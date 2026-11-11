@@ -116,3 +116,9 @@ Send back: the log lines from C4, C5, C6 and B3, plus a yes/no for B1 to B4.
 - `@forge/react` pulls in about 1.4 GB of `node_modules`. It's gitignored, but delete it after the spike.
 - No credits were spent: nothing was invoked headlessly. Rovo needs a browser session, and MCP needs the OAuth you do in C3.
 - Carry-over for `apps/core`: put the consent catch in a shared `asUserOrConsentError()` helper. Keep `record-verification` out of `rovo:mcp`. Keep the action `description` short (40 to 100 tokens) and make it carry the "check before citing" rule.
+
+## Browser results (2026-11-11, Razvan)
+- C1 to C4: toggle on, MCP added, OAuth done. The first call returned `consent_required` (`NEEDS_AUTHENTICATION_ERR`, 401), status `unknown`, no title.
+- C5: the spike page probe gave `{"asUser":"ok"}` after "Allow access" (it first failed on a `"type":"module"` bundling bug, fixed in 2.3.0).
+- C6: the same MCP call then returned 200 with title "S2-6 View-restricted page (D20)" (Razvan is its only viewer).
+- B1/B2: "Rovo enabled on this site: true"; the agent opens and answers through the tool.

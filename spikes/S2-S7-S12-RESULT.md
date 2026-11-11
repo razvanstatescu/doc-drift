@@ -122,3 +122,7 @@ CREATE INDEX IF NOT EXISTS idx_ps_status_sev   ON page_state (status, max_severi
 - A static web trigger can't return data. The spike logs its results and reads them with `forge logs`, which lags 1 to 2 min. Calls made in the first seconds after `forge deploy` can still hit the previous version.
 - The spike web trigger is gated by the encrypted env var `SPIKE_TOKEN` (header `x-spike-token`). The URL and token are in the gitignored `.spike-url` and `.spike-token`.
 - Cleanup when done: `forge uninstall` the spike, and delete the ENGS pages under 2883585.
+
+## Browser results (2026-11-11, Razvan)
+- S2-1: byline "Doc Drift: Verified (Development)", tooltip "Re-checked since its anchors last changed", probe "from content property". `summary.sh`: dynamicProperties calls 0. The icon `resource:icons;verified.svg` showed the generic app (hexagon) icon, not the SVG.
+- S2-2 to S2-4 (other icon formats), S2-5 (key form via the prefixed write), S2-7 (live refresh) and check 5 (person-restricted page): pending.

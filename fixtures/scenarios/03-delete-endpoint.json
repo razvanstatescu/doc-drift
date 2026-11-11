@@ -2,7 +2,7 @@
   "id": "03-delete-endpoint",
   "label": "drift",
   "title": "Remove the refunds endpoint",
-  "notes": "Deleting an anchored file is High severity. The overview page anchors src/** and flags High too, because a file under its glob was removed. The scaling guide is unrelated.",
+  "notes": "Deleting an anchored file is High severity. The overview page anchors src/** and lists POST /v1/refunds, a route the change removed from src/server.ts: it flags Medium (D26: a file removed under a glob is not the page's anchored file being removed). The scaling guide is unrelated.",
   "pages": [
     {
       "pageId": "100104",
@@ -92,7 +92,7 @@
           },
           {
             "pageId": "100105",
-            "severity": "high"
+            "severity": "medium"
           }
         ]
       }

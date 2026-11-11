@@ -10,8 +10,10 @@ function events(result: MatchResult): DriftEvent[] {
   return result.events;
 }
 
+/** Normal anchor weight (D26). Critical is 1. */
+const N = 0.7;
 /** The formula term for a modified file: weight × match × (0.5 + 0.5 × mag). */
-const term = (match: number, lines: number, weight = 1) => weight * match * (0.5 + 0.5 * Math.min(1, Math.log10(1 + lines) / 2));
+const term = (match: number, lines: number, weight = N) => weight * match * (0.5 + 0.5 * Math.min(1, Math.log10(1 + lines) / 2));
 const round = (n: number) => Math.round(n * 100) / 100;
 
 describe('scoreChange: path scoring', () => {
@@ -23,23 +25,43 @@ describe('scoreChange: path scoring', () => {
     expect(event).toMatchObject({ ref: 'nano-soft-dev/payments-api#482', dedupeKey: 'a|nano-soft-dev/payments-api#482', matchedAnchor: 'payments-api: deploy/helm/values.yaml' });
   });
 
-  it('caps magnitude at 100 lines, so a big change on a glob anchor reaches 0.6', () => {
-    const [event] = events(scoreChange(change([modified('src/server.ts', 400, 200)]), [binding('g', 'glob', 'src/**')], NO_PAGES));
-    expect(event?.score).toBe(0.6);
+  it('caps magnitude at 100 lines, so a big change reaches 0.6 on a critical glob and 0.42 on a normal one', () => {
+    const big = change([modified('src/server.ts', 400, 200)]);
+    const [critical] = events(scoreChange(big, [binding('g', 'glob', 'src/**', { weight: 'critical' })], NO_PAGES));
+    expect(critical?.score).toBe(0.6);
+    expect(events(scoreChange(big, [binding('g', 'glob', 'src/**')], NO_PAGES))).toEqual([]);
+    const [normal] = events(scoreChange(big, [binding('g', 'glob', 'src/**')], NO_PAGES, { threshold: 0 }));
+    expect(normal?.score).toBe(0.42);
+  });
+
+  it('keeps a small edit on a normal exact anchor below the threshold, but not on a critical one', () => {
+    const small = change([modified('deploy/helm/values.yaml', 1, 1)]);
+    expect(events(scoreChange(small, [binding('n', 'path', 'deploy/helm/values.yaml')], NO_PAGES))).toEqual([]);
+    const [critical] = events(scoreChange(small, [binding('c', 'path', 'deploy/helm/values.yaml', { weight: 'critical' })], NO_PAGES));
+    expect(critical).toMatchObject({ score: round(term(1, 2, 1)), severity: 'high' });
+  });
+
+  it('accepts custom anchor weights', () => {
+    const small = change([modified('deploy/helm/values.yaml', 1, 1)]);
+    const [event] = events(scoreChange(small, [binding('n', 'path', 'deploy/helm/values.yaml')], NO_PAGES, { anchorWeights: { critical: 1, normal: 1 } }));
+    expect(event?.score).toBe(round(term(1, 2, 1)));
   });
 
   it('keeps small glob matches below the threshold and takes the max over files, not the sum', () => {
     const files = Array.from({ length: 50 }, (_, i) => modified(`src/handlers/h${i}.ts`, 1, 1));
     expect(events(scoreChange(change(files), [binding('g', 'glob', 'src/**')], NO_PAGES))).toEqual([]);
-    const strict = events(scoreChange(change(files), [binding('g', 'glob', 'src/**')], NO_PAGES, { threshold: 0.3 }));
+    const strict = events(scoreChange(change(files), [binding('g', 'glob', 'src/**')], NO_PAGES, { threshold: 0.2 }));
     expect(strict[0]?.score).toBe(round(term(0.6, 2)));
     expect(strict[0]?.reasons).toEqual(['src/handlers/h0.ts changed: 1 line added, 1 removed', '49 more anchored files changed']);
   });
 
-  it('scores removed and renamed files at full magnitude and High severity', () => {
+  it('scores removed and renamed files at full magnitude; High only for an exact path anchor', () => {
     const removed = { status: 'removed', path: 'src/routes/refunds.ts', linesAdded: 0, linesRemoved: 40 } as const;
-    const [byGlob] = events(scoreChange(change([removed]), [binding('g', 'glob', 'src/**')], NO_PAGES));
-    expect(byGlob).toMatchObject({ score: 0.6, severity: 'high', reasons: ['src/routes/refunds.ts removed'] });
+    const [byPath] = events(scoreChange(change([removed]), [binding('p', 'path', 'src/routes/refunds.ts')], NO_PAGES));
+    expect(byPath).toMatchObject({ score: 0.7, severity: 'high', reasons: ['src/routes/refunds.ts removed'] });
+    // A glob outlives any one file in it: Medium unless the score reaches 0.8 (D26).
+    const [byGlob] = events(scoreChange(change([removed]), [binding('g', 'glob', 'src/**')], NO_PAGES, { threshold: 0 }));
+    expect(byGlob).toMatchObject({ score: 0.42, severity: 'medium' });
   });
 
   it('never alerts on a repo-wide anchor alone', () => {
@@ -66,10 +88,12 @@ describe('scoreChange: path scoring', () => {
   it('applies the dismiss dampener down to a 0.3 floor', () => {
     const file = modified('scripts/rollback.sh', 100, 0);
     const score = (dismissCount: number) =>
-      events(scoreChange(change([file]), [binding('a', 'path', 'scripts/rollback.sh', { dismissCount })], NO_PAGES, { threshold: 0 }))[0]?.score;
+      events(scoreChange(change([file]), [binding('a', 'path', 'scripts/rollback.sh', { dismissCount, weight: 'critical' })], NO_PAGES, { threshold: 0 }))[0]?.score;
     expect(score(0)).toBe(1);
     expect(score(2)).toBe(0.8);
     expect(score(20)).toBe(0.3);
+    const normal = events(scoreChange(change([file]), [binding('a', 'path', 'scripts/rollback.sh', { dismissCount: 2 })], NO_PAGES, { threshold: 0 }))[0];
+    expect(normal?.score).toBe(0.5);
   });
 });
 
@@ -85,14 +109,14 @@ describe('scoreChange: identifier and snippet boosts', () => {
   const file = modified('scripts/rollback.sh', 2, 2);
 
   it('adds 0.3 for a removed identifier and 0.4 for a removed code line', () => {
-    // Five dismissals halve the weight, so the boosted score stays under the cap of 1.
+    // Five dismissals take the weight to its 0.3 floor, so the boosted score stays under the cap of 1.
     const damped = binding('a', 'glob', 'scripts/**', { dismissCount: 5 });
     const [event] = events(scoreChange(change([file], { hunks }), [damped], runbook));
-    expect(event?.score).toBe(round(term(0.6, 4, 0.5) + 0.3 + 0.4));
-    expect(event?.matchedIdentifiers).toEqual(['ROLLBACK_TIMEOUT', 'wait']);
+    expect(event?.score).toBe(round(term(0.6, 4, 0.3) + 0.3 + 0.4));
+    expect(event?.matchedIdentifiers).toEqual(['ROLLBACK_TIMEOUT', '--wait']);
     expect(event?.matchedSnippetLines).toBe(1);
     expect(event?.reasons.slice(1, 3)).toEqual([
-      'Page mentions ROLLBACK_TIMEOUT and wait, removed in PR #482',
+      'Page mentions ROLLBACK_TIMEOUT and --wait, removed in PR #482',
       "1 line in this page's code blocks was removed in PR #482",
     ]);
   });
@@ -109,6 +133,23 @@ describe('scoreChange: identifier and snippet boosts', () => {
     expect(noPage[0]?.score).toBe(round(term(0.6, 4)));
   });
 
+  it('counts plain lowercase words only when plainWordIdentifiers is on', () => {
+    const page = indexPages([{ pageId: 'page-a', storage: '<ac:structured-macro ac:name="code"><ac:plain-text-body><![CDATA[registerRoutes(router, deps)]]></ac:plain-text-body></ac:structured-macro>' }]);
+    const c = change([modified('src/routes/index.ts', 0, 1)], { hunks: fileDiff('src/routes/index.ts', ['  if (flag) registerLegacy(router, deps);'], []) });
+    const off = events(scoreChange(c, [binding('a', 'glob', 'src/**')], page, { threshold: 0 }));
+    expect(off[0]?.matchedIdentifiers).toEqual([]);
+    const on = events(scoreChange(c, [binding('a', 'glob', 'src/**')], page, { threshold: 0, plainWordIdentifiers: true }));
+    expect(on[0]?.matchedIdentifiers).toEqual(['router', 'deps']);
+  });
+
+  it('takes no removed identifiers from deleted files', () => {
+    const page = indexPages([{ pageId: 'page-a', storage: '<p>Every query uses <code>charge_id</code>.</p>' }]);
+    const gone = { status: 'removed', path: 'src/routes/refunds-v1.ts', linesAdded: 0, linesRemoved: 1 } as const;
+    const c = change([gone], { hunks: `diff --git a/src/routes/refunds-v1.ts b/src/routes/refunds-v1.ts\ndeleted file mode 100644\n--- a/src/routes/refunds-v1.ts\n+++ /dev/null\n@@ -1 +0,0 @@\n-const q = 'SELECT charge_id FROM refunds';\n` });
+    const [event] = events(scoreChange(c, [binding('a', 'glob', 'src/**')], page, { threshold: 0 }));
+    expect(event?.matchedIdentifiers).toEqual([]);
+  });
+
   it('ignores hunks of ignored files', () => {
     const testHunks = fileDiff('scripts/rollback.test.sh', ['echo $ROLLBACK_TIMEOUT'], ['echo $ROLLBACK_TIMEOUT_SECS']);
     const c = change([file, modified('scripts/rollback.test.sh', 1, 1)], { hunks: testHunks });
@@ -118,12 +159,15 @@ describe('scoreChange: identifier and snippet boosts', () => {
 });
 
 describe('scoreChange: cosmetic changes', () => {
-  it('halves a comment-only change on an exact anchor, keeping it under the threshold', () => {
+  it('scales a comment-only change by 0.4, keeping it under the threshold', () => {
     const hunks = fileDiff('scripts/rollback.sh', ['# Roll back to the previus release.'], ['# Roll back to the previous release.']);
     const c = change([modified('scripts/rollback.sh', 1, 1)], { hunks });
     expect(events(scoreChange(c, [binding('a', 'path', 'scripts/rollback.sh')], NO_PAGES))).toEqual([]);
     const [low] = events(scoreChange(c, [binding('a', 'path', 'scripts/rollback.sh')], NO_PAGES, { threshold: 0 }));
-    expect(low?.score).toBe(round(term(1, 2) * 0.5));
+    // Even a critical anchor with 100+ changed comment lines stays at 0.4.
+    const big = change([modified('scripts/rollback.sh', 150, 0)], { hunks: fileDiff('scripts/rollback.sh', [], Array.from({ length: 150 }, (_, i) => `# usage note ${i}`)) });
+    expect(events(scoreChange(big, [binding('c', 'path', 'scripts/rollback.sh', { weight: 'critical' })], NO_PAGES, { threshold: 0 }))[0]?.score).toBe(0.4);
+    expect(low?.score).toBe(round(term(1, 2) * 0.4));
     expect(low?.reasons).toEqual(['scripts/rollback.sh changed in comments or whitespace only']);
   });
 });

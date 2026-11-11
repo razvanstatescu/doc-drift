@@ -1,0 +1,1817 @@
+{
+  "generatedBy": "packages/matcher/test/eval.test.ts (pnpm eval)",
+  "config": {
+    "threshold": 0.5,
+    "anchorWeights": {
+      "critical": 1,
+      "normal": 0.7
+    },
+    "matchStrength": {
+      "exact": 1,
+      "glob": 0.6,
+      "repo": 0.2
+    },
+    "identifierBoost": 0.3,
+    "snippetBoost": 0.4,
+    "cosmeticFactor": 0.4
+  },
+  "totals": {
+    "scenarios": 40,
+    "scenariosPassing": 40,
+    "pageDecisions": 727,
+    "confusion": {
+      "tp": 30,
+      "fp": 0,
+      "fn": 2,
+      "tn": 695
+    },
+    "precision": 1,
+    "recall": 0.94,
+    "severityAgreement": {
+      "right": 25,
+      "checked": 25
+    },
+    "quietSetAlerts": 0
+  },
+  "sweep": [
+    {
+      "normal": 0.5,
+      "threshold": 0.4,
+      "tp": 30,
+      "fp": 1,
+      "fn": 2,
+      "precision": 0.97,
+      "recall": 0.94
+    },
+    {
+      "normal": 0.5,
+      "threshold": 0.45,
+      "tp": 30,
+      "fp": 0,
+      "fn": 2,
+      "precision": 1,
+      "recall": 0.94
+    },
+    {
+      "normal": 0.5,
+      "threshold": 0.5,
+      "tp": 29,
+      "fp": 0,
+      "fn": 3,
+      "precision": 1,
+      "recall": 0.91
+    },
+    {
+      "normal": 0.5,
+      "threshold": 0.55,
+      "tp": 29,
+      "fp": 0,
+      "fn": 3,
+      "precision": 1,
+      "recall": 0.91
+    },
+    {
+      "normal": 0.5,
+      "threshold": 0.6,
+      "tp": 25,
+      "fp": 0,
+      "fn": 7,
+      "precision": 1,
+      "recall": 0.78
+    },
+    {
+      "normal": 0.5,
+      "threshold": 0.65,
+      "tp": 21,
+      "fp": 0,
+      "fn": 11,
+      "precision": 1,
+      "recall": 0.66
+    },
+    {
+      "normal": 0.6,
+      "threshold": 0.4,
+      "tp": 30,
+      "fp": 1,
+      "fn": 2,
+      "precision": 0.97,
+      "recall": 0.94
+    },
+    {
+      "normal": 0.6,
+      "threshold": 0.45,
+      "tp": 30,
+      "fp": 0,
+      "fn": 2,
+      "precision": 1,
+      "recall": 0.94
+    },
+    {
+      "normal": 0.6,
+      "threshold": 0.5,
+      "tp": 30,
+      "fp": 0,
+      "fn": 2,
+      "precision": 1,
+      "recall": 0.94
+    },
+    {
+      "normal": 0.6,
+      "threshold": 0.55,
+      "tp": 29,
+      "fp": 0,
+      "fn": 3,
+      "precision": 1,
+      "recall": 0.91
+    },
+    {
+      "normal": 0.6,
+      "threshold": 0.6,
+      "tp": 29,
+      "fp": 0,
+      "fn": 3,
+      "precision": 1,
+      "recall": 0.91
+    },
+    {
+      "normal": 0.6,
+      "threshold": 0.65,
+      "tp": 23,
+      "fp": 0,
+      "fn": 9,
+      "precision": 1,
+      "recall": 0.72
+    },
+    {
+      "normal": 0.7,
+      "threshold": 0.4,
+      "tp": 32,
+      "fp": 23,
+      "fn": 0,
+      "precision": 0.58,
+      "recall": 1
+    },
+    {
+      "normal": 0.7,
+      "threshold": 0.45,
+      "tp": 30,
+      "fp": 8,
+      "fn": 2,
+      "precision": 0.79,
+      "recall": 0.94
+    },
+    {
+      "normal": 0.7,
+      "threshold": 0.5,
+      "tp": 30,
+      "fp": 0,
+      "fn": 2,
+      "precision": 1,
+      "recall": 0.94
+    },
+    {
+      "normal": 0.7,
+      "threshold": 0.55,
+      "tp": 30,
+      "fp": 0,
+      "fn": 2,
+      "precision": 1,
+      "recall": 0.94
+    },
+    {
+      "normal": 0.7,
+      "threshold": 0.6,
+      "tp": 29,
+      "fp": 0,
+      "fn": 3,
+      "precision": 1,
+      "recall": 0.91
+    },
+    {
+      "normal": 0.7,
+      "threshold": 0.65,
+      "tp": 27,
+      "fp": 0,
+      "fn": 5,
+      "precision": 1,
+      "recall": 0.84
+    },
+    {
+      "normal": 0.8,
+      "threshold": 0.4,
+      "tp": 32,
+      "fp": 23,
+      "fn": 0,
+      "precision": 0.58,
+      "recall": 1
+    },
+    {
+      "normal": 0.8,
+      "threshold": 0.45,
+      "tp": 32,
+      "fp": 22,
+      "fn": 0,
+      "precision": 0.59,
+      "recall": 1
+    },
+    {
+      "normal": 0.8,
+      "threshold": 0.5,
+      "tp": 32,
+      "fp": 20,
+      "fn": 0,
+      "precision": 0.62,
+      "recall": 1
+    },
+    {
+      "normal": 0.8,
+      "threshold": 0.55,
+      "tp": 30,
+      "fp": 0,
+      "fn": 2,
+      "precision": 1,
+      "recall": 0.94
+    },
+    {
+      "normal": 0.8,
+      "threshold": 0.6,
+      "tp": 30,
+      "fp": 0,
+      "fn": 2,
+      "precision": 1,
+      "recall": 0.94
+    },
+    {
+      "normal": 0.8,
+      "threshold": 0.65,
+      "tp": 27,
+      "fp": 0,
+      "fn": 5,
+      "precision": 1,
+      "recall": 0.84
+    },
+    {
+      "normal": 0.9,
+      "threshold": 0.4,
+      "tp": 32,
+      "fp": 23,
+      "fn": 0,
+      "precision": 0.58,
+      "recall": 1
+    },
+    {
+      "normal": 0.9,
+      "threshold": 0.45,
+      "tp": 32,
+      "fp": 22,
+      "fn": 0,
+      "precision": 0.59,
+      "recall": 1
+    },
+    {
+      "normal": 0.9,
+      "threshold": 0.5,
+      "tp": 32,
+      "fp": 22,
+      "fn": 0,
+      "precision": 0.59,
+      "recall": 1
+    },
+    {
+      "normal": 0.9,
+      "threshold": 0.55,
+      "tp": 32,
+      "fp": 20,
+      "fn": 0,
+      "precision": 0.62,
+      "recall": 1
+    },
+    {
+      "normal": 0.9,
+      "threshold": 0.6,
+      "tp": 30,
+      "fp": 0,
+      "fn": 2,
+      "precision": 1,
+      "recall": 0.94
+    },
+    {
+      "normal": 0.9,
+      "threshold": 0.65,
+      "tp": 27,
+      "fp": 0,
+      "fn": 5,
+      "precision": 1,
+      "recall": 0.84
+    },
+    {
+      "normal": 1,
+      "threshold": 0.4,
+      "tp": 32,
+      "fp": 27,
+      "fn": 0,
+      "precision": 0.54,
+      "recall": 1
+    },
+    {
+      "normal": 1,
+      "threshold": 0.45,
+      "tp": 32,
+      "fp": 22,
+      "fn": 0,
+      "precision": 0.59,
+      "recall": 1
+    },
+    {
+      "normal": 1,
+      "threshold": 0.5,
+      "tp": 32,
+      "fp": 22,
+      "fn": 0,
+      "precision": 0.59,
+      "recall": 1
+    },
+    {
+      "normal": 1,
+      "threshold": 0.55,
+      "tp": 32,
+      "fp": 22,
+      "fn": 0,
+      "precision": 0.59,
+      "recall": 1
+    },
+    {
+      "normal": 1,
+      "threshold": 0.6,
+      "tp": 32,
+      "fp": 21,
+      "fn": 0,
+      "precision": 0.6,
+      "recall": 1
+    },
+    {
+      "normal": 1,
+      "threshold": 0.65,
+      "tp": 28,
+      "fp": 8,
+      "fn": 4,
+      "precision": 0.78,
+      "recall": 0.88
+    }
+  ],
+  "bySource": [
+    {
+      "source": "hand-written",
+      "scenarios": 10,
+      "confusion": {
+        "tp": 8,
+        "fp": 0,
+        "fn": 0,
+        "tn": 21
+      },
+      "precision": 1,
+      "recall": 1
+    },
+    {
+      "source": "demo",
+      "scenarios": 10,
+      "confusion": {
+        "tp": 9,
+        "fp": 0,
+        "fn": 0,
+        "tn": 231
+      },
+      "precision": 1,
+      "recall": 1
+    },
+    {
+      "source": "jira-beat",
+      "scenarios": 2,
+      "confusion": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "tn": 46
+      },
+      "precision": 1,
+      "recall": 1
+    },
+    {
+      "source": "edge",
+      "scenarios": 18,
+      "confusion": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 2,
+        "tn": 397
+      },
+      "precision": 1,
+      "recall": 0.85
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "01-rename-rollback-script",
+      "source": "hand-written",
+      "label": "drift",
+      "title": "Rename rollback script and timeout variable (demo PR #482)",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "tn": 2
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "100101",
+          "expected": true,
+          "actual": true,
+          "score": 1,
+          "rawScore": 1,
+          "severity": "high",
+          "expectedSeverity": "high",
+          "reasons": [
+            "scripts/rollback.sh renamed to scripts/rollback-v2.sh",
+            "Page mentions ROLLBACK_TIMEOUT and rollback.sh, removed in PR #482",
+            "1 line in this page's code blocks was removed in PR #482"
+          ]
+        },
+        {
+          "step": 1,
+          "pageId": "100103",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.14
+        }
+      ]
+    },
+    {
+      "id": "02-helm-value-change",
+      "source": "hand-written",
+      "label": "drift",
+      "title": "Raise replica count and worker max in Helm values",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "tn": 2
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "100101",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.28
+        },
+        {
+          "step": 1,
+          "pageId": "100102",
+          "expected": true,
+          "actual": true,
+          "score": 0.87,
+          "rawScore": 0.87,
+          "severity": "high",
+          "reasons": [
+            "deploy/helm/values.yaml changed: 2 lines added, 2 removed",
+            "2 lines in this page's code blocks were removed in PR #486"
+          ]
+        },
+        {
+          "step": 1,
+          "pageId": "100103",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.09
+        }
+      ]
+    },
+    {
+      "id": "03-delete-endpoint",
+      "source": "hand-written",
+      "label": "drift",
+      "title": "Remove the refunds endpoint",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "tn": 1
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "100104",
+          "expected": true,
+          "actual": true,
+          "score": 1,
+          "rawScore": 1,
+          "severity": "high",
+          "expectedSeverity": "high",
+          "reasons": [
+            "src/routes/refunds.ts removed",
+            "Page mentions /v1/refunds, removed in PR #487"
+          ]
+        },
+        {
+          "step": 1,
+          "pageId": "100105",
+          "expected": true,
+          "actual": true,
+          "score": 0.72,
+          "rawScore": 0.72,
+          "severity": "medium",
+          "expectedSeverity": "medium",
+          "reasons": [
+            "src/routes/refunds.ts removed",
+            "1 more anchored file changed",
+            "Page mentions /v1/refunds, removed in PR #487"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "04-test-only",
+      "source": "hand-written",
+      "label": "no_drift",
+      "title": "Test-only change",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 2
+      },
+      "pages": []
+    },
+    {
+      "id": "05-lockfile-bump",
+      "source": "hand-written",
+      "label": "no_drift",
+      "title": "Lockfile bump",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 2
+      },
+      "pages": []
+    },
+    {
+      "id": "06-comment-typo",
+      "source": "hand-written",
+      "label": "no_drift",
+      "title": "Fix a comment typo in an anchored script",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 1
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "100101",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.17
+        }
+      ]
+    },
+    {
+      "id": "07-unrelated-directory",
+      "source": "hand-written",
+      "label": "no_drift",
+      "title": "Change in an unrelated directory",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 3
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "100103",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.09
+        }
+      ]
+    },
+    {
+      "id": "08-revert-pair",
+      "source": "hand-written",
+      "label": "drift",
+      "title": "A change and its revert",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "tn": 3
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "100102",
+          "expected": true,
+          "actual": true,
+          "score": 0.83,
+          "rawScore": 0.83,
+          "severity": "high",
+          "reasons": [
+            "deploy/helm/values.yaml changed: 1 line added, 1 removed",
+            "1 line in this page's code blocks was removed in PR #490"
+          ]
+        },
+        {
+          "step": 1,
+          "pageId": "100103",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.09
+        }
+      ]
+    },
+    {
+      "id": "09-broad-glob-many-files",
+      "source": "hand-written",
+      "label": "drift",
+      "title": "Codemod across 60 handler files",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "tn": 1
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "100105",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.28
+        },
+        {
+          "step": 1,
+          "pageId": "100107",
+          "expected": true,
+          "actual": true,
+          "score": 0.98,
+          "rawScore": 0.98,
+          "severity": "high",
+          "reasons": [
+            "src/handlers/h01.ts changed: 2 lines added, 2 removed",
+            "59 more anchored files changed",
+            "Page mentions log.info, removed in PR #494",
+            "1 line in this page's code blocks was removed in PR #494"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "10-jira-wont-do",
+      "source": "hand-written",
+      "label": "drift",
+      "title": "Epic resolved as Won't Do",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "tn": 4
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "100201",
+          "expected": true,
+          "actual": true,
+          "score": 0.7,
+          "rawScore": 0.7,
+          "severity": "medium",
+          "expectedSeverity": "medium",
+          "reasons": [
+            "PAY-142 moved to Won't Do",
+            "PAY-142 resolved as Won't Do"
+          ]
+        },
+        {
+          "step": 1,
+          "pageId": "100202",
+          "expected": true,
+          "actual": true,
+          "score": 0.7,
+          "rawScore": 0.7,
+          "severity": "high",
+          "expectedSeverity": "high",
+          "reasons": [
+            "PAY-142 moved to Won't Do",
+            "PAY-142 resolved as Won't Do"
+          ]
+        },
+        {
+          "step": 2,
+          "pageId": "100203",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.3
+        }
+      ]
+    },
+    {
+      "id": "demo-01-rename-rollback-script",
+      "source": "demo",
+      "label": "drift",
+      "title": "Rename rollback script and timeout variable",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "tn": 23
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "payments-rollback-runbook",
+          "expected": true,
+          "actual": true,
+          "score": 1,
+          "rawScore": 1,
+          "severity": "high",
+          "expectedSeverity": "high",
+          "reasons": [
+            "scripts/rollback.sh renamed to scripts/rollback-v2.sh",
+            "Page mentions ROLLBACK_TIMEOUT and rollback.sh, removed in PR #482"
+          ]
+        },
+        {
+          "step": 1,
+          "pageId": "scale-payment-workers",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.43
+        },
+        {
+          "step": 1,
+          "pageId": "fail-over-the-payments-database",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.43
+        },
+        {
+          "step": 1,
+          "pageId": "payments-api-service-overview",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.43
+        },
+        {
+          "step": 1,
+          "pageId": "payments-deployment-and-helm-chart",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.26
+        }
+      ]
+    },
+    {
+      "id": "demo-02-raise-db-pool",
+      "source": "demo",
+      "label": "drift",
+      "title": "Raise PAYMENTS_DB_POOL from 20 to 40",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "tn": 22
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "payments-rollback-runbook",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.43
+        },
+        {
+          "step": 1,
+          "pageId": "scale-payment-workers",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.43
+        },
+        {
+          "step": 1,
+          "pageId": "fail-over-the-payments-database",
+          "expected": true,
+          "actual": true,
+          "score": 0.83,
+          "rawScore": 0.83,
+          "severity": "high",
+          "expectedSeverity": "high",
+          "reasons": [
+            "deploy/helm/values.yaml changed: 1 line added, 1 removed",
+            "1 line in this page's code blocks was removed in PR #483"
+          ]
+        },
+        {
+          "step": 1,
+          "pageId": "payments-api-service-overview",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.43
+        },
+        {
+          "step": 1,
+          "pageId": "payments-deployment-and-helm-chart",
+          "expected": true,
+          "actual": true,
+          "score": 0.66,
+          "rawScore": 0.66,
+          "severity": "medium",
+          "expectedSeverity": "medium",
+          "reasons": [
+            "deploy/helm/values.yaml changed: 1 line added, 1 removed",
+            "1 line in this page's code blocks was removed in PR #483"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "demo-03-remove-v1-refunds",
+      "source": "demo",
+      "label": "drift",
+      "title": "Remove the v1 refunds endpoint (PAY-15)",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "tn": 22
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "payments-api-service-overview",
+          "expected": true,
+          "actual": true,
+          "score": 0.72,
+          "rawScore": 0.72,
+          "severity": "medium",
+          "expectedSeverity": "medium",
+          "reasons": [
+            "src/routes/refunds-v1.ts removed",
+            "2 more anchored files changed",
+            "Page mentions REFUNDS_V1_ENABLED, removed in PR #484"
+          ]
+        },
+        {
+          "step": 1,
+          "pageId": "payments-local-development-setup",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.4
+        },
+        {
+          "step": 1,
+          "pageId": "payments-codebase-tour",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.42
+        },
+        {
+          "step": 1,
+          "pageId": "refunds-api-guide",
+          "expected": true,
+          "actual": true,
+          "score": 1,
+          "rawScore": 1,
+          "severity": "high",
+          "expectedSeverity": "high",
+          "reasons": [
+            "src/routes/refunds-v1.ts removed"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "demo-04-tests-only",
+      "source": "demo",
+      "label": "no_drift",
+      "title": "Add charge validation and idempotency hash tests",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 24
+      },
+      "pages": []
+    },
+    {
+      "id": "demo-05-lockfile-bump",
+      "source": "demo",
+      "label": "no_drift",
+      "title": "Bump pg to 8.13.3 in package-lock.json",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 24
+      },
+      "pages": []
+    },
+    {
+      "id": "demo-06-comment-typo",
+      "source": "demo",
+      "label": "no_drift",
+      "title": "Fix typo in rotate-secrets.sh header comment",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 24
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "rotate-payments-secrets",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.17
+        }
+      ]
+    },
+    {
+      "id": "demo-07-unrelated-loadtest",
+      "source": "demo",
+      "label": "no_drift",
+      "title": "Add k6 load test for the December peak",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 24
+      },
+      "pages": []
+    },
+    {
+      "id": "demo-08-revert-db-pool",
+      "source": "demo",
+      "label": "no_drift",
+      "title": "Revert \"Raise PAYMENTS_DB_POOL from 20 to 40\"",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 24
+      },
+      "pages": []
+    },
+    {
+      "id": "demo-09-rename-scale-flag",
+      "source": "demo",
+      "label": "drift",
+      "title": "Rename scale-workers.sh --count to --replicas",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "tn": 23
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "scale-payment-workers",
+          "expected": true,
+          "actual": true,
+          "score": 0.83,
+          "rawScore": 0.83,
+          "severity": "high",
+          "expectedSeverity": "high",
+          "reasons": [
+            "scripts/scale-workers.sh changed: 10 lines added, 9 removed"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "demo-10-structured-logging",
+      "source": "demo",
+      "label": "drift",
+      "title": "Move HTTP handling to src/http and adopt structured logging",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 0,
+        "tn": 21
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "fail-over-the-payments-database",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.46
+        },
+        {
+          "step": 1,
+          "pageId": "drain-the-settlement-queue",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.46
+        },
+        {
+          "step": 1,
+          "pageId": "replay-failed-psp-webhooks",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.46
+        },
+        {
+          "step": 1,
+          "pageId": "payments-api-service-overview",
+          "expected": true,
+          "actual": true,
+          "score": 0.68,
+          "rawScore": 0.68,
+          "severity": "medium",
+          "expectedSeverity": "medium",
+          "reasons": [
+            "src/server.ts changed: 7 lines added, 30 removed",
+            "8 more anchored files changed",
+            "Page mentions LOG_LEVEL, removed in PR #491"
+          ]
+        },
+        {
+          "step": 1,
+          "pageId": "settlement-worker-overview",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.46
+        },
+        {
+          "step": 1,
+          "pageId": "webhook-ingestion-service-overview",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.46
+        },
+        {
+          "step": 1,
+          "pageId": "payments-local-development-setup",
+          "expected": true,
+          "actual": true,
+          "score": 1,
+          "rawScore": 1,
+          "severity": "high",
+          "expectedSeverity": "high",
+          "reasons": [
+            "src/config.ts changed: 1 line added, 1 removed",
+            "Page mentions LOG_LEVEL, removed in PR #491",
+            "1 line in this page's code blocks was removed in PR #491"
+          ]
+        },
+        {
+          "step": 1,
+          "pageId": "payments-codebase-tour",
+          "expected": true,
+          "actual": true,
+          "score": 1,
+          "rawScore": 1,
+          "severity": "high",
+          "expectedSeverity": "high",
+          "reasons": [
+            "src/server.ts changed: 7 lines added, 30 removed",
+            "8 more anchored files changed",
+            "Page mentions registerRoutes, removed in PR #491",
+            "1 line in this page's code blocks was removed in PR #491"
+          ]
+        },
+        {
+          "step": 1,
+          "pageId": "adr-012-idempotency-keys-for-charge-creation",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.46
+        },
+        {
+          "step": 1,
+          "pageId": "adr-014-async-settlement-worker-queue",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.46
+        },
+        {
+          "step": 1,
+          "pageId": "charges-api-guide",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.46
+        }
+      ]
+    },
+    {
+      "id": "edge-11-rename-only",
+      "source": "edge",
+      "label": "drift",
+      "title": "Rename drain-queue.sh to drain-settlement-queue.sh",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "tn": 23
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "drain-the-settlement-queue",
+          "expected": true,
+          "actual": true,
+          "score": 1,
+          "rawScore": 1,
+          "severity": "high",
+          "expectedSeverity": "high",
+          "reasons": [
+            "scripts/drain-queue.sh renamed to scripts/drain-settlement-queue.sh"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "edge-12-delete-anchored-file",
+      "source": "edge",
+      "label": "drift",
+      "title": "Remove replay-webhooks.sh; replay moves to the admin console",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "tn": 23
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "replay-failed-psp-webhooks",
+          "expected": true,
+          "actual": true,
+          "score": 1,
+          "rawScore": 1,
+          "severity": "high",
+          "expectedSeverity": "high",
+          "reasons": [
+            "scripts/replay-webhooks.sh removed"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "edge-13-revert-of-revert",
+      "source": "edge",
+      "label": "drift",
+      "title": "Revert \"Revert \"Raise PAYMENTS_DB_POOL from 20 to 40\"\"",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "tn": 22
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "payments-rollback-runbook",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.43
+        },
+        {
+          "step": 1,
+          "pageId": "scale-payment-workers",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.43
+        },
+        {
+          "step": 1,
+          "pageId": "fail-over-the-payments-database",
+          "expected": true,
+          "actual": true,
+          "score": 0.83,
+          "rawScore": 0.83,
+          "severity": "high",
+          "expectedSeverity": "high",
+          "reasons": [
+            "deploy/helm/values.yaml changed: 1 line added, 1 removed",
+            "1 line in this page's code blocks was removed in PR #494"
+          ]
+        },
+        {
+          "step": 1,
+          "pageId": "payments-api-service-overview",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.43
+        },
+        {
+          "step": 1,
+          "pageId": "payments-deployment-and-helm-chart",
+          "expected": true,
+          "actual": true,
+          "score": 0.66,
+          "rawScore": 0.66,
+          "severity": "medium",
+          "expectedSeverity": "medium",
+          "reasons": [
+            "deploy/helm/values.yaml changed: 1 line added, 1 removed",
+            "1 line in this page's code blocks was removed in PR #494"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "edge-14-broad-glob-60-new-files",
+      "source": "edge",
+      "label": "no_drift",
+      "title": "Add generated PSP event types (60 files under src/generated/)",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 24
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "payments-api-service-overview",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.3
+        },
+        {
+          "step": 1,
+          "pageId": "payments-codebase-tour",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.3
+        }
+      ]
+    },
+    {
+      "id": "edge-15-same-paths-other-repo",
+      "source": "edge",
+      "label": "no_drift",
+      "title": "ledger-service: rename rollback.sh and ROLLBACK_TIMEOUT",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 24
+      },
+      "pages": []
+    },
+    {
+      "id": "edge-16-monorepo-service-scoping",
+      "source": "edge",
+      "label": "drift",
+      "title": "Monorepo: a change in one service flags only that service",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "tn": 1
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "mono-payments-rollback",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.09
+        },
+        {
+          "step": 1,
+          "pageId": "mono-ledger-rollback",
+          "expected": true,
+          "actual": true,
+          "score": 0.56,
+          "rawScore": 0.56,
+          "severity": "medium",
+          "expectedSeverity": "medium",
+          "reasons": [
+            "services/ledger/scripts/rollback.sh changed: 1 line added, 1 removed",
+            "Page mentions LEDGER_ROLLBACK_TIMEOUT, removed in PR #12"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "edge-17-non-default-branch",
+      "source": "edge",
+      "label": "no_drift",
+      "title": "Hotfix failover-db.sh on release/2026.11",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 24
+      },
+      "pages": []
+    },
+    {
+      "id": "edge-18-reindent-critical-script",
+      "source": "edge",
+      "label": "no_drift",
+      "title": "Reindent failover-db.sh to 4 spaces",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 24
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "fail-over-the-payments-database",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.32
+        }
+      ]
+    },
+    {
+      "id": "edge-19-license-headers",
+      "source": "edge",
+      "label": "no_drift",
+      "title": "Add license headers to every script",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 24
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "rotate-payments-secrets",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.22
+        },
+        {
+          "step": 1,
+          "pageId": "scale-payment-workers",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.32
+        },
+        {
+          "step": 1,
+          "pageId": "fail-over-the-payments-database",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.32
+        },
+        {
+          "step": 1,
+          "pageId": "drain-the-settlement-queue",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.32
+        },
+        {
+          "step": 1,
+          "pageId": "replay-failed-psp-webhooks",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.32
+        }
+      ]
+    },
+    {
+      "id": "edge-20-worker-max-raised",
+      "source": "edge",
+      "label": "drift",
+      "title": "Raise workers.max from 8 to 12",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 2,
+        "tn": 20
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "payments-rollback-runbook",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.43
+        },
+        {
+          "step": 1,
+          "pageId": "scale-payment-workers",
+          "expected": true,
+          "actual": true,
+          "score": 0.83,
+          "rawScore": 0.83,
+          "severity": "high",
+          "reasons": [
+            "deploy/helm/values.yaml changed: 1 line added, 1 removed",
+            "1 line in this page's code blocks was removed in PR #500"
+          ]
+        },
+        {
+          "step": 1,
+          "pageId": "fail-over-the-payments-database",
+          "expected": true,
+          "actual": false,
+          "rawScore": 0.43
+        },
+        {
+          "step": 1,
+          "pageId": "payments-api-service-overview",
+          "expected": true,
+          "actual": false,
+          "rawScore": 0.43
+        },
+        {
+          "step": 1,
+          "pageId": "payments-deployment-and-helm-chart",
+          "expected": true,
+          "actual": true,
+          "score": 0.66,
+          "rawScore": 0.66,
+          "severity": "medium",
+          "reasons": [
+            "deploy/helm/values.yaml changed: 1 line added, 1 removed",
+            "1 line in this page's code blocks was removed in PR #500"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "edge-21-charge-limit-lowered",
+      "source": "edge",
+      "label": "drift",
+      "title": "Lower the per-charge limit to 5,000,000 minor units",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "tn": 23
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "payments-api-service-overview",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.26
+        },
+        {
+          "step": 1,
+          "pageId": "payments-codebase-tour",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.26
+        },
+        {
+          "step": 1,
+          "pageId": "charges-api-guide",
+          "expected": true,
+          "actual": true,
+          "score": 0.62,
+          "rawScore": 0.62,
+          "severity": "high",
+          "expectedSeverity": "high",
+          "reasons": [
+            "src/routes/charges.ts changed: 1 line added, 1 removed"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "edge-22-large-pr-no-hunks",
+      "source": "edge",
+      "label": "drift",
+      "title": "Vendor the PSP SDK and add a drain timeout flag (320 files)",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "tn": 23
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "drain-the-settlement-queue",
+          "expected": true,
+          "actual": true,
+          "score": 0.67,
+          "rawScore": 0.67,
+          "severity": "high",
+          "expectedSeverity": "high",
+          "reasons": [
+            "scripts/drain-queue.sh changed: 2 lines added, 2 removed"
+          ]
+        },
+        {
+          "step": 1,
+          "pageId": "payments-api-service-overview",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.24
+        },
+        {
+          "step": 1,
+          "pageId": "payments-codebase-tour",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.24
+        }
+      ]
+    },
+    {
+      "id": "edge-23-webhook-log-message",
+      "source": "edge",
+      "label": "no_drift",
+      "title": "Include the event type in the webhook dead-letter log",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 24
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "replay-failed-psp-webhooks",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.43
+        },
+        {
+          "step": 1,
+          "pageId": "payments-api-service-overview",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.26
+        },
+        {
+          "step": 1,
+          "pageId": "webhook-ingestion-service-overview",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.43
+        },
+        {
+          "step": 1,
+          "pageId": "payments-codebase-tour",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.26
+        }
+      ]
+    },
+    {
+      "id": "edge-24-jira-summary-only",
+      "source": "edge",
+      "label": "no_drift",
+      "title": "PAY-6 summary edited",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 24
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "payments-rollback-runbook",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.3
+        }
+      ]
+    },
+    {
+      "id": "edge-25-jira-epic-done",
+      "source": "edge",
+      "label": "drift",
+      "title": "PAY-6 moved to Done",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "tn": 23
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "payments-rollback-runbook",
+          "expected": true,
+          "actual": true,
+          "score": 0.7,
+          "rawScore": 0.7,
+          "severity": "medium",
+          "expectedSeverity": "medium",
+          "reasons": [
+            "PAY-6 moved to Done"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "edge-26-jira-done-resolution-wont-do",
+      "source": "edge",
+      "label": "drift",
+      "title": "PAY-18 Done with resolution Won't Do",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "tn": 23
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "adr-015-active-passive-multi-region-database",
+          "expected": true,
+          "actual": true,
+          "score": 0.7,
+          "rawScore": 0.7,
+          "severity": "high",
+          "expectedSeverity": "high",
+          "reasons": [
+            "PAY-18 moved to Done",
+            "PAY-18 resolved as Won't Do"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "edge-27-jira-in-progress",
+      "source": "edge",
+      "label": "no_drift",
+      "title": "PAY-4 To Do to In Progress",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 24
+      },
+      "pages": []
+    },
+    {
+      "id": "edge-28-long-usage-comment",
+      "source": "edge",
+      "label": "no_drift",
+      "title": "Document scale-workers.sh with a 110-line usage comment",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 24
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "scale-payment-workers",
+          "expected": false,
+          "actual": false,
+          "rawScore": 0.4
+        }
+      ]
+    },
+    {
+      "id": "jira-01-epic-done-wont-do-beat",
+      "source": "jira-beat",
+      "label": "drift",
+      "title": "PAY-18 moved to Done (the won't-do beat)",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "tn": 23
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "adr-015-active-passive-multi-region-database",
+          "expected": true,
+          "actual": true,
+          "score": 0.7,
+          "rawScore": 0.7,
+          "severity": "high",
+          "expectedSeverity": "high",
+          "reasons": [
+            "PAY-18 moved to Done"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jira-02-fix-version-slips",
+      "source": "jira-beat",
+      "label": "drift",
+      "title": "PAY-15 fix version 2026.12 to 2027.01",
+      "pass": true,
+      "failures": [],
+      "confusion": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "tn": 23
+      },
+      "pages": [
+        {
+          "step": 1,
+          "pageId": "adr-009-retire-the-v1-refunds-api",
+          "expected": true,
+          "actual": true,
+          "score": 0.6,
+          "rawScore": 0.6,
+          "severity": "high",
+          "expectedSeverity": "high",
+          "reasons": [
+            "PAY-15 fix versions changed (2026.12 to 2027.01)"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -23,7 +23,7 @@
   "matcherAssumptions": [
     "Removed identifiers are identifier-like tokens (containing _ . or -, or camelCase) found on '-' lines and NOT on '+' lines of the same change record. Plain words and ALL-CAPS words without _ (SQL keywords, COUNT) are not identifiers. Counting every '-' line token instead adds 6 false positives in scenario 10 and 4 in scenario 01, mostly through the token payments-api.",
     "Identifier matching against page text is whole-token, not substring.",
-    "Snippet hash compares trimmed, whitespace-collapsed '-' lines of 10+ characters against page code block lines.",
+    "Snippet hash compares trimmed, whitespace-collapsed '-' lines of 5+ characters against page code block lines.",
     "Glob anchors never count as 'anchored file removed or renamed' for the High rule; exact path anchors do.",
     "Jira rule scores are multiplied by anchor weight, so Jira anchors meant to alert alone are critical."
   ],

@@ -116,5 +116,18 @@ Precision and recall of 1.00 on the first 10 fixtures are not evidence of qualit
 Pages reference issues as tokens (for example `{{PAY:rollback-epic}}`) that the seed scripts replace with the real keys after creating the issues. That avoids creating and deleting 155 placeholder issues to land on "PAY-142". The story uses whatever key Jira assigns. Demo mode and the copy library may keep PAY-142 as an illustrative example.
 
 ### D26. Anchor weights are set by the eval, not by assumption
-2026-11-11 · Proposed
+2026-11-11 · Accepted (eval result below)
 The matcher (D24) scores every anchor at 1.0; the demo scenarios were authored assuming normal ≈ 0.7 and critical 1.0. The M1 eval agent runs the real matcher over all 10 demo scenarios × 24 pages and picks the weights that meet recall ≥ 0.9, precision ≥ 0.8, zero lockfile/test-only alerts. The result is recorded here.
+
+**D26 result (eval over 40 scenarios / 727 page decisions):**
+- normal **0.7**, critical **1.0**, threshold **0.5**: precision 1.00, recall 0.94.
+- At weight 1.0, a one-line edit to a widely anchored file (values.yaml, `src/**`) flagged every page that anchors it: 21 of the 22 false positives. With 0.7/0.5, the highest quiet score is 0.46 and the lowest true flag is 0.56.
+- Jira scores are not scaled by weight; critical only makes the alert High.
+- Other changes:
+  - Plain lowercase words are no longer identifiers; `--flags` and `/routes` are.
+  - Deleted files contribute no identifiers.
+  - SQL keywords are ignored.
+  - A glob anchor never makes a deletion High.
+  - The cosmetic factor is 0.4 (it was 0.5 in D24).
+- Known misses: values stated only in prose.
+- For apps/core: revert detection must match by title when a revert PR has no number (scenario 08).

@@ -10,7 +10,7 @@ import * as reason from './reasons.js';
 import { detectRevert } from './revert.js';
 import { removedLineHashes } from './snippets.js';
 import type { DriftEvent, MatchResult, RenameProposal } from './types.js';
-import { effectiveWeight, roundScore, severityFor } from './weights.js';
+import { effectiveWeight, jiraDampener, roundScore, severityFor } from './weights.js';
 
 /** Page indexes by page ID. Pages missing from the map are scored on paths only (no boosts). */
 export type PagesIndex = ReadonlyMap<string, PageIndex>;
@@ -54,8 +54,9 @@ function matchFiles(
   files: readonly ChangedFile[],
   diffs: ReadonlyMap<string, FileDiff>,
   globs: GlobCache,
+  config: MatcherConfig,
 ): { best: FileMatch; matched: ChangedFile[] } | undefined {
-  const weight = effectiveWeight(binding);
+  const weight = effectiveWeight(binding, config.anchorWeights);
   let best: FileMatch | undefined;
   const matched: ChangedFile[] = [];
   for (const file of files) {
@@ -70,11 +71,11 @@ function matchFiles(
   return best && { best, matched };
 }
 
-function pageEvidence(page: PageIndex | undefined, evidence: ChangeEvidence): { identifiers: string[]; snippetLines: number } {
+function pageEvidence(page: PageIndex | undefined, evidence: ChangeEvidence, config: MatcherConfig): { identifiers: string[]; snippetLines: number } {
   if (!page) return { identifiers: [], snippetLines: 0 };
   const identifiers = [
     ...[...evidence.identifiers.codeShaped].filter((t) => page.tokens.has(t)),
-    ...[...evidence.identifiers.plain].filter((t) => page.codeTokens.has(t)),
+    ...(config.plainWordIdentifiers ? [...evidence.identifiers.plain].filter((t) => page.codeTokens.has(t)) : []),
   ];
   const snippetLines = [...evidence.lineHashes].filter((h) => page.codeLineHashes.has(h)).length;
   return { identifiers, snippetLines };
@@ -108,8 +109,9 @@ function scoreBitbucket(
     ? parseUnifiedDiff(change.hunks).filter((d) => relevant.has(d.path) || (d.oldPath !== undefined && relevant.has(d.oldPath)))
     : [];
   const diffByPath = new Map(diffs.map((d) => [d.path, d]));
+  const deletedPaths = new Set(files.filter((f) => f.status === 'removed').map((f) => f.path));
   const evidence: ChangeEvidence = {
-    identifiers: removedIdentifiers(diffs),
+    identifiers: removedIdentifiers(diffs, deletedPaths),
     lineHashes: removedLineHashes(diffs),
     label: `PR #${change.prId}`,
   };
@@ -123,9 +125,9 @@ function scoreBitbucket(
     const rename = renameProposalFor(binding, files);
     if (rename) renameProposals.push(rename);
 
-    const match = matchFiles(binding, files, diffByPath, globs);
+    const match = matchFiles(binding, files, diffByPath, globs, config);
     if (!match) continue;
-    const { identifiers, snippetLines } = pageEvidence(pages.get(binding.pageId), evidence);
+    const { identifiers, snippetLines } = pageEvidence(pages.get(binding.pageId), evidence, config);
     const score = roundScore(
       match.best.term + (identifiers.length > 0 ? IDENTIFIER_BOOST : 0) + (snippetLines > 0 ? SNIPPET_BOOST : 0),
     );
@@ -138,9 +140,10 @@ function scoreBitbucket(
     if (!repoWide && match.matched.length > 1) reasons.push(reason.moreFilesReason(match.matched.length - 1));
     if (identifiers.length > 0) reasons.push(reason.identifierReason(identifiers, evidence.label));
     if (snippetLines > 0) reasons.push(reason.snippetReason(snippetLines, evidence.label));
-    if (binding.dismissCount) reasons.push(reason.dampenerReason(binding.dismissCount, effectiveWeight(binding)));
+    if (binding.dismissCount) reasons.push(reason.dampenerReason(binding.dismissCount, effectiveWeight(binding, config.anchorWeights)));
 
-    const fileGone = !repoWide && match.matched.some((f) => f.status === 'removed' || f.status === 'renamed');
+    // Only an exact path anchor's file can be "gone": a glob such as src/** outlives any one file in it (D26).
+    const fileGone = binding.anchorType === 'path' && match.matched.some((f) => f.status === 'removed' || f.status === 'renamed');
     events.push({
       pageId: binding.pageId,
       bindingId: binding.id,
@@ -165,10 +168,10 @@ function scoreJira(change: JiraChangeRecord, bindings: readonly Binding[], confi
   const events: DriftEvent[] = [];
   for (const binding of bindings) {
     if (!strongest || binding.anchorType !== 'jira' || binding.jiraKey !== change.issueKey) continue;
-    const score = roundScore(strongest.score * effectiveWeight(binding));
+    const score = roundScore(strongest.score * jiraDampener(binding));
     if (score < config.threshold) continue;
     const reasons = [...new Set(signals.map((s) => s.reason))];
-    if (binding.dismissCount) reasons.push(reason.dampenerReason(binding.dismissCount, effectiveWeight(binding)));
+    if (binding.dismissCount) reasons.push(reason.dampenerReason(binding.dismissCount, jiraDampener(binding)));
     events.push({
       pageId: binding.pageId,
       bindingId: binding.id,

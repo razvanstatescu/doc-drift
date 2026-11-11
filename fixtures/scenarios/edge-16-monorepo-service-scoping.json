@@ -1,0 +1,88 @@
+{
+  "id": "edge-16-monorepo-service-scoping",
+  "label": "drift",
+  "title": "Monorepo: a change in one service flags only that service",
+  "notes": "One repo, 2 services with the same script name. The ledger page (glob services/ledger/**) quotes LEDGER_ROLLBACK_TIMEOUT, which the change renamed: flags. The payments page (exact path, its own service glob, and a whole-repo anchor) must stay quiet: repo-wide anchors never alert alone.",
+  "source": "edge",
+  "generatedBy": "fixtures/build-from-demo.ts",
+  "pages": [
+    {
+      "pageId": "mono-payments-rollback",
+      "title": "Payments rollback (platform monorepo)",
+      "storage": "<p>Roll Payments back from the root of the platform repo.</p><ac:structured-macro ac:name=\"code\"><ac:plain-text-body><![CDATA[PAYMENTS_ROLLBACK_TIMEOUT=600 ./services/payments/scripts/rollback.sh]]></ac:plain-text-body></ac:structured-macro><p>Set <code>PAYMENTS_ROLLBACK_TIMEOUT</code> for slow releases.</p>"
+    },
+    {
+      "pageId": "mono-ledger-rollback",
+      "title": "Ledger rollback (platform monorepo)",
+      "storage": "<p>Roll Ledger back from the root of the platform repo.</p><ac:structured-macro ac:name=\"code\"><ac:plain-text-body><![CDATA[LEDGER_ROLLBACK_TIMEOUT=600 ./services/ledger/scripts/rollback.sh]]></ac:plain-text-body></ac:structured-macro><p>Set <code>LEDGER_ROLLBACK_TIMEOUT</code> for slow releases.</p>"
+    }
+  ],
+  "bindings": [
+    {
+      "id": "b-mono-pay-1",
+      "pageId": "mono-payments-rollback",
+      "anchorType": "path",
+      "repo": "nano-soft-dev/platform",
+      "pattern": "services/payments/scripts/rollback.sh",
+      "weight": "critical"
+    },
+    {
+      "id": "b-mono-pay-2",
+      "pageId": "mono-payments-rollback",
+      "anchorType": "glob",
+      "repo": "nano-soft-dev/platform",
+      "pattern": "services/payments/**",
+      "weight": "normal"
+    },
+    {
+      "id": "b-mono-pay-3",
+      "pageId": "mono-payments-rollback",
+      "anchorType": "repo",
+      "repo": "nano-soft-dev/platform",
+      "weight": "normal"
+    },
+    {
+      "id": "b-mono-led-1",
+      "pageId": "mono-ledger-rollback",
+      "anchorType": "glob",
+      "repo": "nano-soft-dev/platform",
+      "pattern": "services/ledger/**",
+      "weight": "normal"
+    }
+  ],
+  "steps": [
+    {
+      "change": {
+        "source": "bitbucket",
+        "workspace": "nano-soft-dev",
+        "repoSlug": "platform",
+        "repoUuid": "{9a1f3c5e-7b2d-4e6f-8a0c-1d3e5f7a9b2c}",
+        "prId": 12,
+        "title": "ledger: take the rollback timeout in seconds",
+        "author": "Sam Rivera",
+        "mergeCommit": "edd34a503f4f",
+        "sourceBranch": "ledger/rollback-secs",
+        "destinationBranch": "main",
+        "defaultBranch": "main",
+        "files": [
+          {
+            "status": "modified",
+            "path": "services/ledger/scripts/rollback.sh",
+            "linesAdded": 1,
+            "linesRemoved": 1
+          }
+        ],
+        "hunks": "diff --git a/services/ledger/scripts/rollback.sh b/services/ledger/scripts/rollback.sh\nindex ee0b61b..ca884cd 100644\n--- a/services/ledger/scripts/rollback.sh\n+++ b/services/ledger/scripts/rollback.sh\n@@ -1,5 +1,5 @@\n #!/usr/bin/env bash\n # Roll ledger back to the previous Helm revision.\n set -euo pipefail\n-TIMEOUT=\"${LEDGER_ROLLBACK_TIMEOUT:-300}\"\n+TIMEOUT=\"${LEDGER_ROLLBACK_TIMEOUT_SECS:-300}\"\n helm rollback ledger --wait --timeout \"${TIMEOUT}s\"\n"
+      },
+      "expect": {
+        "outcome": "scored",
+        "flagged": [
+          {
+            "pageId": "mono-ledger-rollback",
+            "severity": "medium"
+          }
+        ]
+      }
+    }
+  ]
+}

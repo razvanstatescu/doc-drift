@@ -25,8 +25,17 @@ export const SNIPPET_BOOST = 0.4;
 /** Scores at or above this are High severity. */
 export const HIGH_SEVERITY_SCORE = 0.8;
 
-/** Base numeric weight of every anchor. `critical` changes severity, not score. */
-export const BASE_WEIGHT = 1;
+/**
+ * Numeric weight of a code anchor (path, glob, repo) by its `weight` setting (D26, set by the eval).
+ * A normal anchor is weaker evidence: shared files such as `deploy/helm/values.yaml` are anchored by
+ * many pages, and a small edit to one of them alone (0.43 for +1/-1) must not alert. It needs a removed
+ * identifier or quoted line the page uses, or a removed, renamed or heavily changed file (0.58 at 20
+ * lines, 0.7 at 100+). A critical anchor alerts on any non-cosmetic change to the file.
+ * Jira anchors are not scaled by this: Jira rule scores are already per signal (see `JIRA_SCORES`).
+ */
+export const ANCHOR_WEIGHTS = { critical: 1, normal: 0.7 } as const;
+/** @deprecated Use `ANCHOR_WEIGHTS.critical`. Kept for compatibility. */
+export const BASE_WEIGHT = ANCHOR_WEIGHTS.critical;
 /** Each dismissal takes this much off the anchor's weight... */
 export const DISMISS_PENALTY = 0.1;
 /** ...down to this floor. */
@@ -35,9 +44,11 @@ export const DAMPENER_FLOOR = 0.3;
 /**
  * Multiplier for a modified file whose diff only touches comments or whitespace.
  * Not in detection.md: added so comment typos and reformatting stay below the threshold
- * unless the page quotes a removed identifier or line.
+ * unless the page quotes a removed identifier or line. 0.4 (D26, was 0.5) caps a cosmetic file term
+ * at 0.4 even on a critical anchor with 100+ changed lines, so it never alerts alone at Balanced;
+ * at 0.5 a 110-line comment block on a critical script scored exactly 0.5 and alerted.
  */
-export const COSMETIC_FACTOR = 0.5;
+export const COSMETIC_FACTOR = 0.4;
 
 /** Jira rule scores (detection.md, Jira rules). */
 export const JIRA_SCORES = {
@@ -55,6 +66,13 @@ export interface MatcherConfig {
   ignoreGlobs: readonly string[];
   /** Skip PRs merged into a branch other than the repo's default branch, when it is known. */
   ignoreNonDefaultBranches: boolean;
+  /** Code anchor weights by setting. Optional; defaults to `ANCHOR_WEIGHTS` (normal 0.7, critical 1). */
+  anchorWeights?: { readonly critical: number; readonly normal: number };
+  /**
+   * Also count removed plain lowercase words (`router`, `pool`) that appear in page code as identifier
+   * evidence. Off by default (D26): it caused the only false positive on the demo set.
+   */
+  plainWordIdentifiers?: boolean;
 }
 
 export const DEFAULT_CONFIG: Readonly<MatcherConfig> = {

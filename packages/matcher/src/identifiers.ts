@@ -2,6 +2,13 @@ import type { FileDiff } from './diff.js';
 
 /** Identifier candidates: 4+ characters, starting with a letter or underscore (detection.md). */
 const TOKEN = /[A-Za-z_][A-Za-z0-9_.-]{3,}/g;
+/** Long CLI flags (`--count`, `--cleanup-on-fail`), kept with their dashes so they are code-shaped. */
+const FLAG = /(?<![\w-])--[A-Za-z][A-Za-z0-9-]*[A-Za-z0-9]/g;
+/**
+ * HTTP route paths of 2+ segments (`/v1/refunds`, `/v2/charges/:id`), not preceded by a word character,
+ * `.`, `:` or `/`, so relative imports (`../db/pool.js`) and URLs (`https://host/x/y`) are skipped.
+ */
+const ROUTE = /(?<![\w.:/])\/[A-Za-z0-9_{}:-]+(?:\/[A-Za-z0-9_{}:.-]+)+/g;
 
 /**
  * Lowercase words that are too common in code to be evidence on their own.
@@ -20,24 +27,38 @@ const STOPWORDS = new Set([
   'will', 'with', 'yield', 'your',
   'TODO', 'FIXME', 'NOTE', 'TRUE', 'FALSE', 'NULL', 'NONE', 'HTTP', 'HTTPS', 'JSON', 'YAML', 'HTML',
   'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS',
+  // SQL and shell keywords: ALL CAPS, so code-shaped, but they are language, not identifiers (D26).
+  'SELECT', 'FROM', 'WHERE', 'INSERT', 'INTO', 'VALUES', 'UPDATE', 'RETURNING', 'JOIN', 'LEFT', 'RIGHT', 'INNER',
+  'OUTER', 'ORDER', 'GROUP', 'LIMIT', 'OFFSET', 'HAVING', 'UNION', 'CREATE', 'TABLE', 'INDEX', 'ALTER', 'DROP',
+  'WITH', 'CASE', 'WHEN', 'THEN', 'ELSE', 'BEGIN', 'COMMIT', 'ROLLBACK', 'COUNT', 'COALESCE', 'DISTINCT', 'LIKE',
+  'BETWEEN', 'EXISTS', 'CONFLICT', 'NOTHING', 'SKIP', 'LOCKED', 'INTERVAL', 'PRIMARY', 'FOREIGN', 'REFERENCES',
+  'DEFAULT', 'UNIQUE', 'CASCADE', 'ASC', 'DESC', 'EOF',
 ]);
 
-/** Splits text into identifier-like tokens, trimming trailing `.` and `-` (sentence punctuation). */
+/**
+ * Splits text into identifier-like tokens, trimming trailing `.` and `-` (sentence punctuation).
+ * Long CLI flags (`--count`) and HTTP route paths (`/v1/refunds`) are also returned whole, after the other tokens.
+ */
 export function tokenize(text: string): string[] {
   const out: string[] = [];
   for (const [raw] of text.matchAll(TOKEN)) {
     const token = raw.replace(/[.-]+$/, '');
     if (token.length >= 4) out.push(token);
   }
+  for (const [flag] of text.matchAll(FLAG)) if (flag.length >= 5) out.push(flag);
+  for (const [raw] of text.matchAll(ROUTE)) {
+    const route = raw.replace(/[.:-]+$/, '');
+    if (/[A-Za-z]{3}/.test(route)) out.push(route);
+  }
   return out;
 }
 
 /**
  * Code-shaped identifiers are unlikely to be plain prose: they contain `_`, a digit, an inner `.` or `-`,
- * a lower-to-upper case change, or are ALL CAPS. These are matched against all page text.
+ * a lower-to-upper case change, are ALL CAPS, or are a `--flag` or `/route/path`. These are matched against all page text.
  */
 export function isCodeShaped(token: string): boolean {
-  return /[_\d.-]/.test(token) || /[a-z][A-Z]/.test(token) || /^[A-Z]{4,}$/.test(token);
+  return /[_\d./-]/.test(token) || /[a-z][A-Z]/.test(token) || /^[A-Z]{4,}$/.test(token);
 }
 
 /** Plain lowercase words (`timeout`, `wait`) are matched only against the page's code. */
@@ -48,19 +69,28 @@ function isPlainWord(token: string): boolean {
 export interface RemovedIdentifiers {
   /** Matched against all page text. */
   codeShaped: ReadonlySet<string>;
-  /** Matched against page code blocks and inline code only. */
+  /**
+   * Plain lowercase words (`router`, `wait`). Not evidence by default (D26): a change-local diff cannot
+   * tell whether the word still lives elsewhere in the repo. Matched against page code only, and only
+   * when `MatcherConfig.plainWordIdentifiers` is on.
+   */
   plain: ReadonlySet<string>;
 }
 
 /**
  * Identifiers on removed (`-`) lines that no added (`+`) line still uses, across the whole change.
  * Change-wide, so a rename that moves code between files still counts as one change.
+ *
+ * Files in `deletedPaths` add no removed identifiers (D26): every token of a deleted file is on a `-`
+ * line, yet most of them (`charge_id`, `pool.query`) live on elsewhere in the repo. The deletion itself
+ * is already scored at full magnitude through path anchors, and what it really retires usually also
+ * leaves a modified file (a flag in config, a route registration).
  */
-export function removedIdentifiers(diffs: readonly FileDiff[]): RemovedIdentifiers {
+export function removedIdentifiers(diffs: readonly FileDiff[], deletedPaths: ReadonlySet<string> = new Set()): RemovedIdentifiers {
   const added = new Set(diffs.flatMap((d) => d.added.flatMap(tokenize)));
   const codeShaped = new Set<string>();
   const plain = new Set<string>();
-  for (const token of diffs.flatMap((d) => d.removed.flatMap(tokenize))) {
+  for (const token of diffs.filter((d) => !deletedPaths.has(d.path)).flatMap((d) => d.removed.flatMap(tokenize))) {
     if (added.has(token) || STOPWORDS.has(token)) continue;
     if (isCodeShaped(token)) codeShaped.add(token);
     else if (isPlainWord(token)) plain.add(token);

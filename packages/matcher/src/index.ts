@@ -1,4 +1,5 @@
 export {
+  ANCHOR_WEIGHTS,
   COSMETIC_FACTOR,
   DEFAULT_CONFIG,
   DEFAULT_IGNORE_GLOBS,
@@ -26,4 +27,4 @@ export {
 } from './state.js';
 export { suggestAnchors, type SuggestedAnchor } from './suggest.js';
 export type { DriftEvent, MatchResult, RenameProposal, RevertInfo, SkipReason } from './types.js';
-export { effectiveWeight, severityFor } from './weights.js';
+export { effectiveWeight, jiraDampener, severityFor } from './weights.js';

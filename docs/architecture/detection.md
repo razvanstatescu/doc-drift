@@ -26,7 +26,7 @@ on ChangeRecord(cr):                       // from relay or Jira trigger
   enqueue(recompute pages touched, delayInSeconds=600)   // debounce bursts of PRs
 ```
 
-Note: the identifier and hash boosts apply only when `s > 0`, meaning a path match happened first. The implementation (`packages/matcher`) adds a 0.5 cosmetic factor for comment- or whitespace-only edits and stricter identifier rules: see D24.
+Note: the identifier and hash boosts apply only when `s > 0`, meaning a path match happened first. The implementation (`packages/matcher`) adds a cosmetic factor (0.4) for comment- or whitespace-only edits, stricter identifier rules, and weights normal 0.7 / critical 1.0. See D24 and D26, and `packages/matcher/README.md` for the current rules.
 
 ## Jira rules
 
@@ -67,6 +67,10 @@ So the handler filters on changelog `fieldId` and then fetches the issue (`reque
 - **Non-default branches:** merges are ignored (setting).
 - **Reverts:** close the events of the reverted PR with the reason `reverted`.
 - **Noise control:** ignore globs (defaults in [features.md](../product/features.md)), a 24h notification cap, and a dismiss dampener: each dismissal takes 0.1 off that anchor, with a floor of 0.3.
+
+## Evaluation (current results)
+
+40 scenarios, 727 page decisions (`pnpm --filter @dds/matcher eval`, report in `fixtures/eval-report.json`): **precision 1.00, recall 0.94** (TP 30, FP 0, FN 2, TN 695). 0 alerts on test-only and lockfile changes, and severity matches on all 25 flags that state one. The 2 known misses are pages that state a changed Helm bound only in prose (edge-20, `knownMiss`). Before tuning, the same set scored precision 0.59 with 22 false positives.
 
 ## Evaluation plan
 

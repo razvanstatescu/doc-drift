@@ -1,10 +1,25 @@
 import type { Binding, Severity } from '@dds/shared';
-import { BASE_WEIGHT, DAMPENER_FLOOR, DISMISS_PENALTY, HIGH_SEVERITY_SCORE } from './config.js';
+import { ANCHOR_WEIGHTS, DAMPENER_FLOOR, DISMISS_PENALTY, HIGH_SEVERITY_SCORE, type MatcherConfig } from './config.js';
 
-/** Anchor weight after the dismiss dampener: −0.1 per dismissal, floor 0.3. */
-export function effectiveWeight(binding: Binding): number {
+type Weights = NonNullable<MatcherConfig['anchorWeights']>;
+
+/**
+ * Weight of a code anchor after the dismiss dampener: the anchor's base weight (normal 0.7,
+ * critical 1, D26) minus 0.1 per dismissal, floor 0.3.
+ */
+export function effectiveWeight(binding: Binding, weights: Weights = ANCHOR_WEIGHTS): number {
   const dismissals = Math.max(0, binding.dismissCount ?? 0);
-  return Math.max(DAMPENER_FLOOR, BASE_WEIGHT - DISMISS_PENALTY * dismissals);
+  const base = binding.weight === 'critical' ? weights.critical : weights.normal;
+  return Math.max(DAMPENER_FLOOR, base - DISMISS_PENALTY * dismissals);
+}
+
+/**
+ * Multiplier for Jira rule scores: only the dismiss dampener (1 minus 0.1 per dismissal, floor 0.3).
+ * Jira rules are already scored per signal, so `normal` and `critical` change severity only.
+ */
+export function jiraDampener(binding: Binding): number {
+  const dismissals = Math.max(0, binding.dismissCount ?? 0);
+  return Math.max(DAMPENER_FLOOR, 1 - DISMISS_PENALTY * dismissals);
 }
 
 /** High if the score is at least 0.8, an anchored file was removed or renamed, or the anchor is critical. */

@@ -8,7 +8,7 @@
   "delete": [],
   "expected": {
     "alert": false,
-    "summary": "No alert. Rotate payments secrets anchors scripts/rotate-secrets.sh at normal weight: a 1-line change scores 0.43, below the 0.5 threshold, and the removed comment line carries no identifier or snippet the page quotes.",
+    "summary": "No alert. Rotate payments secrets anchors scripts/rotate-secrets.sh at normal weight: a 1-line comment-only change scores 0.17 (normal weight 0.7, cosmetic factor 0.4; D26), below the 0.5 threshold, and the removed comment line carries no identifier or snippet the page quotes.",
     "pages": [],
     "mustNotFlag": ["Rotate payments secrets"],
     "note": "This outcome depends on normal weight being about 0.7. If normal weight is 1.0 the score is 0.62 and the page flags Medium; then the matcher needs a comment-only dampener to keep this case quiet."

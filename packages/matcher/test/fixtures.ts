@@ -8,6 +8,11 @@ export const SCENARIO_DIR = fileURLToPath(new URL('../../../fixtures/scenarios/'
 
 export interface ExpectedFlag {
   pageId: string;
+  /**
+   * The page has truly drifted but the matcher is known not to see it (for example a number stated only
+   * in prose). Still counted as a false negative in the eval; not a fixture failure. Say why.
+   */
+  knownMiss?: string;
   minScore?: number;
   maxScore?: number;
   severity?: Severity;
@@ -27,6 +32,8 @@ export interface Fixture {
   label: 'drift' | 'no_drift';
   title: string;
   notes: string;
+  /** Where the fixture comes from: hand-written (absent), the demo seed, a Jira beat, or a generated edge case. */
+  source?: 'demo' | 'jira-beat' | 'edge';
   config?: Partial<MatcherConfig>;
   pages: PageSource[];
   bindings: Binding[];
@@ -43,10 +50,17 @@ export function loadFixtures(): Fixture[] {
 /** One (step, page) decision: should it flag, did it flag. */
 export interface PageOutcome {
   fixtureId: string;
+  step: number;
   pageId: string;
   expected: boolean;
   actual: boolean;
   score?: number;
+  severity?: Severity;
+  expectedSeverity?: Severity;
+  reasons?: string[];
+  /** Strongest score at threshold 0 (any path or Jira match), for analysing misses. */
+  rawScore?: number;
+  knownMiss?: string;
 }
 
 export interface FixtureRun {
@@ -54,8 +68,8 @@ export interface FixtureRun {
   outcomes: PageOutcome[];
 }
 
-/** Runs every step of a fixture and compares the result with its expectations. */
-export function runFixture(fx: Fixture): FixtureRun {
+/** Runs every step of a fixture and compares the result with its expectations. `override` replaces config fields (sweeps). */
+export function runFixture(fx: Fixture, override: Partial<MatcherConfig> = {}): FixtureRun {
   const failures: string[] = [];
   const outcomes: PageOutcome[] = [];
   const index = indexPages(fx.pages);
@@ -66,7 +80,8 @@ export function runFixture(fx: Fixture): FixtureRun {
       failures.push(`${at}: invalid change record: ${parsed.errors.join('; ')}`);
       return;
     }
-    const result = scoreChange(parsed.value, fx.bindings, index, fx.config);
+    const config = { ...fx.config, ...override };
+    const result = scoreChange(parsed.value, fx.bindings, index, config);
     const want = step.expect;
     if (result.kind !== want.outcome) failures.push(`${at}: outcome ${result.kind}, expected ${want.outcome}`);
     if (want.skipReason && (result.kind !== 'skipped' || result.reason !== want.skipReason)) {
@@ -76,6 +91,8 @@ export function runFixture(fx: Fixture): FixtureRun {
       failures.push(`${at}: expected revert of "${want.revertedTitle}"`);
     }
     const events = result.kind === 'scored' ? result.events : [];
+    const raw = result.kind === 'scored' ? scoreChange(parsed.value, fx.bindings, index, { ...config, threshold: 0 }) : undefined;
+    const rawEvents = raw?.kind === 'scored' ? raw.events : [];
     if (want.renameProposals) {
       const got = result.kind === 'scored' ? result.renameProposals.map(({ bindingId, from, to }) => ({ bindingId, from, to })) : [];
       if (JSON.stringify(got) !== JSON.stringify(want.renameProposals)) {
@@ -86,18 +103,28 @@ export function runFixture(fx: Fixture): FixtureRun {
       const pageEvents = events.filter((e) => e.pageId === page.pageId);
       const top = pageEvents[0];
       const expected = want.flagged.find((f) => f.pageId === page.pageId);
-      outcomes.push({ fixtureId: fx.id, pageId: page.pageId, expected: !!expected, actual: !!top, ...(top && { score: top.score }) });
+      const severity: Severity | undefined = top && (pageEvents.some((e) => e.severity === 'high') ? 'high' : 'medium');
+      outcomes.push({
+        fixtureId: fx.id,
+        step: i + 1,
+        pageId: page.pageId,
+        expected: !!expected,
+        actual: !!top,
+        ...(top && { score: top.score, severity, reasons: top.reasons }),
+        ...(expected?.severity && { expectedSeverity: expected.severity }),
+        ...(expected?.knownMiss && { knownMiss: expected.knownMiss }),
+        ...(rawEvents.some((e) => e.pageId === page.pageId) && { rawScore: Math.max(...rawEvents.filter((e) => e.pageId === page.pageId).map((e) => e.score)) }),
+      });
       if (!expected) {
         if (top) failures.push(`${at}: page ${page.pageId} flagged (${top.score}) but should not: ${top.reasons.join('; ')}`);
         continue;
       }
       if (!top) {
-        failures.push(`${at}: page ${page.pageId} should flag but did not`);
+        if (!expected.knownMiss) failures.push(`${at}: page ${page.pageId} should flag but did not`);
         continue;
       }
       if (expected.minScore !== undefined && top.score < expected.minScore) failures.push(`${at}: page ${page.pageId} score ${top.score} < ${expected.minScore}`);
       if (expected.maxScore !== undefined && top.score > expected.maxScore) failures.push(`${at}: page ${page.pageId} score ${top.score} > ${expected.maxScore}`);
-      const severity = pageEvents.some((e) => e.severity === 'high') ? 'high' : 'medium';
       if (expected.severity && severity !== expected.severity) failures.push(`${at}: page ${page.pageId} severity ${severity}, expected ${expected.severity}`);
     }
   });

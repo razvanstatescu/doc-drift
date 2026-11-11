@@ -175,7 +175,7 @@ The expected severities were checked by replaying the scoring in [docs/architect
 
 - **Normal weight is about 0.7** (critical 1.0). Scenario 06 and the 8 quiet pages in 10 score 0.43 to 0.46. With normal at 1.0 they would cross 0.5.
 - **Removed identifiers are net-removed**: on `-` lines and not on `+` lines, and identifier-like (contains `_`, `.` or `-`, or camelCase). Counting every `-` line token adds 6 false positives in 10 and 4 in 01, mostly through the token `payments-api`.
-- **Jira scores are weighted**, so the 2 ADR Jira anchors are critical.
+- **Jira scores are not scaled by anchor weight** (D26). Critical only raises severity to High. The 2 ADR Jira anchors are critical for that reason.
 
 ## Resetting for another take
 

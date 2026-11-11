@@ -12,6 +12,22 @@ describe('tokenize', () => {
       'cleanup-on-fail',
       'then',
       'log.info',
+      '--cleanup-on-fail',
+    ]);
+  });
+
+  it('keeps HTTP routes whole, but not relative imports or URLs', () => {
+    expect(tokenize("router.post('/v1/refunds', h); import x from '../db/pool.js'; fetch('https://acme.dev/v2/charges')")).toEqual([
+      'router.post',
+      'refunds',
+      'import',
+      'from',
+      'pool.js',
+      'fetch',
+      'https',
+      'acme.dev',
+      'charges',
+      '/v1/refunds',
     ]);
   });
 });
@@ -29,7 +45,7 @@ describe('removedIdentifiers', () => {
       fileDiff('scripts/rollback.sh', ['TIMEOUT="${ROLLBACK_TIMEOUT:-300}"', 'helm rollback payments --wait'], ['TIMEOUT="${ROLLBACK_TIMEOUT_SECS:-300}"', 'helm rollback payments']),
     );
     const ids = removedIdentifiers(diffs);
-    expect([...ids.codeShaped]).toEqual(['ROLLBACK_TIMEOUT']);
+    expect([...ids.codeShaped]).toEqual(['ROLLBACK_TIMEOUT', '--wait']);
     expect([...ids.plain]).toEqual(['wait']);
   });
 
@@ -38,10 +54,15 @@ describe('removedIdentifiers', () => {
     expect(removedIdentifiers(diffs).codeShaped.size).toBe(0);
   });
 
-  it('drops stopwords, short tokens and capitalized prose words', () => {
-    const diffs = parseUnifiedDiff(fileDiff('a.ts', ['// Return the TODO list from this function', 'POST /v1/refunds'], []));
+  it('drops stopwords, SQL keywords, short tokens and capitalized prose words', () => {
+    const diffs = parseUnifiedDiff(fileDiff('a.ts', ['// Return the TODO list from this function', 'POST /v1/refunds', 'SELECT id FROM refunds WHERE status = 1'], []));
     const ids = removedIdentifiers(diffs);
-    expect([...ids.codeShaped]).toEqual([]);
-    expect([...ids.plain]).toEqual(['refunds']);
+    expect([...ids.codeShaped]).toEqual(['/v1/refunds']);
+    expect([...ids.plain]).toEqual(['refunds', 'status']);
+  });
+
+  it('skips files in deletedPaths', () => {
+    const diffs = parseUnifiedDiff(fileDiff('gone.ts', ['export const REFUNDS_V1 = true;'], []) + fileDiff('config.ts', ['REFUNDS_V1_ENABLED=true'], []));
+    expect([...removedIdentifiers(diffs, new Set(['gone.ts'])).codeShaped]).toEqual(['REFUNDS_V1_ENABLED']);
   });
 });

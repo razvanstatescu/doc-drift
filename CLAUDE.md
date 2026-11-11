@@ -4,7 +4,7 @@ A Forge app for Atlassian **Codegeist 2026**. It anchors Confluence pages to the
 
 ## Status
 
-**Building: milestone M0** (scaffold, matcher, spikes), started 2026-11-11. The plan, milestones and agent tracks are in [docs/implementation-plan.md](docs/implementation-plan.md). We are in week 1 of 6. Spikes come first ([docs/hackathon/risks-and-spikes.md](docs/hackathon/risks-and-spikes.md)); the real apps (`apps/core`, `apps/bitbucket-relay`) start in M1.
+**Building: milestone M1** (M0 done 2026-11-11). `apps/core` (app `12e968a1-a45d-4524-ba28-d47e2315db1a`) and `apps/bitbucket-relay` (app `409a6e1e-dd37-482c-b30f-e56d322b4035`) are deployed to development; each has a README with deploy steps and browser checks. The plan, milestones and agent tracks are in [docs/implementation-plan.md](docs/implementation-plan.md). We are in week 1 of 6. Spikes come first ([docs/hackathon/risks-and-spikes.md](docs/hackathon/risks-and-spikes.md)); build with `pnpm` from the root; the core app needs the packages' `dist` built before `forge deploy` (`pnpm deploy:dev` in apps/core).
 
 ## Where knowledge lives
 

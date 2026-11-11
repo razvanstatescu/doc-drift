@@ -1,0 +1,26 @@
+<table data-layout="default"><tbody>
+<tr><th><p>Status</p></th><td><p>Accepted, implemented</p></td></tr>
+<tr><th><p>Date</p></th><td><p>2026-05-19</p></td></tr>
+<tr><th><p>Deciders</p></th><td><p>Lena, Marco, Dana</p></td></tr>
+<tr><th><p>Owner</p></th><td><p>Lena (Payments engineer)</p></td></tr>
+<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/PAY-140">PAY-140</a>, <a href="https://{{ATLASSIAN_SITE}}/browse/PAY-141">PAY-141</a></p></td></tr>
+</tbody></table>
+<h2>Context</h2>
+<p>Charges used to call the PSP capture API inside the HTTP request. When the PSP slowed down, our request threads filled up, latency on <code>POST /v2/charges</code> went above 3 seconds, and checkout timed out. The PSP was slow; we made it look like we were down.</p>
+<h2>Decision</h2>
+<p>Capture moves out of the request path. The API writes a <code>settlement_jobs</code> row in the same transaction as the charge and answers <code>201</code>. A separate worker deployment claims jobs and talks to the PSP.</p>
+<p>The queue is a Postgres table, not a message broker. Workers claim rows with <code>FOR UPDATE SKIP LOCKED</code>, so many workers can run without coordination. The worker is <code>src/workers/settlement-worker.ts</code>.</p>
+<h2>Options considered</h2>
+<table data-layout="default"><tbody>
+<tr><th><p>Option</p></th><th><p>For</p></th><th><p>Against</p></th></tr>
+<tr><td><p><strong>Postgres table with SKIP LOCKED (chosen)</strong></p></td><td><p>Job and charge commit together. No new system to run.</p></td><td><p>Load on the main database. Fine up to roughly 500 jobs per second.</p></td></tr>
+<tr><td><p>RabbitMQ</p></td><td><p>Built for this, good tooling</p></td><td><p>Needs an outbox to stay consistent with the charge. One more system for on-call.</p></td></tr>
+<tr><td><p>Managed cloud queue</p></td><td><p>No operations work</p></td><td><p>Same outbox problem, and ties settlement to one cloud provider</p></td></tr>
+</tbody></table>
+<h2>Consequences</h2>
+<ul>
+<li><p>Charges are <code>pending</code> for seconds to minutes after <code>201</code>. Merchants were told to rely on the <code>charge.settled</code> webhook, not the create response.</p></li>
+<li><p>Settlement lag became a metric we watch, with an alert at 5,000 pending jobs.</p></li>
+<li><p>Operations need new runbooks for scaling and draining. See <ac:link><ri:page ri:content-title="Scale payment workers" /></ac:link> and <ac:link><ri:page ri:content-title="Drain the settlement queue" /></ac:link>.</p></li>
+<li><p>We revisit the broker option if we pass 300 jobs per second sustained.</p></li>
+</ul>

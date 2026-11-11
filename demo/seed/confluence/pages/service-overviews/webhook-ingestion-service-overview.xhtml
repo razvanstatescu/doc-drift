@@ -1,0 +1,30 @@
+<table data-layout="default"><tbody>
+<tr><th><p>Owner</p></th><td><p>Priya (Payments engineer)</p></td></tr>
+<tr><th><p>Endpoint</p></th><td><p><code>POST /webhooks/psp</code> on <code>payments-api</code></p></td></tr>
+<tr><th><p>Last reviewed</p></th><td><p>2026-10-27</p></td></tr>
+</tbody></table>
+<h2>What it does</h2>
+<p>The PSP tells us about charge outcomes by webhook. payments-api verifies each event, stores it once, and updates the charge. The handler is <code>src/routes/webhooks.ts</code>.</p>
+<h2>Verification</h2>
+<p>The PSP signs the raw request body with HMAC-SHA256 and sends the hex digest in the <code>psp-signature</code> header. We compute the same digest with <code>WEBHOOK_SIGNING_SECRET</code> and compare in constant time. A mismatch returns <code>401 signature_invalid</code> and nothing is stored.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">bash</ac:parameter><ac:parameter ac:name="title">Send a signed test event to staging</ac:parameter><ac:plain-text-body><![CDATA[BODY='{"id":"evt_test_1","type":"charge.settled","data":{"charge_id":"ch_123"}}'
+SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$WEBHOOK_SIGNING_SECRET" -hex | awk '{print $2}')
+curl -sS -X POST https://payments.staging.acme.dev/webhooks/psp \
+  -H "content-type: application/json" -H "psp-signature: $SIG" -d "$BODY"]]></ac:plain-text-body></ac:structured-macro>
+<h2>Processing</h2>
+<ol>
+<li><p>Insert into <code>webhook_events</code>. The PSP event id is the primary key, so a duplicate delivery is ignored.</p></li>
+<li><p>For <code>charge.settled</code>, set the charge to <code>settled</code> with <code>settled_at</code>.</p></li>
+<li><p>If anything fails, store the event in <code>webhook_dead_letters</code> with the error, and still answer <code>200</code>. The PSP retries non-2xx answers for 3 days, which would hide the problem; we prefer to replay ourselves.</p></li>
+</ol>
+<h2>Event types we handle</h2>
+<table data-layout="default"><tbody>
+<tr><th><p>Type</p></th><th><p>Effect</p></th></tr>
+<tr><td><p><code>charge.settled</code></p></td><td><p>Charge becomes <code>settled</code></p></td></tr>
+<tr><td><p>anything else</p></td><td><p>Stored in <code>webhook_events</code> only, for audit</p></td></tr>
+</tbody></table>
+<h2>Operations</h2>
+<ul>
+<li><p>Dead letters: <ac:link><ri:page ri:content-title="Replay failed PSP webhooks" /></ac:link>.</p></li>
+<li><p>Secret rotation: <ac:link><ri:page ri:content-title="Rotate payments secrets" /></ac:link>.</p></li>
+</ul>

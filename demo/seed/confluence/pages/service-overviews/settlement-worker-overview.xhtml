@@ -1,0 +1,35 @@
+<table data-layout="default"><tbody>
+<tr><th><p>Owner</p></th><td><p>Lena (Payments engineer)</p></td></tr>
+<tr><th><p>Deployment</p></th><td><p><code>payments-workers</code> (same image as <code>payments-api</code>, <code>PAYMENTS_ROLE=worker</code>)</p></td></tr>
+<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/PAY-140">PAY-140</a> Async settlement worker</p></td></tr>
+<tr><th><p>Last reviewed</p></th><td><p>2026-10-23</p></td></tr>
+</tbody></table>
+<h2>What it does</h2>
+<p>When a charge is created, the API writes a row to <code>settlement_jobs</code> and returns at once. The settlement worker picks those rows up and submits the charges to the PSP for capture. The PSP confirms with a <code>charge.settled</code> webhook, which marks the charge <code>settled</code>. The decision to move this out of the request path is <ac:link><ri:page ri:content-title="ADR-014: Async settlement worker queue" /></ac:link>.</p>
+<h2>Job states</h2>
+<table data-layout="default"><tbody>
+<tr><th><p>Status</p></th><th><p>Meaning</p></th></tr>
+<tr><td><p><code>pending</code></p></td><td><p>Waiting for a worker</p></td></tr>
+<tr><td><p><code>held</code></p></td><td><p>Created during a drain; released by the resume step</p></td></tr>
+<tr><td><p><code>submitted</code></p></td><td><p>Sent to the PSP, waiting for the webhook</p></td></tr>
+</tbody></table>
+<h2>How work is claimed</h2>
+<p>Each worker pod runs <code>PAYMENTS_WORKER_CONCURRENCY</code> slots (8 by default). Each slot claims up to <code>SETTLEMENT_BATCH_SIZE</code> rows (50) in one transaction:</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">sql</ac:parameter><ac:plain-text-body><![CDATA[SELECT id, charge_id FROM settlement_jobs
+ WHERE status = 'pending'
+ ORDER BY created_at
+ LIMIT $1
+ FOR UPDATE SKIP LOCKED]]></ac:plain-text-body></ac:structured-macro>
+<p><code>SKIP LOCKED</code> means slots and pods never wait on each other, so adding pods adds throughput until the database becomes the limit. When a slot finds nothing to do it sleeps for 2 seconds.</p>
+<h2>Scaling</h2>
+<p>The HPA scales on CPU between 2 and 8 pods. Queue depth does not drive it yet (<a href="https://{{ATLASSIAN_SITE}}/browse/PAY-165">PAY-165</a>). For bursts, follow <ac:link><ri:page ri:content-title="Scale payment workers" /></ac:link>.</p>
+<h2>Failure handling</h2>
+<ul>
+<li><p>If a batch fails, its transaction rolls back and the rows go back to <code>pending</code> for the next claim.</p></li>
+<li><p>If the PSP never sends the webhook, the charge stays in <code>settling</code>. Dead-lettered webhooks are handled in <ac:link><ri:page ri:content-title="Replay failed PSP webhooks" /></ac:link>.</p></li>
+</ul>
+<h2>Dashboards</h2>
+<ul>
+<li><p><strong>Pending settlement jobs</strong>: alert at 5,000 for 10 minutes.</p></li>
+<li><p><strong>Settlement lag p99</strong>: target under 15 minutes.</p></li>
+</ul>

@@ -1,0 +1,51 @@
+<table data-layout="default"><tbody>
+<tr><th><p>Owner</p></th><td><p>Marco (Payments tech lead)</p></td></tr>
+<tr><th><p>Repository</p></th><td><p><code>nano-soft-dev/payments-api</code> (Bitbucket), branch <code>main</code></p></td></tr>
+<tr><th><p>Runtime</p></th><td><p>Node.js 24, TypeScript, Postgres 16 via <code>pg</code></p></td></tr>
+<tr><th><p>Tier</p></th><td><p>Tier 1. On-call: Platform rotation</p></td></tr>
+<tr><th><p>Last reviewed</p></th><td><p>2026-10-16</p></td></tr>
+</tbody></table>
+<h2>What it does</h2>
+<p>payments-api takes card charges and refunds from Acme's checkout and merchant tools, sends them to our payment service provider (PSP), and records the result. It is the only service that talks to the PSP. The same image runs in 2 roles:</p>
+<ul>
+<li><p><strong>api</strong> (<code>payments-api</code> deployment, 3 pods): the HTTP API and PSP webhooks.</p></li>
+<li><p><strong>worker</strong> (<code>payments-workers</code> deployment, 2 to 8 pods): settlement. See <ac:link><ri:page ri:content-title="Settlement worker overview" /></ac:link>.</p></li>
+</ul>
+<p>The role comes from <code>PAYMENTS_ROLE</code>, set by the Helm chart.</p>
+<h2>Endpoints</h2>
+<table data-layout="default"><tbody>
+<tr><th><p>Method and path</p></th><th><p>Purpose</p></th><th><p>Guide</p></th></tr>
+<tr><td><p><code>GET /healthz</code></p></td><td><p>Readiness probe</p></td><td><p>n/a</p></td></tr>
+<tr><td><p><code>POST /v2/charges</code>, <code>GET /v2/charges/:id</code></p></td><td><p>Create and read charges. Requires <code>Idempotency-Key</code>.</p></td><td><p><ac:link><ri:page ri:content-title="Charges API guide" /></ac:link></p></td></tr>
+<tr><td><p><code>POST /v2/refunds</code>, <code>GET /v2/refunds/:id</code></p></td><td><p>Full and partial refunds</p></td><td><p><ac:link><ri:page ri:content-title="Refunds API guide" /></ac:link></p></td></tr>
+<tr><td><p><code>POST /v1/refunds</code></p></td><td><p>Legacy full refunds. Deprecated, served only when <code>REFUNDS_V1_ENABLED</code> is true.</p></td><td><p><ac:link><ri:page ri:content-title="Refunds API guide" /></ac:link></p></td></tr>
+<tr><td><p><code>POST /webhooks/psp</code></p></td><td><p>Signed PSP events</p></td><td><p><ac:link><ri:page ri:content-title="Webhook ingestion service overview" /></ac:link></p></td></tr>
+</tbody></table>
+<h2>Configuration</h2>
+<p>All settings are environment variables, read once at start-up in <code>src/config.ts</code>. Non-secret values come from <code>deploy/helm/values.yaml</code>; secrets come from Vault through the <code>payments-secrets</code> ExternalSecret.</p>
+<table data-layout="default"><tbody>
+<tr><th><p>Variable</p></th><th><p>Source</p></th><th><p>Meaning</p></th></tr>
+<tr><td><p><code>PORT</code></p></td><td><p>default</p></td><td><p>HTTP port, 8080</p></td></tr>
+<tr><td><p><code>LOG_LEVEL</code></p></td><td><p>default</p></td><td><p><code>debug</code>, <code>info</code> (default), <code>warn</code> or <code>error</code></p></td></tr>
+<tr><td><p><code>PAYMENTS_ROLE</code></p></td><td><p>chart</p></td><td><p><code>api</code> or <code>worker</code></p></td></tr>
+<tr><td><p><code>PAYMENTS_DB_PRIMARY_HOST</code>, <code>PAYMENTS_DB_REPLICA_HOST</code></p></td><td><p>chart</p></td><td><p>Postgres hosts. Pool sizing is covered in <ac:link><ri:page ri:content-title="Fail over the payments database" /></ac:link>.</p></td></tr>
+<tr><td><p><code>PAYMENTS_DB_PASSWORD</code></p></td><td><p>Vault</p></td><td><p>Password for the <code>payments_app</code> role</p></td></tr>
+<tr><td><p><code>PSP_API_KEY</code>, <code>WEBHOOK_SIGNING_SECRET</code></p></td><td><p>Vault</p></td><td><p>PSP credentials. See <ac:link><ri:page ri:content-title="Rotate payments secrets" /></ac:link>.</p></td></tr>
+<tr><td><p><code>PAYMENTS_WORKER_CONCURRENCY</code>, <code>SETTLEMENT_BATCH_SIZE</code></p></td><td><p>default</p></td><td><p>Worker slots per pod (8) and rows per claim (50)</p></td></tr>
+<tr><td><p><code>SETTLEMENT_ENQUEUE_PAUSED</code></p></td><td><p>set during a drain</p></td><td><p>Holds new settlement jobs</p></td></tr>
+<tr><td><p><code>REFUNDS_V1_ENABLED</code></p></td><td><p>chart</p></td><td><p>Serves the deprecated <code>POST /v1/refunds</code>. Off by default.</p></td></tr>
+</tbody></table>
+<h2>Code layout</h2>
+<p>Everything lives under <code>src/</code>: <code>server.ts</code> starts the process, <code>routes/</code> holds the handlers, <code>db/</code> the connection pool, <code>workers/</code> the settlement worker. For a guided walk through the code, read <ac:link><ri:page ri:content-title="Payments codebase tour" /></ac:link>.</p>
+<h2>Dependencies</h2>
+<ul>
+<li><p><strong>Postgres</strong> (<code>payments-pg</code>, Patroni): charges, refunds, idempotency keys, settlement jobs, webhook events.</p></li>
+<li><p><strong>PSP</strong>: card authorisation, capture and refunds, over HTTPS.</p></li>
+<li><p><strong>Ledger service</strong>: consumes settled charges. See <ac:link><ri:page ri:content-title="Ledger service overview" /></ac:link>.</p></li>
+</ul>
+<h2>SLOs</h2>
+<ul>
+<li><p>Charge success rate (excluding card declines) at least 99.5% over 30 days.</p></li>
+<li><p><code>POST /v2/charges</code> p95 under 400 ms.</p></li>
+<li><p>Settlement within 15 minutes for 99% of charges.</p></li>
+</ul>

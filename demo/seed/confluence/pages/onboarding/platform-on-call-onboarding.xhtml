@@ -1,0 +1,29 @@
+<table data-layout="default"><tbody>
+<tr><th><p>Owner</p></th><td><p>Dana (Platform on-call lead)</p></td></tr>
+<tr><th><p>Audience</p></th><td><p>Engineers joining the Platform on-call rotation</p></td></tr>
+<tr><th><p>Last reviewed</p></th><td><p>2026-09-04</p></td></tr>
+</tbody></table>
+<h2>How the rotation works</h2>
+<ul>
+<li><p>Shifts are 1 week, Monday 10:00 to Monday 10:00 CET, with a primary and a secondary.</p></li>
+<li><p>The primary acknowledges pages within 5 minutes. The secondary takes over if the primary does not, and helps on any SEV1.</p></li>
+<li><p>You are not expected to fix everything alone. Escalating early is part of the job.</p></li>
+</ul>
+<h2>Before your first shift</h2>
+<ol>
+<li><p>Shadow 1 full shift with the current primary.</p></li>
+<li><p>Do 1 shift as secondary with an experienced primary.</p></li>
+<li><p>Read every page under <strong>Runbooks</strong> in this space, starting with <ac:link><ri:page ri:content-title="Payments incident response checklist" /></ac:link>.</p></li>
+<li><p>Run a rollback and a database failover in staging with a teammate watching. Staging is there for this.</p></li>
+<li><p>Check your access: production cluster read, Vault for payments, the incident tool and the status page.</p></li>
+</ol>
+<h2>During a shift</h2>
+<ul>
+<li><p>Hand over at the start: open incidents, ongoing changes, anything flaky.</p></li>
+<li><p>Keep your laptop and a charger within reach. You do not need to stay home.</p></li>
+<li><p>If you are paged more than twice in a night, the secondary takes the next morning's pages and you start late.</p></li>
+</ul>
+<h2>Runbooks are only useful if they are right</h2>
+<p>If a runbook step did not work as written, say so in the incident review and fix the page the same week. Every runbook has an owner on its first line; tell them if you change something important.</p>
+<h2>Compensation</h2>
+<p>On-call weeks are paid as agreed in the on-call policy from People Ops, plus time off in lieu for any night with more than 1 hour of work.</p>

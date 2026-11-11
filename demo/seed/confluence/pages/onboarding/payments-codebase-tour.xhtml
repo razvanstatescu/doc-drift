@@ -1,0 +1,31 @@
+<table data-layout="default"><tbody>
+<tr><th><p>Owner</p></th><td><p>Marco (Payments tech lead)</p></td></tr>
+<tr><th><p>Audience</p></th><td><p>Engineers in their first 2 weeks on Payments</p></td></tr>
+<tr><th><p>Last reviewed</p></th><td><p>2026-10-16</p></td></tr>
+</tbody></table>
+<h2>How to read this</h2>
+<p>Open <code>payments-api</code> next to this page and follow a charge from the HTTP request to settlement. It takes about an hour. You should have finished <ac:link><ri:page ri:content-title="Payments local development setup" /></ac:link> first.</p>
+<h2>1. Start-up: src/server.ts</h2>
+<p>The process reads its configuration with <code>loadConfig()</code> from <code>src/config.ts</code>, creates the Postgres pool with <code>createPool()</code> from <code>src/db/pool.ts</code>, and builds a <code>Router</code>. Routes are attached in one place:</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">typescript</ac:parameter><ac:plain-text-body><![CDATA[const router = new Router();
+registerRoutes(router, { config, pool });]]></ac:plain-text-body></ac:structured-macro>
+<p>The HTTP server itself lives at the bottom of <code>server.ts</code>: it reads the body, matches the route, calls the handler and writes JSON. If <code>PAYMENTS_ROLE</code> is <code>worker</code>, no server starts and the settlement worker runs instead.</p>
+<h2>2. Routing: src/routes/index.ts</h2>
+<p><code>registerRoutes()</code> calls one <code>registerX()</code> function per area: charges, refunds and webhooks. To add an endpoint, add it to the area's file; to add an area, add a file and call it from <code>registerRoutes()</code>. The router in <code>src/http/router.ts</code> is deliberately tiny: exact segments and <code>:params</code>, nothing else.</p>
+<h2>3. A charge: src/routes/charges.ts</h2>
+<ol>
+<li><p>The handler checks the <code>Idempotency-Key</code> header, then validates the body with <code>validateChargeRequest()</code>.</p></li>
+<li><p><code>withIdempotency()</code> from <code>src/idempotency.ts</code> returns the stored response if the key was seen in the last 24 hours. The reasoning is in <ac:link><ri:page ri:content-title="ADR-012: Idempotency keys for charge creation" /></ac:link>.</p></li>
+<li><p>The charge row and a <code>settlement_jobs</code> row are inserted, and the API answers <code>201</code> without waiting for the PSP.</p></li>
+</ol>
+<h2>4. Settlement: src/workers/settlement-worker.ts</h2>
+<p><code>startSettlementWorker()</code> runs a loop per slot that claims jobs with <code>FOR UPDATE SKIP LOCKED</code>. Read <ac:link><ri:page ri:content-title="Settlement worker overview" /></ac:link> next to this file.</p>
+<h2>5. The PSP answers: src/routes/webhooks.ts</h2>
+<p>The <code>charge.settled</code> webhook closes the loop. Note how failures go to a dead-letter table instead of returning an error to the PSP.</p>
+<h2>Conventions</h2>
+<ul>
+<li><p>Money is always an integer in minor units, in SQL and in JSON. 12.50 EUR is <code>1250</code>.</p></li>
+<li><p>Handlers return <code>{ status, body }</code>; they never touch the raw response.</p></li>
+<li><p>Error bodies are <code>{ "error": "snake_case_code" }</code>. Clients match on the code, so never reword one.</p></li>
+<li><p>SQL lives next to the handler that uses it. There is no ORM.</p></li>
+</ul>

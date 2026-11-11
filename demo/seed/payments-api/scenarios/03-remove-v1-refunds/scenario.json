@@ -1,0 +1,31 @@
+{
+  "id": "03-remove-v1-refunds",
+  "branch": "scenario/remove-v1-refunds",
+  "title": "Remove the v1 refunds endpoint (PAY-158)",
+  "description": "Deletes src/routes/refunds-v1.ts and the REFUNDS_V1_ENABLED flag. All callers moved to POST /v2/refunds. Implements ADR-009.",
+  "kind": "drift",
+  "dependsOn": "02-raise-db-pool",
+  "delete": ["src/routes/refunds-v1.ts"],
+  "expected": {
+    "alert": true,
+    "summary": "2 pages flag. Refunds API guide (High: anchored file deleted). Payments API service overview (Medium: src/** glob on a deleted file plus removed identifier REFUNDS_V1_ENABLED).",
+    "pages": [
+      {
+        "title": "Refunds API guide",
+        "severity": "High",
+        "why": "Exact critical anchor src/routes/refunds-v1.ts was removed."
+      },
+      {
+        "title": "Payments API service overview",
+        "severity": "Medium",
+        "why": "Glob src/** (normal) on a removed file scores 0.42; the page lists REFUNDS_V1_ENABLED, a removed identifier, so +0.3 gives 0.72. Glob anchors do not count as 'anchored file removed'."
+      }
+    ],
+    "mustNotFlag": [
+      "Payments codebase tour",
+      "Payments local development setup",
+      "ADR-009: Retire the v1 refunds API"
+    ],
+    "mustNotFlagWhy": "The codebase tour (src/** glob) mentions no removed identifier. Local development setup anchors src/config.ts but the change there is 1 line and it does not mention REFUNDS_V1_ENABLED. ADR-009 is anchored to Jira only."
+  }
+}

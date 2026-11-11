@@ -1,0 +1,40 @@
+<table data-layout="default"><tbody>
+<tr><th><p>Owner</p></th><td><p>Sam (Payments engineer)</p></td></tr>
+<tr><th><p>Time needed</p></th><td><p>About 30 minutes</p></td></tr>
+<tr><th><p>Last reviewed</p></th><td><p>2026-10-30</p></td></tr>
+</tbody></table>
+<h2>Before you start</h2>
+<ul>
+<li><p>Node.js 24. The repo will not build on 22. With nvm: <code>nvm install 24 &amp;&amp; nvm use 24</code>.</p></li>
+<li><p>Docker, for a local Postgres.</p></li>
+<li><p>Read access to <code>nano-soft-dev/payments-api</code> in Bitbucket. Ask in the team channel if you do not have it.</p></li>
+</ul>
+<h2>1. Clone and install</h2>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[git clone git@bitbucket.org:nano-soft-dev/payments-api.git
+cd payments-api
+npm ci]]></ac:plain-text-body></ac:structured-macro>
+<h2>2. Start Postgres</h2>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[docker run -d --name payments-pg -p 5432:5432 \
+  -e POSTGRES_USER=payments_app -e POSTGRES_PASSWORD=local-only -e POSTGRES_DB=payments \
+  postgres:16]]></ac:plain-text-body></ac:structured-macro>
+<p>Ask a teammate for the latest schema dump, or run the migrations from the <code>payments-migrations</code> repo.</p>
+<h2>3. Configure</h2>
+<p>Copy <code>.env.example</code> to <code>.env</code>. Every setting is read in <code>src/config.ts</code>; anything without a default must be set or the process exits at start-up with <code>missing required env var</code>. For local work these lines matter most:</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">bash</ac:parameter><ac:parameter ac:name="title">.env</ac:parameter><ac:plain-text-body><![CDATA[PORT=8080
+LOG_LEVEL=debug
+PAYMENTS_DB_PRIMARY_HOST=localhost
+PAYMENTS_DB_PASSWORD=local-only
+PSP_API_KEY=psp_test_local
+WEBHOOK_SIGNING_SECRET=whsec_local]]></ac:plain-text-body></ac:structured-macro>
+<p><code>LOG_LEVEL=debug</code> prints every request. Use <code>info</code> if it gets noisy. Never put a real PSP key in <code>.env</code>; the test key is enough for everything local.</p>
+<h2>4. Run it</h2>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[npm run build
+set -a; . ./.env; set +a
+npm start
+curl -s localhost:8080/healthz]]></ac:plain-text-body></ac:structured-macro>
+<p>You should see <code>ok</code>. To run the settlement worker instead of the API, start it with <code>PAYMENTS_ROLE=worker npm start</code>.</p>
+<h2>5. Run the tests</h2>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[npm test]]></ac:plain-text-body></ac:structured-macro>
+<p>Tests use the built-in <code>node:test</code> runner and do not need the database.</p>
+<h2>Next</h2>
+<p>Read <ac:link><ri:page ri:content-title="Payments codebase tour" /></ac:link>, then pick a starter ticket labelled <code>good-first-issue</code> in the PAY project.</p>

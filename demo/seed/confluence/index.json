@@ -1,0 +1,710 @@
+{
+  "space": {
+    "key": "PLAT",
+    "name": "Platform",
+    "description": "Runbooks, service overviews, onboarding, ADRs and API guides for the payments platform. Demo space for Doc Drift Sentinel."
+  },
+  "folders": [
+    "Runbooks",
+    "Service overviews",
+    "Onboarding",
+    "Architecture decisions",
+    "API guides"
+  ],
+  "commonLabels": [
+    "payments",
+    "dds-demo"
+  ],
+  "weightScale": {
+    "critical": 1.0,
+    "normal": 0.7,
+    "note": "Assumed by the expected outcomes in scenarios 02 to 10. The matcher owns the real values; if normal is not about 0.7, re-check scenario 06."
+  },
+  "matcherAssumptions": [
+    "Removed identifiers are identifier-like tokens (containing _ . or -, or camelCase) found on '-' lines and NOT on '+' lines of the same change record. Plain words and ALL-CAPS words without _ (SQL keywords, COUNT) are not identifiers. Counting every '-' line token instead adds 6 false positives in scenario 10 and 4 in scenario 01, mostly through the token payments-api.",
+    "Identifier matching against page text is whole-token, not substring.",
+    "Snippet hash compares trimmed, whitespace-collapsed '-' lines of 10+ characters against page code block lines.",
+    "Glob anchors never count as 'anchored file removed or renamed' for the High rule; exact path anchors do.",
+    "Jira rule scores are multiplied by anchor weight, so Jira anchors meant to alert alone are critical."
+  ],
+  "pages": [
+    {
+      "title": "Payments rollback runbook",
+      "file": "pages/runbooks/payments-rollback-runbook.xhtml",
+      "type": "runbook",
+      "folder": "Runbooks",
+      "owner": "Dana",
+      "labels": [
+        "runbook",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": true,
+      "anchors": [
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "scripts/rollback.sh",
+          "weight": "critical"
+        },
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "deploy/helm/values.yaml",
+          "weight": "normal"
+        },
+        {
+          "type": "jira",
+          "key": "PAY-142",
+          "weight": "normal"
+        }
+      ],
+      "jiraMentions": [
+        "PAY-142"
+      ],
+      "flaggedBy": [
+        {
+          "trigger": "bitbucket:01-rename-rollback-script",
+          "severity": "High"
+        }
+      ]
+    },
+    {
+      "title": "Rotate payments secrets",
+      "file": "pages/runbooks/rotate-payments-secrets.xhtml",
+      "type": "runbook",
+      "folder": "Runbooks",
+      "owner": "Dana",
+      "labels": [
+        "runbook",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": true,
+      "anchors": [
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "scripts/rotate-secrets.sh",
+          "weight": "normal"
+        },
+        {
+          "type": "jira",
+          "key": "PAY-147",
+          "weight": "normal"
+        }
+      ],
+      "jiraMentions": [
+        "PAY-147"
+      ],
+      "flaggedBy": []
+    },
+    {
+      "title": "Scale payment workers",
+      "file": "pages/runbooks/scale-payment-workers.xhtml",
+      "type": "runbook",
+      "folder": "Runbooks",
+      "owner": "Dana",
+      "labels": [
+        "runbook",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": true,
+      "anchors": [
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "scripts/scale-workers.sh",
+          "weight": "critical"
+        },
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "deploy/helm/values.yaml",
+          "weight": "normal"
+        }
+      ],
+      "jiraMentions": [
+        "PAY-165"
+      ],
+      "flaggedBy": [
+        {
+          "trigger": "bitbucket:09-rename-scale-flag",
+          "severity": "High"
+        }
+      ]
+    },
+    {
+      "title": "Fail over the payments database",
+      "file": "pages/runbooks/fail-over-the-payments-database.xhtml",
+      "type": "runbook",
+      "folder": "Runbooks",
+      "owner": "Dana",
+      "labels": [
+        "runbook",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": true,
+      "anchors": [
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "scripts/failover-db.sh",
+          "weight": "critical"
+        },
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "deploy/helm/values.yaml",
+          "weight": "normal"
+        },
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "src/db/pool.ts",
+          "weight": "normal"
+        }
+      ],
+      "jiraMentions": [
+        "PAY-149",
+        "PAY-151"
+      ],
+      "flaggedBy": [
+        {
+          "trigger": "bitbucket:02-raise-db-pool",
+          "severity": "High"
+        }
+      ]
+    },
+    {
+      "title": "Drain the settlement queue",
+      "file": "pages/runbooks/drain-the-settlement-queue.xhtml",
+      "type": "runbook",
+      "folder": "Runbooks",
+      "owner": "Dana",
+      "labels": [
+        "runbook",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": true,
+      "anchors": [
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "scripts/drain-queue.sh",
+          "weight": "critical"
+        },
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "src/workers/settlement-worker.ts",
+          "weight": "normal"
+        }
+      ],
+      "jiraMentions": [
+        "PAY-140"
+      ],
+      "flaggedBy": []
+    },
+    {
+      "title": "Replay failed PSP webhooks",
+      "file": "pages/runbooks/replay-failed-psp-webhooks.xhtml",
+      "type": "runbook",
+      "folder": "Runbooks",
+      "owner": "Priya",
+      "labels": [
+        "runbook",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": true,
+      "anchors": [
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "scripts/replay-webhooks.sh",
+          "weight": "critical"
+        },
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "src/routes/webhooks.ts",
+          "weight": "normal"
+        }
+      ],
+      "jiraMentions": [
+        "PAY-175"
+      ],
+      "flaggedBy": []
+    },
+    {
+      "title": "Payments incident response checklist",
+      "file": "pages/runbooks/payments-incident-response-checklist.xhtml",
+      "type": "runbook",
+      "folder": "Runbooks",
+      "owner": "Dana",
+      "labels": [
+        "runbook",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": false,
+      "anchors": [],
+      "jiraMentions": [],
+      "flaggedBy": []
+    },
+    {
+      "title": "PSP outage runbook",
+      "file": "pages/runbooks/psp-outage-runbook.xhtml",
+      "type": "runbook",
+      "folder": "Runbooks",
+      "owner": "Dana",
+      "labels": [
+        "runbook",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": false,
+      "anchors": [],
+      "jiraMentions": [
+        "PAY-163"
+      ],
+      "flaggedBy": []
+    },
+    {
+      "title": "Payments API service overview",
+      "file": "pages/service-overviews/payments-api-service-overview.xhtml",
+      "type": "service-overview",
+      "folder": "Service overviews",
+      "owner": "Marco",
+      "labels": [
+        "service-overview",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": true,
+      "anchors": [
+        {
+          "type": "glob",
+          "repo": "payments-api",
+          "pattern": "src/**",
+          "weight": "normal"
+        },
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "deploy/helm/values.yaml",
+          "weight": "normal"
+        }
+      ],
+      "jiraMentions": [],
+      "flaggedBy": [
+        {
+          "trigger": "bitbucket:03-remove-v1-refunds",
+          "severity": "Medium"
+        },
+        {
+          "trigger": "bitbucket:10-structured-logging",
+          "severity": "Medium"
+        }
+      ]
+    },
+    {
+      "title": "Payments deployment and Helm chart",
+      "file": "pages/service-overviews/payments-deployment-and-helm-chart.xhtml",
+      "type": "service-overview",
+      "folder": "Service overviews",
+      "owner": "Marco",
+      "labels": [
+        "service-overview",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": true,
+      "anchors": [
+        {
+          "type": "glob",
+          "repo": "payments-api",
+          "pattern": "deploy/helm/**",
+          "weight": "normal"
+        }
+      ],
+      "jiraMentions": [],
+      "flaggedBy": [
+        {
+          "trigger": "bitbucket:02-raise-db-pool",
+          "severity": "Medium"
+        }
+      ]
+    },
+    {
+      "title": "Settlement worker overview",
+      "file": "pages/service-overviews/settlement-worker-overview.xhtml",
+      "type": "service-overview",
+      "folder": "Service overviews",
+      "owner": "Lena",
+      "labels": [
+        "service-overview",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": true,
+      "anchors": [
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "src/workers/settlement-worker.ts",
+          "weight": "normal"
+        },
+        {
+          "type": "jira",
+          "key": "PAY-140",
+          "weight": "normal"
+        }
+      ],
+      "jiraMentions": [
+        "PAY-140",
+        "PAY-165"
+      ],
+      "flaggedBy": []
+    },
+    {
+      "title": "Webhook ingestion service overview",
+      "file": "pages/service-overviews/webhook-ingestion-service-overview.xhtml",
+      "type": "service-overview",
+      "folder": "Service overviews",
+      "owner": "Priya",
+      "labels": [
+        "service-overview",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": true,
+      "anchors": [
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "src/routes/webhooks.ts",
+          "weight": "normal"
+        }
+      ],
+      "jiraMentions": [],
+      "flaggedBy": []
+    },
+    {
+      "title": "Ledger service overview",
+      "file": "pages/service-overviews/ledger-service-overview.xhtml",
+      "type": "service-overview",
+      "folder": "Service overviews",
+      "owner": "Lena",
+      "labels": [
+        "service-overview",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": false,
+      "anchors": [],
+      "jiraMentions": [],
+      "flaggedBy": []
+    },
+    {
+      "title": "Fraud screening service overview",
+      "file": "pages/service-overviews/fraud-screening-service-overview.xhtml",
+      "type": "service-overview",
+      "folder": "Service overviews",
+      "owner": "Priya",
+      "labels": [
+        "service-overview",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": false,
+      "anchors": [],
+      "jiraMentions": [],
+      "flaggedBy": []
+    },
+    {
+      "title": "Payments local development setup",
+      "file": "pages/onboarding/payments-local-development-setup.xhtml",
+      "type": "onboarding",
+      "folder": "Onboarding",
+      "owner": "Sam",
+      "labels": [
+        "onboarding",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": true,
+      "anchors": [
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "src/config.ts",
+          "weight": "normal"
+        }
+      ],
+      "jiraMentions": [],
+      "flaggedBy": [
+        {
+          "trigger": "bitbucket:10-structured-logging",
+          "severity": "High"
+        }
+      ]
+    },
+    {
+      "title": "Payments codebase tour",
+      "file": "pages/onboarding/payments-codebase-tour.xhtml",
+      "type": "onboarding",
+      "folder": "Onboarding",
+      "owner": "Marco",
+      "labels": [
+        "onboarding",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": true,
+      "anchors": [
+        {
+          "type": "glob",
+          "repo": "payments-api",
+          "pattern": "src/**",
+          "weight": "normal"
+        }
+      ],
+      "jiraMentions": [],
+      "flaggedBy": [
+        {
+          "trigger": "bitbucket:10-structured-logging",
+          "severity": "High"
+        }
+      ]
+    },
+    {
+      "title": "Platform on-call onboarding",
+      "file": "pages/onboarding/platform-on-call-onboarding.xhtml",
+      "type": "onboarding",
+      "folder": "Onboarding",
+      "owner": "Dana",
+      "labels": [
+        "onboarding",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": false,
+      "anchors": [],
+      "jiraMentions": [],
+      "flaggedBy": []
+    },
+    {
+      "title": "Welcome to the Platform team",
+      "file": "pages/onboarding/welcome-to-the-platform-team.xhtml",
+      "type": "onboarding",
+      "folder": "Onboarding",
+      "owner": "Lena",
+      "labels": [
+        "onboarding",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": false,
+      "anchors": [],
+      "jiraMentions": [],
+      "flaggedBy": []
+    },
+    {
+      "title": "ADR-009: Retire the v1 refunds API",
+      "file": "pages/adrs/adr-009-retire-the-v1-refunds-api.xhtml",
+      "type": "adr",
+      "folder": "Architecture decisions",
+      "owner": "Marco",
+      "labels": [
+        "adr",
+        "architecture",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": true,
+      "anchors": [
+        {
+          "type": "jira",
+          "key": "PAY-158",
+          "weight": "critical"
+        }
+      ],
+      "jiraMentions": [
+        "PAY-158"
+      ],
+      "flaggedBy": [
+        {
+          "trigger": "jira:PAY-158 fixVersion 2026.12 -> 2027.01",
+          "severity": "High"
+        }
+      ]
+    },
+    {
+      "title": "ADR-012: Idempotency keys for charge creation",
+      "file": "pages/adrs/adr-012-idempotency-keys-for-charge-creation.xhtml",
+      "type": "adr",
+      "folder": "Architecture decisions",
+      "owner": "Marco",
+      "labels": [
+        "adr",
+        "architecture",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": true,
+      "anchors": [
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "src/idempotency.ts",
+          "weight": "normal"
+        },
+        {
+          "type": "jira",
+          "key": "PAY-131",
+          "weight": "normal"
+        }
+      ],
+      "jiraMentions": [
+        "PAY-131",
+        "PAY-134"
+      ],
+      "flaggedBy": []
+    },
+    {
+      "title": "ADR-014: Async settlement worker queue",
+      "file": "pages/adrs/adr-014-async-settlement-worker-queue.xhtml",
+      "type": "adr",
+      "folder": "Architecture decisions",
+      "owner": "Lena",
+      "labels": [
+        "adr",
+        "architecture",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": true,
+      "anchors": [
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "src/workers/settlement-worker.ts",
+          "weight": "normal"
+        },
+        {
+          "type": "jira",
+          "key": "PAY-141",
+          "weight": "normal"
+        }
+      ],
+      "jiraMentions": [
+        "PAY-140",
+        "PAY-141"
+      ],
+      "flaggedBy": []
+    },
+    {
+      "title": "ADR-015: Active-passive multi-region database",
+      "file": "pages/adrs/adr-015-active-passive-multi-region-database.xhtml",
+      "type": "adr",
+      "folder": "Architecture decisions",
+      "owner": "Priya",
+      "labels": [
+        "adr",
+        "architecture",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": true,
+      "anchors": [
+        {
+          "type": "jira",
+          "key": "PAY-170",
+          "weight": "critical"
+        }
+      ],
+      "jiraMentions": [
+        "PAY-170"
+      ],
+      "flaggedBy": [
+        {
+          "trigger": "jira:PAY-170 moved to Won't Do",
+          "severity": "High"
+        }
+      ]
+    },
+    {
+      "title": "Refunds API guide",
+      "file": "pages/api-guides/refunds-api-guide.xhtml",
+      "type": "api-guide",
+      "folder": "API guides",
+      "owner": "Priya",
+      "labels": [
+        "api-guide",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": true,
+      "anchors": [
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "src/routes/refunds.ts",
+          "weight": "critical"
+        },
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "src/routes/refunds-v1.ts",
+          "weight": "critical"
+        }
+      ],
+      "jiraMentions": [
+        "PAY-150",
+        "PAY-158"
+      ],
+      "flaggedBy": [
+        {
+          "trigger": "bitbucket:03-remove-v1-refunds",
+          "severity": "High"
+        }
+      ]
+    },
+    {
+      "title": "Charges API guide",
+      "file": "pages/api-guides/charges-api-guide.xhtml",
+      "type": "api-guide",
+      "folder": "API guides",
+      "owner": "Priya",
+      "labels": [
+        "api-guide",
+        "payments",
+        "dds-demo"
+      ],
+      "anchored": true,
+      "anchors": [
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "src/routes/charges.ts",
+          "weight": "critical"
+        },
+        {
+          "type": "path",
+          "repo": "payments-api",
+          "pattern": "src/idempotency.ts",
+          "weight": "normal"
+        }
+      ],
+      "jiraMentions": [
+        "PAY-128"
+      ],
+      "flaggedBy": []
+    }
+  ]
+}

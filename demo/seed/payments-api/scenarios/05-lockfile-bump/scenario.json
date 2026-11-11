@@ -1,0 +1,15 @@
+{
+  "id": "05-lockfile-bump",
+  "branch": "scenario/lockfile-bump",
+  "title": "Bump pg to 8.13.3 in package-lock.json",
+  "description": "npm update pg. Lockfile-only change: pg 8.13.1 to 8.13.3, pg-pool 3.7.0 to 3.7.1, pg-protocol 1.7.0 to 1.7.1. package.json is unchanged (the ^8.13.1 range already allows it).",
+  "kind": "non-drift",
+  "dependsOn": "04-tests-only",
+  "delete": [],
+  "expected": {
+    "alert": false,
+    "summary": "No alert. package-lock.json matches the default ignore globs.",
+    "pages": [],
+    "mustNotFlag": ["Payments local development setup", "Payments codebase tour"]
+  }
+}

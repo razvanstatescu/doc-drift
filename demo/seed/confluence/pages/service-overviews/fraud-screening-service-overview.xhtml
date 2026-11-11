@@ -1,0 +1,25 @@
+<table data-layout="default"><tbody>
+<tr><th><p>Owner</p></th><td><p>Priya (Payments engineer)</p></td></tr>
+<tr><th><p>Team</p></th><td><p>Risk, with Platform on-call for availability</p></td></tr>
+<tr><th><p>Last reviewed</p></th><td><p>2026-05-28</p></td></tr>
+</tbody></table>
+<h2>What it does</h2>
+<p>Fraud screening scores every charge before we send it to the PSP. It answers in 3 ways: allow, review or block. Payments respects the answer; it never overrides a block.</p>
+<h2>Decisions</h2>
+<table data-layout="default"><tbody>
+<tr><th><p>Decision</p></th><th><p>What happens to the charge</p></th><th><p>Share of charges (October)</p></th></tr>
+<tr><td><p>Allow</p></td><td><p>Sent to the PSP as normal</p></td><td><p>97.8%</p></td></tr>
+<tr><td><p>Review</p></td><td><p>Held for up to 4 hours for the Risk team, then allowed or refunded</p></td><td><p>1.9%</p></td></tr>
+<tr><td><p>Block</p></td><td><p>Declined with a generic reason</p></td><td><p>0.3%</p></td></tr>
+</tbody></table>
+<h2>When screening is down</h2>
+<p>If screening does not answer within 300 ms, payments fails open for merchants on the low-risk list and fails closed for everyone else. Risk owns the list and reviews it every quarter. A fail-closed period shows up as a drop in charge success rate for some merchants only, which makes it easy to confuse with a merchant integration issue.</p>
+<h2>Signals</h2>
+<ul>
+<li><p>Card and device history across Acme merchants</p></li>
+<li><p>Velocity: charges per card, per device and per IP in the last hour</p></li>
+<li><p>Mismatch between billing country and IP country</p></li>
+<li><p>Merchant category and the merchant's own dispute rate</p></li>
+</ul>
+<h2>Changing the rules</h2>
+<p>Rules change only through the Risk team's review. Payments engineers should not add exceptions for a merchant, even during an incident. Ask the Risk on-call instead.</p>

@@ -1,0 +1,29 @@
+<table data-layout="default"><tbody>
+<tr><th><p>Status</p></th><td><p>Accepted, implementation planned for Q1 2027</p></td></tr>
+<tr><th><p>Date</p></th><td><p>2026-09-10</p></td></tr>
+<tr><th><p>Deciders</p></th><td><p>Priya, Marco, Dana, Lena</p></td></tr>
+<tr><th><p>Owner</p></th><td><p>Priya (Payments engineer)</p></td></tr>
+<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/PAY-170">PAY-170</a> Multi-region active-passive database</p></td></tr>
+</tbody></table>
+<h2>Context</h2>
+<p>All of payments runs in 1 region. A regional outage would stop every Acme merchant from taking payments until the region recovers. Our largest merchants now ask for a recovery time objective of 1 hour in their contracts, and today we cannot promise it.</p>
+<h2>Decision</h2>
+<p>We will run the payments database active-passive across 2 regions:</p>
+<ul>
+<li><p>The primary region keeps the Patroni cluster as it is today.</p></li>
+<li><p>A standby cluster in the second region follows by asynchronous streaming replication.</p></li>
+<li><p>Failing over to the standby region is a manual, rehearsed decision taken by the incident lead, never automatic.</p></li>
+<li><p>Targets: recovery point objective 1 minute, recovery time objective 1 hour.</p></li>
+</ul>
+<h2>Options considered</h2>
+<ol>
+<li><p><strong>Active-passive with a manual switch (chosen).</strong> Simple to reason about. Asynchronous replication means a regional failover can lose up to about 1 minute of writes, which reconciliation with the PSP can recover.</p></li>
+<li><p><strong>Active-active.</strong> Needs conflict handling for charges and refunds. Too risky for money movement.</p></li>
+<li><p><strong>Backups restored in another region.</strong> Cheap, but a restore takes about 4 hours, which misses the target.</p></li>
+</ol>
+<h2>Consequences</h2>
+<ul>
+<li><p>Infrastructure cost for the database roughly doubles.</p></li>
+<li><p>The failover runbook needs a regional section and a twice-yearly rehearsal.</p></li>
+<li><p>Until this ships, a regional outage is handled as a long incident with the PSP's help. Contracts must not promise a 1-hour recovery time yet.</p></li>
+</ul>

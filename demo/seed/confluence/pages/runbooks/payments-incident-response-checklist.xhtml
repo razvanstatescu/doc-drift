@@ -1,0 +1,41 @@
+<table data-layout="default"><tbody>
+<tr><th><p>Owner</p></th><td><p>Dana (Platform on-call lead)</p></td></tr>
+<tr><th><p>Applies to</p></th><td><p>Any incident that affects charges, refunds or settlement</p></td></tr>
+<tr><th><p>Last reviewed</p></th><td><p>2026-08-19</p></td></tr>
+</tbody></table>
+<h2>First 5 minutes</h2>
+<ol>
+<li><p>Acknowledge the page. If you cannot start within 5 minutes, escalate to the secondary on-call.</p></li>
+<li><p>Open an incident in the incident tool and pick a severity:</p>
+<ul>
+<li><p><strong>SEV1:</strong> merchants cannot take payments, or money is moving incorrectly.</p></li>
+<li><p><strong>SEV2:</strong> payments work but are degraded: slow, partial errors, delayed settlement.</p></li>
+<li><p><strong>SEV3:</strong> a single merchant or a non-critical feature is affected.</p></li>
+</ul>
+</li>
+<li><p>Name an incident lead. On a SEV1 the lead does not also debug.</p></li>
+<li><p>Post a first status update, even if it only says what you know so far.</p></li>
+</ol>
+<h2>Stabilise before you diagnose</h2>
+<p>Pick the fastest safe action, in this order:</p>
+<ol>
+<li><p>A release in the last hour? Roll it back: <ac:link><ri:page ri:content-title="Payments rollback runbook" /></ac:link>.</p></li>
+<li><p>The database is unhealthy? <ac:link><ri:page ri:content-title="Fail over the payments database" /></ac:link>.</p></li>
+<li><p>Settlement is falling behind? <ac:link><ri:page ri:content-title="Scale payment workers" /></ac:link>.</p></li>
+<li><p>The PSP is failing? <ac:link><ri:page ri:content-title="PSP outage runbook" /></ac:link>.</p></li>
+</ol>
+<ac:structured-macro ac:name="info" ac:schema-version="1"><ac:rich-text-body><p>Never retry charges by hand from a database query. Clients retry with their idempotency keys; manual retries bypass that and can charge a customer twice.</p></ac:rich-text-body></ac:structured-macro>
+<h2>Communication</h2>
+<table data-layout="default"><tbody>
+<tr><th><p>Severity</p></th><th><p>Internal update</p></th><th><p>Status page</p></th><th><p>Merchant success team</p></th></tr>
+<tr><td><p>SEV1</p></td><td><p>Every 15 minutes</p></td><td><p>Within 10 minutes</p></td><td><p>Page them</p></td></tr>
+<tr><td><p>SEV2</p></td><td><p>Every 30 minutes</p></td><td><p>If it lasts over 30 minutes</p></td><td><p>Message them</p></td></tr>
+<tr><td><p>SEV3</p></td><td><p>At start and end</p></td><td><p>No</p></td><td><p>Only if a merchant asked</p></td></tr>
+</tbody></table>
+<h2>Closing</h2>
+<ul>
+<li><p>Confirm the charge success rate has been normal for 30 minutes.</p></li>
+<li><p>Lift any deploy freeze only after the fix is reviewed.</p></li>
+<li><p>Schedule the review within 5 working days. Reviews are blameless: describe what the system allowed, not who slipped.</p></li>
+<li><p>File every follow-up in the PAY project and link it from the review.</p></li>
+</ul>

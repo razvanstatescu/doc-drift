@@ -1,0 +1,32 @@
+<table data-layout="default"><tbody>
+<tr><th><p>Owner</p></th><td><p>Priya (Payments engineer)</p></td></tr>
+<tr><th><p>Service</p></th><td><p><code>payments-api</code> webhook ingestion</p></td></tr>
+<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/PAY-175">PAY-175</a> Replay dead-lettered webhooks from the admin console</p></td></tr>
+<tr><th><p>Last reviewed</p></th><td><p>2026-10-27</p></td></tr>
+</tbody></table>
+<h2>When to use this runbook</h2>
+<p>When a PSP webhook fails to process, payments-api still answers <code>200</code> (so the PSP stops retrying) and stores the event in <code>webhook_dead_letters</code>. Charges stay in <code>settling</code> until the event is replayed. Replay when:</p>
+<ul>
+<li><p>The <strong>Webhook dead letters</strong> panel is above 0 for more than 15 minutes.</p></li>
+<li><p>A merchant reports charges stuck in <code>settling</code> for more than 1 hour.</p></li>
+<li><p>You have just fixed the cause of a processing error, such as a database outage.</p></li>
+</ul>
+<p>A <code>401 signature_invalid</code> is not a dead letter. It means the signing secret is wrong; see <ac:link><ri:page ri:content-title="Rotate payments secrets" /></ac:link>.</p>
+<h2>Steps</h2>
+<ol>
+<li><p>See what would be replayed. Narrow it with <code>--since</code> to the start of the incident.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[./scripts/replay-webhooks.sh --since 2026-10-27T09:00:00Z --dry-run]]></ac:plain-text-body></ac:structured-macro>
+</li>
+<li><p>Replay. The script posts each event to the internal endpoint <code>POST /internal/webhooks/replay/:id</code>, which applies it and deletes the dead letter. The default limit is 500 events per run.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[./scripts/replay-webhooks.sh --since 2026-10-27T09:00:00Z --limit 500]]></ac:plain-text-body></ac:structured-macro>
+</li>
+<li><p>Run it again until it prints <code>events: 0</code>.</p></li>
+<li><p>Spot-check 3 replayed charges with <code>GET /v2/charges/:id</code>. They should be <code>settled</code> with a <code>settled_at</code> time.</p></li>
+</ol>
+<h2>Replay is safe to repeat</h2>
+<p><code>webhook_events</code> has the PSP event id as its primary key, so a replayed event that was already applied is ignored. If a replay fails, the event stays in <code>webhook_dead_letters</code> and you can run the script again.</p>
+<h2>Related</h2>
+<ul>
+<li><p><ac:link><ri:page ri:content-title="Webhook ingestion service overview" /></ac:link></p></li>
+<li><p><ac:link><ri:page ri:content-title="PSP outage runbook" /></ac:link></p></li>
+</ul>

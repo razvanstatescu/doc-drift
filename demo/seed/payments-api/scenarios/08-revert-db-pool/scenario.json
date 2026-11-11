@@ -1,0 +1,19 @@
+{
+  "id": "08-revert-db-pool",
+  "branch": "scenario/revert-db-pool",
+  "title": "Revert \"Raise PAYMENTS_DB_POOL from 20 to 40\"",
+  "description": "This reverts the pull request from scenario 02. Connection count alarms on the replica during failover testing; back to 20 until PAY-151 lands.",
+  "kind": "non-drift",
+  "dependsOn": "07-unrelated-loadtest",
+  "revertOf": "02-raise-db-pool",
+  "delete": [],
+  "expected": {
+    "alert": false,
+    "summary": "No alert. Detected as a revert (title starts with Revert \"...\"). The 2 open events from scenario 02 close with reason reverted, and both pages go back to their previous state if they have no other open events.",
+    "pages": [],
+    "closes": [
+      { "title": "Fail over the payments database", "fromScenario": "02-raise-db-pool", "reason": "reverted" },
+      { "title": "Payments deployment and Helm chart", "fromScenario": "02-raise-db-pool", "reason": "reverted" }
+    ]
+  }
+}

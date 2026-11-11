@@ -1,0 +1,28 @@
+<table data-layout="default"><tbody>
+<tr><th><p>Owner</p></th><td><p>Dana (Platform on-call lead)</p></td></tr>
+<tr><th><p>Applies to</p></th><td><p>Outages or slowdowns at our payment service provider (PSP)</p></td></tr>
+<tr><th><p>Last reviewed</p></th><td><p>2026-07-22</p></td></tr>
+</tbody></table>
+<h2>How a PSP outage looks</h2>
+<ul>
+<li><p>Charge success rate drops for every merchant at the same time, while our own latency stays normal.</p></li>
+<li><p>Settlement falls behind and worker errors mention timeouts to the PSP.</p></li>
+<li><p>Webhooks stop arriving, or arrive in bursts.</p></li>
+<li><p>The PSP status page may lag by 15 to 30 minutes. Trust our dashboards first.</p></li>
+</ul>
+<h2>What to do</h2>
+<ol>
+<li><p>Open a SEV2 (SEV1 if charges fail outright). Follow <ac:link><ri:page ri:content-title="Payments incident response checklist" /></ac:link>.</p></li>
+<li><p>Call the PSP support line. The number and our account ID are in the vendor contacts vault entry. Ask for an incident reference and put it in the incident.</p></li>
+<li><p>Do not roll back or fail over. Neither helps with a PSP outage, and both add risk.</p></li>
+<li><p>Tell the merchant success team. Merchants see declines with a generic error; they should not retry in a loop.</p></li>
+<li><p>When the PSP recovers, expect a burst. Scale up first: <ac:link><ri:page ri:content-title="Scale payment workers" /></ac:link>.</p></li>
+<li><p>Replay webhooks that failed during the outage: <ac:link><ri:page ri:content-title="Replay failed PSP webhooks" /></ac:link>.</p></li>
+</ol>
+<h2>Known gaps</h2>
+<p>We do not yet hold settlement submissions while the PSP is degraded, so workers keep retrying and fill the logs. That work is <a href="https://{{ATLASSIAN_SITE}}/browse/PAY-163">PAY-163</a>. Until it ships, expect noisy worker logs during an outage and ignore them.</p>
+<h2>After the outage</h2>
+<ul>
+<li><p>Ask the PSP for their incident report and attach it to our review.</p></li>
+<li><p>Reconcile: compare the PSP settlement report for the outage window with our settled charges. Differences go to the finance channel.</p></li>
+</ul>

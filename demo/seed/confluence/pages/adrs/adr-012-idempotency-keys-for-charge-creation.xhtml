@@ -1,0 +1,36 @@
+<table data-layout="default"><tbody>
+<tr><th><p>Status</p></th><td><p>Accepted, implemented</p></td></tr>
+<tr><th><p>Date</p></th><td><p>2026-03-04</p></td></tr>
+<tr><th><p>Deciders</p></th><td><p>Marco, Priya, Dana</p></td></tr>
+<tr><th><p>Owner</p></th><td><p>Marco (Payments tech lead)</p></td></tr>
+<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/PAY-131">PAY-131</a>, <a href="https://{{ATLASSIAN_SITE}}/browse/PAY-134">PAY-134</a></p></td></tr>
+</tbody></table>
+<h2>Context</h2>
+<p>Checkout retries a charge when it does not get an answer within 10 seconds. Before v2, a slow database during peak hours caused duplicate charges: the first request was still running when the retry arrived. In February we refunded 214 duplicates by hand.</p>
+<h2>Decision</h2>
+<p>Every <code>POST /v2/charges</code> and <code>POST /v2/refunds</code> must carry an <code>Idempotency-Key</code> header of at least 8 characters. The server stores the key with a hash of the request body and the response it sent:</p>
+<ul>
+<li><p>Same key, same body, within 24 hours: return the stored response with <code>idempotent-replay: true</code>. Nothing is created.</p></li>
+<li><p>Same key, different body: <code>409 idempotency_key_conflict</code>. This is almost always a client bug.</p></li>
+<li><p>No key: <code>400 idempotency_key_required</code>.</p></li>
+</ul>
+<p>Keys live in the <code>idempotency_keys</code> table in the payments database, written by <code>withIdempotency()</code> in <code>src/idempotency.ts</code>.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">sql</ac:parameter><ac:parameter ac:name="title">Table</ac:parameter><ac:plain-text-body><![CDATA[CREATE TABLE idempotency_keys (
+  key            text PRIMARY KEY,
+  request_hash   text NOT NULL,
+  status_code    int  NOT NULL,
+  response_body  jsonb,
+  created_at     timestamptz NOT NULL DEFAULT now()
+);]]></ac:plain-text-body></ac:structured-macro>
+<h2>Options considered</h2>
+<ol>
+<li><p><strong>Keys in Postgres (chosen).</strong> Same transaction boundary as the charge, no new dependency.</p></li>
+<li><p><strong>Keys in Redis.</strong> Faster, but a Redis failover could forget a key and allow a duplicate. Duplicates are the exact problem we are solving.</p></li>
+<li><p><strong>Deduplicate on the PSP side.</strong> The PSP supports it, but only per merchant account, and refunds would still be exposed.</p></li>
+</ol>
+<h2>Consequences</h2>
+<ul>
+<li><p>Clients had to start sending keys. We gave them 6 weeks and a <code>400</code> with a clear code.</p></li>
+<li><p>A nightly job deletes keys older than 24 hours. The table holds about 2 million rows at peak.</p></li>
+<li><p>v1 refunds do not support keys, one more reason to retire them. See <ac:link><ri:page ri:content-title="ADR-009: Retire the v1 refunds API" /></ac:link>.</p></li>
+</ul>

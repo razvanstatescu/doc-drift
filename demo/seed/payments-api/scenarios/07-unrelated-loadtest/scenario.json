@@ -1,0 +1,15 @@
+{
+  "id": "07-unrelated-loadtest",
+  "branch": "scenario/unrelated-loadtest",
+  "title": "Add k6 load test for the December peak",
+  "description": "New tools/loadtest/ directory with a k6 script and a ramping profile. Nothing under src/, scripts/ or deploy/ changes.",
+  "kind": "non-drift",
+  "dependsOn": "06-comment-typo",
+  "delete": [],
+  "expected": {
+    "alert": false,
+    "summary": "No alert. No anchor in PLAT matches tools/**.",
+    "pages": [],
+    "mustNotFlag": ["Payments API service overview", "Payments codebase tour"]
+  }
+}

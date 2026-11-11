@@ -1,0 +1,12 @@
+import type { Deps } from '../deps.js';
+import type { Router } from '../http/router.js';
+import { registerCharges } from './charges.js';
+import { registerRefunds } from './refunds.js';
+import { registerWebhooks } from './webhooks.js';
+
+export function mountRoutes(router: Router, deps: Deps): void {
+  router.get('/healthz', () => ({ status: 200, body: 'ok' }));
+  registerCharges(router, deps);
+  registerRefunds(router, deps);
+  registerWebhooks(router, deps);
+}

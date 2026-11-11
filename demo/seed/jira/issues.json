@@ -1,0 +1,209 @@
+{
+  "project": {
+    "key": "PAY",
+    "name": "Payments",
+    "description": "Payments platform work: charges, refunds, settlement, deploy safety. Demo project for Doc Drift Sentinel.",
+    "projectTypeKey": "software",
+    "projectTemplateKey": "com.pyxis.greenhopper.jira:gh-simplified-scrum-classic"
+  },
+  "versions": [
+    { "name": "2026.12", "releaseDate": "2026-12-15", "description": "December release. v1 refunds sunset." },
+    { "name": "2027.01", "releaseDate": "2027-01-19", "description": "January release." }
+  ],
+  "labels": ["dds-demo"],
+  "issues": [
+    {
+      "key": "PAY-128",
+      "type": "Epic",
+      "summary": "Charges API v2",
+      "status": "Done",
+      "description": "Replace the v1 charges endpoint with POST /v2/charges and GET /v2/charges/:id. Integer minor-unit amounts, idempotency keys, async settlement.",
+      "pages": ["Charges API guide"]
+    },
+    {
+      "key": "PAY-131",
+      "type": "Story",
+      "parent": "PAY-128",
+      "summary": "Require Idempotency-Key on POST /v2/charges",
+      "status": "Done",
+      "description": "Reject charge requests without an Idempotency-Key of at least 8 characters (400 idempotency_key_required). Store key, body hash and response for 24 hours.",
+      "pages": ["ADR-012: Idempotency keys for charge creation"]
+    },
+    {
+      "key": "PAY-134",
+      "type": "Story",
+      "parent": "PAY-128",
+      "summary": "Return 409 when an idempotency key is reused with a different body",
+      "status": "Done",
+      "description": "Compare the stored request hash. On mismatch return 409 idempotency_key_conflict and log a warning with the key.",
+      "pages": ["ADR-012: Idempotency keys for charge creation"]
+    },
+    {
+      "key": "PAY-140",
+      "type": "Epic",
+      "summary": "Async settlement worker",
+      "status": "In Progress",
+      "description": "Move PSP capture out of the request path into a worker that claims settlement_jobs rows with FOR UPDATE SKIP LOCKED.",
+      "pages": ["Settlement worker overview", "ADR-014: Async settlement worker queue", "Drain the settlement queue"]
+    },
+    {
+      "key": "PAY-141",
+      "type": "Story",
+      "parent": "PAY-140",
+      "summary": "Move settlement to settlement_jobs with SKIP LOCKED workers",
+      "status": "Done",
+      "description": "Insert a settlement_jobs row with each charge. New payments-workers deployment runs PAYMENTS_ROLE=worker and claims batches of SETTLEMENT_BATCH_SIZE.",
+      "pages": ["ADR-014: Async settlement worker queue"]
+    },
+    {
+      "key": "PAY-142",
+      "type": "Epic",
+      "summary": "Safer payments deploys and rollbacks",
+      "status": "In Progress",
+      "description": "Make a bad payments release cheap to undo: a reliable rollback script, clear timeouts, a deploy freeze label, and a rehearsed runbook.",
+      "pages": ["Payments rollback runbook"]
+    },
+    {
+      "key": "PAY-144",
+      "type": "Story",
+      "parent": "PAY-142",
+      "summary": "Rename rollback script to rollback-v2.sh and take the timeout in seconds",
+      "status": "In Progress",
+      "description": "scripts/rollback.sh becomes scripts/rollback-v2.sh. ROLLBACK_TIMEOUT becomes ROLLBACK_TIMEOUT_SECS so the unit is explicit. This is the change in demo PR #482 (scenario 01).",
+      "pages": ["Payments rollback runbook"]
+    },
+    {
+      "key": "PAY-145",
+      "type": "Story",
+      "parent": "PAY-142",
+      "summary": "Add --cleanup-on-fail to helm rollback",
+      "status": "To Do",
+      "description": "A failed rollback leaves new resources behind. Pass --cleanup-on-fail so a retry starts clean.",
+      "pages": ["Payments rollback runbook"]
+    },
+    {
+      "key": "PAY-146",
+      "type": "Epic",
+      "summary": "Payments secrets hygiene",
+      "status": "In Progress",
+      "description": "Every payments secret lives in Vault, rotates on a schedule, and can be rotated in under 15 minutes during an incident.",
+      "pages": ["Rotate payments secrets"]
+    },
+    {
+      "key": "PAY-147",
+      "type": "Story",
+      "parent": "PAY-146",
+      "summary": "Rotate PSP and webhook secrets every 90 days",
+      "status": "To Do",
+      "description": "Calendar reminder plus scripts/rotate-secrets.sh. Record each rotation in the secrets register.",
+      "pages": ["Rotate payments secrets"]
+    },
+    {
+      "key": "PAY-149",
+      "type": "Epic",
+      "summary": "Payments database resilience",
+      "status": "In Progress",
+      "description": "Survive the loss of the payments-pg primary with no lost charges and under 5 minutes of errors.",
+      "pages": ["Fail over the payments database"]
+    },
+    {
+      "key": "PAY-150",
+      "type": "Epic",
+      "summary": "Refunds API v2",
+      "status": "In Progress",
+      "description": "Partial refunds with idempotency keys on POST /v2/refunds, then retire POST /v1/refunds.",
+      "pages": ["Refunds API guide", "ADR-009: Retire the v1 refunds API"]
+    },
+    {
+      "key": "PAY-151",
+      "type": "Story",
+      "parent": "PAY-149",
+      "summary": "Put PgBouncer in front of the payments database",
+      "status": "To Do",
+      "description": "Transaction pooling so a failover does not cause a reconnect storm. Lets us lower PAYMENTS_DB_POOL per pod.",
+      "pages": ["Fail over the payments database"]
+    },
+    {
+      "key": "PAY-152",
+      "type": "Story",
+      "parent": "PAY-150",
+      "summary": "Partial refunds on POST /v2/refunds",
+      "status": "Done",
+      "description": "Allow several refunds per charge while the sum stays at or below the captured amount (422 amount_exceeds_refundable).",
+      "pages": ["Refunds API guide"]
+    },
+    {
+      "key": "PAY-158",
+      "type": "Story",
+      "parent": "PAY-150",
+      "summary": "Remove the v1 refunds endpoint",
+      "status": "To Do",
+      "fixVersions": ["2026.12"],
+      "description": "Delete src/routes/refunds-v1.ts and the REFUNDS_V1_ENABLED flag after the 2026-12-15 sunset. Implements ADR-009.",
+      "pages": ["ADR-009: Retire the v1 refunds API", "Refunds API guide"]
+    },
+    {
+      "key": "PAY-163",
+      "type": "Story",
+      "parent": "PAY-140",
+      "summary": "Hold settlement submissions while the PSP is degraded",
+      "status": "To Do",
+      "description": "When PSP error rate passes 20% for 2 minutes, stop claiming settlement jobs and back off, instead of retrying into the outage.",
+      "pages": ["PSP outage runbook"]
+    },
+    {
+      "key": "PAY-165",
+      "type": "Story",
+      "parent": "PAY-140",
+      "summary": "Autoscale workers on settlement queue depth",
+      "status": "To Do",
+      "description": "Drive the payments-workers HPA from pending settlement_jobs instead of CPU.",
+      "pages": ["Scale payment workers", "Settlement worker overview"]
+    },
+    {
+      "key": "PAY-170",
+      "type": "Epic",
+      "summary": "Multi-region active-passive database",
+      "status": "To Do",
+      "description": "Standby payments-pg cluster in a second region with asynchronous replication. RPO 1 minute, RTO 1 hour. Decision: ADR-015.",
+      "pages": ["ADR-015: Active-passive multi-region database"]
+    },
+    {
+      "key": "PAY-172",
+      "type": "Story",
+      "parent": "PAY-170",
+      "summary": "Cross-region replica for payments-pg",
+      "status": "To Do",
+      "description": "Provision the standby cluster and stream from the primary region. Measure replication lag at peak.",
+      "pages": ["ADR-015: Active-passive multi-region database"]
+    },
+    {
+      "key": "PAY-175",
+      "type": "Story",
+      "parent": "PAY-140",
+      "summary": "Replay dead-lettered webhooks from the admin console",
+      "status": "To Do",
+      "description": "A button in the admin console for what scripts/replay-webhooks.sh does today, with an audit entry per replay.",
+      "pages": ["Replay failed PSP webhooks"]
+    }
+  ],
+  "demo": {
+    "wontDo": {
+      "key": "PAY-170",
+      "action": "Move to Won't Do (status, or Done with resolution Won't Do)",
+      "flips": ["ADR-015: Active-passive multi-region database"],
+      "expectedSeverity": "High",
+      "why": "Jira rule: status category Done or Won't Do scores 0.7 on the critical PAY-170 anchor. Critical anchors are High.",
+      "videoBeat": "2:40 to 2:55"
+    },
+    "fixVersionChange": {
+      "key": "PAY-158",
+      "from": "2026.12",
+      "to": "2027.01",
+      "flips": ["ADR-009: Retire the v1 refunds API"],
+      "expectedSeverity": "High",
+      "why": "Jira rule: fixVersions change scores 0.6 on the critical PAY-158 anchor. The Refunds API guide only mentions PAY-158 (no Jira anchor), so it stays as it is.",
+      "videoBeat": "optional, eval and dashboard"
+    }
+  }
+}

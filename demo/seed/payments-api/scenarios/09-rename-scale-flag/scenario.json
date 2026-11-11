@@ -1,0 +1,25 @@
+{
+  "id": "09-rename-scale-flag",
+  "branch": "scenario/rename-scale-flag",
+  "title": "Rename scale-workers.sh --count to --replicas",
+  "description": "Matches the kubectl wording. --count now exits with a message that names the new flag. Part of PAY-165.",
+  "kind": "drift",
+  "dependsOn": "08-revert-db-pool",
+  "delete": [],
+  "expected": {
+    "alert": true,
+    "summary": "1 page flags. Scale payment workers (High: critical anchor scripts/scale-workers.sh changed; its step 3 uses --count).",
+    "pages": [
+      {
+        "title": "Scale payment workers",
+        "severity": "High",
+        "why": "Exact critical anchor scripts/scale-workers.sh changed (+10/-9, score 0.83). Critical anchors are High on any alert. The page's step 3 uses the old flag --count."
+      }
+    ],
+    "mustNotFlag": [
+      "Payments incident response checklist",
+      "Drain the settlement queue"
+    ],
+    "mustNotFlagWhy": "The checklist is Unanchored. The drain runbook anchors a different script."
+  }
+}

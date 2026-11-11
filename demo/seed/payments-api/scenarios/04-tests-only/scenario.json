@@ -1,0 +1,20 @@
+{
+  "id": "04-tests-only",
+  "branch": "scenario/tests-only",
+  "title": "Add charge validation and idempotency hash tests",
+  "description": "Test-only change: 2 new cases in src/routes/__tests__/charges.test.ts and a new src/__tests__/idempotency.test.ts. No production code changes.",
+  "kind": "non-drift",
+  "dependsOn": "03-remove-v1-refunds",
+  "delete": [],
+  "expected": {
+    "alert": false,
+    "summary": "No alert. Both files match the default ignore globs (**/*.test.*, **/__tests__/**), so the change record is empty after filtering.",
+    "pages": [],
+    "mustNotFlag": [
+      "Charges API guide",
+      "ADR-012: Idempotency keys for charge creation",
+      "Payments API service overview",
+      "Payments codebase tour"
+    ]
+  }
+}

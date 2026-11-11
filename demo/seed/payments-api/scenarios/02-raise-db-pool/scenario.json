@@ -1,0 +1,31 @@
+{
+  "id": "02-raise-db-pool",
+  "branch": "scenario/raise-db-pool",
+  "title": "Raise PAYMENTS_DB_POOL from 20 to 40",
+  "description": "Doubles the per-pod connection pool in deploy/helm/values.yaml ahead of the December peak. 3 pods x 40 = 120 connections, still under max_connections (200).",
+  "kind": "drift",
+  "dependsOn": "01-rename-rollback-script",
+  "delete": [],
+  "expected": {
+    "alert": true,
+    "summary": "2 pages flag. Fail over the payments database (High: its code block quotes the removed line PAYMENTS_DB_POOL: \"20\"). Payments deployment and Helm chart (Medium: deploy/helm/** glob plus the same snippet).",
+    "pages": [
+      {
+        "title": "Fail over the payments database",
+        "severity": "High",
+        "why": "Exact anchor deploy/helm/values.yaml (normal, +1/-1) scores 0.43; the snippet hash of PAYMENTS_DB_POOL: \"20\" adds 0.4, so 0.83."
+      },
+      {
+        "title": "Payments deployment and Helm chart",
+        "severity": "Medium",
+        "why": "Glob anchor deploy/helm/** (normal) scores 0.26; the snippet hash adds 0.4, so 0.66."
+      }
+    ],
+    "mustNotFlag": [
+      "Payments rollback runbook",
+      "Scale payment workers",
+      "Payments API service overview"
+    ],
+    "mustNotFlagWhy": "They anchor deploy/helm/values.yaml too, but do not quote the changed line. PAYMENTS_DB_POOL is still present on the + side, so it is not a removed identifier."
+  }
+}

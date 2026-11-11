@@ -1,0 +1,42 @@
+{
+  "id": "10-structured-logging",
+  "branch": "scenario/structured-logging",
+  "title": "Move HTTP handling to src/http and adopt structured logging",
+  "description": "Refactor across 10 files under src/: request handling moves from src/server.ts to the new src/http/app.ts, console calls become the JSON logger in src/http/logger.ts, registerRoutes is renamed mountRoutes, and LOG_LEVEL is renamed PAYMENTS_LOG_LEVEL. Charge and refund handlers are untouched.",
+  "kind": "drift",
+  "dependsOn": "09-rename-scale-flag",
+  "delete": [],
+  "expected": {
+    "alert": true,
+    "summary": "3 of the 11 pages whose anchors match a changed file flag: Payments codebase tour (High), Payments local development setup (High), Payments API service overview (Medium). The other 8 had a 1-line logger swap in an anchored file and stay quiet.",
+    "pages": [
+      {
+        "title": "Payments codebase tour",
+        "severity": "High",
+        "why": "Glob src/** (normal) scores 0.38 on src/server.ts (+7/-30). Removed identifier registerRoutes adds 0.3, and the page's code block quotes the removed line registerRoutes(router, { config, pool }); for +0.4. Total 1.0."
+      },
+      {
+        "title": "Payments local development setup",
+        "severity": "High",
+        "why": "Exact anchor src/config.ts (normal, +1/-1) scores 0.43. Removed identifier LOG_LEVEL adds 0.3, and the page's .env block quotes the removed .env.example line LOG_LEVEL=debug for +0.4. Total 1.0."
+      },
+      {
+        "title": "Payments API service overview",
+        "severity": "Medium",
+        "why": "Glob src/** (normal) scores 0.38; its configuration table lists LOG_LEVEL, so +0.3 gives 0.68."
+      }
+    ],
+    "mustNotFlag": [
+      "Fail over the payments database",
+      "Drain the settlement queue",
+      "Replay failed PSP webhooks",
+      "Settlement worker overview",
+      "Webhook ingestion service overview",
+      "ADR-012: Idempotency keys for charge creation",
+      "ADR-014: Async settlement worker queue",
+      "Charges API guide"
+    ],
+    "mustNotFlagWhy": "Each has an exact normal anchor on a file that only swapped a console call for the logger (+2/-1, score 0.46) and mentions none of the removed identifiers. This is the broad-refactor precision check: a glob or file anchor alone is not enough, the page has to reference what changed.",
+    "note": "Scores near 0.46 assume normal weight 0.7 and net-removed identifiers (on '-' lines and not on '+' lines). If the matcher counts every '-' line token, the shared token payments-api pushes those 8 pages over 0.5."
+  }
+}

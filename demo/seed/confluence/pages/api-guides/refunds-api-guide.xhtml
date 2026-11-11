@@ -1,0 +1,46 @@
+<table data-layout="default"><tbody>
+<tr><th><p>Owner</p></th><td><p>Priya (Payments engineer)</p></td></tr>
+<tr><th><p>Audience</p></th><td><p>Internal teams and merchants integrating refunds</p></td></tr>
+<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/PAY-150">PAY-150</a> Refunds API v2</p></td></tr>
+<tr><th><p>Last reviewed</p></th><td><p>2026-10-20</p></td></tr>
+</tbody></table>
+<h2>Overview</h2>
+<p>Use <code>POST /v2/refunds</code> for every new integration. It supports partial refunds and idempotency keys. <code>POST /v1/refunds</code> is deprecated and documented below only to help you migrate.</p>
+<h2>Create a refund (v2)</h2>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[curl -sS -X POST https://payments.acme.dev/v2/refunds \
+  -H "authorization: Bearer $PAYMENTS_TOKEN" \
+  -H "content-type: application/json" \
+  -H "idempotency-key: rf-2026-10-20-000417" \
+  -d '{"charge_id":"ch_8Kq2x","amount":1500,"reason":"requested_by_customer"}']]></ac:plain-text-body></ac:structured-macro>
+<table data-layout="default"><tbody>
+<tr><th><p>Field</p></th><th><p>Type</p></th><th><p>Notes</p></th></tr>
+<tr><td><p><code>charge_id</code></p></td><td><p>string</p></td><td><p>Required. The charge must be <code>settled</code>.</p></td></tr>
+<tr><td><p><code>amount</code></p></td><td><p>integer</p></td><td><p>Required, in minor units. Several partial refunds are allowed while their sum stays at or below the charge amount.</p></td></tr>
+<tr><td><p><code>reason</code></p></td><td><p>string</p></td><td><p>Optional: <code>requested_by_customer</code> (default), <code>duplicate</code> or <code>fraudulent</code>.</p></td></tr>
+</tbody></table>
+<p>A successful call returns <code>201</code> with the refund in <code>pending</code>. It moves to <code>succeeded</code> when the PSP confirms, usually within 1 minute.</p>
+<h2>Errors</h2>
+<table data-layout="default"><tbody>
+<tr><th><p>Status</p></th><th><p>Code</p></th><th><p>What to do</p></th></tr>
+<tr><td><p>400</p></td><td><p><code>idempotency_key_required</code></p></td><td><p>Send an <code>Idempotency-Key</code> of at least 8 characters.</p></td></tr>
+<tr><td><p>404</p></td><td><p><code>charge_not_refundable</code></p></td><td><p>The charge does not exist or is not settled yet. Retry after the <code>charge.settled</code> webhook.</p></td></tr>
+<tr><td><p>409</p></td><td><p><code>idempotency_key_conflict</code></p></td><td><p>You reused a key with a different body. Use a new key.</p></td></tr>
+<tr><td><p>422</p></td><td><p><code>amount_exceeds_refundable</code></p></td><td><p>The sum of refunds would pass the charge amount.</p></td></tr>
+</tbody></table>
+<h2>Migrating from v1</h2>
+<ac:structured-macro ac:name="warning" ac:schema-version="1"><ac:rich-text-body><p><code>POST /v1/refunds</code> stops working after release 2026.12. See <ac:link><ri:page ri:content-title="ADR-009: Retire the v1 refunds API" /></ac:link> and <a href="https://{{ATLASSIAN_SITE}}/browse/PAY-158">PAY-158</a>.</p></ac:rich-text-body></ac:structured-macro>
+<p>v1 accepted only full refunds and returned a different shape:</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">bash</ac:parameter><ac:parameter ac:name="title">v1 (deprecated)</ac:parameter><ac:plain-text-body><![CDATA[curl -sS -X POST https://payments.acme.dev/v1/refunds \
+  -H "authorization: Bearer $PAYMENTS_TOKEN" \
+  -d '{"charge":"ch_8Kq2x","amount_cents":4200}'
+# 200 {"refund":"rf_91","state":"pending","amount_cents":4200}
+# Deprecation: true
+# Sunset: Tue, 15 Dec 2026 00:00:00 GMT]]></ac:plain-text-body></ac:structured-macro>
+<table data-layout="default"><tbody>
+<tr><th><p>v1</p></th><th><p>v2</p></th></tr>
+<tr><td><p><code>charge</code></p></td><td><p><code>charge_id</code></p></td></tr>
+<tr><td><p><code>amount_cents</code> (must equal the charge)</p></td><td><p><code>amount</code> (any amount up to what is left)</p></td></tr>
+<tr><td><p>No idempotency</p></td><td><p><code>Idempotency-Key</code> required</p></td></tr>
+<tr><td><p><code>200</code> with <code>refund</code> and <code>state</code></p></td><td><p><code>201</code> with <code>id</code> and <code>status</code></p></td></tr>
+</tbody></table>
+<p>A v1 request with a partial <code>amount_cents</code> returns <code>400 partial_refunds_require_v2</code>.</p>

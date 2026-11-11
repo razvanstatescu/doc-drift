@@ -1,0 +1,16 @@
+{
+  "id": "06-comment-typo",
+  "branch": "scenario/comment-typo",
+  "title": "Fix typo in rotate-secrets.sh header comment",
+  "description": "recieve to receive in the usage comment of scripts/rotate-secrets.sh. No behaviour change.",
+  "kind": "non-drift",
+  "dependsOn": "05-lockfile-bump",
+  "delete": [],
+  "expected": {
+    "alert": false,
+    "summary": "No alert. Rotate payments secrets anchors scripts/rotate-secrets.sh at normal weight: a 1-line change scores 0.43, below the 0.5 threshold, and the removed comment line carries no identifier or snippet the page quotes.",
+    "pages": [],
+    "mustNotFlag": ["Rotate payments secrets"],
+    "note": "This outcome depends on normal weight being about 0.7. If normal weight is 1.0 the score is 0.62 and the page flags Medium; then the matcher needs a comment-only dampener to keep this case quiet."
+  }
+}

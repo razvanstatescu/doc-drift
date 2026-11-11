@@ -1,0 +1,41 @@
+<table data-layout="default"><tbody>
+<tr><th><p>Owner</p></th><td><p>Dana (Platform on-call lead)</p></td></tr>
+<tr><th><p>Service</p></th><td><p><code>payments-workers</code></p></td></tr>
+<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/PAY-165">PAY-165</a> Autoscale workers on settlement queue depth</p></td></tr>
+<tr><th><p>Last reviewed</p></th><td><p>2026-10-21</p></td></tr>
+</tbody></table>
+<h2>When to use this runbook</h2>
+<p>The settlement workers normally scale themselves: a HorizontalPodAutoscaler keeps them between <code>workers.min</code> and <code>workers.max</code> on CPU. The autoscaler does not see queue depth yet (that is <a href="https://{{ATLASSIAN_SITE}}/browse/PAY-165">PAY-165</a>), so scale by hand when:</p>
+<ul>
+<li><p>The <strong>Pending settlement jobs</strong> panel stays above 5,000 for 10 minutes.</p></li>
+<li><p>You expect a burst, such as a merchant batch import or the first hour after a PSP outage.</p></li>
+</ul>
+<h2>Limits</h2>
+<p>The chart sets the bounds. Stay inside them; going above the maximum needs a database review, because every worker pod opens its own connection pool.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">yaml</ac:parameter><ac:parameter ac:name="title">deploy/helm/values.yaml (excerpt)</ac:parameter><ac:plain-text-body><![CDATA[workers:
+  min: 2
+  max: 8]]></ac:plain-text-body></ac:structured-macro>
+<h2>Steps</h2>
+<ol>
+<li><p>Check the current count and what the autoscaler wants:</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[kubectl -n payments get deploy payments-workers
+kubectl -n payments get hpa payments-workers]]></ac:plain-text-body></ac:structured-macro>
+</li>
+<li><p>Pick a count. Rule of thumb: 1 worker per 1,500 pending jobs, at least 2, at most 8.</p></li>
+<li><p>Scale from the root of the <code>payments-api</code> repo. The script refuses counts outside the chart limits and waits for the rollout.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[./scripts/scale-workers.sh --count 6]]></ac:plain-text-body></ac:structured-macro>
+</li>
+<li><p>Watch the pending jobs panel. It should fall within 15 minutes.</p></li>
+<li><p>When the queue is under 500, let the autoscaler take over again. It will settle back toward <code>workers.min</code> within about 5 minutes; you do not need to scale down by hand.</p></li>
+</ol>
+<h2>If the queue does not move</h2>
+<ul>
+<li><p>Workers are up but idle: check that settlement enqueue is not paused. See <ac:link><ri:page ri:content-title="Drain the settlement queue" /></ac:link> for the resume step.</p></li>
+<li><p>Workers are failing: look for <code>settlement batch failed</code> in the worker logs. A PSP outage looks like this; follow <ac:link><ri:page ri:content-title="PSP outage runbook" /></ac:link>.</p></li>
+<li><p>Database connection errors: you are near the connection limit. Scale down to the previous count and page the database on-call.</p></li>
+</ul>
+<h2>Related</h2>
+<ul>
+<li><p><ac:link><ri:page ri:content-title="Settlement worker overview" /></ac:link></p></li>
+<li><p><ac:link><ri:page ri:content-title="ADR-014: Async settlement worker queue" /></ac:link></p></li>
+</ul>

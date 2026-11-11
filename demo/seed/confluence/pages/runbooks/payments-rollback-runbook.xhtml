@@ -1,0 +1,52 @@
+<table data-layout="default"><tbody>
+<tr><th><p>Owner</p></th><td><p>Dana (Platform on-call lead)</p></td></tr>
+<tr><th><p>Service</p></th><td><p><code>payments-api</code></p></td></tr>
+<tr><th><p>Severity</p></th><td><p>Use during a SEV1 or SEV2 caused by a bad payments release</p></td></tr>
+<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/PAY-142">PAY-142</a> Safer payments deploys and rollbacks</p></td></tr>
+<tr><th><p>Last reviewed</p></th><td><p>2026-10-14</p></td></tr>
+</tbody></table>
+<h2>When to use this runbook</h2>
+<p>Roll back when a payments-api release is live and at least one of these is true:</p>
+<ul>
+<li><p>The charge success rate on the Payments overview dashboard drops below 97% for 5 minutes.</p></li>
+<li><p>p95 latency on <code>POST /v2/charges</code> stays above 800 ms for 5 minutes.</p></li>
+<li><p>Error logs show a spike that started within 30 minutes of the deploy.</p></li>
+</ul>
+<p>If the release also ran a database migration, read <strong>Migrations</strong> below before step 2. A rollback does not undo schema changes.</p>
+<ac:structured-macro ac:name="warning" ac:schema-version="1"><ac:rich-text-body><p>Post in the incident channel before you start, and name yourself as the person rolling back. Only one person runs the rollback.</p></ac:rich-text-body></ac:structured-macro>
+<h2>Steps</h2>
+<ol>
+<li><p>Confirm the current and previous release. The previous revision is the one you are rolling back to.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[kubectl config use-context prod-eu-west-1
+helm history payments -n payments --max 5]]></ac:plain-text-body></ac:structured-macro>
+</li>
+<li><p>Run the rollback script from the root of the <code>payments-api</code> repo. <code>ROLLBACK_TIMEOUT</code> is in seconds and defaults to 300. Raise it to 600 if the cluster is under load.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[export ROLLBACK_TIMEOUT=300
+./scripts/rollback.sh --timeout $ROLLBACK_TIMEOUT]]></ac:plain-text-body></ac:structured-macro>
+<p>The script calls <code>helm rollback payments 0 --wait</code>, so it returns only when the previous release is ready or the timeout expires.</p>
+</li>
+<li><p>Check that the pods are on the previous image tag and passing readiness.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[kubectl -n payments get pods -l app=payments-api -o wide
+kubectl -n payments get deploy payments-api -o jsonpath='{.spec.template.spec.containers[0].image}']]></ac:plain-text-body></ac:structured-macro>
+</li>
+<li><p>Watch the charge success rate for 10 minutes. It should be back above 99%.</p></li>
+<li><p>Freeze deploys: add the <code>deploy-freeze</code> label to the payments-api repo's open release PR and say so in the incident channel.</p></li>
+</ol>
+<h2>If the script times out</h2>
+<p>A timeout usually means the previous image cannot pull or a pod is failing readiness. Do not run the script twice in parallel.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[kubectl -n payments describe pods -l app=payments-api | tail -n 40
+kubectl -n payments get events --sort-by=.lastTimestamp | tail -n 20]]></ac:plain-text-body></ac:structured-macro>
+<p>If a pod is stuck, delete it and let the deployment replace it. Then run step 2 again with a longer timeout.</p>
+<h2>Migrations</h2>
+<p>Payments migrations are expand-only for 1 release, so the previous release can run against the new schema. If the release notes say the migration was <em>contract</em> (dropped or renamed a column), page the database on-call before rolling back.</p>
+<h2>After the rollback</h2>
+<ul>
+<li><p>Open a follow-up in Jira under <a href="https://{{ATLASSIAN_SITE}}/browse/PAY-142">PAY-142</a> with the bad release tag and the dashboard screenshot.</p></li>
+<li><p>Keep the freeze until the fix is reviewed by 2 people.</p></li>
+<li><p>Fill in the incident timeline. See <ac:link><ri:page ri:content-title="Payments incident response checklist" /></ac:link>.</p></li>
+</ul>
+<h2>Related</h2>
+<ul>
+<li><p><ac:link><ri:page ri:content-title="Payments deployment and Helm chart" /></ac:link></p></li>
+<li><p><ac:link><ri:page ri:content-title="Scale payment workers" /></ac:link></p></li>
+</ul>

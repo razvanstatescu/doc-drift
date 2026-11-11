@@ -1,0 +1,35 @@
+<table data-layout="default"><tbody>
+<tr><th><p>Owner</p></th><td><p>Dana (Platform on-call lead)</p></td></tr>
+<tr><th><p>Service</p></th><td><p><code>payments-api</code>, <code>payments-workers</code></p></td></tr>
+<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/PAY-140">PAY-140</a> Async settlement worker</p></td></tr>
+<tr><th><p>Last reviewed</p></th><td><p>2026-10-02</p></td></tr>
+</tbody></table>
+<h2>When to use this runbook</h2>
+<p>Drain the queue before anything that must not run while settlements are in flight:</p>
+<ul>
+<li><p>A database failover that is planned, not forced.</p></li>
+<li><p>A PSP maintenance window announced in advance.</p></li>
+<li><p>A worker release that changes how <code>settlement_jobs</code> rows are claimed.</p></li>
+</ul>
+<p>Draining does not stop charges. <code>POST /v2/charges</code> keeps accepting requests; their settlement jobs are created as <code>held</code> until you resume.</p>
+<h2>How it works</h2>
+<p>The API inserts a <code>settlement_jobs</code> row for every charge. Workers claim pending rows in batches with <code>FOR UPDATE SKIP LOCKED</code>. Setting <code>SETTLEMENT_ENQUEUE_PAUSED=true</code> on the API makes new jobs <code>held</code> instead of <code>pending</code>; the workers keep going until no pending row is left.</p>
+<h2>Steps</h2>
+<ol>
+<li><p>Note the current pending count on the <strong>Pending settlement jobs</strong> panel. Draining takes about 1 minute per 1,000 jobs with 4 workers.</p></li>
+<li><p>Start the drain from the root of the <code>payments-api</code> repo. The default timeout is 900 seconds.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[./scripts/drain-queue.sh --timeout 1200]]></ac:plain-text-body></ac:structured-macro>
+<p>It prints the pending count every 10 seconds and exits 0 when it reaches 0.</p>
+</li>
+<li><p>If it exits 1 (timeout), the workers are probably failing. Check the worker logs before you retry, and consider scaling up with <ac:link><ri:page ri:content-title="Scale payment workers" /></ac:link>.</p></li>
+<li><p>Do the maintenance.</p></li>
+<li><p>Resume. The script turns enqueue back on and releases every <code>held</code> job to <code>pending</code>. The backlog clears within a few minutes.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[./scripts/drain-queue.sh --resume]]></ac:plain-text-body></ac:structured-macro>
+</li>
+</ol>
+<ac:structured-macro ac:name="note" ac:schema-version="1"><ac:rich-text-body><p><code>drain-queue.sh</code> changes the deployment with <code>kubectl set env</code>. The next Helm release resets it to the chart value, so a deploy during a drain also resumes enqueue. Freeze deploys while draining.</p></ac:rich-text-body></ac:structured-macro>
+<h2>Related</h2>
+<ul>
+<li><p><ac:link><ri:page ri:content-title="Settlement worker overview" /></ac:link></p></li>
+<li><p><ac:link><ri:page ri:content-title="Fail over the payments database" /></ac:link></p></li>
+</ul>

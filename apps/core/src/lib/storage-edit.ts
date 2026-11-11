@@ -85,14 +85,14 @@ function headingKey(h: string): string {
 // Matching with a map back to raw offsets
 // ---------------------------------------------------------------------------
 /** A normalised string plus, for each of its characters, the raw [start, end) it came from. */
-interface Mapped {
+export interface Mapped {
   text: string;
   from: number[];
   to: number[];
 }
 
 /** Collapses whitespace in a mapped character list. A collapsed run maps to the whole raw run. */
-function normalizeMapped(chars: { c: string; from: number; to: number }[]): Mapped {
+export function normalizeMapped(chars: { c: string; from: number; to: number }[]): Mapped {
   const out: Mapped = { text: '', from: [], to: [] };
   let pendingFrom = -1;
   let pendingTo = -1;
@@ -202,7 +202,7 @@ function codeSpans(storage: string, start: number, end: number): CodeSpan[] {
 // ---------------------------------------------------------------------------
 // Replacement rendering
 // ---------------------------------------------------------------------------
-function escapeXml(s: string): string {
+export function escapeXml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
@@ -215,7 +215,7 @@ export function inlineXhtml(text: string): string {
 }
 
 /** CDATA content cannot contain `]]>`; split it across two CDATA sections. */
-function cdataSafe(text: string): string {
+export function cdataSafe(text: string): string {
   return text.replace(/\]\]>/g, ']]]]><![CDATA[>');
 }
 
@@ -248,7 +248,7 @@ function imbalance(storage: string, start: number, end: number): { closes: numbe
  * tags balance, so `x</code> more` becomes `<code>x</code> more` and two paragraphs become whole `<p>`s.
  * Returns undefined when it can't balance inside the section.
  */
-function balance(storage: string, start: number, end: number, min: number, max: number): [number, number] | undefined {
+export function balance(storage: string, start: number, end: number, min: number, max: number): [number, number] | undefined {
   let s = start;
   let e = end;
   for (let step = 0; step < 12; step++) {

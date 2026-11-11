@@ -177,6 +177,10 @@ const MIGRATIONS: [string, string][] = [
       INDEX idx_fix_page_status (page_id, status)
     )`,
   ],
+  // M3 polish (D29). A proposal targets one block of the page (`b4`, from get-drift-context). NULL on
+  // drafts stored before: they apply by section and text as before.
+  ['v012_fix_proposal_block_id', 'ALTER TABLE fix_proposal ADD COLUMN block_id VARCHAR(16) NULL'],
+  ['v013_fix_proposal_block_kind', 'ALTER TABLE fix_proposal ADD COLUMN block_kind VARCHAR(16) NULL'],
 ];
 
 /** Applies pending migrations. Idempotent: the runner skips entries recorded in `__migrations`. */
@@ -1096,6 +1100,9 @@ export interface FixProposalRow {
   /** Display refs of the changes it answers: `PR #482`, `PAY-21`. */
   refs: string[];
   sectionHeading: string;
+  /** The page block it changes (D29); null on drafts stored before block targeting. */
+  blockId: string | null;
+  blockKind: string | null;
   originalText: string;
   proposedText: string;
   rationale: string | null;
@@ -1110,16 +1117,18 @@ export interface FixProposalRow {
 type FixRow = {
   id: string; page_id: string; event_ids: unknown; refs: unknown; section_heading: string; original_text: string; proposed_text: string;
   rationale: string | null; status: FixProposalStatus; created_by: string | null; created_at: string; decided_by: string | null;
-  decided_at: string | null; applied_version: number | null;
+  decided_at: string | null; applied_version: number | null; block_id: string | null; block_kind: string | null;
 };
 const FIX_COLS =
-  'id, page_id, event_ids, refs, section_heading, original_text, proposed_text, rationale, status, created_by, created_at, decided_by, decided_at, applied_version';
+  'id, page_id, event_ids, refs, section_heading, original_text, proposed_text, rationale, status, created_by, created_at, decided_by, decided_at, applied_version, block_id, block_kind';
 const toFix = (r: FixRow): FixProposalRow => ({
   id: r.id,
   pageId: r.page_id,
   eventIds: parseJson<string[]>(r.event_ids, []),
   refs: parseJson<string[]>(r.refs, []),
   sectionHeading: r.section_heading,
+  blockId: r.block_id ?? null,
+  blockKind: r.block_kind ?? null,
   originalText: r.original_text,
   proposedText: r.proposed_text,
   rationale: r.rationale,
@@ -1137,15 +1146,17 @@ export async function insertFixProposal(p: {
   eventIds: string[];
   refs: string[];
   sectionHeading: string;
+  blockId: string | null;
+  blockKind: string | null;
   originalText: string;
   proposedText: string;
   rationale: string | null;
   createdBy: string | null;
 }): Promise<void> {
   await exec(
-    `INSERT INTO fix_proposal (id, page_id, event_ids, refs, section_heading, original_text, proposed_text, rationale, status, created_by, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', ?, ?)`,
-    p.id, p.pageId, JSON.stringify(p.eventIds), JSON.stringify(p.refs), p.sectionHeading.slice(0, 512), p.originalText, p.proposedText,
+    `INSERT INTO fix_proposal (id, page_id, event_ids, refs, section_heading, block_id, block_kind, original_text, proposed_text, rationale, status, created_by, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open', ?, ?)`,
+    p.id, p.pageId, JSON.stringify(p.eventIds), JSON.stringify(p.refs), p.sectionHeading.slice(0, 512), p.blockId, p.blockKind, p.originalText, p.proposedText,
     p.rationale, p.createdBy, toSqlDate(),
   );
 }

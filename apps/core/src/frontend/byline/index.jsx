@@ -20,7 +20,7 @@ import ForgeReconciler, {
 } from '@forge/react';
 import { invoke, rovo, view } from '@forge/bridge';
 import { StateBadge } from '../shared/components';
-import { FIX_NOT_FOUND_BODY, FIX_NOT_FOUND_TITLE, acceptedTitle, fixPrompt, openProposals, proposalSource, rovoOpenPayload } from '../shared/fix';
+import { FIX_NOT_FOUND_BODY, FIX_NOT_FOUND_TITLE, acceptedTitle, fixPrompt, joinList, openProposals, proposalSource, rovoOpenPayload } from '../shared/fix';
 import { headerLine, openEvents, plural, sortEvents } from '../shared/format';
 import { AnchorEditor } from './anchors';
 import { ProposedFixSection, ReviewPanel } from './review';
@@ -187,11 +187,29 @@ const App = () => {
     );
   };
 
+  // D29: a section can have one draft per block. Accept them in page order; stop at the first refusal.
+  const acceptAllFix = (list, key) => {
+    const source = joinList([...new Set(list.map((p) => proposalSource(p, allEvents)).filter(Boolean))]) || null;
+    return run(
+      `fixall:${key}`,
+      async () => {
+        let res = null;
+        for (const p of list) {
+          res = await invoke('applyProposal', { proposalId: p.id });
+          if (failed(res)) return res;
+        }
+        return res;
+      },
+      { title: acceptedTitle(source), body: 'Reload the page to see the change.' },
+      (res) => (res?.error === 'not_found' ? { appearance: 'warning', title: FIX_NOT_FOUND_TITLE, body: FIX_NOT_FOUND_BODY } : null),
+    );
+  };
+
   const rejectFix = (p) =>
     run(`reject:${p.id}`, () => invoke('rejectProposal', { proposalId: p.id }), { title: 'Rejected the draft. The page is unchanged.', body: '' });
 
   const drafts = (
-    <ProposedFixSection proposals={proposals} events={allEvents} canEdit={canEdit} busy={busy} onAccept={acceptFix} onReject={rejectFix} />
+    <ProposedFixSection proposals={proposals} events={allEvents} canEdit={canEdit} busy={busy} onAccept={acceptFix} onReject={rejectFix} onAcceptAll={acceptAllFix} />
   );
 
   const header = (
@@ -248,6 +266,7 @@ const App = () => {
       busy={busy}
       onProposeFix={proposeFix}
       onAcceptFix={acceptFix}
+      onAcceptAllFix={acceptAllFix}
       onRejectFix={rejectFix}
       onVerify={() =>
         run('verify', () => invoke('markVerified', { pageId }), {

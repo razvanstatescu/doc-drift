@@ -20,11 +20,13 @@ import {
   parseSpaceKey,
   SECTION_TEXT_MAX,
   clip,
+  type ContextBlock,
   UNTRUSTED_RULE,
   unknownPage,
   type PathMatch,
 } from './agent-tools';
 import { anchorLabel } from './anchors';
+import { extractBlocks, type PageBlock } from './blocks';
 import { plural, refLabel } from './copy';
 import { displayNames, findPagesByTitle, getPageInfo, getPageStorage } from './confluence';
 import {
@@ -39,7 +41,7 @@ import {
   pageStatesFor,
 } from './db';
 import { fromSqlDate } from './ingest-rules';
-import { eventFiles, MAX_SECTIONS, severityName, splitSectionsDetailed, tokenRegExp, tokensForEvents } from './review';
+import { eventFiles, MAX_SECTIONS, severityName, tokenRegExp, tokensForEvents } from './review';
 import { markVerified, type Gate } from './review-service';
 
 type Requester = Parameters<typeof getPageInfo>[0];
@@ -216,7 +218,27 @@ export async function listStalePages(input: Record<string, unknown>, deps: ToolD
 // get-drift-context (agent only)
 // ---------------------------------------------------------------------------
 export const CONTEXT_INSTRUCTIONS =
-  `${UNTRUSTED_RULE} To propose a fix, call submit-fix-proposal with pageId, sectionHeading (exactly as listed), originalText (copied exactly from that section's text, the smallest passage that needs to change) and proposedText. Never edit the page; a person accepts or rejects the draft.`;
+  `${UNTRUSTED_RULE} Each section lists its blocks (paragraph, list-item, table-cell, heading, code). To propose a fix, call submit-fix-proposal once per block that must change, with pageId, blockId and proposedText: the block's full new text, copied verbatim from the block's text with only the needed change. For a code block, proposedText is the whole new code body; to change one line only, also pass that line, verbatim, as originalText. Never put two blocks in one proposal. Never edit the page; a person accepts or rejects each draft.`;
+
+/** Blocks shown per section before unmatched ones are left out (the neighbours of a matched block stay). */
+export const MAX_SECTION_BLOCKS = 30;
+
+/** The blocks of one section for get-drift-context: verbatim text, `matched` where a token appears. */
+export function contextBlocks(blocks: PageBlock[], patterns: RegExp[]): { blocks: ContextBlock[]; blocksOmitted?: number } {
+  const all: ContextBlock[] = blocks.map((b) => {
+    const text = clip(b.text, SECTION_TEXT_MAX);
+    return {
+      blockId: b.blockId,
+      kind: b.kind,
+      text,
+      ...(patterns.some((re) => re.test(b.text)) && { matched: true as const }),
+      ...(text !== b.text && { truncated: true as const }),
+    };
+  });
+  if (all.length <= MAX_SECTION_BLOCKS) return { blocks: all };
+  const keep = all.filter((b, i) => b.matched || all[i - 1]?.matched || all[i + 1]?.matched).slice(0, MAX_SECTION_BLOCKS);
+  return { blocks: keep, blocksOmitted: all.length - keep.length };
+}
 
 export async function getDriftContext(input: Record<string, unknown>, deps: ToolDeps): Promise<Result> {
   const resolved = await resolvePage(input, deps);
@@ -262,11 +284,14 @@ export async function getDriftContext(input: Record<string, unknown>, deps: Tool
     .sort((a, b) => (a.severity === b.severity ? 0 : a.severity === 'high' ? -1 : 1));
 
   const sections = [];
-  for (const s of splitSectionsDetailed(page.storage)) {
-    const hitEvents = views.filter((v) => v._tokens.some((t) => tokenRegExp(t).test(s.text)));
+  const bySection = new Map<number, PageBlock[]>();
+  for (const b of extractBlocks(page.storage)) bySection.set(b.sectionIndex, [...(bySection.get(b.sectionIndex) ?? []), b]);
+  for (const group of bySection.values()) {
+    const text = group.map((b) => b.text).join('\n');
+    const hitEvents = views.filter((v) => v._tokens.some((t) => tokenRegExp(t).test(text)));
     if (hitEvents.length === 0) continue;
-    const matched = [...new Set(hitEvents.flatMap((v) => v._tokens.filter((t) => tokenRegExp(t).test(s.text))))];
-    sections.push({ heading: s.heading, text: clip(s.text, SECTION_TEXT_MAX), matchedTokens: matched, eventIds: hitEvents.map((v) => v.eventId) });
+    const matched = [...new Set(hitEvents.flatMap((v) => v._tokens.filter((t) => tokenRegExp(t).test(text))))];
+    sections.push({ heading: group[0]!.section, matchedTokens: matched, eventIds: hitEvents.map((v) => v.eventId), ...contextBlocks(group, matched.map(tokenRegExp)) });
     if (sections.length >= MAX_SECTIONS) break;
   }
   const ctx = fitContext({
@@ -280,7 +305,7 @@ export async function getDriftContext(input: Record<string, unknown>, deps: Tool
     events: views.map(({ _tokens, ...v }) => v),
     guidance:
       sections.length > 0
-        ? `Draft replacement text only for the ${plural(sections.length, 'section')} listed, then call submit-fix-proposal once per section. Never edit the page.`
+        ? `Draft replacement text only for the ${plural(sections.length, 'section')} listed. Call submit-fix-proposal once per block that must change (usually the blocks marked matched), with its blockId. Never merge blocks. Never edit the page.`
         : 'No section of this page mentions the changed files or identifiers. Explain the change instead of drafting a fix.',
   });
   return ctx;

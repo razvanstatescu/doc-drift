@@ -4,6 +4,7 @@
 // `guidance`, because third-party agents and MCP clients never see our skill (D14).
 import { GlobCache, normalizePath, pathMatchStrength } from '@dds/matcher';
 import type { Binding, StoredPageState } from '@dds/shared';
+import { parseBlockId } from './blocks';
 import { plural, refLabel } from './copy';
 
 export const CONSENT_GUIDANCE = 'Grant Doc Drift Sentinel access in Connected apps, then retry.';
@@ -204,21 +205,50 @@ export function diffForPaths(diff: string | null | undefined, paths: string[], m
   return keep.length > 0 ? clip(keep.join(''), max) : null;
 }
 
-/** Shrinks the largest strings of a context object until its JSON fits `maxBytes`. */
-export function fitContext<T extends { sections: { text: string }[]; events: { diff?: string | null }[] }>(ctx: T, maxBytes = CONTEXT_MAX_BYTES): T & { truncated: boolean } {
+export interface ContextBlock {
+  blockId: string;
+  kind: string;
+  text: string;
+  /** The block contains a changed path, removed identifier or Jira key. */
+  matched?: true;
+  /** The text was cut to fit; target it with blockId plus an originalText line from what is shown. */
+  truncated?: true;
+}
+
+type FitSection = { blocks: ContextBlock[]; blocksOmitted?: number };
+
+/**
+ * Shrinks a context object until its JSON fits `maxBytes`: diffs first, then blocks without a matched
+ * token are dropped (counted in `blocksOmitted`), then long block texts are cut (marked `truncated`).
+ */
+export function fitContext<T extends { sections: FitSection[]; events: { diff?: string | null }[] }>(ctx: T, maxBytes = CONTEXT_MAX_BYTES): T & { truncated: boolean } {
   const out = structuredClone(ctx) as T & { truncated: boolean };
   out.truncated = false;
   const size = () => Buffer.byteLength(JSON.stringify(out), 'utf8');
-  for (let round = 0; round < 12 && size() > maxBytes; round++) {
+  let droppedUnmatched = false;
+  for (let round = 0; round < 16 && size() > maxBytes; round++) {
     out.truncated = true;
     const diffs = out.events.filter((e) => typeof e.diff === 'string' && e.diff.length > 200);
     if (diffs.length > 0) {
       for (const e of diffs) e.diff = clip(e.diff!, Math.floor(e.diff!.length / 2));
       continue;
     }
-    const texts = out.sections.filter((s) => s.text.length > 300);
-    if (texts.length === 0) break;
-    for (const s of texts) s.text = clip(s.text, Math.floor(s.text.length / 2));
+    if (!droppedUnmatched) {
+      droppedUnmatched = true;
+      for (const s of out.sections) {
+        const keep = s.blocks.filter((b) => b.matched);
+        if (keep.length === s.blocks.length || keep.length === 0) continue;
+        s.blocksOmitted = (s.blocksOmitted ?? 0) + s.blocks.length - keep.length;
+        s.blocks = keep;
+      }
+      continue;
+    }
+    const long = out.sections.flatMap((s) => s.blocks).filter((b) => b.text.length > 300);
+    if (long.length === 0) break;
+    for (const b of long) {
+      b.text = clip(b.text, Math.floor(b.text.length / 2));
+      b.truncated = true;
+    }
   }
   if (size() > maxBytes) {
     for (const e of out.events) e.diff = null;
@@ -242,22 +272,31 @@ export function versionMessage(refs: string[]): string {
 
 export type FixInputError = { error: 'bad_request'; message: string };
 
-export function validateFixInput(input: { sectionHeading?: unknown; originalText?: unknown; proposedText?: unknown; rationale?: unknown }):
-  | { ok: true; value: { sectionHeading: string; originalText: string; proposedText: string; rationale: string | null } }
+export function validateFixInput(input: { sectionHeading?: unknown; blockId?: unknown; originalText?: unknown; proposedText?: unknown; rationale?: unknown }):
+  | { ok: true; value: { sectionHeading: string; blockId: string | null; originalText: string; proposedText: string; rationale: string | null } }
   | ({ ok: false } & FixInputError) {
   const sectionHeading = typeof input.sectionHeading === 'string' ? input.sectionHeading.trim() : '';
+  const rawBlock = typeof input.blockId === 'number' ? String(input.blockId) : typeof input.blockId === 'string' ? input.blockId.trim() : '';
+  const blockId = rawBlock ? parseBlockId(rawBlock) : null;
   const originalText = typeof input.originalText === 'string' ? input.originalText.replace(/\r\n/g, '\n') : '';
   const proposedText = typeof input.proposedText === 'string' ? input.proposedText.replace(/\r\n/g, '\n') : '';
   const rationale = typeof input.rationale === 'string' && input.rationale.trim() !== '' ? input.rationale.trim() : null;
   const bad = (message: string) => ({ ok: false as const, error: 'bad_request' as const, message });
-  if (!originalText.trim()) return bad('originalText is required. Copy it exactly from a section in get-drift-context.');
+  if (rawBlock && !blockId) return bad('blockId must be an ID such as "b3", copied from the blocks in get-drift-context.');
+  if (!blockId && !originalText.trim()) return bad('Pass blockId from get-drift-context (preferred), or originalText copied exactly from one block.');
   if (!proposedText.trim()) return bad('proposedText is required.');
   if (originalText.length > FIX_LIMITS.original) return bad(`originalText is limited to ${FIX_LIMITS.original} characters. Propose a smaller change.`);
   if (proposedText.length > FIX_LIMITS.proposed) return bad(`proposedText is limited to ${FIX_LIMITS.proposed} characters.`);
   if (sectionHeading.length > FIX_LIMITS.heading) return bad('sectionHeading is too long.');
-  if (originalText.replace(/\s+/g, ' ').trim() === proposedText.replace(/\s+/g, ' ').trim()) return bad('proposedText is the same as originalText.');
+  if (originalText.trim() && originalText.replace(/\s+/g, ' ').trim() === proposedText.replace(/\s+/g, ' ').trim()) return bad('proposedText is the same as originalText.');
   return {
     ok: true,
-    value: { sectionHeading: sectionHeading || 'Top of page', originalText, proposedText, rationale: rationale ? rationale.slice(0, FIX_LIMITS.rationale) : null },
+    value: {
+      sectionHeading: sectionHeading || 'Top of page',
+      blockId: blockId ?? null,
+      originalText,
+      proposedText,
+      rationale: rationale ? rationale.slice(0, FIX_LIMITS.rationale) : null,
+    },
   };
 }

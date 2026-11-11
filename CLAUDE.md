@@ -14,7 +14,7 @@ A Forge app for Atlassian **Codegeist 2026**. It anchors Confluence pages to the
 | How it fits together | [docs/architecture/overview.md](docs/architecture/overview.md) and siblings |
 | Exact Forge manifest fields, scopes, REST paths, limits | [docs/platform/](docs/platform/). Start with its README's **corrections checklist** |
 | Rules, dates, distribution | [docs/hackathon/codegeist-rules.md](docs/hackathon/codegeist-rules.md), [docs/hackathon/timeline.md](docs/hackathon/timeline.md), [docs/hackathon/distribution.md](docs/hackathon/distribution.md) |
-| Why something is the way it is | [docs/decisions.md](docs/decisions.md) (D1 to D28) |
+| Why something is the way it is | [docs/decisions.md](docs/decisions.md) (D1 to D29) |
 | Terms | [docs/glossary.md](docs/glossary.md) |
 | Colours, type, logo, copy | [brand/](brand/) |
 | Full index | [docs/README.md](docs/README.md) |
@@ -81,5 +81,5 @@ Storage leans Forge SQL. UI is UI Kit (`render: native`).
 
 - Keep the docs current. When a spike or a discussion changes the design, update the relevant doc **and** add an entry to [docs/decisions.md](docs/decisions.md). Mark spike outcomes in [risks-and-spikes.md](docs/hackathon/risks-and-spikes.md). (We are building a doc-drift tool; don't let our own docs drift.)
 - Platform facts: prefer [docs/platform/](docs/platform/) over memory. If you verify something new against developer.atlassian.com, add it there with its source URL and a Verified/Unverified tag. Preview modules (`rovo:mcp`, `rovo:skill`, TWG, multi-app, page banner) change often, so check the Forge changelog before relying on details.
-- Feature IDs F1 to F18 and decision IDs D1 to D28 are stable. Reference them in issues and commits.
+- Feature IDs F1 to F18 and decision IDs D1 to D29 are stable. Reference them in issues and commits.
 - If brand changes are made here, mirror them to the design system artifact (and the reverse).

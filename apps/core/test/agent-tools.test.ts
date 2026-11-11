@@ -14,6 +14,7 @@ import {
   unknownPage,
   validateFixInput,
   versionMessage,
+  type ContextBlock,
 } from '../src/lib/agent-tools';
 
 const DAY = 86_400_000;
@@ -128,12 +129,23 @@ describe('drift context', () => {
     expect(diffForPaths(null, ['a'])).toBeNull();
   });
   it('fits the context under the byte cap, shrinking diffs first', () => {
-    const big = { sections: [{ text: 'x'.repeat(3000) }], events: [{ diff: 'y\n'.repeat(20_000) }, { diff: 'z\n'.repeat(20_000) }] };
+    const big = { sections: [{ blocks: [{ blockId: 'b1', kind: 'code', text: 'x'.repeat(3000), matched: true as const }] }], events: [{ diff: 'y\n'.repeat(20_000) }, { diff: 'z\n'.repeat(20_000) }] };
     const out = fitContext(big, 15_000);
     expect(Buffer.byteLength(JSON.stringify(out))).toBeLessThanOrEqual(15_000);
     expect(out.truncated).toBe(true);
-    expect(out.sections[0]!.text.length).toBe(3000);
+    expect(out.sections[0]!.blocks[0]!.text.length).toBe(3000);
     expect(fitContext({ sections: [], events: [] }).truncated).toBe(false);
+  });
+  it('then drops unmatched blocks, then cuts long block texts', () => {
+    const blocks: ContextBlock[] = [
+      { blockId: 'b1', kind: 'paragraph', text: 'a'.repeat(6000) },
+      { blockId: 'b2', kind: 'code', text: 'b\n'.repeat(6000), matched: true },
+    ];
+    const sections: { blocks: ContextBlock[]; blocksOmitted?: number }[] = [{ blocks }];
+    const out = fitContext({ sections, events: [{ diff: null }] }, 8_000);
+    expect(Buffer.byteLength(JSON.stringify(out))).toBeLessThanOrEqual(8_000);
+    expect(out.sections[0]!.blocksOmitted).toBe(1);
+    expect(out.sections[0]!.blocks.map((b) => [b.blockId, b.truncated])).toEqual([['b2', true]]);
   });
 });
 
@@ -146,12 +158,16 @@ describe('fix proposals', () => {
   it('validateFixInput requires text, refuses no-op drafts and caps sizes', () => {
     expect(validateFixInput({ originalText: 'a', proposedText: 'b' })).toEqual({
       ok: true,
-      value: { sectionHeading: 'Top of page', originalText: 'a', proposedText: 'b', rationale: null },
+      value: { sectionHeading: 'Top of page', blockId: null, originalText: 'a', proposedText: 'b', rationale: null },
     });
     expect(validateFixInput({ originalText: 'a  b', proposedText: 'a b' }).ok).toBe(false);
     expect(validateFixInput({ originalText: '', proposedText: 'b' }).ok).toBe(false);
     expect(validateFixInput({ originalText: 'a'.repeat(4001), proposedText: 'b' }).ok).toBe(false);
     const r = validateFixInput({ sectionHeading: ' Rollback ', originalText: 'a', proposedText: 'b', rationale: ' PR #482 renamed it ' });
     expect(r.ok && r.value).toMatchObject({ sectionHeading: 'Rollback', rationale: 'PR #482 renamed it' });
+    // blockId alone is enough; a malformed one is refused with the expected shape.
+    expect(validateFixInput({ blockId: 'B4', proposedText: 'x' })).toMatchObject({ ok: true, value: { blockId: 'b4', originalText: '' } });
+    expect(validateFixInput({ blockId: 'paragraph 4', proposedText: 'x' }).ok).toBe(false);
+    expect(validateFixInput({ proposedText: 'x' }).ok).toBe(false);
   });
 });

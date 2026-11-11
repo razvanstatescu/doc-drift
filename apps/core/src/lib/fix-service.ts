@@ -2,13 +2,15 @@
 // rejects it in the review panel. Submitting never writes the page. Accepting writes the page asUser
 // (the `user` requester), with the version message naming the change, then closes the proposal's events,
 // records a verification (method accepted_proposal) and rewrites the byline asApp (D15).
+// D29: a draft targets one page block (`blockId` from get-drift-context, see blocks.ts). A passage that
+// runs across blocks is refused with `spans_blocks`; text in no block is `not_found` with candidates.
 import { randomUUID } from 'node:crypto';
 import { PAGE_STATE_LABELS } from '@dds/shared';
 import { FIX_LIMITS, validateFixInput, versionMessage } from './agent-tools';
-import { refLabel } from './copy';
+import { plural, refLabel } from './copy';
+import { applyBlockEdit, blockSummary, editBlock, extractBlocks, isNoOp, resolveTarget, targetOriginal, type PageBlock, type TargetResult } from './blocks';
 import { displayNames, getPageForEdit, getPageStorage, updatePageBody } from './confluence';
 import {
-  countOpenFixProposals,
   decideFixProposal,
   ensureSchema,
   eventDetailsForPage,
@@ -24,7 +26,7 @@ import { fromSqlDate } from './ingest-rules';
 import { refreshPage } from './page-state';
 import { eventFiles, splitSections, tokenRegExp, tokensForEvents } from './review';
 import type { Failure, Gate } from './review-service';
-import { applySectionEdit, EDIT_MESSAGES, normalizeWhitespace, TOP_OF_PAGE, type EditError } from './storage-edit';
+import { applySectionEdit, EDIT_MESSAGES, normalizeWhitespace, stripFence, TOP_OF_PAGE, type EditError } from './storage-edit';
 
 type Requester = Parameters<typeof getPageStorage>[0];
 
@@ -49,26 +51,69 @@ function fail(error: string, message: string): Failure {
 
 const headingKey = (h: string) => normalizeWhitespace(h).toLowerCase();
 
-/** Why a draft was refused at submit time, addressed to the agent. */
-const SUBMIT_ERRORS: Record<EditError, string> = {
-  not_found: 'originalText is not in that section of the current page.',
-  ambiguous: 'originalText appears more than once in that section. Use a longer passage.',
-  section_not_found: 'No section of the page has that heading.',
-  unsupported_span: 'originalText spans a code block and prose. Propose one change per block.',
-  empty: 'originalText is empty.',
-};
+const RETRY_ONCE = 'Retry at most once, then tell the user in one sentence why no draft was saved.';
 
 /** The open events whose tokens appear in the section; all open events when none do. */
 export function eventsForSection(storage: string, heading: string, events: EventDetailRow[]): EventDetailRow[] {
   const section = splitSections(storage).find((s) => headingKey(s.heading) === headingKey(heading));
   if (!section) return events;
-  const hit = events.filter((e) => {
-    const tokens = tokensForEvents([
-      { files: e.source === 'bitbucket' ? eventFiles(e.files, e.changeFiles) : [], matchedTokens: e.matchedTokens, issueKey: e.source === 'jira' ? e.ref : null },
-    ]);
-    return tokens.some((t) => tokenRegExp(t).test(section.text));
-  });
+  const hit = eventsMentionedIn(section.text, events);
   return hit.length > 0 ? hit : events;
+}
+
+function eventTokens(e: EventDetailRow): string[] {
+  return tokensForEvents([
+    { files: e.source === 'bitbucket' ? eventFiles(e.files, e.changeFiles) : [], matchedTokens: e.matchedTokens, issueKey: e.source === 'jira' ? e.ref : null },
+  ]);
+}
+
+function eventsMentionedIn(text: string, events: EventDetailRow[]): EventDetailRow[] {
+  return events.filter((e) => eventTokens(e).some((t) => tokenRegExp(t).test(text)));
+}
+
+/** A proposal's events: those named in its block, else in its section, else every open event. */
+export function eventsForBlock(storage: string, block: PageBlock, events: EventDetailRow[]): EventDetailRow[] {
+  const hit = eventsMentionedIn(block.text, events);
+  return hit.length > 0 ? hit : eventsForSection(storage, block.section, events);
+}
+
+const MAX_CANDIDATES = 12;
+
+/** Candidate blocks for the agent's one retry: blocks with a matched token first, at most 12. */
+export function candidateList(blocks: PageBlock[], tokens: string[]): Record<string, unknown>[] {
+  const res = tokens.map(tokenRegExp);
+  const rows = blocks.map((b) => ({ ...blockSummary(b), ...(res.some((re) => re.test(b.text)) && { matched: true }) }));
+  return [...rows.filter((r) => r.matched), ...rows.filter((r) => !r.matched)].slice(0, MAX_CANDIDATES);
+}
+
+/** The structured refusal for a draft that does not resolve to one block. Nothing is saved. */
+export function targetFailure(pageId: string, r: Extract<TargetResult, { ok: false }>, blocks: PageBlock[], tokens: string[], blockId: string | null): Record<string, unknown> {
+  if (r.error === 'spans_blocks') {
+    const ids = r.blockIds ?? [];
+    return {
+      ok: false,
+      pageId,
+      error: 'spans_blocks',
+      blockIds: ids,
+      blocks: blocks.filter((b) => ids.includes(b.blockId)).map(blockSummary),
+      guidance: `originalText runs across ${ids.length} blocks (${ids.join(', ')}). Submit one proposal per block. Use blockId from get-drift-context, with that block's full new text as proposedText. Nothing was saved. ${RETRY_ONCE}`,
+    };
+  }
+  const why =
+    r.error === 'ambiguous'
+      ? 'originalText appears in more than one place. Pass the blockId of the one to change.'
+      : blockId && !blocks.some((b) => b.blockId === blockId)
+        ? `No block on the page has blockId ${blockId}.`
+        : blockId
+          ? `originalText is not in block ${blockId}. Omit originalText to replace the whole block, or copy one line of it verbatim.`
+          : 'originalText is not inside any one block of the page.';
+  return {
+    ok: false,
+    pageId,
+    error: r.error === 'ambiguous' ? 'ambiguous' : 'not_found',
+    candidates: candidateList(r.candidates ?? blocks, tokens),
+    guidance: `${why} Pick the block from candidates and call submit-fix-proposal with its blockId and the block's full new text as proposedText. Nothing was saved. ${RETRY_ONCE}`,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -83,37 +128,60 @@ export async function submitFixProposal(pageId: string, input: Record<string, un
   const page = await getPageStorage(deps.user, pageId);
   if (page.status >= 300 || page.storage === undefined) return { ok: false, pageId, title: null, status: 'unknown', error: 'not_visible', guidance: 'Page not found or not visible to you.' };
   const v = valid.value;
-  const dry = applySectionEdit(page.storage, v.sectionHeading, v.originalText, v.proposedText);
-  if (!dry.ok) {
-    return {
-      ok: false,
-      pageId,
-      error: dry.error,
-      guidance: `${SUBMIT_ERRORS[dry.error]} Call get-drift-context again, copy originalText exactly from one section's text, and pass that section's heading as sectionHeading. Nothing was saved.`,
-      headings: splitSections(page.storage).map((s) => s.heading).slice(0, 30),
-    };
-  }
   const events = await eventDetailsForPage(pageId);
   if (events.length === 0) return { ok: false, pageId, error: 'nothing_open', guidance: FIX_MESSAGES.nothingOpen };
-  if ((await countOpenFixProposals(pageId)) >= FIX_LIMITS.openPerPage) return { ok: false, pageId, error: 'too_many', guidance: FIX_MESSAGES.tooMany };
-  const chosen = eventsForSection(page.storage, v.sectionHeading, events);
+  const tokens = [...new Set(events.flatMap(eventTokens))];
+
+  const blocks = extractBlocks(page.storage);
+  const resolved = resolveTarget(blocks, { blockId: v.blockId, sectionHeading: input.sectionHeading ? v.sectionHeading : null, originalText: v.originalText });
+  if (!resolved.ok) {
+    console.log(`DDS_FIX_REFUSED ${JSON.stringify({ pageId, error: resolved.error, byBlock: Boolean(v.blockId), blockIds: resolved.blockIds ?? [] })}`);
+    return targetFailure(pageId, resolved, blocks, tokens, v.blockId);
+  }
+  const target = resolved.target;
+  if (isNoOp(target, v.proposedText)) {
+    return { ok: false, pageId, error: 'bad_request', guidance: `proposedText is the same as the current text of block ${target.block.blockId}. Nothing was saved.` };
+  }
+  const dry = editBlock(page.storage, target, v.proposedText);
+  if (!dry.ok) return { ok: false, pageId, error: dry.error, guidance: `${EDIT_MESSAGES.unsupported_span} Nothing was saved.` };
+
+  // A new draft for the same block replaces the open one.
+  const open = await fixProposalsForPage(pageId, true, 50);
+  const replaced = open.filter((p) => p.blockId === target.block.blockId);
+  for (const p of replaced) await decideFixProposal(p.id, 'rejected', deps.accountId);
+  if (open.length - replaced.length >= FIX_LIMITS.openPerPage) return { ok: false, pageId, error: 'too_many', guidance: FIX_MESSAGES.tooMany };
+
+  const chosen = eventsForBlock(page.storage, target.block, events);
   const refs = [...new Set(chosen.map((e) => refLabel(e.ref, e.source)))];
   const id = randomUUID();
-  // Store the heading as the page spells it, so the review panel shows the real heading.
-  const heading = splitSections(page.storage).find((s) => headingKey(s.heading) === headingKey(v.sectionHeading))?.heading ?? (v.sectionHeading || TOP_OF_PAGE);
   await insertFixProposal({
     id,
     pageId,
     eventIds: chosen.map((e) => e.id),
     refs,
-    sectionHeading: heading,
-    originalText: v.originalText,
-    proposedText: v.proposedText,
+    // Stored as the page spells it, so the review panel shows the real heading.
+    sectionHeading: target.block.section || TOP_OF_PAGE,
+    blockId: target.block.blockId,
+    blockKind: target.block.kind,
+    originalText: targetOriginal(target),
+    proposedText: stripFence(v.proposedText),
     rationale: v.rationale,
     createdBy: deps.accountId,
   });
-  console.log(`DDS_FIX_PROPOSED ${JSON.stringify({ proposalId: id, pageId, refs, events: chosen.length, kind: dry.kind })}`);
-  return { ok: true, pageId, title: page.title ?? null, proposalId: id, status: 'open', refs, sectionHeading: heading, guidance: FIX_MESSAGES.saved };
+  console.log(`DDS_FIX_PROPOSED ${JSON.stringify({ proposalId: id, pageId, refs, events: chosen.length, kind: dry.kind, blockId: target.block.blockId, span: Boolean(target.span), replaced: replaced.length })}`);
+  return {
+    ok: true,
+    pageId,
+    title: page.title ?? null,
+    proposalId: id,
+    status: 'open',
+    refs,
+    sectionHeading: target.block.section,
+    blockId: target.block.blockId,
+    blockKind: target.block.kind,
+    ...(replaced.length > 0 && { replaced: replaced.map((p) => p.id) }),
+    guidance: FIX_MESSAGES.saved,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -130,6 +198,8 @@ export async function listProposals(pageId: string, deps: FixDeps): Promise<unkn
     eventIds: r.eventIds,
     refs: r.refs,
     sectionHeading: r.sectionHeading,
+    blockId: r.blockId,
+    blockKind: r.blockKind,
     originalText: r.originalText,
     proposedText: r.proposedText,
     rationale: r.rationale ?? '',
@@ -161,7 +231,10 @@ export async function applyProposal(proposalId: unknown, deps: FixDeps): Promise
     if (page.status >= 300 || page.storage === undefined || !page.id || !page.title || page.version === undefined) {
       return fail('not_visible', 'Page not found or not visible to you.');
     }
-    const edit = applySectionEdit(page.storage, p.sectionHeading, p.originalText, p.proposedText);
+    // D29: by block (ID, then the one block that still holds the original); legacy drafts by section and text.
+    const edit = p.blockId
+      ? applyBlockEdit(page.storage, { blockId: p.blockId, sectionHeading: p.sectionHeading, originalText: p.originalText, proposedText: p.proposedText })
+      : applySectionEdit(page.storage, p.sectionHeading, p.originalText, p.proposedText);
     if (!edit.ok) {
       console.log(`DDS_FIX_APPLY_REFUSED ${JSON.stringify({ proposalId, pageId: p.pageId, error: edit.error })}`);
       return editFailure(edit.error);
@@ -177,30 +250,40 @@ export async function applyProposal(proposalId: unknown, deps: FixDeps): Promise
     // Someone decided it between our read and now; the page write stands (it is in page history).
     console.warn(`DDS_FIX_RACE proposalId=${proposalId}`);
   }
-  const closed = await resolveEvents(p.pageId, p.eventIds, deps.accountId);
-  const current = await getPageState(p.pageId);
-  await recordVerification({
-    id: randomUUID(),
-    pageId: p.pageId,
-    spaceKey: current?.spaceKey ?? null,
-    userId: deps.accountId,
-    closedEventIds: [...closed],
-    note: `${message} (version ${put.version})`,
-    method: 'accepted_proposal',
-    driftSince: closed.oldest ?? null,
-  });
+  // Several drafts can answer the same events (one per block of a section). The events close, and the
+  // verification is recorded, when the last of those drafts is accepted; until then the page stays flagged.
+  const siblings = (await fixProposalsForPage(p.pageId, true, 50)).filter((o) => o.id !== p.id && o.eventIds.some((id) => p.eventIds.includes(id)));
+  const held = new Set(siblings.flatMap((o) => o.eventIds));
+  const closable = p.eventIds.filter((id) => !held.has(id));
+  const closed = closable.length > 0 ? await resolveEvents(p.pageId, closable, deps.accountId) : Object.assign([] as string[], { oldest: undefined });
+  if (closed.length > 0) {
+    const current = await getPageState(p.pageId);
+    await recordVerification({
+      id: randomUUID(),
+      pageId: p.pageId,
+      spaceKey: current?.spaceKey ?? null,
+      userId: deps.accountId,
+      closedEventIds: [...closed],
+      note: `${message} (version ${put.version})`,
+      method: 'accepted_proposal',
+      driftSince: closed.oldest ?? null,
+    });
+  }
   const state = await refreshPage(p.pageId);
-  console.log(`DDS_FIX_APPLIED ${JSON.stringify({ proposalId, pageId: p.pageId, version: put.version, message, closed: closed.length, status: state.status })}`);
+  console.log(`DDS_FIX_APPLIED ${JSON.stringify({ proposalId, pageId: p.pageId, blockId: p.blockId, version: put.version, message, closed: closed.length, pendingDrafts: siblings.length, status: state.status })}`);
+  const names = p.refs.length > 0 ? p.refs.join(' and ') : 'Doc Drift';
+  const pending = siblings.length > 0 ? ` ${plural(siblings.length, 'more draft')} for the same change ${siblings.length === 1 ? 'is' : 'are'} open.` : '';
   return {
     ok: true,
     pageId: p.pageId,
     version: put.version,
     versionMessage: message,
     closedEvents: closed.length,
+    pendingDrafts: siblings.length,
     state: state.status,
     status: state.status,
     statusLabel: PAGE_STATE_LABELS[state.status],
-    message: `Accepted. Version ${put.version} names ${p.refs.length > 0 ? p.refs.join(' and ') : 'Doc Drift'}.`,
+    message: `Accepted. Version ${put.version} names ${names}.${pending}`,
   };
 }
 

@@ -19,7 +19,7 @@ import {
 } from '@forge/react';
 import { SeverityLozenge } from '../shared/components';
 import { excerptBlocks } from '../shared/excerpt';
-import { PROPOSE_FIX_HELP, diffText, fixAttribution, proposalSource } from '../shared/fix';
+import { PROPOSE_FIX_HELP, diffText, fixAttribution, groupBySection, proposalSource } from '../shared/fix';
 import { DISMISS_REASONS, eventLead, fileChangeParts, plural, relativeTime } from '../shared/format';
 
 const rowStyle = xcss({
@@ -120,7 +120,7 @@ function Excerpt({ section }) {
   );
 }
 
-function ProposalRow({ proposal, events, canEdit, busy, onAccept, onReject }) {
+function ProposalRow({ proposal, events, canEdit, busy, onAccept, onReject, showHeading = true }) {
   const source = proposalSource(proposal, events);
   const who = proposal.createdBy?.displayName;
   const when = relativeTime(proposal.createdAt);
@@ -129,7 +129,7 @@ function ProposalRow({ proposal, events, canEdit, busy, onAccept, onReject }) {
   return (
     <Box xcss={rowStyle}>
       <Stack space="space.100">
-        {proposal.sectionHeading ? <Heading size="xsmall">{proposal.sectionHeading}</Heading> : null}
+        {showHeading && proposal.sectionHeading ? <Heading size="xsmall">{proposal.sectionHeading}</Heading> : null}
         <CodeBlock text={diffText(proposal.originalText, proposal.proposedText)} language="diff" shouldWrapLongLines />
         {proposal.rationale ? <Text>{proposal.rationale}</Text> : null}
         <Text size="small" color="color.text.subtle">
@@ -154,16 +154,31 @@ function ProposalRow({ proposal, events, canEdit, busy, onAccept, onReject }) {
 }
 
 /**
- * The "Proposed fix" section (F11, D6): open proposals only. Accept writes the page `asUser()` with a
- * version message naming the PR; both buttons are off for view-only users (D15).
+ * The "Proposed fix" section (F11, D6): open proposals only, grouped by section (D29: one draft per
+ * block, so a section can have several). Accept writes the page `asUser()` with a version message naming
+ * the PR; both buttons are off for view-only users (D15). A section with 2 or more drafts also gets
+ * "Accept all for this section", which accepts them one by one.
  */
-export function ProposedFixSection({ proposals, events, canEdit, busy, onAccept, onReject }) {
+export function ProposedFixSection({ proposals, events, canEdit, busy, onAccept, onReject, onAcceptAll }) {
   if (!proposals?.length) return null;
+  const groups = groupBySection(proposals);
   return (
     <Stack space="space.100">
       <Heading size="small">Proposed fix</Heading>
-      {proposals.map((p) => (
-        <ProposalRow key={p.id} proposal={p} events={events} canEdit={canEdit} busy={busy} onAccept={() => onAccept(p)} onReject={() => onReject(p)} />
+      {groups.map((g) => (
+        <Stack key={g.key} space="space.100">
+          {g.heading ? <Heading size="xsmall">{g.heading}</Heading> : null}
+          {g.proposals.map((p) => (
+            <ProposalRow key={p.id} proposal={p} events={events} canEdit={canEdit} busy={busy} showHeading={false} onAccept={() => onAccept(p)} onReject={() => onReject(p)} />
+          ))}
+          {g.proposals.length > 1 && onAcceptAll ? (
+            <ButtonGroup label={`All drafts for ${g.heading || 'this section'}`}>
+              <LoadingButton isLoading={busy === `fixall:${g.key}`} isDisabled={!canEdit || Boolean(busy)} onClick={() => onAcceptAll(g.proposals, g.key)}>
+                Accept all for this section
+              </LoadingButton>
+            </ButtonGroup>
+          ) : null}
+        </Stack>
       ))}
     </Stack>
   );
@@ -209,6 +224,7 @@ export function ReviewPanel({
   onRejectRename,
   onProposeFix,
   onAcceptFix,
+  onAcceptAllFix,
   onRejectFix,
 }) {
   const [reason, setReason] = useState(null);
@@ -235,7 +251,7 @@ export function ReviewPanel({
         )}
       </Stack>
 
-      <ProposedFixSection proposals={proposals} events={allEvents || events} canEdit={canEdit} busy={busy} onAccept={onAcceptFix} onReject={onRejectFix} />
+      <ProposedFixSection proposals={proposals} events={allEvents || events} canEdit={canEdit} busy={busy} onAccept={onAcceptFix} onReject={onRejectFix} onAcceptAll={onAcceptAllFix} />
 
       {renameProposals?.length ? (
         <Stack space="space.100">

@@ -4,6 +4,7 @@ import {
   diffText,
   fixAttribution,
   fixPrompt,
+  groupBySection,
   joinList,
   openProposals,
   promptTitle,
@@ -14,7 +15,7 @@ import {
 describe('fixPrompt', () => {
   it('names the page, the tools and the no-edit rule', () => {
     expect(fixPrompt('Payments rollback runbook', '12345')).toBe(
-      'Draft a fix for the drifted sections of page "Payments rollback runbook" (id 12345). Use get-drift-context, then submit-fix-proposal. Do not edit the page.',
+      'Draft a fix for the drifted sections of page "Payments rollback runbook" (id 12345). Use get-drift-context, then submit-fix-proposal once per changed block. Do not edit the page.',
     );
   });
 
@@ -105,5 +106,21 @@ describe('proposals', () => {
     expect(fixAttribution(null)).toBe('Drafted by Drift Reviewer. Nothing changes until you accept.');
     expect(acceptedTitle('PR #482')).toBe('Accepted. A new page version names PR #482.');
     expect(acceptedTitle(null)).toBe('Accepted. The page has a new version.');
+  });
+});
+
+describe('groupBySection', () => {
+  it('groups drafts by section, in page order inside a section', () => {
+    const groups = groupBySection([
+      { id: 'c', sectionHeading: 'Retry the payout job', blockId: 'b4' },
+      { id: 'x', sectionHeading: 'Escalation', blockId: 'b6' },
+      { id: 'p', sectionHeading: 'retry the payout job ', blockId: 'b3' },
+      { id: 'old', sectionHeading: 'Escalation' },
+    ]);
+    expect(groups.map((g) => [g.heading, g.proposals.map((p) => p.id)])).toEqual([
+      ['Retry the payout job', ['p', 'c']],
+      ['Escalation', ['x', 'old']],
+    ]);
+    expect(groupBySection(null)).toEqual([]);
   });
 });

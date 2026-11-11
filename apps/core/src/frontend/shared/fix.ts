@@ -20,7 +20,7 @@ export function promptTitle(title: string | null | undefined): string {
 export function fixPrompt(title: string | null | undefined, pageId: string): string {
   const t = promptTitle(title);
   const page = t ? `page "${t}" (id ${pageId})` : `page id ${pageId}`;
-  return `Draft a fix for the drifted sections of ${page}. Use get-drift-context, then submit-fix-proposal. Do not edit the page.`;
+  return `Draft a fix for the drifted sections of ${page}. Use get-drift-context, then submit-fix-proposal once per changed block. Do not edit the page.`;
 }
 
 export interface RovoForgePayload {
@@ -59,6 +59,8 @@ export interface ProposalView {
   id: string;
   eventIds?: string[];
   sectionHeading?: string;
+  blockId?: string | null;
+  blockKind?: string | null;
   originalText?: string;
   proposedText?: string;
   rationale?: string;
@@ -76,6 +78,33 @@ export interface EventRef {
 /** Open proposals, newest first. */
 export function openProposals<T extends ProposalView>(proposals: T[] | null | undefined): T[] {
   return (proposals ?? []).filter((p) => p && p.status === 'open').sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+}
+
+export interface ProposalGroup<T> {
+  key: string;
+  heading: string;
+  proposals: T[];
+}
+
+function blockOrder(p: ProposalView): number {
+  const m = /^b(\d+)$/.exec(String(p.blockId ?? ''));
+  return m ? Number(m[1]) : Number.MAX_SAFE_INTEGER;
+}
+
+/**
+ * Drafts grouped by section heading (D29: one draft per block, so a section can have several). Groups
+ * keep the order of their newest draft; inside a group, drafts follow the page (block order).
+ */
+export function groupBySection<T extends ProposalView>(proposals: T[] | null | undefined): ProposalGroup<T>[] {
+  const groups = new Map<string, ProposalGroup<T>>();
+  for (const p of proposals ?? []) {
+    const heading = p.sectionHeading ?? '';
+    const key = heading.trim().toLowerCase();
+    const g = groups.get(key) ?? { key, heading, proposals: [] };
+    g.proposals.push(p);
+    groups.set(key, g);
+  }
+  return [...groups.values()].map((g) => ({ ...g, proposals: [...g.proposals].sort((a, b) => blockOrder(a) - blockOrder(b)) }));
 }
 
 /** "A", "A and B", "A, B and C". */

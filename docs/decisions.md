@@ -96,8 +96,9 @@ Razvan is experienced and runs several AI agents in parallel, so the team counts
 2026-11-11 · Accepted (Razvan)
 Remote: `git@github.com:razvanstatescu/doc-drift.git`. Private now, made public before Devpost submission (target Dec 19, see [hackathon/timeline.md](hackathon/timeline.md)). Never commit secrets, tokens or relay HMAC secrets: they live in Forge storage and environment variables only.
 
-### Note on D20 (S2 finding, 2026-11-11, open)
+### Note on D20 (S2 finding, 2026-11-11, resolved: D20 stands)
 The app could still read and write a page it had created after the page was restricted to Razvan only. Either app creators are exempt, or the app user ignores page restrictions altogether. A test on a page a person creates and restricts (S2 check 5) decides whether D20 can be relaxed.
+**Result (page 2883670, created and restricted by Razvan):** `asApp` GET page, properties and operations all returned **404 "Could not find page"**. The app user is blocked by person-set restrictions; the earlier result came from the app having created the page. D20 stands.
 
 ### D24. Matcher v0 design choices (M0)
 2026-11-11 · Accepted (made by the matcher track, recorded by the orchestrator)

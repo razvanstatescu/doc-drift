@@ -2,7 +2,7 @@
   "id": "09-rename-scale-flag",
   "branch": "scenario/rename-scale-flag",
   "title": "Rename scale-workers.sh --count to --replicas",
-  "description": "Matches the kubectl wording. --count now exits with a message that names the new flag. Part of PAY-165.",
+  "description": "Matches the kubectl wording. --count now exits with a message that names the new flag. Part of {{PAY:autoscale-workers-queue-depth}}.",
   "kind": "drift",
   "dependsOn": "08-revert-db-pool",
   "delete": [],

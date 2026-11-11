@@ -1,11 +1,11 @@
 <table data-layout="default"><tbody>
 <tr><th><p>Owner</p></th><td><p>Dana (Platform on-call lead)</p></td></tr>
 <tr><th><p>Service</p></th><td><p><code>payments-workers</code></p></td></tr>
-<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/PAY-165">PAY-165</a> Autoscale workers on settlement queue depth</p></td></tr>
+<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/{{PAY:autoscale-workers-queue-depth}}">{{PAY:autoscale-workers-queue-depth}}</a> Autoscale workers on settlement queue depth</p></td></tr>
 <tr><th><p>Last reviewed</p></th><td><p>2026-10-21</p></td></tr>
 </tbody></table>
 <h2>When to use this runbook</h2>
-<p>The settlement workers normally scale themselves: a HorizontalPodAutoscaler keeps them between <code>workers.min</code> and <code>workers.max</code> on CPU. The autoscaler does not see queue depth yet (that is <a href="https://{{ATLASSIAN_SITE}}/browse/PAY-165">PAY-165</a>), so scale by hand when:</p>
+<p>The settlement workers normally scale themselves: a HorizontalPodAutoscaler keeps them between <code>workers.min</code> and <code>workers.max</code> on CPU. The autoscaler does not see queue depth yet (that is <a href="https://{{ATLASSIAN_SITE}}/browse/{{PAY:autoscale-workers-queue-depth}}">{{PAY:autoscale-workers-queue-depth}}</a>), so scale by hand when:</p>
 <ul>
 <li><p>The <strong>Pending settlement jobs</strong> panel stays above 5,000 for 10 minutes.</p></li>
 <li><p>You expect a burst, such as a merchant batch import or the first hour after a PSP outage.</p></li>

@@ -55,12 +55,12 @@
         },
         {
           "type": "jira",
-          "key": "PAY-142",
+          "key": "{{PAY:rollback-epic}}",
           "weight": "normal"
         }
       ],
       "jiraMentions": [
-        "PAY-142"
+        "{{PAY:rollback-epic}}"
       ],
       "flaggedBy": [
         {
@@ -90,12 +90,12 @@
         },
         {
           "type": "jira",
-          "key": "PAY-147",
+          "key": "{{PAY:rotate-secrets-90-days}}",
           "weight": "normal"
         }
       ],
       "jiraMentions": [
-        "PAY-147"
+        "{{PAY:rotate-secrets-90-days}}"
       ],
       "flaggedBy": []
     },
@@ -126,7 +126,7 @@
         }
       ],
       "jiraMentions": [
-        "PAY-165"
+        "{{PAY:autoscale-workers-queue-depth}}"
       ],
       "flaggedBy": [
         {
@@ -168,8 +168,8 @@
         }
       ],
       "jiraMentions": [
-        "PAY-149",
-        "PAY-151"
+        "{{PAY:db-resilience-epic}}",
+        "{{PAY:pgbouncer}}"
       ],
       "flaggedBy": [
         {
@@ -205,7 +205,7 @@
         }
       ],
       "jiraMentions": [
-        "PAY-140"
+        "{{PAY:settlement-worker-epic}}"
       ],
       "flaggedBy": []
     },
@@ -236,7 +236,7 @@
         }
       ],
       "jiraMentions": [
-        "PAY-175"
+        "{{PAY:replay-webhooks-admin-console}}"
       ],
       "flaggedBy": []
     },
@@ -270,7 +270,7 @@
       "anchored": false,
       "anchors": [],
       "jiraMentions": [
-        "PAY-163"
+        "{{PAY:hold-settlement-psp-degraded}}"
       ],
       "flaggedBy": []
     },
@@ -361,13 +361,13 @@
         },
         {
           "type": "jira",
-          "key": "PAY-140",
+          "key": "{{PAY:settlement-worker-epic}}",
           "weight": "normal"
         }
       ],
       "jiraMentions": [
-        "PAY-140",
-        "PAY-165"
+        "{{PAY:settlement-worker-epic}}",
+        "{{PAY:autoscale-workers-queue-depth}}"
       ],
       "flaggedBy": []
     },
@@ -530,16 +530,16 @@
       "anchors": [
         {
           "type": "jira",
-          "key": "PAY-158",
+          "key": "{{PAY:remove-v1-refunds}}",
           "weight": "critical"
         }
       ],
       "jiraMentions": [
-        "PAY-158"
+        "{{PAY:remove-v1-refunds}}"
       ],
       "flaggedBy": [
         {
-          "trigger": "jira:PAY-158 fixVersion 2026.12 -> 2027.01",
+          "trigger": "jira:{{PAY:remove-v1-refunds}} fixVersion 2026.12 -> 2027.01",
           "severity": "High"
         }
       ]
@@ -566,13 +566,13 @@
         },
         {
           "type": "jira",
-          "key": "PAY-131",
+          "key": "{{PAY:idempotency-key-required}}",
           "weight": "normal"
         }
       ],
       "jiraMentions": [
-        "PAY-131",
-        "PAY-134"
+        "{{PAY:idempotency-key-required}}",
+        "{{PAY:idempotency-conflict-409}}"
       ],
       "flaggedBy": []
     },
@@ -598,13 +598,13 @@
         },
         {
           "type": "jira",
-          "key": "PAY-141",
+          "key": "{{PAY:settlement-jobs-skip-locked}}",
           "weight": "normal"
         }
       ],
       "jiraMentions": [
-        "PAY-140",
-        "PAY-141"
+        "{{PAY:settlement-worker-epic}}",
+        "{{PAY:settlement-jobs-skip-locked}}"
       ],
       "flaggedBy": []
     },
@@ -624,16 +624,16 @@
       "anchors": [
         {
           "type": "jira",
-          "key": "PAY-170",
+          "key": "{{PAY:multi-region-epic}}",
           "weight": "critical"
         }
       ],
       "jiraMentions": [
-        "PAY-170"
+        "{{PAY:multi-region-epic}}"
       ],
       "flaggedBy": [
         {
-          "trigger": "jira:PAY-170 moved to Won't Do",
+          "trigger": "jira:{{PAY:multi-region-epic}} moved to Won't Do",
           "severity": "High"
         }
       ]
@@ -665,8 +665,8 @@
         }
       ],
       "jiraMentions": [
-        "PAY-150",
-        "PAY-158"
+        "{{PAY:refunds-v2-epic}}",
+        "{{PAY:remove-v1-refunds}}"
       ],
       "flaggedBy": [
         {
@@ -702,7 +702,7 @@
         }
       ],
       "jiraMentions": [
-        "PAY-128"
+        "{{PAY:charges-v2-epic}}"
       ],
       "flaggedBy": []
     }

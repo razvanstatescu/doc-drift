@@ -3,8 +3,8 @@ import type pg from 'pg';
 import { log } from './http/logger.js';
 import type { Response } from './http/router.js';
 
-// Idempotency for POST /v2/charges and POST /v2/refunds (ADR-012, PAY-131).
-// A key is stored for 24 hours. Reusing a key with a different body returns 409 (PAY-134).
+// Idempotency for POST /v2/charges and POST /v2/refunds (ADR-012, {{PAY:idempotency-key-required}}).
+// A key is stored for 24 hours. Reusing a key with a different body returns 409 ({{PAY:idempotency-conflict-409}}).
 export const IDEMPOTENCY_TTL_HOURS = 24;
 
 export function requestHash(body: unknown): string {

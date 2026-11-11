@@ -1,7 +1,7 @@
 import type { Deps } from '../deps.js';
 import { log } from '../http/logger.js';
 
-// Settlement worker (ADR-014, PAY-141). Claims pending rows from settlement_jobs with
+// Settlement worker (ADR-014, {{PAY:settlement-jobs-skip-locked}}). Claims pending rows from settlement_jobs with
 // FOR UPDATE SKIP LOCKED, so any number of worker pods can run side by side.
 // Concurrency per pod: PAYMENTS_WORKER_CONCURRENCY. Rows per claim: SETTLEMENT_BATCH_SIZE.
 const IDLE_DELAY_MS = 2_000;

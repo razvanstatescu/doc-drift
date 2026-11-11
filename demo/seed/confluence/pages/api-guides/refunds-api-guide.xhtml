@@ -1,7 +1,7 @@
 <table data-layout="default"><tbody>
 <tr><th><p>Owner</p></th><td><p>Priya (Payments engineer)</p></td></tr>
 <tr><th><p>Audience</p></th><td><p>Internal teams and merchants integrating refunds</p></td></tr>
-<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/PAY-150">PAY-150</a> Refunds API v2</p></td></tr>
+<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/{{PAY:refunds-v2-epic}}">{{PAY:refunds-v2-epic}}</a> Refunds API v2</p></td></tr>
 <tr><th><p>Last reviewed</p></th><td><p>2026-10-20</p></td></tr>
 </tbody></table>
 <h2>Overview</h2>
@@ -28,7 +28,7 @@
 <tr><td><p>422</p></td><td><p><code>amount_exceeds_refundable</code></p></td><td><p>The sum of refunds would pass the charge amount.</p></td></tr>
 </tbody></table>
 <h2>Migrating from v1</h2>
-<ac:structured-macro ac:name="warning" ac:schema-version="1"><ac:rich-text-body><p><code>POST /v1/refunds</code> stops working after release 2026.12. See <ac:link><ri:page ri:content-title="ADR-009: Retire the v1 refunds API" /></ac:link> and <a href="https://{{ATLASSIAN_SITE}}/browse/PAY-158">PAY-158</a>.</p></ac:rich-text-body></ac:structured-macro>
+<ac:structured-macro ac:name="warning" ac:schema-version="1"><ac:rich-text-body><p><code>POST /v1/refunds</code> stops working after release 2026.12. See <ac:link><ri:page ri:content-title="ADR-009: Retire the v1 refunds API" /></ac:link> and <a href="https://{{ATLASSIAN_SITE}}/browse/{{PAY:remove-v1-refunds}}">{{PAY:remove-v1-refunds}}</a>.</p></ac:rich-text-body></ac:structured-macro>
 <p>v1 accepted only full refunds and returned a different shape:</p>
 <ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">bash</ac:parameter><ac:parameter ac:name="title">v1 (deprecated)</ac:parameter><ac:plain-text-body><![CDATA[curl -sS -X POST https://payments.acme.dev/v1/refunds \
   -H "authorization: Bearer $PAYMENTS_TOKEN" \

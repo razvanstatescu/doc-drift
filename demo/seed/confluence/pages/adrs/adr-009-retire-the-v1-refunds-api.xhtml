@@ -3,7 +3,7 @@
 <tr><th><p>Date</p></th><td><p>2026-02-12</p></td></tr>
 <tr><th><p>Deciders</p></th><td><p>Marco, Priya</p></td></tr>
 <tr><th><p>Owner</p></th><td><p>Marco (Payments tech lead)</p></td></tr>
-<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/PAY-158">PAY-158</a> Remove the v1 refunds endpoint, fix version <strong>2026.12</strong></p></td></tr>
+<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/{{PAY:remove-v1-refunds}}">{{PAY:remove-v1-refunds}}</a> Remove the v1 refunds endpoint, fix version <strong>2026.12</strong></p></td></tr>
 </tbody></table>
 <h2>Context</h2>
 <p>v1 refunds only support full refunds, take amounts in a different field from the rest of the API, and have no idempotency. Support spends about 6 hours a month on refunds issued twice through v1. v2 refunds cover every v1 use case.</p>

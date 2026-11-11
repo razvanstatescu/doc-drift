@@ -1,7 +1,7 @@
 <table data-layout="default"><tbody>
 <tr><th><p>Owner</p></th><td><p>Lena (Payments engineer)</p></td></tr>
 <tr><th><p>Deployment</p></th><td><p><code>payments-workers</code> (same image as <code>payments-api</code>, <code>PAYMENTS_ROLE=worker</code>)</p></td></tr>
-<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/PAY-140">PAY-140</a> Async settlement worker</p></td></tr>
+<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/{{PAY:settlement-worker-epic}}">{{PAY:settlement-worker-epic}}</a> Async settlement worker</p></td></tr>
 <tr><th><p>Last reviewed</p></th><td><p>2026-10-23</p></td></tr>
 </tbody></table>
 <h2>What it does</h2>
@@ -22,7 +22,7 @@
  FOR UPDATE SKIP LOCKED]]></ac:plain-text-body></ac:structured-macro>
 <p><code>SKIP LOCKED</code> means slots and pods never wait on each other, so adding pods adds throughput until the database becomes the limit. When a slot finds nothing to do it sleeps for 2 seconds.</p>
 <h2>Scaling</h2>
-<p>The HPA scales on CPU between 2 and 8 pods. Queue depth does not drive it yet (<a href="https://{{ATLASSIAN_SITE}}/browse/PAY-165">PAY-165</a>). For bursts, follow <ac:link><ri:page ri:content-title="Scale payment workers" /></ac:link>.</p>
+<p>The HPA scales on CPU between 2 and 8 pods. Queue depth does not drive it yet (<a href="https://{{ATLASSIAN_SITE}}/browse/{{PAY:autoscale-workers-queue-depth}}">{{PAY:autoscale-workers-queue-depth}}</a>). For bursts, follow <ac:link><ri:page ri:content-title="Scale payment workers" /></ac:link>.</p>
 <h2>Failure handling</h2>
 <ul>
 <li><p>If a batch fails, its transaction rolls back and the rows go back to <code>pending</code> for the next claim.</p></li>

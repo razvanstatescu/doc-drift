@@ -2,7 +2,7 @@
 <tr><th><p>Owner</p></th><td><p>Dana (Platform on-call lead)</p></td></tr>
 <tr><th><p>Service</p></th><td><p><code>payments-api</code></p></td></tr>
 <tr><th><p>Severity</p></th><td><p>Use during a SEV1 or SEV2 caused by a bad payments release</p></td></tr>
-<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/PAY-142">PAY-142</a> Safer payments deploys and rollbacks</p></td></tr>
+<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/{{PAY:rollback-epic}}">{{PAY:rollback-epic}}</a> Safer payments deploys and rollbacks</p></td></tr>
 <tr><th><p>Last reviewed</p></th><td><p>2026-10-14</p></td></tr>
 </tbody></table>
 <h2>When to use this runbook</h2>
@@ -41,7 +41,7 @@ kubectl -n payments get events --sort-by=.lastTimestamp | tail -n 20]]></ac:plai
 <p>Payments migrations are expand-only for 1 release, so the previous release can run against the new schema. If the release notes say the migration was <em>contract</em> (dropped or renamed a column), page the database on-call before rolling back.</p>
 <h2>After the rollback</h2>
 <ul>
-<li><p>Open a follow-up in Jira under <a href="https://{{ATLASSIAN_SITE}}/browse/PAY-142">PAY-142</a> with the bad release tag and the dashboard screenshot.</p></li>
+<li><p>Open a follow-up in Jira under <a href="https://{{ATLASSIAN_SITE}}/browse/{{PAY:rollback-epic}}">{{PAY:rollback-epic}}</a> with the bad release tag and the dashboard screenshot.</p></li>
 <li><p>Keep the freeze until the fix is reviewed by 2 people.</p></li>
 <li><p>Fill in the incident timeline. See <ac:link><ri:page ri:content-title="Payments incident response checklist" /></ac:link>.</p></li>
 </ul>

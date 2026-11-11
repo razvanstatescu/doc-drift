@@ -1,19 +1,26 @@
 #!/usr/bin/env python3
 """Seed the Doc Drift Sentinel demo project PAY in Jira Cloud, and run the Jira demo beats.
 
-Pages in PLAT cite fixed keys (PAY-142, PAY-158, PAY-170, ...). Jira assigns keys itself, so
-`seed` reserves the numbers in between: it creates placeholder issues and deletes them at once.
-Deleted issues still use up their number, so the next real issue gets the key it should.
-This assumes a fresh project (or one seeded only by this script). If a created key ever differs
-from issues.json, the script stops and says so.
+Keys are templated (D25). issues.json names each issue by a stable `ref` (for example
+`rollback-epic`), and pages cite it as the token `{{PAY:rollback-epic}}`. Jira assigns the real
+key; `seed` records ref -> key in keymap.json next to this script, and seed_confluence.py and
+bb_seed.py replace the tokens from it. keymap.json is site-specific and git-ignored.
+`exampleKey` in issues.json is the illustrative key from the original plan (PAY-142 and so on).
+It is used only by offline dry runs, never written to the site.
+
+Idempotent: an issue whose summary already exists in PAY is reused, not created again, and the
+keymap is rebuilt from what is there. Running `seed` twice creates nothing the second time.
 
 Usage (from the repo root, with .env loaded):
   set -a; . ./.env; set +a
   python3 -I demo/seed/jira/seed_jira.py seed --dry-run        # print the plan, write nothing
-  python3 -I demo/seed/jira/seed_jira.py seed                  # project, versions, epics, stories
-  python3 -I demo/seed/jira/seed_jira.py wontdo PAY-170        # demo beat: flips the ADR-015 page
-  python3 -I demo/seed/jira/seed_jira.py fixversion PAY-158 2027.01   # flips the ADR-009 page
-  python3 -I demo/seed/jira/seed_jira.py reset-demo            # undo both beats for a rehearsal
+  python3 -I demo/seed/jira/seed_jira.py seed                  # project, versions, epics, stories, keymap
+  python3 -I demo/seed/jira/seed_jira.py keymap                # rebuild keymap.json only (no writes to Jira)
+  python3 -I demo/seed/jira/seed_jira.py wontdo                # demo beat: multi-region-epic to Won't Do (ADR-015)
+  python3 -I demo/seed/jira/seed_jira.py fixversion            # demo beat: remove-v1-refunds 2026.12 -> 2027.01 (ADR-009)
+  python3 -I demo/seed/jira/seed_jira.py reset-demo            # undo both beats for another take
+`wontdo` and `fixversion` also take an explicit ref or key, and `fixversion` a version name:
+  python3 -I demo/seed/jira/seed_jira.py fixversion remove-v1-refunds 2027.01
 Every command accepts --dry-run.
 
 Environment:
@@ -21,13 +28,13 @@ Environment:
   ATLASSIAN_SITE                          default one-atlas-jzzf.atlassian.net
 The account needs the Administer Jira global permission to create the project.
 
-REST endpoints (Jira Cloud REST v3, checked against the OpenAPI spec, 2026-11-11):
+REST endpoints (Jira Cloud REST v3):
   GET  /rest/api/3/myself                                       lead account id
-  GET  /rest/api/3/project/{key}, POST /rest/api/3/project      project (company-managed scrum)
+  GET  /rest/api/3/project/{key}, POST /rest/api/3/project      project (company-managed)
   GET  /rest/api/3/project/{key}/versions, POST /rest/api/3/version
   GET  /rest/api/3/issue/createmeta/{key}/issuetypes[/{id}]     issue type ids, required fields
   POST /rest/api/3/search/jql                                   existing issues (enhanced search)
-  POST /rest/api/3/issue, POST /rest/api/3/issue/bulk, DELETE /rest/api/3/issue/{key}
+  POST /rest/api/3/issue
   GET/POST /rest/api/3/issue/{key}/transitions, PUT /rest/api/3/issue/{key}
 The token is never printed.
 """
@@ -40,14 +47,20 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 SITE = os.environ.get("ATLASSIAN_SITE", "one-atlas-jzzf.atlassian.net").removeprefix("https://").rstrip("/")
 BASE = f"https://{SITE}"
-PLACEHOLDER = "Key reservation placeholder (deleted by the demo seed)"
 DATA = json.loads((HERE / "issues.json").read_text())
 PKEY = DATA["project"]["key"]
+KEYMAP = HERE / "keymap.json"
+TOKEN = re.compile(r"\{\{PAY:([a-z0-9-]+)\}\}")
+# Tried in order. Company-managed Scrum first: To Do / In Progress / Done, epics, versions.
+TEMPLATES = [DATA["project"]["projectTemplateKey"],
+             "com.pyxis.greenhopper.jira:gh-simplified-kanban-classic",
+             "com.pyxis.greenhopper.jira:gh-simplified-basic"]
 
 
 class ApiError(Exception):
@@ -87,13 +100,14 @@ def call(method, path, body=None):
         raise ApiError(e.code, method, path.split("?")[0], msg) from None
 
 
-def num(key):
-    return int(key.rsplit("-", 1)[1])
-
-
 def adf(text):
     return {"type": "doc", "version": 1,
             "content": [{"type": "paragraph", "content": [{"type": "text", "text": text}]}]}
+
+
+def resolve_text(text, keys):
+    """Replace {{PAY:ref}} tokens (issues.json text may mention other issues)."""
+    return TOKEN.sub(lambda m: keys.get(m.group(1), m.group(0)), text)
 
 
 def get_project():
@@ -106,8 +120,8 @@ def get_project():
 
 
 def existing_issues():
-    """Map summary -> {key, status, fixVersions}, plus the highest key number seen."""
-    out, token, top = {}, None, 0
+    """Map summary -> {key, status, fixVersions}."""
+    out, token = {}, None
     while True:
         body = {"jql": f"project = {PKEY} ORDER BY key ASC", "maxResults": 100,
                 "fields": ["summary", "status", "fixVersions"]}
@@ -116,12 +130,11 @@ def existing_issues():
         d = call("POST", "/rest/api/3/search/jql", body)
         for i in d.get("issues", []):
             f = i["fields"]
-            out[f["summary"]] = {"key": i["key"], "status": f["status"]["name"],
-                                 "fixVersions": [v["name"] for v in f.get("fixVersions") or []]}
-            top = max(top, num(i["key"]))
+            out.setdefault(f["summary"], {"key": i["key"], "status": f["status"]["name"],
+                                          "fixVersions": [v["name"] for v in f.get("fixVersions") or []]})
         token = d.get("nextPageToken")
         if not token or d.get("isLast", True):
-            return out, top
+            return out
 
 
 def issue_types():
@@ -152,68 +165,70 @@ def transition_to(key, status, dry):
     return True
 
 
-def reserve(task_type, start, stop, dry):
-    """Use up key numbers start..stop-1 by creating and deleting placeholders."""
-    count = stop - start
-    if count <= 0:
-        return
-    if dry:
-        print(f"  would reserve {PKEY}-{start} to {PKEY}-{stop - 1} ({count} placeholders, created then deleted)")
-        return
-    made = []
-    while len(made) < count:
-        n = min(50, count - len(made))
-        d = call("POST", "/rest/api/3/issue/bulk", {"issueUpdates": [
-            {"fields": {"project": {"key": PKEY}, "issuetype": {"id": task_type}, "summary": PLACEHOLDER}}
-            for _ in range(n)]})
-        if d.get("errors"):
-            sys.exit(f"placeholder bulk create failed: {json.dumps(d['errors'])[:400]}")
-        made += [i["key"] for i in d["issues"]]
-    for k in made:
-        call("DELETE", f"/rest/api/3/issue/{k}")
-    last = max(num(k) for k in made)
-    print(f"  reserved {PKEY}-{start} to {PKEY}-{last} ({len(made)} placeholders deleted)")
-    if last != stop - 1:
-        sys.exit(f"key counter is off: expected the last placeholder to be {PKEY}-{stop - 1}, got {PKEY}-{last}. "
-                 "Someone else created issues in this project, or it is not fresh. Stopping.")
+def write_keymap(keys):
+    missing = [i["ref"] for i in DATA["issues"] if i["ref"] not in keys]
+    KEYMAP.write_text(json.dumps({
+        "site": SITE, "project": PKEY,
+        "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "keys": {i["ref"]: keys[i["ref"]] for i in DATA["issues"] if i["ref"] in keys},
+    }, indent=2) + "\n")
+    print(f"keymap: {len(keys)} refs written to {KEYMAP.relative_to(HERE.parent.parent.parent)}"
+          + (f" (missing: {', '.join(missing)})" if missing else ""))
+
+
+def load_keymap():
+    if not KEYMAP.exists():
+        sys.exit(f"{KEYMAP.name} not found. Run `seed_jira.py seed` (or `keymap`) first.")
+    km = json.loads(KEYMAP.read_text())
+    if km.get("site") != SITE:
+        sys.exit(f"{KEYMAP.name} was written for {km.get('site')}, not {SITE}. Run `seed_jira.py keymap`.")
+    return km["keys"]
+
+
+def create_project(me):
+    p = DATA["project"]
+    last = None
+    for tpl in TEMPLATES:
+        try:
+            call("POST", "/rest/api/3/project", {
+                "key": PKEY, "name": p["name"], "description": p["description"],
+                "projectTypeKey": p["projectTypeKey"], "projectTemplateKey": tpl,
+                "leadAccountId": me["accountId"], "assigneeType": "UNASSIGNED"})
+            print(f"project {PKEY}: created from template {tpl}")
+            return get_project()
+        except ApiError as e:
+            print(f"project {PKEY}: template {tpl} refused ({e})")
+            last = e
+    raise last
 
 
 def cmd_seed(dry):
-    online = _auth() is not None
-    issues = sorted(DATA["issues"], key=lambda i: num(i["key"]))
-    if dry and not online:
+    issues = DATA["issues"]
+    if dry and _auth() is None:
         print(f"Offline plan for {BASE} (no credentials, so existing content is not checked):")
         print(f"  project {PKEY} '{DATA['project']['name']}' ({DATA['project']['projectTemplateKey']})")
         print(f"  versions: {', '.join(v['name'] for v in DATA['versions'])}")
-        nxt = 1
         for i in issues:
-            gap = num(i["key"]) - nxt
-            if gap:
-                print(f"  reserve {gap} key numbers")
             fv = f" fixVersion {','.join(i['fixVersions'])}" if i.get("fixVersions") else ""
             parent = f" parent {i['parent']}" if i.get("parent") else ""
-            print(f"  {i['key']} {i['type']:5} {i['status']:11} {i['summary']}{parent}{fv}")
-            nxt = num(i["key"]) + 1
-        print(f"\n{len(issues)} issues, {num(issues[-1]['key']) - len(issues)} placeholder keys.")
+            print(f"  {i['ref']:32} {i['type']:5} {i['status']:11} {i['summary']}{parent}{fv}")
+        print(f"\n{len(issues)} issues. Keys are assigned by Jira and written to {KEYMAP.name}.")
         return
 
     me = call("GET", "/rest/api/3/myself")
     project = get_project()
     if project:
-        print(f"project {PKEY}: exists (id {project['id']})")
+        print(f"project {PKEY}: exists (id {project['id']}, {project.get('style', '?')}, "
+              f"{project.get('projectTypeKey', '?')})")
     elif dry:
         print(f"project {PKEY}: would create '{DATA['project']['name']}' with lead {me.get('displayName', 'you')}")
     else:
-        p = DATA["project"]
-        call("POST", "/rest/api/3/project", {
-            "key": PKEY, "name": p["name"], "description": p["description"],
-            "projectTypeKey": p["projectTypeKey"], "projectTemplateKey": p["projectTemplateKey"],
-            "leadAccountId": me["accountId"], "assigneeType": "UNASSIGNED"})
-        project = get_project()
-        print(f"project {PKEY}: created (id {project['id']})")
+        project = create_project(me)
 
     if not project:
-        cmd_seed_plan_only(issues)
+        print(f"versions: would create {', '.join(v['name'] for v in DATA['versions'])}")
+        for i in issues:
+            print(f"{i['ref']}: would create {i['type']} '{i['summary']}'")
         return
 
     have = {v["name"]: v["id"] for v in call("GET", f"/rest/api/3/project/{PKEY}/versions")}
@@ -229,28 +244,23 @@ def cmd_seed(dry):
             print(f"version {v['name']}: created")
 
     types = issue_types()
-    task_type = types.get("Task") or types.get("Story")
     extra = {name: required_extra_fields(tid) for name, tid in types.items() if name in ("Epic", "Story", "Task")}
-    existing, top = existing_issues()
-    nxt = top + 1
+    existing = existing_issues()
+    keys = {i["ref"]: existing[i["summary"]]["key"] for i in issues if i["summary"] in existing}
     created = skipped = 0
     for i in issues:
-        target = num(i["key"])
-        if i["summary"] in existing:
-            got = existing[i["summary"]]["key"]
-            note = "" if got == i["key"] else f"  WARNING: expected {i['key']}, pages will cite the wrong key"
-            print(f"{i['key']}: exists as {got}, skipped{note}")
+        ref = i["ref"]
+        if ref in keys:
+            print(f"{ref}: exists as {keys[ref]}, skipped")
             skipped += 1
             continue
-        if target < nxt:
-            sys.exit(f"{i['key']} cannot be created: the project counter is already past {target}. "
-                     "Use a fresh project (delete PAY and run again).")
-        reserve(task_type, nxt, target, dry)
         tname = i["type"] if i["type"] in types else "Story" if "Story" in types else "Task"
         fields = {"project": {"key": PKEY}, "issuetype": {"id": types[tname]}, "summary": i["summary"],
-                  "description": adf(i["description"]), "labels": DATA["labels"]}
+                  "description": adf(resolve_text(i["description"], keys)), "labels": DATA["labels"]}
         if i.get("parent"):
-            fields["parent"] = {"key": i["parent"]}
+            if i["parent"] not in keys and not dry:
+                sys.exit(f"{ref}: parent {i['parent']} has no key yet; issues.json must list parents first")
+            fields["parent"] = {"key": keys.get(i["parent"], i["parent"])}
         if i.get("fixVersions"):
             fields["fixVersions"] = [{"id": have[v]} if v in have else {"name": v} for v in i["fixVersions"]]
         for fid, fname in extra.get(tname, []):
@@ -259,32 +269,37 @@ def cmd_seed(dry):
             else:
                 print(f"  note: {tname} requires '{fname}' ({fid}); not set by this script")
         if dry:
-            print(f"{i['key']}: would create {tname} '{i['summary']}'"
+            print(f"{ref}: would create {tname} '{i['summary']}'"
                   + (f", then move to {i['status']}" if i["status"] != "To Do" else ""))
-            nxt = target + 1
             created += 1
             continue
         d = call("POST", "/rest/api/3/issue", {"fields": fields})
-        if d["key"] != i["key"]:
-            sys.exit(f"created {d['key']} but expected {i['key']}. Stopping so pages and Jira stay in step.")
-        print(f"{i['key']}: created {tname} '{i['summary']}'")
+        keys[ref] = d["key"]
+        print(f"{ref}: created {d['key']} {tname} '{i['summary']}'")
         if i["status"] != "To Do":
-            transition_to(i["key"], i["status"], dry)
-        nxt = target + 1
+            transition_to(d["key"], i["status"], dry)
         created += 1
     verb = "would create" if dry else "created"
     print(f"\nissues: {verb} {created}, skipped {skipped}. Board: {BASE}/jira/software/c/projects/{PKEY}/issues")
+    if not dry:
+        write_keymap(keys)
 
 
-def cmd_seed_plan_only(issues):
-    print(f"versions: would create {', '.join(v['name'] for v in DATA['versions'])}")
-    nxt = 1
-    for i in issues:
-        gap = num(i["key"]) - nxt
-        if gap:
-            print(f"  would reserve {gap} key numbers")
-        print(f"{i['key']}: would create {i['type']} '{i['summary']}'")
-        nxt = num(i["key"]) + 1
+def cmd_keymap():
+    existing = existing_issues()
+    keys = {i["ref"]: existing[i["summary"]]["key"] for i in DATA["issues"] if i["summary"] in existing}
+    for i in DATA["issues"]:
+        print(f"  {i['ref']:32} {keys.get(i['ref'], 'MISSING')}")
+    write_keymap(keys)
+
+
+def to_key(ref_or_key):
+    if re.fullmatch(rf"{PKEY}-\d+", ref_or_key):
+        return ref_or_key
+    keys = load_keymap()
+    if ref_or_key not in keys:
+        sys.exit(f"unknown ref '{ref_or_key}' (not in {KEYMAP.name})")
+    return keys[ref_or_key]
 
 
 WONT = re.compile(r"won.?t do", re.I)
@@ -332,17 +347,17 @@ def cmd_fixversion(key, name, dry):
 
 def cmd_reset(dry):
     demo = DATA["demo"]
-    wkey = demo["wontDo"]["key"]
-    status = next(i["status"] for i in DATA["issues"] if i["key"] == wkey)
-    transition_to(wkey, status, dry)
+    wref = demo["wontDo"]["ref"]
+    status = next(i["status"] for i in DATA["issues"] if i["ref"] == wref)
+    transition_to(to_key(wref), status, dry)
     f = demo["fixVersionChange"]
-    cmd_fixversion(f["key"], f["from"], dry)
+    cmd_fixversion(to_key(f["ref"]), f["from"], dry)
     print("Mark ADR-015 and ADR-009 as Verified again in the Doc Drift badge before the next take.")
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("command", choices=["seed", "wontdo", "fixversion", "reset-demo"])
+    ap.add_argument("command", choices=["seed", "keymap", "wontdo", "fixversion", "reset-demo"])
     ap.add_argument("args", nargs="*")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
@@ -351,12 +366,14 @@ def main():
         return
     if a.command == "seed":
         cmd_seed(a.dry_run)
+    elif a.command == "keymap":
+        cmd_keymap()
     elif a.command == "wontdo":
-        cmd_wontdo(a.args[0] if a.args else DATA["demo"]["wontDo"]["key"], a.dry_run)
+        cmd_wontdo(to_key(a.args[0] if a.args else DATA["demo"]["wontDo"]["ref"]), a.dry_run)
     elif a.command == "fixversion":
         f = DATA["demo"]["fixVersionChange"]
-        key, name = (a.args + [None, None])[:2]
-        cmd_fixversion(key or f["key"], name or f["to"], a.dry_run)
+        ref, name = (a.args + [None, None])[:2]
+        cmd_fixversion(to_key(ref or f["ref"]), name or f["to"], a.dry_run)
     else:
         cmd_reset(a.dry_run)
 

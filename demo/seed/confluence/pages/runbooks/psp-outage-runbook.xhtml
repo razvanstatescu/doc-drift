@@ -20,7 +20,7 @@
 <li><p>Replay webhooks that failed during the outage: <ac:link><ri:page ri:content-title="Replay failed PSP webhooks" /></ac:link>.</p></li>
 </ol>
 <h2>Known gaps</h2>
-<p>We do not yet hold settlement submissions while the PSP is degraded, so workers keep retrying and fill the logs. That work is <a href="https://{{ATLASSIAN_SITE}}/browse/PAY-163">PAY-163</a>. Until it ships, expect noisy worker logs during an outage and ignore them.</p>
+<p>We do not yet hold settlement submissions while the PSP is degraded, so workers keep retrying and fill the logs. That work is <a href="https://{{ATLASSIAN_SITE}}/browse/{{PAY:hold-settlement-psp-degraded}}">{{PAY:hold-settlement-psp-degraded}}</a>. Until it ships, expect noisy worker logs during an outage and ignore them.</p>
 <h2>After the outage</h2>
 <ul>
 <li><p>Ask the PSP for their incident report and attach it to our review.</p></li>

@@ -1,6 +1,8 @@
 # payments-api base additions
 
-Files the Confluence pages and scenarios 02 to 10 rely on, which the current `base/` lacks. Written 2026-11-11 by the demo-content agent; the orchestrator applies them.
+Files the Confluence pages and scenarios 02 to 10 rely on. Written 2026-11-11 by the demo-content agent.
+
+**Status: applied 2026-11-11.** All 24 files are in `base/`, and `bb_seed.py reset` put them on `main` (commit `4713eff481dc`, "Reset demo baseline"). This file is now a record; edit `base/` directly. Jira keys in the code comments are D25 tokens (`{{PAY:<ref>}}`) that `bb_seed.py` resolves from `jira/keymap.json` at commit time.
 
 ## How to apply
 
@@ -8,7 +10,7 @@ Files the Confluence pages and scenarios 02 to 10 rely on, which the current `ba
 2. **Replace** means the file already exists in `base/` and is overwritten. **Add** means it is new.
 3. Do **not** touch `base/deploy/helm/values.yaml` or `base/scripts/rollback.sh`. Scenario 01 commits a full copy of `values.yaml`, so any new line there would be silently removed by scenario 01 and show up as extra drift.
 4. Make the scripts executable: `chmod +x demo/seed/payments-api/base/scripts/*.sh`. (The Bitbucket `/src` upload does not carry the mode bit either way; it only matters for local use.)
-5. If `payments-api` is already seeded in Bitbucket, run `python3 -I demo/seed/bb_seed.py base payments-api` again: it commits the whole folder on top of `main`. Do this **before** anyone anchors pages, so the commit raises no drift.
+5. If `payments-api` is already seeded in Bitbucket, run `python3 -I demo/seed/bb_seed.py reset payments-api`: it makes `main` equal to `base/` in one commit. Do this **before** anyone anchors pages, so the commit raises no drift.
 
 Why `scripts/scale-workers.sh` is replaced: the current script takes a positional count, so there is no flag to rename. Scenario 09 needs `--count` to exist in the base so it can become `--replicas`, and the Scale payment workers page documents `--count 6`.
 
@@ -787,8 +789,8 @@ import { createHash } from 'node:crypto';
 import type pg from 'pg';
 import type { Response } from './http/router.js';
 
-// Idempotency for POST /v2/charges and POST /v2/refunds (ADR-012, PAY-131).
-// A key is stored for 24 hours. Reusing a key with a different body returns 409 (PAY-134).
+// Idempotency for POST /v2/charges and POST /v2/refunds (ADR-012, {{PAY:idempotency-key-required}}).
+// A key is stored for 24 hours. Reusing a key with a different body returns 409 ({{PAY:idempotency-conflict-409}}).
 export const IDEMPOTENCY_TTL_HOURS = 24;
 
 export function requestHash(body: unknown): string {
@@ -946,7 +948,7 @@ import type { Deps } from '../deps.js';
 import type { Router } from '../http/router.js';
 
 // Legacy v1 refunds. Full refunds only, amounts in amount_cents, no idempotency.
-// Registered only when REFUNDS_V1_ENABLED is true. Removal tracked in PAY-158 (ADR-009).
+// Registered only when REFUNDS_V1_ENABLED is true. Removal tracked in {{PAY:remove-v1-refunds}} (ADR-009).
 const SUNSET = 'Tue, 15 Dec 2026 00:00:00 GMT';
 
 export function registerLegacyRefunds(router: Router, { pool }: Deps): void {
@@ -990,7 +992,7 @@ import { withIdempotency } from '../idempotency.js';
 
 const REASONS = new Set(['requested_by_customer', 'duplicate', 'fraudulent']);
 
-// POST /v2/refunds supports partial refunds (PAY-152).
+// POST /v2/refunds supports partial refunds ({{PAY:partial-refunds}}).
 // The sum of refunds for a charge can never exceed the captured amount.
 export function registerRefunds(router: Router, { pool }: Deps): void {
   router.post('/v2/refunds', async (req) => {
@@ -1098,7 +1100,7 @@ export function registerWebhooks(router: Router, { pool, config }: Deps): void {
 ````typescript
 import type { Deps } from '../deps.js';
 
-// Settlement worker (ADR-014, PAY-141). Claims pending rows from settlement_jobs with
+// Settlement worker (ADR-014, {{PAY:settlement-jobs-skip-locked}}). Claims pending rows from settlement_jobs with
 // FOR UPDATE SKIP LOCKED, so any number of worker pods can run side by side.
 // Concurrency per pod: PAYMENTS_WORKER_CONCURRENCY. Rows per claim: SETTLEMENT_BATCH_SIZE.
 const IDLE_DELAY_MS = 2_000;

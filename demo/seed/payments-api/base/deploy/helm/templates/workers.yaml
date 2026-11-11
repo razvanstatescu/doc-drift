@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payments-workers
+  labels:
+    app: payments-workers
+spec:
+  replicas: {{ .Values.workers.min }}
+  selector:
+    matchLabels:
+      app: payments-workers
+  template:
+    metadata:
+      labels:
+        app: payments-workers
+    spec:
+      containers:
+        - name: worker
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          env:
+            - name: PAYMENTS_ROLE
+              value: worker
+            {{- range $name, $value := .Values.env }}
+            - name: {{ $name }}
+              value: {{ $value | quote }}
+            {{- end }}
+          envFrom:
+            - secretRef:
+                name: payments-secrets
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: payments-workers
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: payments-workers
+  minReplicas: {{ .Values.workers.min }}
+  maxReplicas: {{ .Values.workers.max }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

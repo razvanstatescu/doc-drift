@@ -3,7 +3,7 @@
 <tr><th><p>Date</p></th><td><p>2026-03-04</p></td></tr>
 <tr><th><p>Deciders</p></th><td><p>Marco, Priya, Dana</p></td></tr>
 <tr><th><p>Owner</p></th><td><p>Marco (Payments tech lead)</p></td></tr>
-<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/PAY-131">PAY-131</a>, <a href="https://{{ATLASSIAN_SITE}}/browse/PAY-134">PAY-134</a></p></td></tr>
+<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/{{PAY:idempotency-key-required}}">{{PAY:idempotency-key-required}}</a>, <a href="https://{{ATLASSIAN_SITE}}/browse/{{PAY:idempotency-conflict-409}}">{{PAY:idempotency-conflict-409}}</a></p></td></tr>
 </tbody></table>
 <h2>Context</h2>
 <p>Checkout retries a charge when it does not get an answer within 10 seconds. Before v2, a slow database during peak hours caused duplicate charges: the first request was still running when the retry arrived. In February we refunded 214 duplicates by hand.</p>

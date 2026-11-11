@@ -1,7 +1,7 @@
 <table data-layout="default"><tbody>
 <tr><th><p>Owner</p></th><td><p>Dana (Platform on-call lead)</p></td></tr>
 <tr><th><p>Service</p></th><td><p><code>payments-pg</code> (Patroni, 1 primary and 2 replicas), <code>payments-api</code></p></td></tr>
-<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/PAY-149">PAY-149</a> Payments database resilience</p></td></tr>
+<tr><th><p>Jira</p></th><td><p><a href="https://{{ATLASSIAN_SITE}}/browse/{{PAY:db-resilience-epic}}">{{PAY:db-resilience-epic}}</a> Payments database resilience</p></td></tr>
 <tr><th><p>Last reviewed</p></th><td><p>2026-10-08</p></td></tr>
 </tbody></table>
 <h2>When to use this runbook</h2>
@@ -13,7 +13,7 @@
 
 env:
   PAYMENTS_DB_POOL: "20"]]></ac:plain-text-body></ac:structured-macro>
-<p><code>PAYMENTS_DB_POOL</code> is the pool size per pod (see <code>src/db/pool.ts</code>). With 3 API pods and up to 8 worker pods that is 11 x 20 = 220 connections at the worst moment, against <code>max_connections = 200</code> on <code>payments-pg</code>. Patroni reserves 20 for superuser and replication, so in practice the API reconnects first and some workers retry for up to 1 minute. This is expected. PgBouncer (<a href="https://{{ATLASSIAN_SITE}}/browse/PAY-151">PAY-151</a>) will remove the problem.</p>
+<p><code>PAYMENTS_DB_POOL</code> is the pool size per pod (see <code>src/db/pool.ts</code>). With 3 API pods and up to 8 worker pods that is 11 x 20 = 220 connections at the worst moment, against <code>max_connections = 200</code> on <code>payments-pg</code>. Patroni reserves 20 for superuser and replication, so in practice the API reconnects first and some workers retry for up to 1 minute. This is expected. PgBouncer (<a href="https://{{ATLASSIAN_SITE}}/browse/{{PAY:pgbouncer}}">{{PAY:pgbouncer}}</a>) will remove the problem.</p>
 <h2>Steps</h2>
 <ol>
 <li><p>See the cluster state and pick the replica with the lowest lag as the candidate:</p>

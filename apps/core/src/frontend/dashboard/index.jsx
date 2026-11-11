@@ -24,7 +24,7 @@ import {
   anchoredPctText,
   anchoredText,
   emptyDashboardText,
-  hasDrift,
+  driftedPages,
   medianText,
   plural,
   relativeTime,
@@ -150,7 +150,8 @@ const App = () => {
     medianTimeToVerifyDays: null,
     ...(data.kpis || {}),
   };
-  const pages = sortPages(data.pages || []);
+  // Polish item 4: only drifted pages are listed; Verified pages stay out of the table.
+  const pages = sortPages(driftedPages(data.pages));
   const owners = sortOwners(data.owners || []);
   const now = Date.now();
 
@@ -175,7 +176,7 @@ const App = () => {
     );
   }
 
-  if (!hasDrift(kpis, pages.length)) {
+  if (pages.length === 0) {
     return (
       <Stack space="space.300">
         <Heading size="large">{title}</Heading>
@@ -213,11 +214,10 @@ const App = () => {
       </Stack>
       {tiles}
       <Stack space="space.100">
-        <Heading size="medium">Pages to review</Heading>
+        <DynamicTable caption={`Pages with drift in ${spaceKey}`} head={PAGE_HEAD} rows={pageRows} rowsPerPage={10} />
         <Text size="small" color="color.text.subtle">
           Ranked by severity, then state and open changes.
         </Text>
-        <DynamicTable caption={`Pages with drift in ${spaceKey}`} head={PAGE_HEAD} rows={pageRows} rowsPerPage={10} />
       </Stack>
       {owners.length ? (
         <Stack space="space.100">

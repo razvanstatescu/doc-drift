@@ -189,7 +189,9 @@ modules:
       resolver:
         function: settings-resolver
       title: Doc Drift Sentinel
-      useAsConfig: true
+      # No useAsConfig: a Configure-only page gets no sidebar link, and the Configure link
+      # is hidden for unshared (development) apps, so admins could not reach settings.
+      # As a plain global settings page it appears in Confluence administration's sidebar.
   confluence:spacePage:
     # Space dashboard (F8). Resolver getSpaceDashboard({spaceKey}); spaceKey comes from the module context.
     - key: dds-dashboard

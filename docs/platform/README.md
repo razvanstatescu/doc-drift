@@ -22,7 +22,7 @@ Apply these when writing the real manifests. The sketches are in [source/plan-v1
 - [ ] **Queues:** push record IDs, not diffs (100 KB per event when `timeoutSeconds` > 55). Consumers must be idempotent.
 - [ ] **Forge SQL:** `sql: [{ key: main, engine: mysql }]` plus a migration consumer on `avi:forge:installed:app` / `avi:forge:upgraded:app` (`timeoutSeconds: 900`). Ship from day 1.
 - [ ] **`confluence:spacePage`** needs a `route`, or deploy fails.
-- [ ] **`confluence:globalSettings`:** add `useAsConfig: true`.
+- [ ] **`confluence:globalSettings`:** no `useAsConfig` (live 2026-11-11). A Configure-only page gets no admin sidebar link, and the Configure link is hidden for unshared development apps.
 - [ ] **Byline:** the backend writes a flat `{title, icon, tooltip}` of strings under `contentPropertyKey`. `icon` is a path relative to a declared resource (or an absolute URL), so ship 4 state SVGs in the byline resource. A `data:` URI is the fallback. Put the state word in the title too. Use the UUID-like key: duplicate keys on a page stop updates. S2 tests whether Confluence reads the raw key or the hook's `forge-<localId>-<key>` form.
 - [ ] **Permission checks:** `asUser()` `GET /wiki/api/v2/pages/{id}/operations`, never v1 `/permission/check`. Restricted pages are unsupported (D20). No `asApp()` fallback in MCP tools (D21). Add `confluence:backgroundScript` only if live refresh via `updateBylineProperties` matters.
 - [ ] **Optional:** a `confluence:contentProperty` index (`dds_state`, no hyphens) for CQL-queryable state.
@@ -51,3 +51,4 @@ Apply these when writing the real manifests. The sketches are in [source/plan-v1
 - [ ] Web triggers have an undocumented `request.authentication: hmacSharedSecret` option (seen in S1, untested). Keep our own HMAC.
 - [ ] Missing user consent in actions surfaces as `NeedsAuthenticationError` (`NEEDS_AUTHENTICATION_ERR`, 401). Map it to `error: consent_required` (D21).
 - [ ] **Don't set `"type": "module"` in a Forge app's package.json.** With it, the bundler's strict ESM interop makes `import Resolver from '@forge/resolver'` (a CommonJS package) return the namespace object, and the function fails with "out_namespaceObject is not a constructor" (S3 spike, 2026-11-11). Either leave `type` unset (S1/S2 spikes) or use TypeScript with the default Forge bundling.
+- [ ] **UI Kit does not batch state updates in a promise callback** (live 2026-11-11). `setData(res); setForm(...)` inside `invoke(...).then` renders once per setter, so a render saw `data` with `form` still null, threw, and left the settings page blank (only the host title, no console error outside the app iframe). Keep dependent values in one state, or guard every render on all of them.

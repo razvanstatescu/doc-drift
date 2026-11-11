@@ -1,4 +1,4 @@
-// Global settings (useAsConfig, F13): detection (sensitivity, ignore globs, branch filter), watched
+// Global settings (F13; a plain confluence:globalSettings page): detection (sensitivity, ignore globs, branch filter), watched
 // spaces, escalation and notifications, Jira, the Bitbucket relay connection (ingest URL, secret,
 // connection status) and demo mode. UI Kit components only; copy follows brand/voice-and-copy.md.
 import React, { useEffect, useState } from 'react';
@@ -19,7 +19,6 @@ import ForgeReconciler, {
   Select,
   Spinner,
   Stack,
-  Strong,
   Text,
   TextArea,
   Textfield,
@@ -115,13 +114,15 @@ const App = () => {
     if (context === undefined) return; // wait for the context so the settings location is saved
     invoke('load', { location: context?.extension?.location ?? null })
       .then((res) => {
-        setData(res);
+        // UI Kit's reconciler does not batch state updates in a promise callback: each setter
+        // renders on its own. Set the form first, and guard below, so no render sees data without a form.
         if (res.ok) setForm(toForm(res.settings));
+        setData(res);
       })
       .catch((e) => setData({ ok: false, message: String(e?.message || e) }));
   }, [context === undefined]);
 
-  if (!data) return <Spinner size="medium" label="Loading settings" />;
+  if (!data || (data.ok && !form)) return <Spinner size="medium" label="Loading settings" />;
   if (!data.ok) {
     return (
       <SectionMessage appearance={data.error === 'forbidden' ? 'information' : 'warning'} title="Settings are for Confluence administrators">
@@ -369,13 +370,9 @@ const App = () => {
           ) : null}
         </Stack>
         <Text>Install the Doc Drift Sentinel Bitbucket relay in your workspace, then paste this URL and the secret into its settings.</Text>
-        <Text>
-          <Strong>Ingest URL</Strong>
-        </Text>
+        <Heading size="xxsmall">Ingest URL</Heading>
         <Code>{data.ingestUrl}</Code>
-        <Text>
-          <Strong>Relay secret</Strong>
-        </Text>
+        <Heading size="xxsmall">Relay secret</Heading>
         {data.secret ? (
           <Text>
             Set on {new Date(data.secret.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}. Fingerprint{' '}

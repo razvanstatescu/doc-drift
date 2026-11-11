@@ -39,7 +39,7 @@ The Forge apps bundle their own dependencies. They import `packages/*` through w
   - The badge turns Verified.
 
   External MCP is verified from Claude Code (find-docs-for-path). 332 tests. |
-| **M4** | Dec 8 to 14 | Admin settings, F12 if chosen, UI polish (ADS tokens), production deploy, share links, judge setup guide, second clean site test. | A clean-site install by the setup guide alone. |  |
+| **M4** | Dec 8 to 14 | Admin settings, F12 if chosen, UI polish (ADS tokens), production deploy, share links, judge setup guide, second clean site test. | A clean-site install by the setup guide alone. | **Done (in-scope part)** 2026-11-11 (core v4.16.0). Browser-checked: the F13 settings page (now in Confluence administration > Apps), the review panel (D30 evidence, per-control gating) and the dashboard (18 of 24, drifted pages only). Live QA: all 10 Bitbucket scenarios pass. 387 tests. **Deferred by Razvan:** production deploy, share links, judge guide (and H1, removing the dev driver, which goes with production). |
 | **M5** | Dec 15 to 21 | Bug bash, freeze Dec 18, video, Devpost text, open-source the repo Dec 19, submit Dec 21. | Submitted. |  |
 
 ## Tracks (agent assignments)

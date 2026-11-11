@@ -24,6 +24,16 @@ modules:
         function: settings-resolver
       title: Doc Drift Sentinel
       useAsConfig: true
+  confluence:spacePage:
+    # Space dashboard (F8). Resolver getSpaceDashboard({spaceKey}); spaceKey comes from the module context.
+    - key: dds-dashboard
+      resource: dashboard
+      render: native
+      resolver:
+        function: byline-resolver
+      title: Drift dashboard
+      route: drift-dashboard
+      icon: resource:icons;doc-drift.svg
   sql:
     - key: main
       engine: mysql
@@ -149,6 +159,8 @@ resources:
     path: src/frontend/byline/index.jsx
   - key: settings
     path: src/frontend/settings/index.jsx
+  - key: dashboard
+    path: src/frontend/dashboard/index.jsx
   - key: icons
     path: static/icons
 permissions:

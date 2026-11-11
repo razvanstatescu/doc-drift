@@ -29,7 +29,7 @@ const sectionStyle = xcss({
   borderColor: 'color.border',
   borderStyle: 'solid',
   borderWidth: 'border.width',
-  borderRadius: 'border.radius',
+  borderRadius: 'radius.medium',
   padding: 'space.200',
 });
 

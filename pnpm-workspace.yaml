@@ -1,2 +1,7 @@
 packages:
   - "packages/*"
+  - "apps/core"
+
+# iframe-resizer (pulled in by @forge/react) only prints a licence notice on install.
+allowBuilds:
+  iframe-resizer: false

@@ -13,10 +13,12 @@ function header(request, name) {
   return Array.isArray(value) ? value[0] : value;
 }
 
+// Accepts the @dds/shared format (bare hex, used by apps/bitbucket-relay) and the S1 spike's `sha256=` prefix.
 function verify(secret, timestamp, body, signature) {
-  const expected = 'sha256=' + createHmac('sha256', secret).update(`${timestamp}.${body}`).digest('hex');
+  const expected = createHmac('sha256', secret).update(`${timestamp}.${body}`).digest('hex');
+  const given = String(signature || '').replace(/^sha256=/, '');
   const a = Buffer.from(expected);
-  const b = Buffer.from(String(signature || ''));
+  const b = Buffer.from(given);
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
@@ -54,7 +56,14 @@ export async function ingest(request) {
     console.warn('ingest: rejected, body is not JSON');
     return { outputKey: 'bad-request' };
   }
-  if (!record || record.v !== 1 || !Array.isArray(record.files)) {
+  // M1 relay test ping: signature verified, nothing stored.
+  if (record && record.source === 'ping') {
+    console.log('ingest: ping verified', { workspaceUuid: record.workspaceUuid, sentAt: record.sentAt });
+    return { outputKey: 'accepted' };
+  }
+  const isSpikeRecord = record && record.v === 1 && Array.isArray(record.files);
+  const isChangeRecord = record && record.source === 'bitbucket' && Array.isArray(record.files);
+  if (!isSpikeRecord && !isChangeRecord) {
     console.warn('ingest: rejected, not a v1 change record');
     return { outputKey: 'bad-request' };
   }
@@ -62,8 +71,10 @@ export async function ingest(request) {
   console.log('ingest: HMAC verified', {
     fields: Object.keys(record),
     source: record.source,
-    repo: record.repo,
-    pr: record.pr && { id: record.pr.id, title: record.pr.title, dst: record.pr.destinationBranch },
+    repo: record.repo ?? { workspace: record.workspace, slug: record.repoSlug, uuid: record.repoUuid },
+    pr: record.pr ? { id: record.pr.id, title: record.pr.title, dst: record.pr.destinationBranch }
+      : { id: record.prId, title: record.title, dst: record.destinationBranch, merge: record.mergeCommit },
+    hunksBytes: typeof record.hunks === 'string' ? Buffer.byteLength(record.hunks) : 0,
     files: record.files.length,
     diffstatVia: record.diffstatVia,
   });

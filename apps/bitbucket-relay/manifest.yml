@@ -1,0 +1,38 @@
+modules:
+  trigger:
+    - key: pr-merged
+      function: on-merged
+      events:
+        - avi:bitbucket:fulfilled:pullrequest
+  bitbucket:workspaceSettingsMenuPage:
+    - key: relay-settings
+      resource: settings
+      resolver:
+        function: settings-resolver
+      render: native
+      title: Doc Drift Sentinel Relay
+  function:
+    - key: on-merged
+      handler: index.onMerged
+    - key: settings-resolver
+      handler: index.handler
+resources:
+  - key: settings
+    path: src/frontend/index.tsx
+app:
+  runtime:
+    name: nodejs24.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/409a6e1e-dd37-482c-b30f-e56d322b4035
+permissions:
+  scopes:
+    - read:pullrequest:bitbucket
+    - read:repository:bitbucket
+    - read:workspace:bitbucket
+    - storage:app
+  external:
+    fetch:
+      backend:
+        - address: '*.webtrigger.atlassian.app'
+          inScopeEUD: false

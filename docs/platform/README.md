@@ -50,3 +50,4 @@ Apply these when writing the real manifests. The sketches are in [source/plan-v1
 - [ ] **Diffstat spec:** `route\`/2.0/repositories/${ws}/${repo}/diffstat/${src}..${dst}?topic=true\`` with `src` and `dst` as separate interpolations. A single value containing `..` makes `route()` throw.
 - [ ] Web triggers have an undocumented `request.authentication: hmacSharedSecret` option (seen in S1, untested). Keep our own HMAC.
 - [ ] Missing user consent in actions surfaces as `NeedsAuthenticationError` (`NEEDS_AUTHENTICATION_ERR`, 401). Map it to `error: consent_required` (D21).
+- [ ] **Don't set `"type": "module"` in a Forge app's package.json.** With it, the bundler's strict ESM interop makes `import Resolver from '@forge/resolver'` (a CommonJS package) return the namespace object, and the function fails with "out_namespaceObject is not a constructor" (S3 spike, 2026-11-11). Either leave `type` unset (S1/S2 spikes) or use TypeScript with the default Forge bundling.

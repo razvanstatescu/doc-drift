@@ -5,7 +5,6 @@
   "description": "Spike S3/S4/S11: actions + rovo:agent + rovo:skill + rovo:mcp (throwaway)",
   "main": "index.js",
   "license": "UNLICENSED",
-  "type": "module",
   "dependencies": {
     "@forge/api": "8.5.0",
     "@forge/bridge": "7.3.0",

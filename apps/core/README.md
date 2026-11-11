@@ -1,12 +1,13 @@
 # Doc Drift Sentinel: core app
 
-The core Forge app. Confluence is required and Jira is optional (`app.compatibility`). It stores page anchors, receives HMAC-signed change records from the Bitbucket relay and Jira issue events, runs the deterministic matcher, writes each page's state to the byline content property, and serves the review panel, the space dashboard and the owner notifications. Milestones M1 and M2 (backend) of [docs/implementation-plan.md](../../docs/implementation-plan.md).
+The core Forge app. Confluence is required and Jira is optional (`app.compatibility`). It stores page anchors, receives HMAC-signed change records from the Bitbucket relay and Jira issue events, runs the deterministic matcher, writes each page's state to the byline content property, serves the review panel, the space dashboard and the owner notifications, and exposes the Drift Reviewer Rovo agent, its actions and skill, and a `rovo:mcp` server for coding agents. Milestones M1, M2 and M3 (backend) of [docs/implementation-plan.md](../../docs/implementation-plan.md).
 
 | | |
 | --- | --- |
 | App ID | `ari:cloud:ecosystem::app/12e968a1-a45d-4524-ba28-d47e2315db1a` |
 | Developer Space | Doc Drift (`af90295c-aad7-4188-9754-122ee3c4c6f4`) |
-| Development env ID | `b7eadd8c-211c-4cdf-98c0-86172909ead2` (version 4.5.0 on 2026-11-11; 4.0.0 was the M2 scope change) |
+| Development env ID | `b7eadd8c-211c-4cdf-98c0-86172909ead2` (version 4.8.0 on 2026-11-11, M3; 4.0.0 was the M2 scope change) |
+| MCP endpoint | `https://mcp.atlassian.com/forge/12e968a1-a45d-4524-ba28-d47e2315db1a` (`rovo:mcp` "Doc Drift": `check-page-freshness`, `find-docs-for-path`, `list-stale-pages`) |
 | Installed | development, one-atlas-jzzf.atlassian.net: Confluence (required) + Jira (connected). Installation `27236af5-036e-44ad-bb1d-d3bec72a5122` |
 | Runs on Atlassian | Eligible (every deploy so far) |
 
@@ -24,6 +25,10 @@ notify consumer ─▶ footer comment @owner (1 per page per 24 h; appends insid
 hourly dds-escalation ─▶ Possibly stale past escalationDays ─▶ Stale; bylines whose snooze ended
 avi:confluence:trashed|deleted:page ─▶ close events, drop bindings, proposals, state
 byline-resolver (asUser checks, D15/D20) ─▶ review panel, binding modal, dashboard ─▶ asApp writes
+Rovo chat / Rovo Studio / MCP client ─▶ action (asUser only, D21) ─▶ freshness, docs for a path, stale pages,
+   drift context, record verification, submit-fix-proposal ─▶ fix_proposal row (never the page)
+review panel Accept fix ─▶ applyProposal: edit check asUser ─▶ storage-edit ─▶ PUT page asUser (version message)
+   ─▶ close events, verification (accepted_proposal), byline asApp
 ```
 
 | Path | What it does |
@@ -34,6 +39,13 @@ byline-resolver (asUser checks, D15/D20) ─▶ review panel, binding modal, das
 | `src/lib/page-state.ts` | Recomputes `page_state` from bindings and open events (D27 via `nextPageState`, snoozes, `escalationDays`), fills the page owner, writes the byline property asApp |
 | `src/lib/review-service.ts` | Review panel and dashboard services: `pageDrift`, `markVerified`, `dismissEvent`, `snoozePage`, `decideRename`, `spaceDashboard`. Each write takes a `Gate` (the resolver's asUser check) |
 | `src/lib/review.ts` | Pure helpers: affected sections, event rows, dismiss/snooze input, notifier copy and 24 h plan, Jira event to ChangeRecord, deleted-issue events, dashboard ranking and median. Unit-tested |
+| `src/actions/index.ts` | Rovo action entry points (M3): asUser deps, `NeedsAuthenticationError` to `consent_required` (D21), `DDS_TOOL` logs |
+| `src/lib/agent-service.ts` | The tools: `checkPageFreshness`, `findDocsForPath`, `listStalePages`, `getDriftContext`, `recordAgentVerification`. Reader-injected, so the dev driver runs them asApp |
+| `src/lib/fix-service.ts` | Propose fix: `submitFixProposal` (stores a draft, dry-runs the edit, never writes the page), `listProposals`, `applyProposal` (asUser PUT, version message, verification), `rejectProposal` |
+| `src/lib/storage-edit.ts` | Pure: replaces `originalText` with `proposedText` inside the named section of a storage body, in code macro CDATA or prose, after whitespace normalisation; `not_found`, `ambiguous`, `section_not_found` or `unsupported_span` otherwise. Unit-tested |
+| `src/lib/agent-tools.ts` | Pure: input parsing (page ID, URL, title, repo, limit), path/folder/glob matching, `guidance` copy, diff filtering, the 15 KB context cap, version message, draft validation. Unit-tested |
+| `src/lib/access.ts` | `makeGate(user, app)`: the asUser operations check and the D20 restriction check, shared by resolvers and actions |
+| `prompts/drift-reviewer.md`, `skills/check-page-freshness/SKILL.md` | The agent prompt (resource `agent-prompt`) and the skill |
 | `src/lib/notifier.ts` | `notify-queue` consumer body: footer comment with an @mention of the page owner |
 | `src/triggers/product-events.ts` | Jira issue updated/deleted, Confluence page trashed/deleted, hourly escalation |
 | `src/lib/bindings-service.ts` | Saves a page's anchors (replace-all), closes open events as `resolved`, records a `verification` row, marks the page Verified |
@@ -48,10 +60,11 @@ byline-resolver (asUser checks, D15/D20) ─▶ review panel, binding modal, das
 
 ### Data (Forge SQL, [data-model.md](../../docs/architecture/data-model.md))
 
-`binding`, `page_state`, `drift_event`, `change_record`, `verification`, `rename_proposal`, `notification`. Additions to the data model: `drift_event.change_record_id`, `matched_anchor`, `reasons`, `matched_tokens` (removed identifiers the page mentions), `closed_by`; `change_record.dedupe_key`, `origin`, `record` (normalized JSON without hunks), `hunks`, `processed_at`, `outcome` (`title` holds the issue summary for Jira); `verification.drift_since` (oldest closed event, for time to verify). `binding.repo` is stored lowercased. `max_severity`: 0 none, 1 medium, 2 high. All DATETIMEs are UTC.
+`binding`, `page_state`, `drift_event`, `change_record`, `verification`, `rename_proposal`, `notification`, and from M3 `fix_proposal` (migration v011). Additions to the data model: `drift_event.change_record_id`, `matched_anchor`, `reasons`, `matched_tokens` (removed identifiers the page mentions), `closed_by`; `change_record.dedupe_key`, `origin`, `record` (normalized JSON without hunks), `hunks`, `processed_at`, `outcome` (`title` holds the issue summary for Jira); `verification.drift_since` (oldest closed event, for time to verify). `binding.repo` is stored lowercased. `max_severity`: 0 none, 1 medium, 2 high. All DATETIMEs are UTC.
 
 - **Event status**: `open` (a snoozed event stays `open` with `snoozed_until` set), `dismissed` (with `dismiss_reason`), `resolved` (verified, or `dismiss_reason = page_removed`), `reverted`.
 - **`rename_proposal`**: one row per binding and rename (unique on a SHA-256 `proposal_key`: a unique key over the raw paths exceeds the index length limit). `open`, `accepted`, `rejected`.
+- **`fix_proposal`**: one row per draft: page, `event_ids` (the open events whose tokens appear in that section, else all open events), `refs` (`PR #482`), section heading as the page spells it, original and proposed text, rationale, `status` `open`/`accepted`/`rejected` (the UI calls accepted `applied`), `created_by` (the Rovo user's account ID), `applied_version`. Trashing the page rejects its open drafts.
 - **`notification`**: one row per page: the footer comment ID and version, the 24 h window start, the notified `eventId@changeRecordId` keys, and `body_lines` (`LINES` is a reserved word in MySQL).
 
 Migrations run from `avi:forge:installed:app` / `avi:forge:upgraded:app` through `dds-migration-queue` (900 s consumer), and `ensureSchema()` also runs them lazily once per warm container. Never edit a shipped migration; append a new one.
@@ -92,13 +105,17 @@ All calls go to the `byline-resolver` function (the byline modal and the dashboa
 | `snoozePage` | `{pageId?, days: 1..30}` | `{ok, state, snoozedUntil, message}` |
 | `acceptRename` / `rejectRename` | `{proposalId}` | `{ok, pageId, state, message}` |
 | `getSpaceDashboard` | `{spaceKey?}` (defaults to the context space) | `{ok, spaceKey, kpis:{anchored, total, anchoredPct, possiblyStale, stale, medianTimeToVerifyDays\|null}, pages:[…], owners:[{ownerId, ownerName, open, pages}], truncated}` |
+| `getProposals` | `{pageId?}` | `[{id, eventIds, refs, sectionHeading, originalText, proposedText, rationale, createdBy:{accountId, displayName}\|null, createdAt, status:'open'\|'applied'\|'rejected', appliedVersion?}]`, newest first, 20 at most |
+| `applyProposal` | `{proposalId}` | `{ok:true, pageId, version, versionMessage, closedEvents, state, statusLabel, message}`. Needs edit rights. `error: 'not_found'` when the original text (or its section) is no longer on the page; also `ambiguous`, `unsupported_span`, `not_open` (already handled), `forbidden`, `update_failed` |
+| `rejectProposal` | `{proposalId}` | `{ok, pageId, message}`. Needs edit rights. The page is unchanged |
+| `getRovoAgentInfo` | none | `{ok, agentName: 'Drift Reviewer', agentKey: 'drift-reviewer'}` for `rovo.open({type: 'forge', agentName, agentKey, prompt})` |
 | `load`, `checkAnchor`, `save` | M1, unchanged | M1 shapes (`load` is kept as an alias) |
 
-- **`events[]`**: `{id, source, ref ('PR #482' or 'PAY-21'), title (PR title or issue summary), author, at, summary, files:[{path, status, oldPath?}], severity, score, anchor, reasons, status: 'open'|'snoozed', snoozedUntil, url (Bitbucket PR link or null)}`, newest first. Only open events (snoozed ones included, with `status: 'snoozed'`).
-- **`affectedSections[]`**: `{heading, excerpt (≤ 300 chars, `…` where cut), matchedTokens}` from the page body (asUser, storage format), split at headings (`Top of page` before the first). Tokens: changed paths and old paths, distinctive file names, removed identifiers the page mentions, Jira keys. Whole-token match (`ROLLBACK_TIMEOUT` does not match `ROLLBACK_TIMEOUT_SECS`). At most 5.
+- **`events[]`**: `{id, source, ref ('PR #482' or 'PAY-21'), title (PR title or issue summary), author, at, summary, files:[{path, status, oldPath?}], severity, score, anchor, reasons, status: 'open'|'snoozed', snoozedUntil, url (Bitbucket PR link or null)}`, High before Medium, newest first within a severity (M3). Only open events (snoozed ones included, with `status: 'snoozed'`).
+- **`affectedSections[]`**: `{heading, excerpt (≤ 300 chars, `…` where cut), matchedTokens, codeLines?}` (`codeLines`: up to 5 exact code lines of the section that contain a token; omitted when none) from the page body (asUser, storage format), split at headings (`Top of page` before the first). Tokens: changed paths and old paths, distinctive file names, removed identifiers the page mentions, Jira keys. Whole-token match (`ROLLBACK_TIMEOUT` does not match `ROLLBACK_TIMEOUT_SECS`). At most 5.
 - **`renameProposals[]`**: `{id, bindingId, from, to, anchor}`. Accept rewrites the binding's pattern; a binding edited since is refused with `binding_changed`.
 - **`bindings[]`**: the M1 `anchors` shape plus `dismissCount`.
-- **`pages[]`**: `{pageId, title, url, status, statusLabel, maxSeverity: 'high'|'medium'|null, openEvents, since, ownerId, ownerName}`, anchored pages only, ranked by severity, then the oldest open drift, then title. `total` is every current page in the space the caller can see (REST v2 listing); counts are Forge SQL `GROUP BY` over the visible anchored pages.
+- **`pages[]`**: `{pageId, title, url, status, statusLabel, maxSeverity: 'high'|'medium'|null, openEvents, since, ownerId, ownerName}`, Possibly stale and Stale pages only (M3), ranked by severity, then the oldest open drift, then title. `total` is every current page in the space the caller can see (REST v2 listing), minus the space home page (M3); counts are Forge SQL `GROUP BY` over the visible anchored pages.
 
 ### Page state (D27, `nextPageState` in `@dds/matcher`)
 
@@ -134,7 +151,7 @@ The app is a pnpm workspace member (`apps/core` in `pnpm-workspace.yaml`). `forg
 pnpm install                         # at the repo root
 cd apps/core
 pnpm run prebuild:packages           # tsc for @dds/shared and @dds/matcher
-pnpm typecheck && pnpm test          # 57 Vitest tests over the pure helpers
+pnpm typecheck && pnpm test          # 122 Vitest tests over the pure helpers
 forge lint
 forge deploy -e development --non-interactive     # or: pnpm deploy:dev (builds packages first)
 forge install -e development --site one-atlas-jzzf.atlassian.net --product confluence --non-interactive --confirm-scopes
@@ -174,8 +191,29 @@ KVS also holds `settings` (`{sensitivity, ignoreGlobs, escalationDays, notifyEna
 | `jira-event`, `page-event` | `event` | Feed a synthetic product event to the handler |
 | `settings` | `settings` | Merge into the stored settings (validated) |
 | `changes`, `set-secret` | | As in M1 |
+| `tool` | `tool, input, pageId?` | Runs an M3 tool (`check-page-freshness`, `find-docs-for-path`, `list-stale-pages`, `get-drift-context`, `record-verification`, `submit-fix-proposal`) with an asApp reader and an open gate; `pageId` stands in for the Rovo page context |
+| `proposals`, `apply-proposal`, `reject-proposal` | `pageId` / `proposalId` | The review panel's proposal calls; apply writes the page **asApp** here (development only) |
 
 The asUser permission checks can't run here (no user): they are in the browser checks below.
+
+## Status (2026-11-11, M3 backend, version 4.8.0)
+
+### Verified live (headless: dev driver with an asApp reader, plus REST)
+
+- **check-page-freshness**: by ID, URL and title on DDSTEST 2752731 (Possibly stale, "Cite with caveat: changed by PR #4 on 2026-11-11 and PR #482 on 2026-11-11."); 3047452 Stale with 3 changes; unknown ID 999999999 gives `status: unknown`, `title: null`; no input gives `no_page`.
+- **find-docs-for-path**: `payments-api` + `scripts/rollback.sh` finds 2 pages (exact); `nano-soft-dev/payments-api` + `deploy/` finds 5 PLAT pages (folder).
+- **list-stale-pages**: all spaces (3 pages, Stale first, owner names) and `PLAT` (Scale payment workers).
+- **get-drift-context** on 2752731: 1 section (`Roll back`, exact text), 2 events with only the rollback script's diff, 4.3 KB.
+- **Propose fix end to end** on DDSTEST page **3080280** ("Doc Drift M3 fix test page", anchor `payments-api: scripts/payout-retry.sh` critical, synthetic PR #9301 renaming `--count` to `--attempts`): a code-block draft and a prose draft (across `<code>--count</code>`) were stored; a draft with text not on the page returned `not_found` with the page's headings and stored nothing. Apply wrote version 2, message "Doc Drift: accepted proposal for PR #9301", closed the event, recorded a verification (`accepted_proposal`), byline "Doc Drift: Verified". The prose draft became version 3 (`<code>--attempts</code>`). Reject left the page unchanged; applying a rejected draft returned `not_open`.
+- **record-verification** (method `agent`) closed 1 event and set Verified.
+- **M2 polish**: getPageDrift events High first; `codeLines` (`./scripts/rollback.sh --timeout $ROLLBACK_TIMEOUT` on 2752731); PLAT dashboard total 24 (home page excluded), only drifted pages listed.
+- Page 3080280 was then reset to its `--count` text (version 4) and re-flagged by PR #9301, ready for the browser check.
+- **MCP endpoint** live: unauthenticated POST gives 401 `invalid_token` with the OAuth resource metadata.
+- The S3 spike app (`d212a098`) was uninstalled from the demo site, so Rovo lists one Drift Reviewer.
+
+### Not verifiable headlessly
+
+The asUser path of every action (Rovo chat and MCP need a signed-in user), the `consent_required` mapping in this app, the Rovo confirmation dialogs for CREATE/UPDATE, the skill attachment, and the asUser page PUT from the review panel. See checks 16 to 24.
 
 ## Status (2026-11-11, M2 backend)
 
@@ -228,5 +266,19 @@ Log in to one-atlas-jzzf.atlassian.net as yourself. Tail logs meanwhile: `cd app
 13. **Dashboard.** Open the DDSTEST space, then the Doc Drift space page. Expect KPI tiles (3 pages, 2 anchored), pages ranked by severity, and you as owner. Repeat in PLAT: 25 pages, 18 anchored, the rollback runbook Stale on top.
 14. **Restricted page (D20).** On the restricted page from check 5, `getPageDrift` returns `restricted: true` and the panel says "Restricted pages can't be watched yet."
 15. **Settings.** `escalationDays`, `notifyEnabled` and `notifyDelaySeconds` are stored with the other settings (current values: 7, on, 600). If the settings form does not show them yet, saving it keeps them.
+
+### M3 checks (Rovo, review panel, Claude Code)
+
+Rovo messages cost about 10 credits each; keep it to the steps below. Tail logs: `forge logs -e development -s 15m | grep -E "DDS_TOOL|DDS_FIX"`.
+
+16. **One agent.** On any Confluence page, open **Ask Rovo**, then the agent picker. Expect exactly one **Drift Reviewer** (Doc Drift mark), no "Drift Reviewer (spike)".
+17. **Freshness in Rovo.** Open https://one-atlas-jzzf.atlassian.net/wiki/spaces/DDSTEST/pages/3080280 and ask Drift Reviewer "Is this page still current?". Expect "Possibly stale", PR #9301 named with its date, no "wrong", and no confirmation prompt (GET). Log: `DDS_TOOL {"tool":"check-page-freshness","surface":"confluence",...,"status":"possibly_stale"}`. If the reply mentions Connected apps, open the Doc Drift byline on the page once, click **Allow access** if asked, and retry.
+18. **Draft a fix.** Ask "Draft a fix for the drifted sections of this page". Expect calls to `get-drift-context`, then a confirmation dialog for **Submit fix proposal** (CREATE); confirm. Expect a reply that the draft waits in the review panel and the page is unchanged. Logs: `DDS_TOOL get-drift-context`, `DDS_FIX_PROPOSED {"refs":["PR #9301"],...}`. The page text must still say `--count`.
+19. **Accept in the review panel** (needs the M3 UI merged and deployed). Click the byline, find the proposed fix (diff with `-`/`+` lines), click **Accept fix**. Expect "Accepted. A new page version names PR #9301." Reload: the code block reads `--attempts`, the byline reads **Doc Drift: Verified**, and Page history shows a new version by you with the message "Doc Drift: accepted proposal for PR #9301". Log: `DDS_FIX_APPLIED`.
+20. **Propose fix button.** On page 2752731 (Possibly stale), the review panel's **Propose fix** opens the Rovo sidebar with Drift Reviewer and a pre-filled prompt naming the page ID. Don't send it unless you want a second draft.
+21. **Record verification.** On page 2752731 tell Drift Reviewer "I re-checked this page against the code, record verification". Expect a confirmation dialog (UPDATE) first, then Verified. Log: `DDS_TOOL record-verification ok:true`. (Replay the demo afterwards to re-flag it.)
+22. **MCP setup.** admin.atlassian.com > Apps > Sites > one-atlas-jzzf > Connected apps > **Doc Drift Sentinel** (development) > Details > Tools > turn on "Expose tools to MCP-compatible apps". Then in a terminal: `claude mcp remove dds-spike` (the spike is uninstalled) and `claude mcp add --transport http doc-drift https://mcp.atlassian.com/forge/12e968a1-a45d-4524-ba28-d47e2315db1a`. In Claude Code run `/mcp` > doc-drift > Authenticate, pick one-atlas-jzzf and approve. Expect exactly 3 tools: `check-page-freshness`, `find-docs-for-path`, `list-stale-pages`.
+23. **MCP calls.** Ask Claude Code: "Use doc-drift check-page-freshness for https://one-atlas-jzzf.atlassian.net/wiki/spaces/PLAT/pages/2720129" (expect Possibly stale, PR #5); "Use doc-drift find-docs-for-path with repo payments-api and path scripts/rollback.sh" (2 pages); "Use doc-drift list-stale-pages for space PLAT". Logs show `"surface":"external"`. A first call may return `consent_required` ("Grant Doc Drift Sentinel access in Connected apps, then retry."): open the Doc Drift byline on any page once, allow access, and retry (spike C5/C6 behaviour).
+24. **Permission-aware.** Via MCP, check pageId 999999999: `status: unknown`, `title: null`. Check the restricted page 2883670 (you are its only viewer): `status: unanchored`, `restricted: true`, guidance "Doc Drift can't watch pages with view restrictions…".
 
 Cleanup when M1 is accepted: delete the DDSTEST space, and `forge variables unset -e development DDS_DEV_TOKEN`.

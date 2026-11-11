@@ -51,6 +51,12 @@ describe('affected sections', () => {
     expect(sections[0]!.heading).toBe('Step 2: run the rollback');
     expect(sections[0]!.matchedTokens.sort()).toEqual(['ROLLBACK_TIMEOUT', 'rollback.sh', 'scripts/rollback.sh']);
     expect(sections[0]!.excerpt).toContain('./scripts/rollback.sh --timeout $ROLLBACK_TIMEOUT');
+    expect(sections[0]!.codeLines).toEqual(['export ROLLBACK_TIMEOUT=300', './scripts/rollback.sh']);
+  });
+
+  it('omits codeLines when no code line matches', () => {
+    const [s] = affectedSections('<h2>A</h2><p>Uses PAY-12.</p>', ['PAY-12']);
+    expect(s).toEqual({ heading: 'A', excerpt: 'Uses PAY-12.', matchedTokens: ['PAY-12'] });
   });
 
   it('matches whole tokens only: ROLLBACK_TIMEOUT is not inside ROLLBACK_TIMEOUT_SECS', () => {

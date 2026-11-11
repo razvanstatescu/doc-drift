@@ -13,7 +13,11 @@ export interface AffectedSection {
   heading: string;
   excerpt: string;
   matchedTokens: string[];
+  /** Exact code lines of the section (code macros and `<pre>`) that contain a token. Omitted when none. */
+  codeLines?: string[];
 }
+
+export const MAX_CODE_LINES = 5;
 
 export const EXCERPT_MAX = 300;
 export const MAX_SECTIONS = 5;
@@ -22,18 +26,27 @@ export const TOP_OF_PAGE = 'Top of page';
 
 const HEADING = /<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/g;
 
-/** Splits storage-format XHTML into sections at each heading. Text before the first heading is its own section. */
-export function splitSections(storage: string): { heading: string; text: string }[] {
-  const out: { heading: string; text: string }[] = [];
+/** Sections with their code blocks. Text before the first heading is its own section. */
+export function splitSectionsDetailed(storage: string): { heading: string; text: string; codeBlocks: string[] }[] {
+  const out: { heading: string; text: string; codeBlocks: string[] }[] = [];
   let last = 0;
   let heading = TOP_OF_PAGE;
+  const push = (slice: string) => {
+    const page = extractPageText(slice);
+    out.push({ heading, text: page.text, codeBlocks: page.codeBlocks });
+  };
   for (const m of storage.matchAll(HEADING)) {
-    out.push({ heading, text: extractPageText(storage.slice(last, m.index)).text });
+    push(storage.slice(last, m.index));
     heading = extractPageText(m[2] ?? '').text.replace(/\s+/g, ' ').trim() || TOP_OF_PAGE;
     last = (m.index ?? 0) + m[0].length;
   }
-  out.push({ heading, text: extractPageText(storage.slice(last)).text });
+  push(storage.slice(last));
   return out.filter((s) => s.text.trim() !== '');
+}
+
+/** Splits storage-format XHTML into sections at each heading. Text before the first heading is its own section. */
+export function splitSections(storage: string): { heading: string; text: string }[] {
+  return splitSectionsDetailed(storage).map(({ heading, text }) => ({ heading, text }));
 }
 
 /**
@@ -62,7 +75,7 @@ function escapeRegExp(s: string): string {
 }
 
 /** Whole-token match: `ROLLBACK_TIMEOUT` must not match inside `ROLLBACK_TIMEOUT_SECS`. */
-function tokenRegExp(token: string): RegExp {
+export function tokenRegExp(token: string): RegExp {
   return new RegExp(`(?<![A-Za-z0-9_])${escapeRegExp(token)}(?![A-Za-z0-9_])`);
 }
 
@@ -88,18 +101,38 @@ export function excerptAround(text: string, index: number, max = EXCERPT_MAX): s
   return `${start > 0 ? '…' : ''}${flat.slice(start, end).trim()}${end < flat.length ? '…' : ''}`;
 }
 
+/** Code lines that contain any token, trimmed of trailing space, de-duplicated, at most `max`. */
+export function matchedCodeLines(codeBlocks: string[], patterns: RegExp[], max = MAX_CODE_LINES): string[] {
+  const out: string[] = [];
+  for (const block of codeBlocks) {
+    for (const line of block.split('\n')) {
+      const l = line.replace(/\s+$/, '');
+      if (l.trim() === '' || out.includes(l) || !patterns.some((re) => re.test(l))) continue;
+      out.push(l);
+      if (out.length >= max) return out;
+    }
+  }
+  return out;
+}
+
 /** The page sections whose text or code contains any token, with a short excerpt around the first hit. */
 export function affectedSections(storage: string, tokens: string[], limit = MAX_SECTIONS): AffectedSection[] {
   if (tokens.length === 0 || !storage) return [];
   const patterns = tokens.map((t) => ({ token: t, re: tokenRegExp(t) }));
   const out: AffectedSection[] = [];
-  for (const section of splitSections(storage)) {
+  for (const section of splitSectionsDetailed(storage)) {
     const hits = patterns
       .map(({ token, re }) => ({ token, index: re.exec(section.text)?.index ?? -1 }))
       .filter((h) => h.index >= 0);
     if (hits.length === 0) continue;
     const first = Math.min(...hits.map((h) => h.index));
-    out.push({ heading: section.heading, excerpt: excerptAround(section.text, first), matchedTokens: hits.map((h) => h.token) });
+    const codeLines = matchedCodeLines(section.codeBlocks, patterns.map((p) => p.re));
+    out.push({
+      heading: section.heading,
+      excerpt: excerptAround(section.text, first),
+      matchedTokens: hits.map((h) => h.token),
+      ...(codeLines.length > 0 && { codeLines }),
+    });
     if (out.length >= limit) break;
   }
   return out;

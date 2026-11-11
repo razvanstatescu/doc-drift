@@ -94,6 +94,8 @@ export async function pageDrift(pageId: string, reader: Requester, access: { can
     const snoozedUntil = fromSqlDate(rawSnooze);
     return eventView({ ...rest, createdAt: fromSqlDate(createdAt) ?? now, ...(snoozedUntil !== undefined && { snoozedUntil }) }, now);
   });
+  // Polish item 1: High before Medium, newest first within a severity (the query is newest first).
+  views.sort((a, b) => (a.severity === b.severity ? b.at - a.at : a.severity === 'high' ? -1 : 1));
   const tokens = tokensForEvents(
     events.map((e) => ({
       files: e.source === 'bitbucket' ? eventFiles(e.files, e.changeFiles) : [],
@@ -133,7 +135,7 @@ export async function pageDrift(pageId: string, reader: Requester, access: { can
 // ---------------------------------------------------------------------------
 // Writes (callers have passed the gate)
 // ---------------------------------------------------------------------------
-export async function markVerified(pageId: string, actor: string | null, rawNote: unknown, gate: Gate, method: 'manual' | 'dev' = 'manual') {
+export async function markVerified(pageId: string, actor: string | null, rawNote: unknown, gate: Gate, method: 'manual' | 'agent' | 'dev' = 'manual') {
   const denied = await gate(pageId, 'read');
   if (denied) return denied;
   await ensureSchema();
@@ -227,11 +229,14 @@ export async function decideRename(proposalId: unknown, decision: 'accepted' | '
 // ---------------------------------------------------------------------------
 export async function spaceDashboard(spaceKey: string, reader: Requester, spaceIdHint?: string) {
   await ensureSchema();
-  const spaceId = spaceIdHint ?? (await getSpaceIdByKey(reader, spaceKey)).id;
+  const space = await getSpaceIdByKey(reader, spaceKey);
+  const spaceId = spaceIdHint ?? space.id;
   if (!spaceId) return fail('not_visible', 'Space not found or not visible to you.');
   const listing = await listSpacePages(reader, spaceId);
   if (listing.status >= 300) return fail('not_visible', 'Space not found or not visible to you.');
-  const visible = new Map(listing.pages.map((p) => [p.id, p]));
+  // Polish item 3: the space home page is not documentation to anchor, so it never counts.
+  const listed = listing.pages.filter((p) => p.id !== space.homepageId);
+  const visible = new Map(listed.map((p) => [p.id, p]));
   // Permission-aware: only pages the caller can see count or show.
   const pageIds = (await statePagesInSpace(spaceKey)).filter((id) => visible.has(id));
   await backfillOwners(pageIds.flatMap((id) => (visible.get(id)?.ownerId ? [{ pageId: id, ownerId: visible.get(id)!.ownerId! }] : [])));
@@ -242,10 +247,11 @@ export async function spaceDashboard(spaceKey: string, reader: Requester, spaceI
     verifyDurations(pageIds),
   ]);
   const names = await displayNames(reader, [...owners.map((o) => o.ownerId), ...rows.map((r) => r.ownerId)]);
-  const total = listing.pages.length;
+  const total = listed.length;
   const anchored = (counts.verified ?? 0) + (counts.possibly_stale ?? 0) + (counts.stale ?? 0);
+  // Polish item 4: only drifted pages are listed; the UI shows its empty state when there are none.
   const pages = rankPages(
-    rows.map((r) => {
+    rows.filter((r) => r.status === 'possibly_stale' || r.status === 'stale').map((r) => {
       const p = visible.get(r.pageId);
       const ownerId = r.ownerId ?? p?.ownerId ?? null;
       return {

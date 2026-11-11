@@ -327,3 +327,9 @@ Source: the Forge MCP server `search-forge-docs`, reading https://developer.atla
 - **Action payload context** includes `cloudId`, `moduleKey`, and (in Confluence) `confluence.contentId`, `spaceKey`, `spaceId`, `url`, `resourceType`. The docs suggest checking LLM-supplied IDs against this context. Verified.
 
 - **Correction (live admin UI, 2026-11-11):** the admin page shows a single toggle, "Expose tools to MCP-compatible apps", under Details > Tools. It is all-or-nothing per app installation, despite the docs' per-tool wording. The toggle is visible even for a development-environment app that has not been shared.
+
+## Update (2026-11-11, M3 build in apps/core)
+
+- `forge lint` rejects function keys longer than 23 characters (`The function key exceeds 23 characters`, `valid-module-required`). Action handler keys must be short (`action-verify`, not `action-record-verification`). Verified (Forge CLI 15.1.0).
+- Adding `action`, `rovo:agent`, `rovo:skill` and `rovo:mcp` to an installed app with no new scopes deployed as a minor version (4.6.0 to 4.7.0), with no `MAJOR_VERSION_RULE` prompt. Verified.
+- A `rovo:agent` `icon` can reuse an existing resource (`resource:icons;doc-drift.svg`). Lint and deploy pass; how Rovo renders it is Unverified until the browser check.

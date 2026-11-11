@@ -8,7 +8,10 @@ import { PAGE_STATE_LABELS } from '@dds/shared';
 import { anchorLabel, normalizeAnchor, type AnchorInput } from '../lib/anchors';
 import { saveBindings, suggestionsFor } from '../lib/bindings-service';
 import { refLabel } from '../lib/copy';
-import { getPageMeta, getPageStorage, pageOperations } from '../lib/confluence';
+import { appCannotRead as appCannotReadAs, makeGate, notVisible } from '../lib/access';
+import { AGENT } from '../lib/agent-meta';
+import { getPageStorage, pageOperations } from '../lib/confluence';
+import { applyProposal, listProposals, rejectProposal } from '../lib/fix-service';
 import { bindingsForPage, ensureSchema, getPageState, openEventsForPage } from '../lib/db';
 import { fromSqlDate } from '../lib/ingest-rules';
 import {
@@ -19,7 +22,6 @@ import {
   pageDrift,
   snoozePage,
   spaceDashboard,
-  type Failure,
   type Gate,
 } from '../lib/review-service';
 
@@ -36,29 +38,10 @@ function pageIdOf(context: ResolverContext, payload?: unknown): string | undefin
   return id === undefined || id === null || id === '' ? undefined : String(id);
 }
 
-/** D20: the app user gets 404 on pages with view restrictions (confirmed live 2026-11-11). */
-async function appCannotRead(pageId: string): Promise<boolean> {
-  const asApp = await getPageMeta(api.asApp(), pageId);
-  return asApp.status === 404 || asApp.status === 403;
-}
-
-const notVisible = (): Failure => ({ ok: false, error: 'not_visible', state: 'unknown', message: MESSAGES.notVisible });
-const restricted = (): Failure => ({ ok: false, error: 'restricted', restricted: true, message: MESSAGES.restricted });
+const appCannotRead = (pageId: string) => appCannotReadAs(api.asApp(), pageId);
 
 /** asUser permission check, then the D20 restriction check. Logged, never trusted from the client. */
-const userGate: Gate = async (pageId, need) => {
-  const user = await pageOperations(api.asUser(), pageId);
-  if (user.status >= 300 || !user.ops.has('read')) return notVisible();
-  if (need === 'update' && !user.ops.has('update')) {
-    console.log(`DDS_GATE_DENIED pageId=${pageId} need=${need}`);
-    return { ok: false, error: 'forbidden', message: MESSAGES.needsEdit };
-  }
-  if (await appCannotRead(pageId)) {
-    console.log(`DDS_BYLINE_RESTRICTED pageId=${pageId}`);
-    return restricted();
-  }
-  return null;
-};
+const userGate: Gate = (pageId, need) => makeGate(api.asUser(), api.asApp())(pageId, need);
 
 // ---------------------------------------------------------------------------
 // Review panel (M2 contract)
@@ -101,6 +84,30 @@ resolver.define('acceptRename', async ({ payload, context }) => {
 resolver.define('rejectRename', async ({ payload, context }) => {
   return decideRename((payload as { proposalId?: unknown })?.proposalId, 'rejected', (context as ResolverContext).accountId ?? null, userGate);
 });
+
+// ---------------------------------------------------------------------------
+// Propose fix (M3, F11, D6). Drafts come from Drift Reviewer (submit-fix-proposal); the page text
+// changes only here, asUser, when a person with edit rights clicks Accept fix.
+// ---------------------------------------------------------------------------
+const fixDeps = (ctx: ResolverContext) => ({ user: api.asUser(), gate: userGate, accountId: ctx.accountId ?? null });
+
+resolver.define('getProposals', async ({ payload, context }) => {
+  const ctx = context as ResolverContext;
+  const pageId = pageIdOf(ctx, payload);
+  if (!pageId) return notVisible();
+  return listProposals(pageId, fixDeps(ctx));
+});
+
+resolver.define('applyProposal', async ({ payload, context }) => {
+  return applyProposal((payload as { proposalId?: unknown })?.proposalId, fixDeps(context as ResolverContext));
+});
+
+resolver.define('rejectProposal', async ({ payload, context }) => {
+  return rejectProposal((payload as { proposalId?: unknown })?.proposalId, fixDeps(context as ResolverContext));
+});
+
+/** What `rovo.open({type: 'forge', agentName, agentKey})` needs: the manifest's rovo:agent name and key. */
+resolver.define('getRovoAgentInfo', async () => ({ ok: true, agentName: AGENT.name, agentKey: AGENT.key }));
 
 // ---------------------------------------------------------------------------
 // Space dashboard (F8). Reads asUser, so only pages the caller can see count or show.

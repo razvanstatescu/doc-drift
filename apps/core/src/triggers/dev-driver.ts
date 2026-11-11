@@ -9,7 +9,16 @@ import { timingSafeEqual } from 'node:crypto';
 import api from '@forge/api';
 import { kvs } from '@forge/kvs';
 import { parseChangeRecord } from '@dds/shared';
+import {
+  checkPageFreshness,
+  findDocsForPath,
+  getDriftContext,
+  listStalePages,
+  recordAgentVerification,
+  type ToolDeps,
+} from '../lib/agent-service';
 import { saveBindings } from '../lib/bindings-service';
+import { applyProposal, listProposals, rejectProposal, submitFixProposal } from '../lib/fix-service';
 import { getPageProperty, upsertPageProperty } from '../lib/confluence';
 import { BYLINE_PROPERTY_KEY } from '../lib/copy';
 import { devAgeOpenEvents, ensureSchema, recentChanges, snapshotForPage } from '../lib/db';
@@ -46,6 +55,8 @@ type Body = {
   changeRecordId?: string;
   resultPageId?: string;
   sync?: boolean;
+  tool?: string;
+  input?: Record<string, unknown>;
 };
 
 export const DEV_RESULT_PROPERTY_KEY = 'dds-dev-result';
@@ -101,6 +112,33 @@ async function run(body: Body): Promise<unknown> {
       return decideRename(body.proposalId, 'rejected', null, openGate);
     case 'dashboard':
       return spaceDashboard(String(body.spaceKey ?? ''), api.asApp());
+    // M3 agent tools with an asApp reader and an open gate (the asUser path needs Rovo or an MCP client).
+    case 'tool': {
+      const deps: ToolDeps = { user: api.asApp(), app: api.asApp(), gate: openGate, accountId: null, contextPageId: body.pageId ?? null };
+      const input = body.input ?? {};
+      switch (body.tool) {
+        case 'check-page-freshness':
+          return checkPageFreshness(input, deps);
+        case 'find-docs-for-path':
+          return findDocsForPath(input, deps);
+        case 'list-stale-pages':
+          return listStalePages(input, deps);
+        case 'get-drift-context':
+          return getDriftContext(input, deps);
+        case 'record-verification':
+          return recordAgentVerification(input, deps);
+        case 'submit-fix-proposal':
+          return submitFixProposal(String(input.pageId ?? body.pageId ?? ''), input, deps);
+        default:
+          return undefined;
+      }
+    }
+    case 'proposals':
+      return listProposals(pageId, { user: api.asApp(), gate: openGate, accountId: null });
+    case 'apply-proposal':
+      return applyProposal(body.proposalId, { user: api.asApp(), gate: openGate, accountId: null });
+    case 'reject-proposal':
+      return rejectProposal(body.proposalId, { user: api.asApp(), gate: openGate, accountId: null });
     case 'escalate':
       await escalate();
       return { ok: true };

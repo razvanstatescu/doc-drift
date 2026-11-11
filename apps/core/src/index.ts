@@ -8,6 +8,14 @@ import { processChange } from './lib/matching';
 import { notifyPage } from './lib/notifier';
 import { getRelaySecret, recordRelayPing } from './lib/settings-store';
 
+export {
+  checkPageFreshness,
+  findDocsForPath,
+  getDriftContext,
+  listStalePages,
+  recordVerification,
+  submitFixProposal,
+} from './actions';
 export { handler as bylineHandler } from './resolvers/byline';
 export { handler as settingsHandler } from './resolvers/settings';
 export { devDriver } from './triggers/dev-driver';

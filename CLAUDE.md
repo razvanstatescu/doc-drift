@@ -4,7 +4,7 @@ A Forge app for Atlassian **Codegeist 2026**. It anchors Confluence pages to the
 
 ## Status
 
-Pre-implementation (as of 2026-11-11). The knowledge base and brand are in place. **No apps, packages or repo scaffolding exist yet.** Do not scaffold until asked. We are in week 1 of 6: spikes come first ([docs/hackathon/risks-and-spikes.md](docs/hackathon/risks-and-spikes.md)).
+**Building: milestone M0** (scaffold, matcher, spikes), started 2026-11-11. The plan, milestones and agent tracks are in [docs/implementation-plan.md](docs/implementation-plan.md). We are in week 1 of 6. Spikes come first ([docs/hackathon/risks-and-spikes.md](docs/hackathon/risks-and-spikes.md)); the real apps (`apps/core`, `apps/bitbucket-relay`) start in M1.
 
 ## Where knowledge lives
 

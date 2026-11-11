@@ -1,0 +1,13 @@
+{
+  "name": "doc-drift-sentinel",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Doc Drift Sentinel: Confluence pages that know when the code moved (Codegeist 2026)",
+  "engines": { "node": ">=24" },
+  "packageManager": "pnpm@11.1.0",
+  "scripts": {
+    "test": "pnpm -r --if-present test",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "build": "pnpm -r --if-present build"
+  }
+}

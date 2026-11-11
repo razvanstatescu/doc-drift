@@ -50,3 +50,7 @@ Thumbs.db
 
 
 /.forge/
+
+# Dev driver (local only, never commit)
+.dev-token
+.dev-url

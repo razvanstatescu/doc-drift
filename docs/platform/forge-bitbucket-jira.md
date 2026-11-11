@@ -334,3 +334,10 @@ Verified [JIRA-API]:
 - Forge call: `api.asApp().requestBitbucket(route\`/2.0/repositories/${event.workspace.uuid}/${event.repository.uuid}?fields=mainbranch.name\`)`, then compare with `event.pullrequest.destination.branch`. Both path params accept `{uuid}` with braces. Verified [BB-API], [REQ-BB].
 - Cache per repo in KVS. `avi:bitbucket:push:repository` carries `push.mainbranch: boolean` per pushed ref, and `avi:bitbucket:updated:repository` carries a `changes` object. Verified [BB-EV]. Whether `changes` includes a `mainbranch` entry when the default branch is renamed is **Unverified**, so give the cache a TTL (for example 1 hour).
 - A trigger filter expression cannot look this up ("no access to extra context or dynamic data loading", [FILTER]). Do it in the handler.
+
+## Update (2026-11-11, live check on nano-soft-dev/payments-api)
+
+- `GET /2.0/repositories/{ws}/{repo}/diffstat/{src}..{dst}?topic=true` with commit hashes returned, for a file moved and edited via the `/src` API: `status: "renamed"`, `old.path: scripts/rollback.sh`, `new.path: scripts/rollback-v2.sh`, `lines_added: 3`, `lines_removed: 3`. A one-line edit returned `status: "modified"`. Default `pagelen` 500, `next` null. Verified (live).
+- `GET /2.0/repositories/{ws}/{repo}?fields=mainbranch.name` returned `{"mainbranch":{"name":"main"}}`. Verified (live).
+- Repo creation through the API failed with "You can't create repositories under this project" for a token without project scopes. Create repos in the UI, or use a token with project scopes.
+- The `/src` endpoint (multipart form, `write:repository`) is enough to seed files, create branches (`branch` + `parents`) and delete files (`files` field) without git credentials.

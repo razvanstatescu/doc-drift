@@ -1,0 +1,13 @@
+replicaCount: 3
+
+image:
+  repository: registry.acme.dev/payments-api
+  tag: "1.4.0"
+
+workers:
+  min: 2
+  max: 8
+
+env:
+  ROLLBACK_TIMEOUT: "300"
+  PAYMENTS_DB_POOL: "20"

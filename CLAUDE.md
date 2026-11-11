@@ -73,6 +73,7 @@ Storage leans Forge SQL. UI is UI Kit (`render: native`).
 
 - **Node 24 only** (`.nvmrc`). The machine's nvm default is Node 22, which Forge CLI 15.x rejects. Each shell command must start with `source ~/.nvm/nvm.sh && nvm use 24 >/dev/null && ...`.
 - Forge CLI 15.1.0, logged in as Razvan Statescu. Runtime in manifests: `nodejs24.x`.
+- **Local credentials:** `.env` in the repo root (git-ignored, mode 600) holds `BITBUCKET_EMAIL` and `BITBUCKET_API_TOKEN` (scopes: repository read/write/admin, pull request read/write; no delete; expires 2027-03-01). Load it with `set -a; . ./.env; set +a`. Never print, log or commit the values. Forge apps never use these; they are for demo seed scripts and spikes only.
 - Demo site (Rovo-enabled): https://one-atlas-jzzf.atlassian.net, which expires **2027-02-09**. Repo: `git@github.com:razvanstatescu/doc-drift.git` (private until Dec 19, then open source; never commit secrets).
 - Forge developer skills are installed (`forge-app-builder`, `forge-debugger`, `forge-app-review`, `forge-security-review`, `forge-cost-optimizer`). Use them for Forge work. The **Forge MCP** (`mcp__forge__*`: docs search, manifest guide, module list, exact REST scopes, UI Kit component reference, error diagnosis) and **ADS MCP** (`mcp__ads-mcp__*`: tokens, icons, components, a11y) servers are connected. Prefer them over memory or web search for Forge and ADS facts, and record anything new in [docs/platform/](docs/platform/). Once an app has a `manifest.yml` with `app.id`, pass it as `appId` on Forge MCP calls.
 

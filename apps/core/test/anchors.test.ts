@@ -76,6 +76,14 @@ describe('planBindingChanges', () => {
 
   it('is a no-op when nothing changed', () => {
     const plan = planBindingChanges(existing, existing.map(({ anchorType, repo, pattern, weight }) => ({ anchorType: anchorType as 'path', repo, pattern, weight })));
-    expect(plan).toEqual({ insert: [], remove: [], reweight: [], resetDampener: [] });
+    expect(plan).toEqual({ insert: [], remove: [], reweight: [], resetDampener: [], clearExclude: [] });
+  });
+
+  it('clears exclusions only for kept anchors that have them (R-7 "Watch all files")', () => {
+    const withExclude: Binding[] = [existing[0]!, { ...existing[1]!, exclude: ['deploy/helm/values.yaml'] }];
+    const same = withExclude.map(({ anchorType, repo, pattern, weight }) => ({ anchorType: anchorType as 'path', repo, pattern, weight }));
+    const keys = new Set(same.map((a) => anchorKey(a)));
+    expect(planBindingChanges(withExclude, same, new Set(), keys).clearExclude).toEqual(['b2']);
+    expect(planBindingChanges(withExclude, same).clearExclude).toEqual([]);
   });
 });

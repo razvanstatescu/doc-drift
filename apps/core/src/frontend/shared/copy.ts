@@ -65,6 +65,8 @@ export const COPY = {
   stopWatchFailed: "Dismissed, but couldn't stop watching every path.",
 
   // Anchors explainer (UX-10)
+  watchAllFiles: 'Watch all files',
+  watchAllPending: 'Watches every file again after you save.',
   anchorExplainer: 'An anchor is a file, folder or Jira issue this page describes. When it changes, the page is flagged.',
   weak: 'Weak',
 
@@ -200,3 +202,10 @@ export const pagesTableLabel = (spaceKey: string | null | undefined): string => 
 
 /** "No pages in PLAT are anchored yet." */
 export const noAnchoredPages = (spaceKey: string | null | undefined): string => `No pages in ${spaceKey || 'this space'} are anchored yet.`;
+
+/** R-7: paths a glob or repo anchor no longer watches. "Not watching deploy/values.yaml." */
+export const notWatchingLine = (paths: string[]): string => {
+  const shown = paths.slice(0, 3).join(', ');
+  const more = paths.length > 3 ? ` and ${paths.length - 3} more` : '';
+  return `Not watching ${shown}${more}.`;
+};

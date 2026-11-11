@@ -10,6 +10,8 @@ export interface AnchorInput {
   weight?: string;
   /** BUG-15: clear this anchor's dismiss dampener when it is saved again (`dismissCount` back to 0). */
   resetDismissCount?: boolean;
+  /** R-7: watch every file again (clear the paths "Stop watching" excluded from a glob or repo anchor). */
+  clearExclude?: boolean;
 }
 
 /** A validated anchor, ready to store. `repo` is lowercased; `pattern` has no leading `./` or `/`. */
@@ -113,7 +115,8 @@ export function planBindingChanges(
   existing: readonly Binding[],
   desired: readonly NormalizedAnchor[],
   resetKeys: ReadonlySet<string> = new Set(),
-): { insert: NormalizedAnchor[]; remove: Binding[]; reweight: { id: string; weight: AnchorWeight }[]; resetDampener: string[] } {
+  clearKeys: ReadonlySet<string> = new Set(),
+): { insert: NormalizedAnchor[]; remove: Binding[]; reweight: { id: string; weight: AnchorWeight }[]; resetDampener: string[]; clearExclude: string[] } {
   const want = new Map(desired.map((a) => [anchorKey(a), a]));
   const have = new Map(existing.map((b) => [anchorKey(b), b]));
   const insert = [...want.entries()].filter(([k]) => !have.has(k)).map(([, a]) => a);
@@ -122,5 +125,6 @@ export function planBindingChanges(
     .filter(([k, b]) => want.has(k) && want.get(k)!.weight !== b.weight)
     .map(([k, b]) => ({ id: b.id, weight: want.get(k)!.weight }));
   const resetDampener = [...have.entries()].filter(([k, b]) => want.has(k) && resetKeys.has(k) && (b.dismissCount ?? 0) > 0).map(([, b]) => b.id);
-  return { insert, remove, reweight, resetDampener };
+  const clearExclude = [...have.entries()].filter(([k, b]) => want.has(k) && clearKeys.has(k) && (b.exclude?.length ?? 0) > 0).map(([, b]) => b.id);
+  return { insert, remove, reweight, resetDampener, clearExclude };
 }

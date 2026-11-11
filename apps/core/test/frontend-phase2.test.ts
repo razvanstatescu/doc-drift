@@ -1,7 +1,7 @@
 // Phase 2 Track B helpers: why sentences, verified context (R-8, UX-9), drafts (UX-2), diffs (UX-4),
 // stop watching (R-7), rename quick fix (R-4), dashboard sort and filter (UX-7), coding-agent copy (R-3).
 import { describe, expect, it } from 'vitest';
-import { AGENT_INSTRUCTION, COPY, MCP_ADD_COMMAND, MCP_URL, quickFixSource, stoppedWatching } from '../src/frontend/shared/copy';
+import { AGENT_INSTRUCTION, COPY, MCP_ADD_COMMAND, MCP_URL, notWatchingLine, quickFixSource, stoppedWatching } from '../src/frontend/shared/copy';
 import {
   dismissedSinceVerified,
   filterPagesByState,
@@ -190,5 +190,12 @@ describe('coding-agent block (R-3)', () => {
     expect(AGENT_INSTRUCTION).toContain('`check-page-freshness`');
     expect(AGENT_INSTRUCTION).toContain('trust the code');
     expect(AGENT_INSTRUCTION).not.toMatch(/\n|!/);
+  });
+});
+
+describe('notWatchingLine (R-7)', () => {
+  it('names up to 3 paths', () => {
+    expect(notWatchingLine(['a.yaml'])).toBe('Not watching a.yaml.');
+    expect(notWatchingLine(['a', 'b', 'c', 'd', 'e'])).toBe('Not watching a, b, c and 2 more.');
   });
 });

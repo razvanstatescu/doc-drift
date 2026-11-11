@@ -157,7 +157,8 @@ def g_matcher():
         path_anchor("docs/ünï.sh"),
     ]
     res = bind(pid, anchors)
-    check("BND-01 a unicode anchor path is refused with a per-row error", isinstance(res, dict) and res.get("ok") is False and any(e.get("index") == 6 for e in res.get("errors", [])), res)
+    # Phase 2 (UX obs 2): Unicode paths are allowed; the matcher handles them.
+    check("BND-01 a unicode anchor path is accepted", isinstance(res, dict) and res.get("ok") is True, res)
     res = bind(pid, anchors[:6])
     check("BND-02 6 valid anchors save and mark Verified", isinstance(res, dict) and res.get("ok") and res["state"]["status"] == "verified", {k: res.get(k) for k in ("ok", "added", "removed", "closedEvents")} if isinstance(res, dict) else res)
 
@@ -304,7 +305,9 @@ def g_revert():
 # ---------------------------------------------------------------------------
 def g_review():
     pid = page("review page", "<p>Uses <code>scripts/qa-review.sh</code>.</p>")
-    bind(pid, [path_anchor("scripts/qa-review.sh", "critical")])
+    # BUG-15: a re-save keeps the dampener unless asked, so reset it to make reruns comparable.
+    bind(pid, [{**path_anchor("scripts/qa-review.sh", "critical"), "resetDismissCount": True}])
+    before = drift(pid)["bindings"][0].get("dismissCount", 0)
     ingest(rec([q.fmod("scripts/qa-review.sh", 5, 5)]))
     d = drift(pid)
     eid = d["events"][0]["id"]
@@ -316,7 +319,7 @@ def g_review():
     st, r2 = q.driver("dismiss", eventId=eid, reason="false_positive")
     check("REV-04 dismiss twice: second is not_open", r.get("ok") and r2.get("ok") is False and r2.get("error") == "not_open", {"first": r, "second": r2})
     b = drift(pid)["bindings"][0]
-    check("REV-05 a dismissal raises the anchor's dismissCount", b["dismissCount"] == 1, b)
+    check("REV-05 a dismissal raises the anchor's dismissCount", before == 0 and b["dismissCount"] == 1, {**b, "before": before})
     for days, label in ((0, "0"), (31, "31"), ("7.5", "7.5"), ("abc", "abc")):
         st, r = q.driver("snooze", pageId=pid, days=days)
         check(f"REV-06 snooze {label} days is refused", r.get("ok") is False, r)
@@ -477,21 +480,29 @@ def g_fix():
     check("FIX-13 applying an accepted draft again is not_open", a2.get("error") == "not_open", a2)
     st, rj = q.driver("reject-proposal", proposalId="nope")
     check("FIX-14 reject an unknown draft", rj.get("ok") is False, rj)
-    # Too many drafts.
+    # Too many drafts: a page with 12 plain paragraphs (BUG-05 refuses drafts on the tricky page's link blocks).
+    MANY = "<h2>Flags</h2>" + "".join(f"<p>Step {i}: run <code>scripts/qa-fix.sh --retries {i}</code>.</p>" for i in range(1, 13))
     q.put_page(pid, TRICKY, message="QA reset tricky")
+    q.driver("verify", pageId=pid)
+    pid = page("draft cap", MANY)
+    q.put_page(pid, MANY, message="QA reset draft cap")
+    bind(pid, [path_anchor("scripts/qa-fix.sh", "critical")])
     ingest(rec([q.fmod("scripts/qa-fix.sh", 2, 2)], hunks=hunks, title="QA rename retries flag 3"))
     st, ctx = q.driver("tool", tool="get-drift-context", input={"pageId": pid})
     ids = [b["blockId"] for s in ctx.get("sections", []) for b in s["blocks"] if b["kind"] != "heading"]
     results = []
-    for bid in ids[:12]:
+    # BUG-05: blocks with links or mentions refuse a plain-text draft (unsupported_span); keep going
+    # until 10 drafts are open, then the next must be too_many.
+    for bid in ids:
         st, r = q.driver("tool", tool="submit-fix-proposal", input={"pageId": pid, "blockId": bid, "proposedText": f"QA draft for {bid}"}, pageId=pid)
         results.append(r.get("error") or "ok")
-    check("FIX-15 an 11th open draft on a page is refused (too_many)", "too_many" in results, {"results": results})
+        if results[-1] == "too_many":
+            break
+    check("FIX-15 an 11th open draft on a page is refused (too_many)", results[-1:] == ["too_many"], {"results": results})
     st, props = q.driver("proposals", pageId=pid)
     for p in props if isinstance(props, list) else []:
         if p.get("status") == "open":
             q.driver("reject-proposal", proposalId=p["id"])
-    q.put_page(pid, TRICKY, message="QA reset tricky")
     q.driver("verify", pageId=pid)
 
     # Long page: 400 paragraphs, the token far down.

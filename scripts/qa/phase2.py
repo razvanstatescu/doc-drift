@@ -169,7 +169,10 @@ RENAME_BODY = '<h2>Run</h2><p>Use <code>scripts/p2-old.sh</code> to start.</p><a
 def g_resolvers():
     pid = page("rename page", RENAME_BODY)
     q.put_page(pid, RENAME_BODY)
-    bind(pid, [path_anchor("scripts/p2-old.sh"), path_anchor("deploy/p2/**", "critical", kind="glob")])
+    # clearExclude ("Watch all files") undoes a previous run's stop-watching, so reruns start clean.
+    bind(pid, [path_anchor("scripts/p2-old.sh"), {**path_anchor("deploy/p2/**", "critical", kind="glob"), "clearExclude": True}])
+    glob0 = next((b for b in (inspect(pid).get("sql") or {}).get("bindings", []) if b.get("pattern") == "deploy/p2/**"), {})
+    check("P2-STW-00 (R-7) clearExclude on save watches every file again", not glob0.get("exclude_paths"), {"exclude_paths": glob0.get("exclude_paths")})
     renamed = {"status": "renamed", "path": "scripts/p2-new.sh", "oldPath": "scripts/p2-old.sh", "linesAdded": 0, "linesRemoved": 0}
     ingest(rec([renamed], title="QA P2 rename script"))
     d = drift(pid)

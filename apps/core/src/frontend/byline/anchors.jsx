@@ -19,7 +19,7 @@ import {
   Textfield,
 } from '@forge/react';
 import { invoke } from '@forge/bridge';
-import { COPY, anchorsSavedTitle } from '../shared/copy';
+import { COPY, anchorsSavedTitle, notWatchingLine } from '../shared/copy';
 import { Muted, SPACE, Section, SuggestionRow, cardStyle } from '../shared/components';
 import { anchorInputError, plural } from '../shared/format';
 import { defaultChecked, sortSuggestions, suggestionToAnchor } from '../shared/suggest';
@@ -62,7 +62,7 @@ export function AnchorEditor({ bindings, suggestions, canEdit, gateNote, onSaved
   const pickedSuggestions = list.filter((s) => checked[s.key]);
   const needsRepo = useMemo(() => list.some((s) => s.needsRepo), [list]);
   const repoMissing = pickedSuggestions.some((s) => s.needsRepo) && !suggestRepo.trim();
-  const dirty = pickedSuggestions.length > 0 || !sameAnchors(draft, bindings || []);
+  const dirty = pickedSuggestions.length > 0 || draft.some((a) => a.clearExclude) || !sameAnchors(draft, bindings || []);
 
   const setField = (patch) => {
     setManual((m) => ({ ...m, ...patch }));
@@ -102,12 +102,13 @@ export function AnchorEditor({ bindings, suggestions, canEdit, gateNote, onSaved
   };
 
   const removeAnchor = (key) => setDraft((d) => d.filter((a) => a.key !== key));
+  const watchAll = (key) => setDraft((d) => d.map((a) => (a.key === key ? { ...a, clearExclude: true } : a)));
   const setCritical = (key, on) => setDraft((d) => d.map((a) => (a.key === key ? { ...a, weight: on ? 'critical' : 'normal' } : a)));
 
   const save = async () => {
     if (repoMissing) return;
     const fromSuggestions = pickedSuggestions.map((sg) => suggestionToAnchor(sg, suggestRepo));
-    const anchors = [...draft, ...fromSuggestions].map(({ anchorType, repo, pattern, jiraKey, weight }) => ({ anchorType, repo, pattern, jiraKey, weight }));
+    const anchors = [...draft, ...fromSuggestions].map(({ anchorType, repo, pattern, jiraKey, weight, clearExclude }) => ({ anchorType, repo, pattern, jiraKey, weight, ...(clearExclude ? { clearExclude: true } : {}) }));
     setSaving(true);
     try {
       const res = await invoke('save', { anchors });
@@ -140,6 +141,17 @@ export function AnchorEditor({ bindings, suggestions, canEdit, gateNote, onSaved
           <Stack space="space.025">
             <Code>{a.label || a.pattern || a.jiraKey || a.repo}</Code>
             {a.dismissCount > 0 ? <Muted tone="subtlest">{`Dismissed ${plural(a.dismissCount, 'time')}`}</Muted> : null}
+            {a.exclude?.length && !a.clearExclude ? (
+              <Inline space="space.050" alignBlock="center">
+                <Muted tone="subtlest">{notWatchingLine(a.exclude)}</Muted>
+                {canEdit ? (
+                  <Button appearance="subtle" spacing="compact" onClick={() => watchAll(a.key)}>
+                    {COPY.watchAllFiles}
+                  </Button>
+                ) : null}
+              </Inline>
+            ) : null}
+            {a.clearExclude ? <Muted tone="subtlest">{COPY.watchAllPending}</Muted> : null}
           </Stack>
         ),
       },

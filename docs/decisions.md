@@ -1,0 +1,97 @@
+# Decision log
+
+Newest at the bottom. Each entry: what was decided, why, and what would reopen it. Add an entry whenever a spike or discussion changes the design.
+
+### D1. Two Forge apps: core (Confluence + optional Jira) and a Bitbucket relay
+2026-11-11 · Accepted
+Multi-app compatibility does not cover Bitbucket, and Bitbucket-context calls to other products fail. The relay POSTs HMAC-signed change records to the core app's web trigger. Reopen if: Atlassian adds Bitbucket to multi-app compatibility.
+
+### D2. Detection is deterministic; LLMs only on explicit "Propose fix"
+2026-11-11 · Accepted
+This is both the cost story (Rovo credits are metered from Dec 3; Forge LLMs are developer-paid) and the trust story. Reopen if: the eval misses recall targets that only semantic matching can hit, and then only as optional gray-zone triage (F16).
+
+### D3. Byline badge state comes from a content property (`contentPropertyKey`)
+2026-11-11 · Accepted, pending spike S2
+Zero function invocations per page view. Fallback: `dynamicProperties`.
+
+### D4. The byline badge is the primary signal; the page banner is a Could
+2026-11-11 · Accepted
+The banner is capped at 48 px, back in Preview, and community reports layout shift and spinners. Show it only for Stale pages, if at all.
+
+### D5. UI Kit (`render: native`) for all Confluence UI
+2026-11-11 · Accepted
+Faster, native look, Atlassian tokens automatically. Custom UI only if the review panel needs a rich diff viewer.
+
+### D6. Agents never write pages
+2026-11-11 · Accepted
+Drift Reviewer drafts; a human accepts in the review panel. Writes are `asUser()` with a version message naming the PR.
+
+### D7. Headline bonus: agents + MCP; also submit for Marketplace listing
+2026-11-11 · Accepted; Marketplace part superseded by D19
+Only one bonus can be won. The Marketplace bonus has 6 winners, so submit for listing by Dec 11 anyway, with a separate judge-copy app ID.
+
+### D8. Teamwork Graph only for interactive "suggest anchors"
+2026-11-11 · Accepted
+It is `asUser()` only, needs persisted queries, and registration is fiddly. It is never in background detection.
+
+### D9. Brand: "Doc Drift Sentinel", Night shift teal with one amber "slip"
+2026-11-11 · Accepted
+Never "DocDrift" or "DDS" in user-facing text. `beacon` amber is reserved for drift; primary buttons fill with the text colour. See [brand/](../brand/).
+
+### D10. Positioning: code- and Jira-triggered drift, not decision drift
+2026-11-11 · Accepted
+Accord and Precedent (Codegeist 2026) occupy decision drift. Decisions are at most a secondary anchor type.
+
+### D11. Core app stays egress-free (Runs on Atlassian); relay accepts egress
+2026-11-11 · Accepted, amended
+The polling fallback (core calls api.bitbucket.org) is used only if the relay path fails. Amendment from research: RoA is not a 2026 prize, only a Marketplace badge. Keeping it requires the ingest web trigger to be **static** (`urlFormat: v2`, `response.type: static`). Do it because it is cheap; drop it if it blocks the relay.
+
+### D12. Two app IDs: listed (licensed) and judge copy (unlicensed)
+2026-11-11 · Superseded by D19 (no listing, so one unlicensed app ID)
+Submitting for listing or setting `licensing.enabled` disables install-link sharing, and paid production installs are blocked until approval. The demo, video and Devpost link use the unlicensed judge copy.
+
+### D13. Demo runs on a Forge demo site, not a free dev site
+2026-11-11 · Accepted
+Free dev sites reportedly lack Rovo. Demo sites (`forge site provision`) include Rovo but expire after 90 days, so timing matters for judging.
+
+### D14. Freshness instructions travel in tool descriptions and `guidance`, not only the skill
+2026-11-11 · Accepted
+`rovo:skill` attaches only to our own agent. Third-party agents and MCP clients see action descriptions and responses.
+
+### D15. App-owned state is written `asApp()` after a permission check; page text is written `asUser()`
+2026-11-11 · Accepted
+Content-property writes need edit rights, which view-only verifiers lack. External MCP `asUser()` needs per-user consent, so MCP handlers check the caller's `accountId` permissions themselves.
+
+### D16. Forge SQL from day 1
+2026-11-11 · Proposed, pending S7
+Custom entities cannot aggregate. Adding `sql` later forces a major version.
+
+### D17. Video: the core story and the agent/MCP proof finish before 3:00
+2026-11-11 · Accepted
+Judges need not watch past 3 minutes. No third-party UI mocks (Slack).
+
+### D18. Devpost category: Apps for Software Teams
+2026-11-11 · Accepted
+
+### Note on D15 (2026-11-11 validation pass)
+The permission check before an `asApp()` state write is done `asUser()` in the resolver, via `GET /wiki/api/v2/pages/{id}/operations`. External MCP has no `asApp()` fallback (D21).
+
+### D19. Hackathon distribution is the share link only; no Marketplace listing
+2026-11-11 · Accepted (Razvan). Supersedes the Marketplace half of D7 and replaces D12.
+We do only what the rules require: a Forge share/install link plus setup instructions. No Marketplace submission, no paid listing, no partner verification, no licensing. One app ID per app (core + relay), with no `app.licensing` block. We give up the "Best Marketplace published app" bonus; the headline bonus stays Agents/MCP. Reopen after the hackathon if we want a public listing ([hackathon/marketplace.md](hackathon/marketplace.md) keeps the research).
+
+### D20. Pages with view restrictions are unsupported in v1
+2026-11-11 · Accepted, confirmed by Razvan (forced by the platform)
+The app user cannot read restricted pages, and their events do not arrive (ECO-822, ECO-961). Adding the app user to page permissions via the v2 permissions API is possible, but it changes customer permissions behind their backs, so we don't do it. The binding modal tells the user restricted pages can't be watched yet. Demo pages must be unrestricted. Reopen if: Atlassian fixes the tickets.
+
+### D21. MCP and agent tools require `asUser()`; no `asApp()` fallback
+2026-11-11 · Accepted, confirmed by Razvan. Jira stays optional (also confirmed).
+There is no reliable way to check another user's page permission from an app context, so an `asApp()` fallback could leak restricted titles or state. Without user consent, the tools return a clear "grant access" error.
+
+### D22. Team is Razvan + Claude Code; full scope kept
+2026-11-11 · Accepted (Razvan)
+Razvan is experienced and runs several AI agents in parallel, so the team counts as the plan's full team. No pre-emptive scope cut; the cut order applies only if a weekly definition of done slips.
+
+### D23. Code lives in a private GitHub repo, open-sourced before submission
+2026-11-11 · Accepted (Razvan)
+Remote: `git@github.com:razvanstatescu/doc-drift.git`. Private now, made public before Devpost submission (target Dec 19, see [hackathon/timeline.md](hackathon/timeline.md)). Never commit secrets, tokens or relay HMAC secrets: they live in Forge storage and environment variables only.

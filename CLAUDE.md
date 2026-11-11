@@ -4,7 +4,7 @@ A Forge app for Atlassian **Codegeist 2026**. It anchors Confluence pages to the
 
 ## Status
 
-**Milestone M4 in-scope work done** (settings, polish, reviews, live QA); production, share links, judge guide and video wait for Razvan. M0 to M3 done 2026-11-11 (M1 live E2E: merge to flagged page in 11 s; M2 browser-checked). `apps/core` (app `12e968a1-a45d-4524-ba28-d47e2315db1a`) and `apps/bitbucket-relay` (app `409a6e1e-dd37-482c-b30f-e56d322b4035`) are deployed to development; each has a README with deploy steps and browser checks. The plan, milestones and agent tracks are in [docs/implementation-plan.md](docs/implementation-plan.md). We are in week 1 of 6. Spikes come first ([docs/hackathon/risks-and-spikes.md](docs/hackathon/risks-and-spikes.md)); build with `pnpm` from the root; the core app needs the packages' `dist` built before `forge deploy` (`pnpm deploy:dev` in apps/core).
+**Milestone M4 in-scope work done** (settings, polish, reviews, live QA), plus phase 2 (19 QA bugs, UX review fixes, research features R-1 to R-8; core 4.23.0, 2026-11-12); production, share links, judge guide and video wait for Razvan. M0 to M3 done 2026-11-11 (M1 live E2E: merge to flagged page in 11 s; M2 browser-checked). `apps/core` (app `12e968a1-a45d-4524-ba28-d47e2315db1a`) and `apps/bitbucket-relay` (app `409a6e1e-dd37-482c-b30f-e56d322b4035`) are deployed to development; each has a README with deploy steps and browser checks. The plan, milestones and agent tracks are in [docs/implementation-plan.md](docs/implementation-plan.md). We are in week 1 of 6. Spikes come first ([docs/hackathon/risks-and-spikes.md](docs/hackathon/risks-and-spikes.md)); build with `pnpm` from the root; the core app needs the packages' `dist` built before `forge deploy` (`pnpm deploy:dev` in apps/core).
 
 ## Where knowledge lives
 
@@ -14,7 +14,7 @@ A Forge app for Atlassian **Codegeist 2026**. It anchors Confluence pages to the
 | How it fits together | [docs/architecture/overview.md](docs/architecture/overview.md) and siblings |
 | Exact Forge manifest fields, scopes, REST paths, limits | [docs/platform/](docs/platform/). Start with its README's **corrections checklist** |
 | Rules, dates, distribution | [docs/hackathon/codegeist-rules.md](docs/hackathon/codegeist-rules.md), [docs/hackathon/timeline.md](docs/hackathon/timeline.md), [docs/hackathon/distribution.md](docs/hackathon/distribution.md) |
-| Why something is the way it is | [docs/decisions.md](docs/decisions.md) (D1 to D31) |
+| Why something is the way it is | [docs/decisions.md](docs/decisions.md) (D1 to D34) |
 | Terms | [docs/glossary.md](docs/glossary.md) |
 | Colours, type, logo, copy | [brand/](brand/) |
 | Full index | [docs/README.md](docs/README.md) |
@@ -81,5 +81,5 @@ Storage leans Forge SQL. UI is UI Kit (`render: native`).
 
 - Keep the docs current. When a spike or a discussion changes the design, update the relevant doc **and** add an entry to [docs/decisions.md](docs/decisions.md). Mark spike outcomes in [risks-and-spikes.md](docs/hackathon/risks-and-spikes.md). (We are building a doc-drift tool; don't let our own docs drift.)
 - Platform facts: prefer [docs/platform/](docs/platform/) over memory. If you verify something new against developer.atlassian.com, add it there with its source URL and a Verified/Unverified tag. Preview modules (`rovo:mcp`, `rovo:skill`, TWG, multi-app, page banner) change often, so check the Forge changelog before relying on details.
-- Feature IDs F1 to F18 and decision IDs D1 to D31 are stable. Reference them in issues and commits.
+- Feature IDs F1 to F18 and decision IDs D1 to D34 are stable. Reference them in issues and commits.
 - If brand changes are made here, mirror them to the design system artifact (and the reverse).

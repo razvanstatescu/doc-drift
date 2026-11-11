@@ -1,0 +1,100 @@
+modules:
+  confluence:contentBylineItem:
+    # Production-shaped byline: state comes from the content property, no dynamicProperties.
+    - key: dds-byline
+      resource: byline
+      render: native
+      resolver:
+        function: resolver
+      viewportContainer: modal
+      viewportSize: large
+      title: Doc Drift
+      tooltip: Doc Drift Sentinel
+      icon: resource:icons;unanchored.svg
+      contentPropertyKey: dds-byline-7f3c2a
+    # Probe byline: same pattern plus dynamicProperties, to see whether Confluence calls the function
+    # when the property exists (it should not) or is missing (fallback?).
+    - key: dds-probe
+      resource: byline
+      render: native
+      resolver:
+        function: resolver
+      title: Probe default (manifest)
+      icon: resource:icons;unanchored.svg
+      contentPropertyKey: dds-probe-91d4e0
+      dynamicProperties:
+        function: dynprops
+  confluence:backgroundScript:
+    - key: dds-bg
+      resource: background
+      render: native
+      resolver:
+        function: bg-resolver
+  sql:
+    - key: main
+      engine: mysql
+  trigger:
+    - key: migration-trigger
+      function: enqueue-migration
+      events:
+        - avi:forge:installed:app
+        - avi:forge:upgraded:app
+  consumer:
+    - key: schema-migration-consumer
+      queue: schema-migration-queue
+      function: run-migration
+  webtrigger:
+    - key: spike-driver
+      function: spike-trigger
+      urlFormat: v2
+      response:
+        type: static
+        outputs:
+          - key: accepted
+            statusCode: 202
+            contentType: application/json
+            body: '{"status":"accepted"}'
+          - key: unauthorized
+            statusCode: 401
+            contentType: application/json
+            body: '{"status":"unauthorized"}'
+          - key: bad-request
+            statusCode: 400
+            contentType: application/json
+            body: '{"status":"bad-request"}'
+          - key: failed
+            statusCode: 500
+            contentType: application/json
+            body: '{"status":"failed"}'
+  function:
+    - key: resolver
+      handler: index.handler
+    - key: dynprops
+      handler: index.dynamicProps
+    - key: bg-resolver
+      handler: index.bgHandler
+    - key: enqueue-migration
+      handler: index.enqueueMigration
+    - key: run-migration
+      handler: index.runMigration
+      timeoutSeconds: 900
+    - key: spike-trigger
+      handler: index.spikeTrigger
+resources:
+  - key: byline
+    path: src/byline/index.jsx
+  - key: background
+    path: src/background/index.jsx
+  - key: icons
+    path: static/icons
+permissions:
+  scopes:
+    - read:page:confluence
+    - write:page:confluence
+    - read:space:confluence
+app:
+  runtime:
+    name: nodejs24.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/358919d6-16c9-4eac-af40-7c0e16ece0c2

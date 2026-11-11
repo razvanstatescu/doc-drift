@@ -325,3 +325,5 @@ Source: the Forge MCP server `search-forge-docs`, reading https://developer.atla
 - **Claude Code setup (official example):** `claude mcp add --transport http doc-drift https://mcp.atlassian.com/forge/<appId>`, then `/mcp` to connect and complete OAuth. Verified.
 - **Data access:** tools see only the data of the Atlassian app they're installed in, unless the app is multi-app compatible. Our Confluence-required, Jira-optional setup covers both. If products run different app versions, the tools come from the latest version. Verified.
 - **Action payload context** includes `cloudId`, `moduleKey`, and (in Confluence) `confluence.contentId`, `spaceKey`, `spaceId`, `url`, `resourceType`. The docs suggest checking LLM-supplied IDs against this context. Verified.
+
+- **Correction (live admin UI, 2026-11-11):** the admin page shows a single toggle, "Expose tools to MCP-compatible apps", under Details > Tools. It is all-or-nothing per app installation, despite the docs' per-tool wording. The toggle is visible even for a development-environment app that has not been shared.

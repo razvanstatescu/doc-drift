@@ -41,7 +41,7 @@ The SKILL.md tells the agent to:
 
 - Endpoint: `https://mcp.atlassian.com/forge/<appId>` (Preview). Disabled by default. A site admin enables it per site. Each user completes an OAuth 2.1 consent screen.
 - **`asUser()` from external MCP clients needs the user's consent** in Connected apps. The docs suggest falling back to `asApp()`, but there is no reliable way to check another user's page permission from an app context (validation pass, [platform/forge-confluence.md](../platform/forge-confluence.md)). **Decision D21: no `asApp()` fallback.** Without consent, the tool returns an error saying "Grant Doc Drift Sentinel access in Connected apps, then retry." This is a judge setup step too.
-- The admin turns on external exposure per tool, per site (corrected via the Forge MCP; earlier research said all-or-nothing). Still keep `get-drift-context` and `record-verification` out of `rovo:mcp` `tools` entirely.
+- **External exposure is one switch per app per site** (Admin > Apps > Sites > site > Connected apps > app > Details > Tools > "Expose tools to MCP-compatible apps"; seen live 2026-11-11). It exposes every tool in `rovo:mcp` `tools`. The docs' "turn on the tools you want" wording does not match the UI. So `get-drift-context` and `record-verification` must never be listed in `rovo:mcp`.
 - Claude Code: `claude mcp add --transport http doc-drift https://mcp.atlassian.com/forge/<appId>`, then `/mcp` to complete OAuth.
 - Needs Forge CLI 13.3.0 or later. External MCP does not need a Rovo licence on the site.
 - Keep Teamwork Graph calls out of MCP handlers (TWG is `asUser` only).

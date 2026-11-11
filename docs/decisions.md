@@ -63,7 +63,7 @@ Free dev sites reportedly lack Rovo. Demo sites (`forge site provision`) include
 Content-property writes need edit rights, which view-only verifiers lack. External MCP `asUser()` needs per-user consent, so MCP handlers check the caller's `accountId` permissions themselves.
 
 ### D16. Forge SQL from day 1
-2026-11-11 · Proposed, pending S7
+2026-11-11 · Accepted (S7 GO: dashboard GROUP BY in 35 ms p50 on 200 rows)
 Custom entities cannot aggregate. Adding `sql` later forces a major version.
 
 ### D17. Video: the core story and the agent/MCP proof finish before 3:00
@@ -95,3 +95,6 @@ Razvan is experienced and runs several AI agents in parallel, so the team counts
 ### D23. Code lives in a private GitHub repo, open-sourced before submission
 2026-11-11 · Accepted (Razvan)
 Remote: `git@github.com:razvanstatescu/doc-drift.git`. Private now, made public before Devpost submission (target Dec 19, see [hackathon/timeline.md](hackathon/timeline.md)). Never commit secrets, tokens or relay HMAC secrets: they live in Forge storage and environment variables only.
+
+### Note on D20 (S2 finding, 2026-11-11, open)
+The app could still read and write a page it had created after the page was restricted to Razvan only. Either app creators are exempt, or the app user ignores page restrictions altogether. A test on a page a person creates and restricts (S2 check 5) decides whether D20 can be relaxed.

@@ -17,7 +17,7 @@ const result = scoreChange(parsed.value, bindings, pages, { threshold: 0.5 });
 ```
 
 - `DriftEvent` has `score`, `severity` (`high` | `medium`), `matchedAnchor` (for example `payments-api: scripts/rollback.sh`), `files`, `reasons` (product voice, for example `scripts/rollback.sh renamed to scripts/rollback-v2.sh`), `matchedIdentifiers`, `matchedSnippetLines` and a `dedupeKey` for idempotent upserts.
-- `nextPageState({ current, bindingCount, openEvents, now })` gives `verified`, `possibly_stale`, `stale` or `unanchored`.
+- `nextPageState({ current, bindingCount, openEvents, now, escalationDays? })` gives `verified`, `possibly_stale`, `stale` or `unanchored` (D27): the first drift on a Verified page is always Possibly stale; Possibly stale becomes Stale after `escalationDays` (default 7), at 3+ distinct changes (`ref`), or on a further High on a critical anchor from another change; snoozed events (`snoozedUntil`) don't count, and an all-snoozed page reads Possibly stale.
 - `suggestAnchors(extractPageText(storage))` proposes anchors for the binding modal: Bitbucket URLs, repo paths in code blocks and inline code, and Jira keys.
 
 ## Scoring summary

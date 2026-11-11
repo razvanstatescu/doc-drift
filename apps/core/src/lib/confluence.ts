@@ -22,6 +22,7 @@ export interface PageBody {
   id?: string;
   title?: string;
   spaceId?: string;
+  ownerId?: string;
   storage?: string;
 }
 
@@ -31,16 +32,130 @@ export async function getPageStorage(requester: Requester, pageId: string): Prom
     headers: { Accept: 'application/json' },
   });
   if (!res.ok) return { status: res.status };
-  const out = (await res.json()) as { id: string; title: string; spaceId: string; body?: { storage?: { value?: string } } };
-  return { status: res.status, id: out.id, title: out.title, spaceId: out.spaceId, storage: out.body?.storage?.value ?? '' };
+  const out = (await res.json()) as { id: string; title: string; spaceId: string; ownerId?: string; body?: { storage?: { value?: string } } };
+  return {
+    status: res.status,
+    id: out.id,
+    title: out.title,
+    spaceId: out.spaceId,
+    ...(out.ownerId && { ownerId: out.ownerId }),
+    storage: out.body?.storage?.value ?? '',
+  };
+}
+
+export interface PageMeta {
+  status: number;
+  title?: string;
+  spaceId?: string;
+  ownerId?: string;
 }
 
 /** GET a page without its body (cheap visibility check). */
-export async function getPageMeta(requester: Requester, pageId: string): Promise<{ status: number; title?: string }> {
+export async function getPageMeta(requester: Requester, pageId: string): Promise<PageMeta> {
   const res = await requester.requestConfluence(route`/wiki/api/v2/pages/${pageId}`, { headers: { Accept: 'application/json' } });
   if (!res.ok) return { status: res.status };
-  const out = (await res.json()) as { title: string };
-  return { status: res.status, title: out.title };
+  const out = (await res.json()) as { title: string; spaceId?: string; ownerId?: string };
+  return { status: res.status, title: out.title, ...(out.spaceId && { spaceId: out.spaceId }), ...(out.ownerId && { ownerId: out.ownerId }) };
+}
+
+// ---------------------------------------------------------------------------
+// Footer comments (notifier). Scope write:comment:confluence.
+// ---------------------------------------------------------------------------
+export async function createFooterComment(
+  requester: Requester,
+  pageId: string,
+  storage: string,
+): Promise<{ status: number; id?: string; version?: number; error?: unknown }> {
+  const res = await requester.requestConfluence(route`/wiki/api/v2/footer-comments`, {
+    method: 'POST',
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ pageId, body: { representation: 'storage', value: storage } }),
+  });
+  if (!res.ok) return { status: res.status, error: await readBody(res) };
+  const out = (await res.json()) as { id: string; version?: { number?: number } };
+  return { status: res.status, id: out.id, version: out.version?.number ?? 1 };
+}
+
+export async function updateFooterComment(
+  requester: Requester,
+  commentId: string,
+  version: number,
+  storage: string,
+): Promise<{ status: number; version?: number; error?: unknown }> {
+  const res = await requester.requestConfluence(route`/wiki/api/v2/footer-comments/${commentId}`, {
+    method: 'PUT',
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ version: { number: version, message: 'Doc Drift Sentinel' }, body: { representation: 'storage', value: storage } }),
+  });
+  if (!res.ok) return { status: res.status, error: await readBody(res) };
+  const out = (await res.json()) as { version?: { number?: number } };
+  return { status: res.status, version: out.version?.number ?? version };
+}
+
+// ---------------------------------------------------------------------------
+// Spaces and users (dashboard). Scopes read:space:confluence, read:page:confluence, read:confluence-user.
+// ---------------------------------------------------------------------------
+export async function getSpaceIdByKey(requester: Requester, spaceKey: string): Promise<{ status: number; id?: string; name?: string }> {
+  const res = await requester.requestConfluence(route`/wiki/api/v2/spaces?keys=${spaceKey}&limit=1`, { headers: { Accept: 'application/json' } });
+  if (!res.ok) return { status: res.status };
+  const hit = ((await res.json()) as { results?: { id: string; name?: string }[] }).results?.[0];
+  return hit ? { status: res.status, id: String(hit.id), ...(hit.name && { name: hit.name }) } : { status: 404 };
+}
+
+export interface SpacePage {
+  id: string;
+  title: string;
+  ownerId?: string;
+  url?: string;
+}
+
+/**
+ * Every current page in a space that the requester can see (asUser: permission-aware), paginated.
+ * `truncated` is true when the cap was hit.
+ */
+export async function listSpacePages(requester: Requester, spaceId: string, maxPages = 5000): Promise<{ status: number; pages: SpacePage[]; truncated: boolean }> {
+  const pages: SpacePage[] = [];
+  let cursor: string | undefined;
+  for (let i = 0; i < Math.ceil(maxPages / 250); i++) {
+    const res = cursor
+      ? await requester.requestConfluence(route`/wiki/api/v2/spaces/${spaceId}/pages?status=current&limit=250&cursor=${cursor}`, { headers: { Accept: 'application/json' } })
+      : await requester.requestConfluence(route`/wiki/api/v2/spaces/${spaceId}/pages?status=current&limit=250`, { headers: { Accept: 'application/json' } });
+    if (!res.ok) return { status: res.status, pages, truncated: false };
+    const out = (await res.json()) as {
+      results?: { id: string; title: string; ownerId?: string; _links?: { webui?: string } }[];
+      _links?: { next?: string; base?: string };
+    };
+    const base = out._links?.base ?? '';
+    for (const p of out.results ?? []) {
+      pages.push({
+        id: String(p.id),
+        title: p.title,
+        ...(p.ownerId && { ownerId: p.ownerId }),
+        ...(p._links?.webui && { url: `${base}${p._links.webui}` }),
+      });
+    }
+    const next = out._links?.next;
+    if (!next) return { status: res.status, pages, truncated: false };
+    cursor = new URLSearchParams(next.split('?')[1] ?? '').get('cursor') ?? undefined;
+    if (!cursor) return { status: res.status, pages, truncated: false };
+  }
+  return { status: 200, pages, truncated: true };
+}
+
+/** Display names by account ID (v1 user lookup, one call per distinct user). Unknown users are left out. */
+export async function displayNames(requester: Requester, accountIds: (string | null | undefined)[]): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  const ids = [...new Set(accountIds.filter((a): a is string => !!a))].slice(0, 25);
+  await Promise.all(
+    ids.map(async (id) => {
+      const res = await requester.requestConfluence(route`/wiki/rest/api/user?accountId=${id}`, { headers: { Accept: 'application/json' } });
+      if (!res.ok) return;
+      const u = (await res.json()) as { displayName?: string; publicName?: string };
+      const name = u.displayName ?? u.publicName;
+      if (name) out.set(id, name);
+    }),
+  );
+  return out;
 }
 
 /**

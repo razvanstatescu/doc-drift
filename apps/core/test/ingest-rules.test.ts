@@ -39,8 +39,19 @@ describe('settings', () => {
   it('parses the settings form', () => {
     expect(parseSettings({ sensitivity: 'quiet', ignoreGlobs: ' **/*.lock\n\n**/*.lock\ndocs/** ' })).toEqual({
       ok: true,
-      value: { sensitivity: 'quiet', ignoreGlobs: ['**/*.lock', 'docs/**'] },
+      value: { sensitivity: 'quiet', ignoreGlobs: ['**/*.lock', 'docs/**'], escalationDays: 7, notifyEnabled: true, notifyDelaySeconds: 600 },
     });
+    expect(parseSettings({ sensitivity: 'balanced', notifyDelaySeconds: 0, escalationDays: '3', notifyEnabled: false })).toMatchObject({
+      ok: true,
+      value: { notifyDelaySeconds: 0, escalationDays: 3, notifyEnabled: false },
+    });
+    // Missing optional fields keep the current values.
+    expect(parseSettings({ sensitivity: 'balanced' }, { notifyDelaySeconds: 0, escalationDays: 2 })).toMatchObject({
+      value: { notifyDelaySeconds: 0, escalationDays: 2 },
+    });
+    expect(parseSettings({ sensitivity: 'balanced', notifyDelaySeconds: 901 })).toMatchObject({ ok: false });
+    expect(parseSettings({ sensitivity: 'balanced', escalationDays: 0 })).toMatchObject({ ok: false });
+    expect(parseSettings({ sensitivity: 'balanced', escalationDays: 1.5 })).toMatchObject({ ok: false });
     expect(parseSettings({ sensitivity: 'loud' })).toMatchObject({ ok: false });
     expect(parseSettings({ sensitivity: 'strict', ignoreGlobs: ['has space'] })).toMatchObject({ ok: false });
   });

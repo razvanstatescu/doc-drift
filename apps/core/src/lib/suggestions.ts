@@ -40,6 +40,8 @@ export function suggestionsFor(storage: string, existing: { anchorType: string; 
       return view;
     })
     .filter((s) => !have.has(looseKey(s)))
+    // A path found on a page that links no repo: hide it when an anchor already watches that path.
+    .filter((s) => !(s.needsRepo && existing.some((b) => b.pattern === s.pattern)))
     .slice(0, 30);
 }
 

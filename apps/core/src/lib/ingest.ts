@@ -29,7 +29,12 @@ export interface IngestResult {
  * @param origin where it came from (stored for the audit trail)
  * @param dedupeKey override; the demo replay passes a fresh key so every replay is a new change
  */
-export async function ingestRecord(record: ChangeRecord, origin: IngestOrigin, dedupeKey?: string): Promise<IngestResult> {
+export async function ingestRecord(
+  record: ChangeRecord,
+  origin: IngestOrigin,
+  dedupeKey?: string,
+  meta: { title?: string | null } = {},
+): Promise<IngestResult> {
   await ensureSchema();
   const key = dedupeKey ?? changeDedupeKey(record);
   const existing = await findChangeByDedupe(key);
@@ -42,7 +47,7 @@ export async function ingestRecord(record: ChangeRecord, origin: IngestOrigin, d
   }
   const id = randomUUID();
   try {
-    await insertChange(id, key, origin, record);
+    await insertChange(id, key, origin, record, meta.title ?? undefined);
   } catch (e) {
     // A concurrent delivery won the unique dedupe_key race.
     const raced = await findChangeByDedupe(key);
@@ -61,4 +66,23 @@ export async function ingestRecord(record: ChangeRecord, origin: IngestOrigin, d
 async function pushMatch(changeRecordId: string): Promise<void> {
   const job: MatchJob = { changeRecordId };
   await matchQueue.push({ body: job });
+}
+
+export const NOTIFY_QUEUE_KEY = 'notify-queue';
+const notifyQueue = new Queue({ key: NOTIFY_QUEUE_KEY });
+
+export type NotifyJob = { pageId: string };
+
+/**
+ * Queues a footer-comment notification for a page. `delayInSeconds` debounces a burst of changes:
+ * the job that runs first sends every event not yet notified, later ones find nothing new.
+ */
+export async function pushNotify(pageIds: string[], delayInSeconds: number): Promise<void> {
+  if (pageIds.length === 0) return;
+  const delay = Math.max(0, Math.min(900, Math.floor(delayInSeconds)));
+  // Queue.push takes up to 50 events per call.
+  for (let i = 0; i < pageIds.length; i += 50) {
+    const batch = pageIds.slice(i, i + 50).map((pageId) => ({ body: { pageId } satisfies NotifyJob, ...(delay > 0 && { delayInSeconds: delay }) }));
+    await notifyQueue.push(batch);
+  }
 }

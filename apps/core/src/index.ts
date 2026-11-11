@@ -5,11 +5,13 @@ import { runMigrationsWithRetry } from './lib/db';
 import { ingestRecord, type MatchJob } from './lib/ingest';
 import { headerValue } from './lib/ingest-rules';
 import { processChange } from './lib/matching';
+import { notifyPage } from './lib/notifier';
 import { getRelaySecret, recordRelayPing } from './lib/settings-store';
 
 export { handler as bylineHandler } from './resolvers/byline';
 export { handler as settingsHandler } from './resolvers/settings';
 export { devDriver } from './triggers/dev-driver';
+export { confluencePageEvent, escalate, jiraEvent } from './triggers/product-events';
 
 interface WebTriggerRequest {
   method?: string;
@@ -73,6 +75,16 @@ export async function match(event: { body?: Partial<MatchJob> }): Promise<void> 
     return;
   }
   await processChange(id);
+}
+
+/** notify-queue consumer (F7). The event body holds only a page ID. */
+export async function notify(event: { body?: { pageId?: unknown } }): Promise<void> {
+  const pageId = event?.body?.pageId;
+  if (typeof pageId !== 'string' || pageId.length === 0) {
+    console.warn('DDS_NOTIFY skipped: event without pageId');
+    return;
+  }
+  await notifyPage(pageId);
 }
 
 // Forge SQL migrations: lifecycle trigger -> queue -> consumer with timeoutSeconds 900 (S7).

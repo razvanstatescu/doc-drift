@@ -1,5 +1,7 @@
-// Resolver for the byline modal (binding UI, F1). Every user-facing read goes asUser; app-owned
-// state is written asApp only after the clicking user's rights are checked asUser (D15).
+// Resolver `byline-resolver`: the byline modal (binding UI F1, review panel F5) and the space
+// dashboard (F8) call it. Every user-facing read goes asUser; app-owned state is written asApp only
+// after the clicking user's rights are checked asUser with GET /pages/{id}/operations (D15).
+// Restricted pages are unsupported (D20): if the user can see a page and the app can't, it is restricted.
 import api from '@forge/api';
 import Resolver from '@forge/resolver';
 import { PAGE_STATE_LABELS } from '@dds/shared';
@@ -9,31 +11,113 @@ import { refLabel } from '../lib/copy';
 import { getPageMeta, getPageStorage, pageOperations } from '../lib/confluence';
 import { bindingsForPage, ensureSchema, getPageState, openEventsForPage } from '../lib/db';
 import { fromSqlDate } from '../lib/ingest-rules';
+import {
+  decideRename,
+  dismissEvent,
+  markVerified,
+  MESSAGES,
+  pageDrift,
+  snoozePage,
+  spaceDashboard,
+  type Failure,
+  type Gate,
+} from '../lib/review-service';
 
-interface BylineContext {
+interface ResolverContext {
   accountId?: string;
-  extension?: { content?: { id?: string | number }; space?: { key?: string } };
+  extension?: { content?: { id?: string | number }; space?: { key?: string; id?: string | number } };
 }
 
 const resolver = new Resolver();
 
-function pageIdOf(context: BylineContext): string | undefined {
-  const id = context.extension?.content?.id;
-  return id === undefined ? undefined : String(id);
+function pageIdOf(context: ResolverContext, payload?: unknown): string | undefined {
+  const fromPayload = (payload as { pageId?: unknown } | undefined)?.pageId;
+  const id = fromPayload ?? context.extension?.content?.id;
+  return id === undefined || id === null || id === '' ? undefined : String(id);
 }
 
-/**
- * D20: the app user cannot read pages with view restrictions (confirmed live 2026-11-11: asApp
- * GET page, properties and operations all return 404). If the user can see the page and the app
- * can't, the page is restricted.
- */
+/** D20: the app user gets 404 on pages with view restrictions (confirmed live 2026-11-11). */
 async function appCannotRead(pageId: string): Promise<boolean> {
   const asApp = await getPageMeta(api.asApp(), pageId);
   return asApp.status === 404 || asApp.status === 403;
 }
 
+const notVisible = (): Failure => ({ ok: false, error: 'not_visible', state: 'unknown', message: MESSAGES.notVisible });
+const restricted = (): Failure => ({ ok: false, error: 'restricted', restricted: true, message: MESSAGES.restricted });
+
+/** asUser permission check, then the D20 restriction check. Logged, never trusted from the client. */
+const userGate: Gate = async (pageId, need) => {
+  const user = await pageOperations(api.asUser(), pageId);
+  if (user.status >= 300 || !user.ops.has('read')) return notVisible();
+  if (need === 'update' && !user.ops.has('update')) {
+    console.log(`DDS_GATE_DENIED pageId=${pageId} need=${need}`);
+    return { ok: false, error: 'forbidden', message: MESSAGES.needsEdit };
+  }
+  if (await appCannotRead(pageId)) {
+    console.log(`DDS_BYLINE_RESTRICTED pageId=${pageId}`);
+    return restricted();
+  }
+  return null;
+};
+
+// ---------------------------------------------------------------------------
+// Review panel (M2 contract)
+// ---------------------------------------------------------------------------
+resolver.define('getPageDrift', async ({ payload, context }) => {
+  const ctx = context as ResolverContext;
+  const pageId = pageIdOf(ctx, payload);
+  if (!pageId) return notVisible();
+  const user = await pageOperations(api.asUser(), pageId);
+  if (user.status >= 300 || !user.ops.has('read')) return notVisible();
+  if (await appCannotRead(pageId)) {
+    console.log(`DDS_BYLINE_RESTRICTED pageId=${pageId}`);
+    return { ok: true, pageId, restricted: true, state: 'unanchored', canEdit: user.ops.has('update'), message: MESSAGES.restricted };
+  }
+  return pageDrift(pageId, api.asUser(), { canEdit: user.ops.has('update') });
+});
+
+resolver.define('markVerified', async ({ payload, context }) => {
+  const ctx = context as ResolverContext;
+  const pageId = pageIdOf(ctx, payload);
+  if (!pageId) return notVisible();
+  return markVerified(pageId, ctx.accountId ?? null, (payload as { note?: unknown })?.note, userGate);
+});
+
+resolver.define('dismissEvent', async ({ payload, context }) => {
+  const p = (payload ?? {}) as { eventId?: unknown; reason?: unknown };
+  return dismissEvent(p.eventId, p.reason, (context as ResolverContext).accountId ?? null, userGate);
+});
+
+resolver.define('snoozePage', async ({ payload, context }) => {
+  const pageId = pageIdOf(context as ResolverContext, payload);
+  if (!pageId) return notVisible();
+  return snoozePage(pageId, (payload as { days?: unknown })?.days, userGate);
+});
+
+resolver.define('acceptRename', async ({ payload, context }) => {
+  return decideRename((payload as { proposalId?: unknown })?.proposalId, 'accepted', (context as ResolverContext).accountId ?? null, userGate);
+});
+
+resolver.define('rejectRename', async ({ payload, context }) => {
+  return decideRename((payload as { proposalId?: unknown })?.proposalId, 'rejected', (context as ResolverContext).accountId ?? null, userGate);
+});
+
+// ---------------------------------------------------------------------------
+// Space dashboard (F8). Reads asUser, so only pages the caller can see count or show.
+// ---------------------------------------------------------------------------
+resolver.define('getSpaceDashboard', async ({ payload, context }) => {
+  const ctx = context as ResolverContext;
+  const spaceKey = String((payload as { spaceKey?: unknown })?.spaceKey ?? ctx.extension?.space?.key ?? '').trim();
+  if (!spaceKey) return { ok: false, error: 'not_visible', message: 'Space not found or not visible to you.' };
+  const hint = ctx.extension?.space?.key === spaceKey && ctx.extension?.space?.id !== undefined ? String(ctx.extension.space.id) : undefined;
+  return spaceDashboard(spaceKey, api.asUser(), hint);
+});
+
+// ---------------------------------------------------------------------------
+// Binding modal (M1). `load` is kept as an alias for older UI code.
+// ---------------------------------------------------------------------------
 resolver.define('load', async ({ context }) => {
-  const ctx = context as BylineContext;
+  const ctx = context as ResolverContext;
   const pageId = pageIdOf(ctx);
   if (!pageId) return { error: 'no_page' };
 
@@ -88,7 +172,7 @@ resolver.define('checkAnchor', async ({ payload }) => {
 });
 
 resolver.define('save', async ({ payload, context }) => {
-  const ctx = context as BylineContext;
+  const ctx = context as ResolverContext;
   const pageId = pageIdOf(ctx);
   if (!pageId) return { ok: false, message: 'No page in context.' };
 
@@ -96,9 +180,9 @@ resolver.define('save', async ({ payload, context }) => {
   const user = await pageOperations(api.asUser(), pageId);
   if (!user.ops.has('update')) {
     console.log(`DDS_BYLINE_SAVE_DENIED pageId=${pageId} status=${user.status}`);
-    return { ok: false, message: 'You need edit rights on this page to change its anchors.' };
+    return { ok: false, message: MESSAGES.needsEdit };
   }
-  if (await appCannotRead(pageId)) return { ok: false, restricted: true, message: "Restricted pages can't be watched yet." };
+  if (await appCannotRead(pageId)) return { ok: false, restricted: true, message: MESSAGES.restricted };
 
   const anchors = Array.isArray((payload as { anchors?: unknown })?.anchors) ? ((payload as { anchors: AnchorInput[] }).anchors) : [];
   const result = await saveBindings({

@@ -23,15 +23,40 @@ export function headerValue(headers: Record<string, string[] | string | undefine
 export interface AppSettings {
   sensitivity: Sensitivity;
   ignoreGlobs: string[];
+  /** Days a page stays Possibly stale before it escalates to Stale (D27). */
+  escalationDays: number;
+  /** Footer-comment notifications to the page owner (F7). */
+  notifyEnabled: boolean;
+  /** Debounce before a notification is posted, so a burst of PRs becomes one comment. 0 for demos. */
+  notifyDelaySeconds: number;
 }
 
-export const DEFAULT_SETTINGS: AppSettings = { sensitivity: 'balanced', ignoreGlobs: [...DEFAULT_IGNORE_GLOBS] };
+export const DEFAULT_SETTINGS: AppSettings = {
+  sensitivity: 'balanced',
+  ignoreGlobs: [...DEFAULT_IGNORE_GLOBS],
+  escalationDays: 7,
+  notifyEnabled: true,
+  notifyDelaySeconds: 600,
+};
 
 export const MAX_IGNORE_GLOBS = 50;
+/** Forge queues accept `delayInSeconds` up to 900. */
+export const MAX_NOTIFY_DELAY_SECONDS = 900;
+export const MAX_ESCALATION_DAYS = 90;
 
-/** Validates settings from the settings page. Returns cleaned settings or a user-facing error. */
-export function parseSettings(input: unknown): { ok: true; value: AppSettings } | { ok: false; error: string } {
-  const raw = (input ?? {}) as { sensitivity?: unknown; ignoreGlobs?: unknown };
+function intIn(v: unknown, min: number, max: number): number | undefined {
+  const n = typeof v === 'string' && v.trim() !== '' ? Number(v) : v;
+  return typeof n === 'number' && Number.isInteger(n) && n >= min && n <= max ? n : undefined;
+}
+
+/**
+ * Validates settings from the settings page. Returns cleaned settings or a user-facing error.
+ * `escalationDays`, `notifyEnabled` and `notifyDelaySeconds` are optional: missing ones keep the defaults
+ * (or `current`, when given), so an older settings form still saves.
+ */
+export function parseSettings(input: unknown, current: Partial<AppSettings> = {}): { ok: true; value: AppSettings } | { ok: false; error: string } {
+  const raw = (input ?? {}) as { sensitivity?: unknown; ignoreGlobs?: unknown; escalationDays?: unknown; notifyEnabled?: unknown; notifyDelaySeconds?: unknown };
+  const base = { ...DEFAULT_SETTINGS, ...current };
   const sensitivity = raw.sensitivity;
   if (sensitivity !== 'strict' && sensitivity !== 'balanced' && sensitivity !== 'quiet') {
     return { ok: false, error: 'Pick Strict, Balanced or Quiet.' };
@@ -45,7 +70,25 @@ export function parseSettings(input: unknown): { ok: true; value: AppSettings } 
   if (globs.length > MAX_IGNORE_GLOBS) return { ok: false, error: `Use at most ${MAX_IGNORE_GLOBS} ignore globs.` };
   const bad = globs.find((g) => g.length > 200 || /\s/.test(g));
   if (bad) return { ok: false, error: `This glob has spaces or is too long: ${bad.slice(0, 40)}` };
-  return { ok: true, value: { sensitivity, ignoreGlobs: globs } };
+
+  let escalationDays = base.escalationDays;
+  if (raw.escalationDays !== undefined) {
+    const n = intIn(raw.escalationDays, 1, MAX_ESCALATION_DAYS);
+    if (n === undefined) return { ok: false, error: `Escalation needs a whole number of days from 1 to ${MAX_ESCALATION_DAYS}.` };
+    escalationDays = n;
+  }
+  let notifyDelaySeconds = base.notifyDelaySeconds;
+  if (raw.notifyDelaySeconds !== undefined) {
+    const n = intIn(raw.notifyDelaySeconds, 0, MAX_NOTIFY_DELAY_SECONDS);
+    if (n === undefined) return { ok: false, error: `Notification delay must be 0 to ${MAX_NOTIFY_DELAY_SECONDS} seconds.` };
+    notifyDelaySeconds = n;
+  }
+  let notifyEnabled = base.notifyEnabled;
+  if (raw.notifyEnabled !== undefined) {
+    if (typeof raw.notifyEnabled !== 'boolean') return { ok: false, error: 'Turn notifications on or off.' };
+    notifyEnabled = raw.notifyEnabled;
+  }
+  return { ok: true, value: { sensitivity, ignoreGlobs: globs, escalationDays, notifyEnabled, notifyDelaySeconds } };
 }
 
 /** Matcher config from the stored settings (missing fields fall back to the defaults). */

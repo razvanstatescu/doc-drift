@@ -29,11 +29,13 @@ export interface BylineFacts {
   /** Open drift events on the page. */
   openEventCount?: number;
   /** The most recent open event, for the Possibly stale tooltip. */
-  latest?: { ref: string; source: 'bitbucket' | 'jira'; files: string[]; at: number };
+  latest?: { ref: string; source: 'bitbucket' | 'jira'; files: string[]; at: number; summary?: string };
   /** Oldest open event (epoch ms), for the Stale tooltip. */
   oldestOpenAt?: number;
   /** Clock for "N days", injectable for tests. */
   now?: number;
+  /** Set when every open event is snoozed (epoch ms): the tooltip says until when instead of "Review." */
+  snoozedUntil?: number;
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -78,19 +80,27 @@ export function displayFiles(matchedAnchor: string | null, files: string[]): str
 
 function possiblyStaleTooltip(f: BylineFacts): string {
   const latest = f.latest;
-  if (!latest) return 'An anchor changed after the last verification. Review.';
+  const tail = f.snoozedUntil !== undefined ? `Snoozed until ${shortDate(f.snoozedUntil)}.` : 'Review.';
+  if (!latest) return clampTooltip(`An anchor changed after the last verification. ${tail}`);
   const who = refLabel(latest.ref, latest.source);
   const when = shortDate(latest.at);
   const more = (f.openEventCount ?? 1) > 1 ? ` (+${plural((f.openEventCount ?? 1) - 1, 'change')})` : '';
-  if (latest.source === 'jira') return clampTooltip(`${who} changed on ${when}${more}. Review.`);
+  if (latest.source === 'jira') {
+    // The matcher's reason starts with the key: "PAY-142 moved to Done".
+    const what = latest.summary?.startsWith(latest.ref) ? latest.summary.replace(/\.$/, '') : `${who} changed`;
+    const full = `${what} on ${when}${more}. ${tail}`;
+    return full.length <= TOOLTIP_MAX ? full : clampTooltip(`${who} changed on ${when}${more}. ${tail}`);
+  }
   const file = latest.files[0];
   const extraFiles = latest.files.length > 1 ? ` and ${plural(latest.files.length - 1, 'file')}` : '';
-  if (!file) return clampTooltip(`${who} changed an anchor on ${when}${more}. Review.`);
-  const full = `${who} changed ${file}${extraFiles} on ${when}${more}. Review.`;
+  if (!file) return clampTooltip(`${who} changed an anchor on ${when}${more}. ${tail}`);
+  const full = `${who} changed ${file}${extraFiles} on ${when}${more}. ${tail}`;
   if (full.length <= TOOLTIP_MAX) return full;
-  // Long paths: fall back to the file name.
+  // Long paths: fall back to the file name, then drop the extra counts.
   const base = file.split('/').at(-1) ?? file;
-  return clampTooltip(`${who} changed ${base}${extraFiles} on ${when}${more}. Review.`);
+  const short = `${who} changed ${base}${extraFiles} on ${when}${more}. ${tail}`;
+  if (short.length <= TOOLTIP_MAX) return short;
+  return clampTooltip(`${who} changed ${base} on ${when}. ${tail}`);
 }
 
 function staleTooltip(f: BylineFacts): string {

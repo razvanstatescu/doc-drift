@@ -14,13 +14,16 @@ import {
   ensureSchema,
   findPrIdByTitle,
   getChange,
+  insertRenameProposal,
   markChangeProcessed,
   revertEventsForRef,
   upsertEvent,
   type StoredBinding,
 } from './db';
+import { pushNotify } from './ingest';
 import { matcherConfigFor } from './ingest-rules';
-import { refreshPage } from './page-state';
+import { refreshPage, type RefreshResult } from './page-state';
+import { deletedIssueEvents, isDeletedIssueRecord } from './review';
 import { getSettings } from './settings-store';
 
 /** Most pages we fetch for one change. Bindings are per repo, so this is generous for M1. */
@@ -63,9 +66,25 @@ export async function processChange(changeRecordId: string): Promise<MatchOutcom
     return { changeRecordId, outcome: 'missing', events: 0, pages: [] };
   }
   const record = stored.record;
-  const config = matcherConfigFor(await getSettings());
+  const settings = await getSettings();
+  const config = matcherConfigFor(settings);
   const bindings = await candidateBindings(record);
   const spaceByPage = new Map(bindings.map((b) => [b.pageId, b.spaceKey ?? null]));
+
+  // A deleted Jira issue: the matcher has no rule for it, so every page anchored to it gets an event.
+  if (record.source === 'jira' && isDeletedIssueRecord(record)) {
+    const events = deletedIssueEvents(record.issueKey, record.changelogId ?? 'deleted', bindings);
+    const notify: string[] = [];
+    for (const e of events) {
+      const upsert = await upsertEvent({ id: randomUUID(), changeRecordId, source: 'jira', summary: e.reasons[0]!, files: [], ...e });
+      if (upsert !== 'refreshed') notify.push(e.pageId);
+    }
+    const pages = await refreshAll([...new Set(events.map((e) => e.pageId))], spaceByPage);
+    await pushNotify([...new Set(notify)], settings.notifyDelaySeconds);
+    await markChangeProcessed(changeRecordId, `deleted-issue:${events.length}`);
+    log('DDS_MATCH_DELETED_ISSUE', { changeRecordId, issueKey: record.issueKey, events: events.length });
+    return { changeRecordId, outcome: 'deleted-issue', events: events.length, pages: pages.map((p) => ({ pageId: p.pageId, status: p.status })) };
+  }
 
   // Pass 1, paths only, threshold 0: which pages have any matching anchor? Boosts need a path
   // match first, so only those pages can flag, and only their bodies are fetched.
@@ -104,6 +123,7 @@ export async function processChange(changeRecordId: string): Promise<MatchOutcom
     return { changeRecordId, outcome: result.kind, events: 0, pages: [] };
   }
 
+  const notify = new Set<string>();
   for (const event of result.events) {
     const upsert = await upsertEvent({
       id: randomUUID(),
@@ -119,7 +139,10 @@ export async function processChange(changeRecordId: string): Promise<MatchOutcom
       score: event.score,
       severity: event.severity,
       dedupeKey: event.dedupeKey,
+      matchedTokens: event.matchedIdentifiers,
     });
+    // A redelivery ('refreshed') was already notified; new and reopened events notify the owner.
+    if (upsert !== 'refreshed') notify.add(event.pageId);
     log('DDS_MATCH_EVENT', {
       pageId: event.pageId,
       anchor: event.matchedAnchor,
@@ -129,17 +152,17 @@ export async function processChange(changeRecordId: string): Promise<MatchOutcom
       upsert,
     });
   }
-  for (const rename of result.renameProposals) log('DDS_MATCH_RENAME_PROPOSAL', rename);
+  for (const rename of result.renameProposals) {
+    const stored = await insertRenameProposal({ id: randomUUID(), changeRecordId, ...rename });
+    log('DDS_MATCH_RENAME_PROPOSAL', { ...rename, stored });
+  }
 
   const touched = [...new Set(result.events.map((e) => e.pageId))];
-  const refreshed = [];
-  for (const pageId of touched) {
-    try {
-      refreshed.push(await refreshPage(pageId, spaceByPage.get(pageId) ?? null));
-    } catch (e) {
-      // One bad page must not block the others; the queue would otherwise retry the whole change.
-      log('DDS_MATCH_REFRESH_FAILED', { pageId, message: String((e as Error)?.message ?? e).slice(0, 300) });
-    }
+  const refreshed = await refreshAll(touched, spaceByPage);
+  try {
+    await pushNotify([...notify], settings.notifyDelaySeconds);
+  } catch (e) {
+    log('DDS_NOTIFY_QUEUE_FAILED', { message: String((e as Error)?.message ?? e).slice(0, 300) });
   }
   await markChangeProcessed(changeRecordId, `scored:${result.events.length}`);
   log('DDS_MATCH_DONE', {
@@ -155,4 +178,17 @@ export async function processChange(changeRecordId: string): Promise<MatchOutcom
     events: result.events.length,
     pages: refreshed.map((p) => ({ pageId: p.pageId, status: p.status })),
   };
+}
+
+async function refreshAll(pageIds: string[], spaceByPage: Map<string, string | null>): Promise<RefreshResult[]> {
+  const refreshed: RefreshResult[] = [];
+  for (const pageId of pageIds) {
+    try {
+      refreshed.push(await refreshPage(pageId, { spaceKeyHint: spaceByPage.get(pageId) ?? null }));
+    } catch (e) {
+      // One bad page must not block the others; the queue would otherwise retry the whole change.
+      log('DDS_MATCH_REFRESH_FAILED', { pageId, message: String((e as Error)?.message ?? e).slice(0, 300) });
+    }
+  }
+  return refreshed;
 }

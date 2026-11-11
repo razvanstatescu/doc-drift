@@ -52,17 +52,18 @@ export async function saveBindings(input: SaveBindingsInput): Promise<SaveBindin
   for (const r of plan.reweight) await setBindingWeight(r.id, r.weight);
   for (const a of plan.insert) await insertBinding(randomUUID(), input.pageId, input.spaceKey, a, input.actorAccountId);
 
-  const closed = await resolveOpenEvents(input.pageId);
+  const closed = await resolveOpenEvents(input.pageId, input.actorAccountId);
   await recordVerification({
     id: randomUUID(),
     pageId: input.pageId,
     spaceKey: input.spaceKey,
     userId: input.actorAccountId,
-    closedEventIds: closed,
+    closedEventIds: [...closed],
     note: `Anchors saved: ${valid.value.length}`,
     method: input.method,
+    driftSince: closed.oldest ?? null,
   });
-  const state = await refreshPage(input.pageId, input.spaceKey);
+  const state = await refreshPage(input.pageId, { spaceKeyHint: input.spaceKey });
   console.log(
     `DDS_BINDINGS_SAVED ${JSON.stringify({ pageId: input.pageId, added: plan.insert.length, removed: plan.remove.length, reweighted: plan.reweight.length, closed: closed.length, status: state.status })}`,
   );

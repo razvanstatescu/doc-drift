@@ -10,7 +10,9 @@ modules:
         function: byline-resolver
       viewportContainer: modal
       viewportSize: large
-      title: 'Doc Drift: Unanchored'
+      # State-neutral: the modal's top bar shows this title. The page byline gets its state title
+      # ("Doc Drift: Possibly stale") from the content property.
+      title: Doc Drift
       tooltip: Not linked to code or Jira. Add anchors.
       icon: resource:icons;doc-drift.svg
       contentPropertyKey: dds-byline-7f3c2a
@@ -31,6 +33,36 @@ modules:
       events:
         - avi:forge:installed:app
         - avi:forge:upgraded:app
+    # Jira (optional app): anchored issues. Filter on changelog fieldId only; string methods in list
+    # callbacks fail deploy on complexity. The handler re-checks the fields (RECEIVE_AND_LOG).
+    - key: dds-jira-updated
+      function: jira-event
+      events:
+        - avi:jira:updated:issue
+      filter:
+        ignoreSelf: true
+        expression: >-
+          event.changelog.items.some(i => ['status', 'resolution', 'fixVersions', 'components',
+          'description', 'summary', 'parent', 'IssueParentAssociation'].includes(i.fieldId))
+        onError: RECEIVE_AND_LOG
+    - key: dds-jira-deleted
+      function: jira-event
+      events:
+        - avi:jira:deleted:issue
+      filter:
+        ignoreSelf: true
+    # A trashed or deleted page closes its events and drops its bindings. `ignoreSelf` is Jira-only,
+    # so the handler drops selfGenerated events itself.
+    - key: dds-page-removed
+      function: confluence-page-event
+      events:
+        - avi:confluence:trashed:page
+        - avi:confluence:deleted:page
+  scheduledTrigger:
+    # D27: Possibly stale to Stale after escalationDays; also rewrites bylines whose snooze ended.
+    - key: dds-escalation
+      function: escalate
+      interval: hour
   consumer:
     - key: dds-migration-consumer
       queue: dds-migration-queue
@@ -38,6 +70,10 @@ modules:
     - key: dds-match-consumer
       queue: match-queue
       function: match
+    # Footer-comment notifier. Jobs carry a page ID only, pushed with delayInSeconds (debounce).
+    - key: dds-notify-consumer
+      queue: notify-queue
+      function: notify
   webtrigger:
     # The relay POSTs HMAC-signed change records here. Static response keeps Runs on Atlassian eligibility.
     - key: ingest-change
@@ -96,6 +132,16 @@ modules:
     - key: run-migration
       handler: index.runMigration
       timeoutSeconds: 900
+    - key: notify
+      handler: index.notify
+      timeoutSeconds: 60
+    - key: jira-event
+      handler: index.jiraEvent
+    - key: confluence-page-event
+      handler: index.confluencePageEvent
+    - key: escalate
+      handler: index.escalate
+      timeoutSeconds: 300
     - key: dev-driver
       handler: index.devDriver
 resources:
@@ -114,6 +160,15 @@ permissions:
     - read:confluence-user
     # KVS settings and the relay secret.
     - storage:app
+    # M2. Notifier footer comments (POST/PUT /footer-comments).
+    - write:comment:confluence
+    # M2. Dashboard: space ID by key (GET /spaces?keys=).
+    - read:space:confluence
+    # M2. Page trashed/deleted events (the trashed and deleted events also need write:confluence-content).
+    - read:confluence-content.summary
+    - write:confluence-content
+    # M2. Jira trigger and GET /rest/api/3/issue/{key}.
+    - read:jira-work
 app:
   runtime:
     name: nodejs24.x

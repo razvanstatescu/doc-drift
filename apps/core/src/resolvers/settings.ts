@@ -34,7 +34,7 @@ resolver.define('rotateSecret', async ({ context }) => {
 
 resolver.define('saveSettings', async ({ payload }) => {
   if (!(await currentUserIsAdmin(api.asUser()))) return DENIED;
-  const parsed = parseSettings(payload);
+  const parsed = parseSettings(payload, await getSettings());
   if (!parsed.ok) return { ok: false, message: parsed.error };
   await saveSettings(parsed.value);
   return { ok: true, settings: parsed.value };

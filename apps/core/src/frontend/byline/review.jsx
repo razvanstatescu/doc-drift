@@ -84,7 +84,8 @@ function DiffPreview({ text }) {
  * One change, summary first (UX-4): ref, who and when, severity; the why sentence; the files as a
  * compact list; the anchor; the reasons. The raw diff waits behind Show diff.
  */
-function EventRow({ event, now, evidence }) {
+// `hideWhy`: with a single change the page header already shows the same why sentence.
+function EventRow({ event, now, evidence, hideWhy }) {
   const [showDiff, setShowDiff] = useState(false);
   const isJira = event.source === 'jira';
   const when = relativeTime(event.at, now);
@@ -106,7 +107,7 @@ function EventRow({ event, now, evidence }) {
             <SeverityLozenge severity={event.severity} />
           </Inline>
         </Inline>
-        {event.whySentence ? <CodeText text={event.whySentence} /> : null}
+        {event.whySentence && !hideWhy ? <CodeText text={event.whySentence} /> : null}
         {!isJira && event.title ? <Text color="color.text.subtle">{event.title}</Text> : null}
         {!isJira && files.length ? (
           <Stack space="space.025">
@@ -430,7 +431,7 @@ export function ReviewPanel({
       <Section title={COPY.whatChanged}>
         {evidence !== 'full' ? <Muted tone="subtlest">{COPY.summaryOnly}</Muted> : null}
         {shown.map((e) => (
-          <EventRow key={e.id} event={e} now={now} evidence={evidence} />
+          <EventRow key={e.id} event={e} now={now} evidence={evidence} hideWhy={n === 1} />
         ))}
         {n > MAX_EVENTS && !showAllEvents ? (
           <Inline>

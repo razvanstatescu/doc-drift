@@ -5,6 +5,8 @@ Merged from:
 - [ux-review-2026-11-11.md](ux-review-2026-11-11.md) (UX-n)
 - [../research/user-needs-and-competitors.md](../research/user-needs-and-competitors.md) (R-n)
 
+**Status 2026-11-12: Track A and Track B are done, merged and deployed (core 4.23.0). Retest results are in the [test report](test-report-2026-11-11.md#phase-2-retest-2026-11-12-core-4210-to-4230-relay-220). Still open: UX observations 3 (fix-version wording) and 10 (look-alike Jira keys), the Verified tooltip count (R-8), a browser check of UX-2 on a real draft, and R-6 on a real merge.**
+
 Production, share links, the judge guide and video stay out of scope. No new scopes (avoids a major version): R items that need scopes are listed under "Decide by Dec 1".
 
 ## Track A: backend (main tree, the only deployer)

@@ -2,6 +2,24 @@
 
 QA run against core 4.16.0 and relay version 2 in development (one-atlas-jzzf, DDSTEST space, sandbox repo `nano-soft-dev/qa-sandbox` for crafted records, `qa/` files in `nano-soft-dev/payments-api` for real merges). Plan: [test-plan.md](test-plan.md). No app source was changed and nothing was deployed.
 
+## Phase 2 retest (2026-11-12, core 4.21.0 to 4.23.0, relay 2.2.0)
+
+After merging Track A (backend) and Track B (UI) of [backlog-phase2.md](backlog-phase2.md):
+
+| Layer | Result |
+| --- | --- |
+| Vitest | core 337, matcher 202 (eval P 1.00 / R 0.94), relay 53, shared 14; no `it.fails` left |
+| `scripts/qa/phase2.py all` | 38 of 39 on the first rerun; the 1 failure was test-only (P2-STW-01 reused an already-excluded file), fixed by `clearExclude` on bind (P2-STW-00) |
+| `scripts/qa/run_matrix.py all` (run 3) | 104 pass, 16 observations, 3 failures, all checks written for pre-phase-2 behaviour: BND-01 (Unicode is now allowed), REV-05 (the dampener now survives a re-save unless reset), FIX-15 (BUG-05 refuses drafts on link blocks, so the tricky page has fewer than 11 draftable blocks). Checks updated; all 3 pass |
+| Browser (Chrome, PLAT) | byline leads with the state word; review panel why sentence, summary-first card, Show diff; Anchors explainer; dashboard filter, Review action, Anchor this space (cancelled, PLAT kept at 18 of 24); settings Get started, relay status, coding-agent card |
+| MCP (real server, asUser) | tiny link resolves (`resolvedFrom: tinyUrl`, D20 note); a title passed as `pageId` resolves to that page with `citePolicy` |
+
+Found and fixed in this pass:
+- **Exclusions were invisible (R-7).** After "Stop watching", the Anchors tab did not say which files were excluded, and there was no undo (removing and re-adding the anchor in one save keeps the row). Now each anchor shows "Not watching x." with a **Watch all files** button, saved as `clearExclude: true`.
+- **The why sentence appeared twice** on a page with 1 change (header and card). The card now hides it when there is only 1 change.
+
+Flaky once: on the first `resolvers` run right after deploying 4.22.0, a rename record ingested into page 3015468 was counted as a quiet change (`changesSince 1, relevant 0`) instead of flagging. 3 later runs flagged it. Page update events do not touch open events, so the cause is not known. Watch for it in the next full run.
+
 ## Summary
 
 | Layer | Cases | Pass | Fail | Observation |

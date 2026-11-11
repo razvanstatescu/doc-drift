@@ -17,10 +17,28 @@ import ForgeReconciler, {
   useProductContext,
 } from '@forge/react';
 import { invoke, rovo, view } from '@forge/bridge';
-import { COPY, dismissedTitle, snoozedBody, tabLabel, unwatchedBody } from '../shared/copy';
-import { ErrorState, Loading, Notice, SPACE, StateBadge, UnwatchedNotice } from '../shared/components';
+import { COPY, dismissedTitle, snoozedBody, stoppedWatching, tabLabel, unwatchedBody } from '../shared/copy';
+import { CodeText, ErrorState, Loading, Muted, Notice, SPACE, StateBadge, UnwatchedNotice } from '../shared/components';
 import { FIX_NOT_FOUND_BODY, FIX_NOT_FOUND_TITLE, acceptedTitle, fixPrompt, joinList, openProposals, pageOrder, proposalSource, rovoOpenPayload } from '../shared/fix';
-import { capabilities, evidenceLevel, gateNote, headerLine, isConsentError, isViewOnly, reviewEvents, snoozedUntilOf, sortEvents } from '../shared/format';
+import {
+  capabilities,
+  dismissedSinceVerified,
+  evidenceLevel,
+  gateNote,
+  headerLine,
+  isConsentError,
+  isDraftPage,
+  isViewOnly,
+  lastVerifiedLine,
+  plural,
+  quickFixDoneTitle,
+  reviewEvents,
+  snoozedUntilOf,
+  sortEvents,
+  trustLine,
+  usableQuickFixes,
+  verifiedContextLine,
+} from '../shared/format';
 import { AnchorEditor } from './anchors';
 import { ProposedFixSection, ReviewPanel } from './review';
 
@@ -31,6 +49,9 @@ const errorText = (e) => String(e?.message || e || 'Unknown error');
 const failed = (res) => res?.ok === false || Boolean(res?.error);
 const failMessage = (res) => res?.message || res?.error || COPY.tryLater;
 const notFound = (res) => (res?.error === 'not_found' ? { appearance: 'warning', title: FIX_NOT_FOUND_TITLE, body: FIX_NOT_FOUND_BODY } : null);
+// A fresh id per notice remounts it, so its Reload page button takes focus again (UX-8).
+let noticeSeq = 0;
+const withId = (n) => (n ? { id: ++noticeSeq, ...n } : n);
 
 function ConsentNeeded({ onRetry }) {
   return <ErrorState appearance="warning" title={COPY.consentTitle} body={COPY.consentBody} onRetry={onRetry} />;
@@ -42,7 +63,8 @@ const App = () => {
   const [data, setData] = useState(null);
   const [proposals, setProposals] = useState(EMPTY);
   const [loadError, setLoadError] = useState(null);
-  const [notice, setNotice] = useState(null);
+  const [notice, setNoticeRaw] = useState(null);
+  const setNotice = useCallback((n) => setNoticeRaw(withId(n)), []);
   const [busy, setBusy] = useState('');
 
   const load = useCallback(async () => {
@@ -70,7 +92,8 @@ const App = () => {
   }, [load]);
 
   // Runs one write action, then reloads the drift so the panel shows the new state.
-  // `onFail(res)` may return a notice for a known error code; it reloads too, since the data moved.
+  // `success` is a notice, or a function of the result that returns one. `onFail(res)` may return a
+  // notice for a known error code; it reloads too, since the data moved.
   const run = async (key, call, success, onFail) => {
     setBusy(key);
     setNotice(null);
@@ -82,7 +105,7 @@ const App = () => {
         if (known) await load();
         return;
       }
-      setNotice({ appearance: 'success', ...success });
+      setNotice({ appearance: 'success', ...(typeof success === 'function' ? success(res) : success) });
       await load();
     } catch (e) {
       setNotice({ appearance: 'error', title: COPY.actionFailed, body: errorText(e) });
@@ -100,6 +123,14 @@ const App = () => {
   if (!data) return <Loading text={COPY.loadingPage} />;
 
   if (isConsentError(data)) return <ConsentNeeded onRetry={retry} />;
+  // UX-2: drafts are not restricted; the app only reads published pages.
+  if (isDraftPage(data)) {
+    return (
+      <SectionMessage appearance="information" title={COPY.draftTitle}>
+        <Text>{COPY.draftBody}</Text>
+      </SectionMessage>
+    );
+  }
   if (data.error === 'not_visible' || data.error === 'no_page' || data.status === 'unknown' || data.state === 'unknown') {
     return <Text>{COPY.notVisible}</Text>;
   }
@@ -133,6 +164,7 @@ const App = () => {
   const snoozedUntil = snoozedUntilOf(data.snoozedUntil, allEvents);
   const reviewing = events.length > 0;
   const n = events.length;
+  const quickFixes = usableQuickFixes(data.renameQuickFix);
 
   // F11: open Drift Reviewer in Rovo with a prefilled prompt. The agent drafts; it never writes (D6).
   const proposeFix = async () => {
@@ -161,7 +193,7 @@ const App = () => {
 
   const acceptFix = (p) => {
     const source = proposalSource(p, allEvents);
-    return run(`fix:${p.id}`, () => invoke('applyProposal', { proposalId: p.id }), { title: acceptedTitle(source), body: COPY.reloadPage }, notFound);
+    return run(`fix:${p.id}`, () => invoke('applyProposal', { proposalId: p.id }), { title: acceptedTitle(source), body: COPY.reloadPage, reload: true }, notFound);
   };
 
   // D29: a section can have one draft per block. Accept them in page order; stop at the first refusal.
@@ -177,12 +209,25 @@ const App = () => {
         }
         return res;
       },
-      { title: acceptedTitle(source), body: COPY.reloadPage },
+      { title: acceptedTitle(source), body: COPY.reloadPage, reload: true },
       notFound,
     );
   };
 
   const rejectFix = (p) => run(`reject:${p.id}`, () => invoke('rejectProposal', { proposalId: p.id }), { title: COPY.draftRejected, body: '' });
+
+  // R-4: a deterministic rename fix. Edits the page asUser() with a version message (backend).
+  const applyQuickFix = (fix) =>
+    run(`qf:${fix.eventId}`, () => invoke('applyRenameQuickFix', { eventId: fix.eventId }), { title: quickFixDoneTitle(fix), body: COPY.reloadPage, reload: true }, notFound);
+
+  // Header: the page, its state (word and icon), and one line on why. Verified pages also say what
+  // the watch has seen since (R-8); after a dismiss-all they say nobody re-verified (UX-9).
+  const why = state === 'possibly_stale' || state === 'stale' ? data.whySentence : null;
+  const dismissedOnly = state === 'verified' && dismissedSinceVerified(allEvents, data.verifiedAt);
+  const contextLine = state === 'verified' ? verifiedContextLine(data.verifiedContext) : '';
+  const summary = why ? null : dismissedOnly
+    ? `${lastVerifiedLine(data.verifiedBy, data.verifiedAt)} Watching ${plural(bindings.length, 'anchor')}.`
+    : headerLine(state, { events, verifiedBy: data.verifiedBy, verifiedAt: data.verifiedAt, anchorCount: bindings.length, snoozedUntil });
 
   const header = (
     <Stack space={SPACE.row}>
@@ -194,7 +239,15 @@ const App = () => {
         ) : null}
         <StateBadge status={state} />
       </Inline>
-      <Text>{headerLine(state, { events, verifiedBy: data.verifiedBy, verifiedAt: data.verifiedAt, anchorCount: bindings.length, snoozedUntil })}</Text>
+      {why ? (
+        <Stack space={SPACE.tight}>
+          <CodeText text={why} />
+          <Muted>{trustLine(snoozedUntil)}</Muted>
+        </Stack>
+      ) : (
+        <Text>{summary}</Text>
+      )}
+      {contextLine ? <Muted>{contextLine}</Muted> : null}
     </Stack>
   );
 
@@ -217,7 +270,7 @@ const App = () => {
       canEdit={caps.editAnchors}
       gateNote={viewOnly ? '' : gateNote(caps, ['editAnchors'])}
       onSaved={async (msg) => {
-        setNotice({ appearance: 'success', ...msg });
+        setNotice({ appearance: 'success', reload: true, ...msg });
         await load();
       }}
       onError={(msg) => setNotice({ appearance: 'error', ...msg })}
@@ -252,9 +305,13 @@ const App = () => {
       onAcceptSectionFix={acceptAllFix}
       onAcceptAllFix={() => acceptAllFix(pageOrder(proposals), 'all')}
       onRejectFix={rejectFix}
-      onVerify={() => run('verify', () => invoke('markVerified', { pageId }), { title: COPY.verified, body: COPY.reloadBadge })}
-      onSnooze={() => run('snooze', () => invoke('snoozePage', { pageId, days: 7 }), { title: COPY.snoozed, body: `${snoozedBody(n)} ${COPY.reloadBadge}` })}
-      onDismiss={(reason, reasonLabel) =>
+      quickFixes={quickFixes}
+      onQuickFix={applyQuickFix}
+      onVerify={() => run('verify', () => invoke('markVerified', { pageId }), { title: COPY.verified, body: COPY.reloadBadge, reload: true })}
+      onSnooze={() =>
+        run('snooze', () => invoke('snoozePage', { pageId, days: 7 }), { title: COPY.snoozed, body: `${snoozedBody(n)} ${COPY.reloadBadge}`, reload: true })
+      }
+      onDismiss={(reason, reasonLabel, stops = []) =>
         run(
           'dismiss',
           async () => {
@@ -262,9 +319,24 @@ const App = () => {
               const res = await invoke('dismissEvent', { eventId: e.id, reason });
               if (failed(res)) return res;
             }
-            return { ok: true };
+            // R-7: after the dismiss, narrow each chosen anchor. A failure here keeps the dismiss.
+            const stopped = [];
+            const missed = [];
+            for (const t of stops) {
+              try {
+                const res = await invoke('stopWatchingPath', { eventId: t.eventId });
+                (failed(res) ? missed : stopped).push(t.path);
+              } catch {
+                missed.push(t.path);
+              }
+            }
+            return { ok: true, stopped, missed };
           },
-          { title: dismissedTitle(n, reasonLabel), body: COPY.reloadBadge },
+          (res) => ({
+            ...(res.missed?.length ? { appearance: 'warning', title: COPY.stopWatchFailed } : { title: dismissedTitle(n, reasonLabel) }),
+            body: [stoppedWatching(res.stopped || []), COPY.reloadBadge].filter(Boolean).join(' '),
+            reload: true,
+          }),
         )
       }
       onAcceptRename={(p) => run(`accept:${p.id}`, () => invoke('acceptRename', { proposalId: p.id }), { title: `Anchor moved to ${p.to}.`, body: '' })}

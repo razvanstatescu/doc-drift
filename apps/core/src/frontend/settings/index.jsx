@@ -1,12 +1,15 @@
-// Global settings (F13; a plain confluence:globalSettings page): detection (sensitivity, ignore globs, branch filter), watched
-// spaces, escalation and notifications, Jira, the Bitbucket relay connection (ingest URL, secret,
-// connection status) and demo mode. UI Kit components only; copy follows brand/voice-and-copy.md.
+// Global settings (F13; a plain confluence:globalSettings page). Setup comes first (UX-5): a
+// "Get started" checklist (connect the relay, anchor pages, try the demo replay), the Bitbucket relay
+// connection (ingest URL, secret, status) and the coding-agent instructions (R-3). Tuning follows:
+// detection, watched spaces, escalation and notifications, Jira. UI Kit components only; copy follows
+// brand/voice-and-copy.md.
 import React, { useEffect, useState } from 'react';
 import ForgeReconciler, {
   Box,
   Button,
   ButtonGroup,
   Code,
+  CodeBlock,
   ErrorMessage,
   Heading,
   HelperMessage,
@@ -28,6 +31,7 @@ import ForgeReconciler, {
   xcss,
 } from '@forge/react';
 import { invoke } from '@forge/bridge';
+import { AGENT_INSTRUCTION, COPY, MCP_ADD_COMMAND, MCP_URL } from '../shared/copy';
 
 const SENSITIVITY = [
   { name: 'sensitivity', value: 'strict', label: 'Strict: flag at a score of 0.4. More flags, some noise.' },
@@ -52,10 +56,35 @@ function Section({ title, children }) {
   return (
     <Box xcss={sectionStyle}>
       <Stack space="space.150">
-        <Heading size="small">{title}</Heading>
+        <Heading size="small" as="h2">
+          {title}
+        </Heading>
         {children}
       </Stack>
     </Box>
+  );
+}
+
+/** One numbered setup step, with a Done lozenge once the app can tell it happened. */
+function Step({ n, title, done, children }) {
+  return (
+    <Stack space="space.075">
+      <Inline space="space.100" alignBlock="center">
+        <Heading size="xsmall" as="h3">{`${n}. ${title}`}</Heading>
+        {done ? <Lozenge appearance="success">{COPY.stepDone}</Lozenge> : null}
+      </Inline>
+      {children}
+    </Stack>
+  );
+}
+
+/** A notice shown where its action is (UX-8), not at the top of a long page. */
+function Notice({ notice, at }) {
+  if (!notice || (notice.at || 'top') !== at) return null;
+  return (
+    <SectionMessage appearance={notice.appearance} title={notice.title}>
+      {notice.body ? <Text>{notice.body}</Text> : null}
+    </SectionMessage>
   );
 }
 
@@ -137,13 +166,13 @@ const App = () => {
     setErrors((e) => ({ ...e, [key]: undefined }));
   };
 
-  const run = async (name, fn) => {
+  const run = async (name, fn, at = 'top') => {
     setBusy(name);
     setNotice(null);
     try {
       await fn();
     } catch (e) {
-      setNotice({ appearance: 'error', title: 'Something went wrong. Try again.', body: String(e?.message || e) });
+      setNotice({ at, appearance: 'error', title: 'Something went wrong. Try again.', body: String(e?.message || e) });
     } finally {
       setBusy('');
     }
@@ -177,27 +206,31 @@ const App = () => {
   const rotate = () =>
     run('secret', async () => {
       const res = await invoke('rotateSecret');
-      if (!res.ok) return setNotice({ appearance: 'error', title: res.message, body: '' });
+      if (!res.ok) return setNotice({ at: 'relay', appearance: 'error', title: res.message, body: '' });
       setNewSecret(res.secret);
       setData((d) => ({ ...d, secret: res.meta }));
-    });
+    }, 'relay');
 
   const replay = () =>
     run('replay', async () => {
       const res = await invoke('replayDemo');
-      if (!res.ok) return setNotice({ appearance: 'error', title: res.message, body: '' });
+      if (!res.ok) return setNotice({ at: 'demo', appearance: 'error', title: res.message, body: '' });
       setNotice({
+        at: 'demo',
         appearance: 'success',
         title: `Replayed PR #${data.demoPrId}.`,
         body: 'Pages anchored to scripts/rollback.sh or deploy/helm/values.yaml in payments-api update within a minute. Reload a page to see its badge.',
       });
-    });
+    }, 'demo');
 
   const spaceOptions = data.spaces.map((s) => ({ label: `${s.name} (${s.key})`, value: s.key }));
   // Keep saved keys that the listing did not return (archived or not visible), so they are not lost.
   for (const key of form.spaceKeys) if (!spaceOptions.some((o) => o.value === key)) spaceOptions.push({ label: key, value: key });
   const selectedSpaces = spaceOptions.filter((o) => form.spaceKeys.includes(o.value));
   const conn = data.connection;
+  const connected = Boolean(conn.lastPingAt || conn.lastRecord);
+  // Optional from the resolver; without it, step 2 never shows Done.
+  const anchoredPages = Number(data.anchoredPages ?? data.stats?.anchoredPages ?? 0) || 0;
   const errorCount = Object.values(errors).filter(Boolean).length;
 
   return (
@@ -207,11 +240,95 @@ const App = () => {
         to trust. These settings apply to the next change it receives.
       </Text>
 
-      {notice ? (
-        <SectionMessage appearance={notice.appearance} title={notice.title}>
-          {notice.body ? <Text>{notice.body}</Text> : null}
-        </SectionMessage>
-      ) : null}
+      <Section title={COPY.getStarted}>
+        <Step n={1} title="Connect the Bitbucket relay" done={connected}>
+          <Text>
+            {connected
+              ? 'The relay is sending merged pull requests. Details are under Bitbucket relay below.'
+              : 'Install the Doc Drift Sentinel Bitbucket relay in your workspace. Paste the ingest URL and a secret from Bitbucket relay below into its settings, then send a test ping.'}
+          </Text>
+        </Step>
+        <Step n={2} title="Anchor pages" done={anchoredPages > 0}>
+          <Text>
+            Open a page and click its Doc Drift badge to link it to the code paths and Jira issues it describes. To anchor many pages at once, open a
+            space's Drift dashboard and use Anchor this space.
+          </Text>
+        </Step>
+        <Step n={3} title="Try the demo replay" done={false}>
+          <Text>
+            Replays seeded PR #{data.demoPrId} from <Code>payments-api</Code>: <Code>scripts/rollback.sh</Code> renamed to <Code>scripts/rollback-v2.sh</Code>,
+            and <Code>ROLLBACK_TIMEOUT</Code> renamed to <Code>ROLLBACK_TIMEOUT_SECS</Code>. It runs through the same path as the relay, with no Bitbucket
+            needed.
+          </Text>
+          <ButtonGroup>
+            <LoadingButton isLoading={busy === 'replay'} onClick={replay}>
+              {`Replay seeded PR #${data.demoPrId}`}
+            </LoadingButton>
+          </ButtonGroup>
+          <Notice notice={notice} at="demo" />
+        </Step>
+      </Section>
+
+      <Section title="Bitbucket relay">
+        <Inline space="space.100" alignBlock="center">
+          <Lozenge appearance={connected ? 'success' : 'default'}>{connected ? 'Connected' : 'Not connected'}</Lozenge>
+          {conn.workspaceUuid ? (
+            <Text>
+              Workspace <Code>{conn.workspaceUuid}</Code>
+            </Text>
+          ) : null}
+        </Inline>
+        <Stack space="space.050">
+          <Text>{conn.lastPingAt ? `Last test ping: ${dateTime(conn.lastPingAt)}` : 'No test ping yet. Use Send test ping in the relay settings.'}</Text>
+          <Text>
+            {conn.lastRecord
+              ? `Last change: ${conn.lastRecord.repo ?? 'unknown repo'}${conn.lastRecord.prId ? ` PR #${conn.lastRecord.prId}` : ''}, ${dateTime(conn.lastRecord.receivedAt)}. ${plural(conn.records30d, 'change')} in the last 30 days.`
+              : 'No merged pull requests received yet.'}
+          </Text>
+          {conn.repos.length > 0 ? (
+            <Text>{`Repositories seen: ${conn.repos.map((r) => r.repo).join(', ')}`}</Text>
+          ) : null}
+        </Stack>
+        <Text>Install the Doc Drift Sentinel Bitbucket relay in your workspace, then paste this URL and the secret into its settings.</Text>
+        <Heading size="xxsmall" as="h3">Ingest URL</Heading>
+        <CodeBlock text={String(data.ingestUrl || '')} language="text" shouldWrapLongLines />
+        <Heading size="xxsmall" as="h3">Relay secret</Heading>
+        {data.secret ? (
+          <Text>
+            Set on {new Date(data.secret.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}. Fingerprint{' '}
+            <Code>{data.secret.fingerprint}</Code>
+          </Text>
+        ) : (
+          <Text>No secret yet. The ingest URL rejects every request until you generate one.</Text>
+        )}
+        {newSecret ? (
+          <SectionMessage appearance="warning" title="Copy this secret now. It is shown only once.">
+            <Code>{newSecret}</Code>
+          </SectionMessage>
+        ) : null}
+        <ButtonGroup>
+          <LoadingButton isLoading={busy === 'secret'} onClick={rotate}>
+            {data.secret ? 'Rotate secret' : 'Generate secret'}
+          </LoadingButton>
+        </ButtonGroup>
+        {data.secret ? <HelperMessage>Rotating stops the old secret at once. Update the relay right after.</HelperMessage> : null}
+        <Notice notice={notice} at="relay" />
+      </Section>
+
+
+      <Section title={COPY.forCodingAgents}>
+        <Text>
+          Paste this into CLAUDE.md or AGENTS.md. Coding agents then check a page before they rely on it, and trust the code when the two disagree.
+        </Text>
+        <CodeBlock text={AGENT_INSTRUCTION} language="text" shouldWrapLongLines />
+        <Heading size="xxsmall" as="h3">MCP server URL</Heading>
+        <CodeBlock text={MCP_URL} language="text" shouldWrapLongLines />
+        <Heading size="xxsmall" as="h3">Add it to Claude Code</Heading>
+        <CodeBlock text={MCP_ADD_COMMAND} language="bash" shouldWrapLongLines />
+        <HelperMessage>Agents read as the signed-in person, so they only see pages that person can view.</HelperMessage>
+      </Section>
+
+      <Notice notice={notice} at="top" />
 
       <Section title="Detection">
         <Field>
@@ -349,63 +466,6 @@ const App = () => {
         {errorCount > 0 ? <ErrorMessage>{`${plural(errorCount, 'setting')} ${errorCount === 1 ? 'needs' : 'need'} a fix. Nothing was saved.`}</ErrorMessage> : null}
       </Stack>
 
-      <Section title="Bitbucket relay">
-        <Inline space="space.100" alignBlock="center">
-          <Lozenge appearance={conn.lastPingAt || conn.lastRecord ? 'success' : 'default'}>{conn.lastPingAt || conn.lastRecord ? 'Connected' : 'Not connected'}</Lozenge>
-          {conn.workspaceUuid ? (
-            <Text>
-              Workspace <Code>{conn.workspaceUuid}</Code>
-            </Text>
-          ) : null}
-        </Inline>
-        <Stack space="space.050">
-          <Text>{conn.lastPingAt ? `Last test ping: ${dateTime(conn.lastPingAt)}` : 'No test ping yet. Use Send test ping in the relay settings.'}</Text>
-          <Text>
-            {conn.lastRecord
-              ? `Last change: ${conn.lastRecord.repo ?? 'unknown repo'}${conn.lastRecord.prId ? ` PR #${conn.lastRecord.prId}` : ''}, ${dateTime(conn.lastRecord.receivedAt)}. ${plural(conn.records30d, 'change')} in the last 30 days.`
-              : 'No merged pull requests received yet.'}
-          </Text>
-          {conn.repos.length > 0 ? (
-            <Text>{`Repositories seen: ${conn.repos.map((r) => r.repo).join(', ')}`}</Text>
-          ) : null}
-        </Stack>
-        <Text>Install the Doc Drift Sentinel Bitbucket relay in your workspace, then paste this URL and the secret into its settings.</Text>
-        <Heading size="xxsmall">Ingest URL</Heading>
-        <Code>{data.ingestUrl}</Code>
-        <Heading size="xxsmall">Relay secret</Heading>
-        {data.secret ? (
-          <Text>
-            Set on {new Date(data.secret.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}. Fingerprint{' '}
-            <Code>{data.secret.fingerprint}</Code>
-          </Text>
-        ) : (
-          <Text>No secret yet. The ingest URL rejects every request until you generate one.</Text>
-        )}
-        {newSecret ? (
-          <SectionMessage appearance="warning" title="Copy this secret now. It is shown only once.">
-            <Code>{newSecret}</Code>
-          </SectionMessage>
-        ) : null}
-        <ButtonGroup>
-          <LoadingButton isLoading={busy === 'secret'} onClick={rotate}>
-            {data.secret ? 'Rotate secret' : 'Generate secret'}
-          </LoadingButton>
-        </ButtonGroup>
-        {data.secret ? <HelperMessage>Rotating stops the old secret at once. Update the relay right after.</HelperMessage> : null}
-      </Section>
-
-      <Section title="Demo mode">
-        <Text>
-          Replays seeded PR #{data.demoPrId} from <Code>payments-api</Code>: <Code>scripts/rollback.sh</Code> renamed to <Code>scripts/rollback-v2.sh</Code>,
-          and <Code>ROLLBACK_TIMEOUT</Code> renamed to <Code>ROLLBACK_TIMEOUT_SECS</Code>. It runs through the same path as the relay, with no Bitbucket
-          needed.
-        </Text>
-        <ButtonGroup>
-          <LoadingButton isLoading={busy === 'replay'} onClick={replay}>
-            Replay seeded change
-          </LoadingButton>
-        </ButtonGroup>
-      </Section>
     </Stack>
   );
 };

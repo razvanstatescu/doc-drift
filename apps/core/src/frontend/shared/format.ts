@@ -564,3 +564,187 @@ export function anchorInputError(a: AnchorInput): FieldError | null {
   if (!balanced(pattern)) return { field: 'pattern', message: 'Close every bracket, brace or parenthesis in the glob.' };
   return null;
 }
+
+// ---------------------------------------------------------------------------
+// Phase 2 (Track B): why sentences, verified context, drafts, diffs, dashboard sort and filter
+// ---------------------------------------------------------------------------
+
+export interface InlinePart {
+  kind: 'text' | 'code';
+  text: string;
+}
+
+/**
+ * Splits a backend sentence on backticks so paths and identifiers render in code style:
+ * "PR #482 renamed `scripts/rollback.sh`." -> text, code, text. Unpaired backticks stay as text.
+ */
+export function inlineCodeParts(text: string | null | undefined): InlinePart[] {
+  const s = String(text ?? '');
+  if (!s) return [];
+  const pieces = s.split('`');
+  if (pieces.length % 2 === 0) return [{ kind: 'text', text: s }];
+  return pieces.map((t, i): InlinePart => ({ kind: i % 2 === 1 ? 'code' : 'text', text: t })).filter((p) => p.text !== '');
+}
+
+/** A sentence without its backticks, for plain-string slots (titles, labels). */
+export function plainSentence(text: string | null | undefined): string {
+  return String(text ?? '').replace(/`/g, '');
+}
+
+export interface VerifiedContext {
+  changesSince?: number | null;
+  relevant?: number | null;
+}
+
+/**
+ * R-8: shows the watch is working on a Verified page.
+ * "12 changes to anchored code since, none flagged." or "No changes to anchored code since.";
+ * '' when the resolver sent no count.
+ */
+export function verifiedContextLine(ctx: VerifiedContext | null | undefined): string {
+  if (!ctx || typeof ctx.changesSince !== 'number' || !Number.isFinite(ctx.changesSince) || ctx.changesSince < 0) return '';
+  const n = Math.floor(ctx.changesSince);
+  if (n === 0) return 'No changes to anchored code since.';
+  const relevant = typeof ctx.relevant === 'number' && ctx.relevant > 0 ? Math.floor(ctx.relevant) : 0;
+  return `${plural(n, 'change')} to anchored code since, ${relevant === 0 ? 'none' : String(relevant)} flagged.`;
+}
+
+/**
+ * UX-9: after every change is dismissed the page reads Verified again, but nobody re-verified it.
+ * True when a dismissed event closed after the last verification.
+ */
+export function dismissedSinceVerified(
+  events: { status?: string; dismissedAt?: TimeLike; closedAt?: TimeLike; at?: TimeLike }[] | null | undefined,
+  verifiedAt: TimeLike,
+): boolean {
+  const v = toMs(verifiedAt);
+  return (events ?? []).some((e) => {
+    if (e.status !== 'dismissed') return false;
+    const ms = toMs(e.dismissedAt ?? e.closedAt ?? e.at);
+    return ms !== null && (v === null || ms > v);
+  });
+}
+
+/** "No open changes. Last verified by Dana, 4 hours ago." (UX-9) */
+export function lastVerifiedLine(verifiedBy: { displayName?: string } | null | undefined, verifiedAt: TimeLike, now: number = Date.now()): string {
+  const when = relativeTime(verifiedAt, now);
+  const who = verifiedBy?.displayName ? ` by ${verifiedBy.displayName}` : '';
+  if (!when && !who) return 'No open changes.';
+  return `No open changes. Last verified${who}${when ? `, ${midSentence(when)}` : ''}.`;
+}
+
+/** UX-2: Doc Drift reads published pages only. Tolerates the old and new resolver shapes. */
+export function isDraftPage(d: Record<string, unknown> | null | undefined): boolean {
+  if (!d) return false;
+  const page = d.page as { status?: unknown } | null | undefined;
+  return page?.status === 'draft' || d.draft === true || d.error === 'draft' || d.pageStatus === 'draft';
+}
+
+const GIT_HEADER =
+  /^(diff --git |index [0-9a-f]+\.\.[0-9a-f]+|similarity index |dissimilarity index |rename from |rename to |copy from |copy to |old mode |new mode |new file mode |deleted file mode |--- (a\/|\/dev\/null)|Binary files )/;
+
+/** UX-4: drops git plumbing (`diff --git`, `index`, `similarity`, `--- a/`) and keeps `+++` file headers and hunks. */
+export function stripGitHeaders(text: string | null | undefined): string {
+  return String(text ?? '')
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .filter((line) => !GIT_HEADER.test(line))
+    .join('\n')
+    .replace(/^\n+/, '');
+}
+
+/** Second line under a why sentence: "Snoozed until Nov 18. Agents are told not to trust this page until someone reviews it." */
+export function trustLine(snoozedUntil: number | null | undefined, now: number = Date.now()): string {
+  const snooze = snoozedUntil && snoozedUntil > now ? `Snoozed until ${absoluteDate(snoozedUntil, now)}. ` : '';
+  return `${snooze}Agents are told not to trust this page until someone reviews it.`;
+}
+
+export interface StopWatchTarget {
+  eventId: string;
+  path: string;
+}
+
+/**
+ * R-7: one "Stop watching `path` for this page" option per distinct anchored path among the
+ * events being dismissed. Jira events and events without an anchor are left out.
+ */
+export function stopWatchTargets(
+  events: { id: string; source?: string; anchor?: string | null; watchPath?: string | null }[] | null | undefined,
+): StopWatchTarget[] {
+  const seen = new Set<string>();
+  const out: StopWatchTarget[] = [];
+  for (const e of events ?? []) {
+    if (e.source === 'jira') continue;
+    const path = (e.watchPath || e.anchor || '').trim();
+    if (!path || seen.has(path)) continue;
+    seen.add(path);
+    out.push({ eventId: e.id, path });
+  }
+  return out;
+}
+
+export interface RenameQuickFix {
+  eventId: string;
+  from: string;
+  to: string;
+  blocks?: number | unknown[] | null;
+}
+
+/** How many places a rename quick fix edits: `blocks` is a count or a list of blocks. */
+export function quickFixPlaces(fix: Pick<RenameQuickFix, 'blocks'>): number {
+  const b = fix.blocks;
+  if (Array.isArray(b)) return b.length;
+  return typeof b === 'number' && Number.isFinite(b) && b > 0 ? Math.floor(b) : 0;
+}
+
+/** Usable quick fixes only: both names present and different. */
+export function usableQuickFixes<T extends RenameQuickFix>(list: T[] | null | undefined): T[] {
+  return (list ?? []).filter((f) => f && f.eventId && f.from && f.to && f.from !== f.to);
+}
+
+/** "Replaced scripts/rollback.sh with scripts/rollback-v2.sh in 2 places." */
+export function quickFixDoneTitle(fix: RenameQuickFix): string {
+  const n = quickFixPlaces(fix);
+  return `Replaced ${fix.from} with ${fix.to}${n ? ` in ${plural(n, 'place')}` : ''}.`;
+}
+
+/** "Replace in 2 places" (the quick-fix button). */
+export function quickFixButton(fix: Pick<RenameQuickFix, 'blocks'>): string {
+  const n = quickFixPlaces(fix);
+  return n ? `Replace in ${plural(n, 'place')}` : 'Replace';
+}
+
+export type StateFilter = 'all' | 'possibly_stale' | 'stale';
+
+export const STATE_FILTERS: { label: string; value: StateFilter }[] = [
+  { label: 'All drifted pages', value: 'all' },
+  { label: 'Possibly stale', value: 'possibly_stale' },
+  { label: 'Stale', value: 'stale' },
+];
+
+/** UX-7: the dashboard's state filter. Anything but a drift state keeps every page. */
+export function filterPagesByState<T extends Pick<DashboardPage, 'status'>>(pages: T[], filter: string | null | undefined): T[] {
+  if (filter !== 'possibly_stale' && filter !== 'stale') return [...pages];
+  return pages.filter((p) => p.status === filter);
+}
+
+/**
+ * Sort values for the dashboard's DynamicTable. ADS sorts on each cell's `key`, and UI Kit also uses
+ * it as the React key inside a row, so each key carries its column as a prefix. The ADS collator is
+ * numeric, so `open:12` sorts after `open:3`.
+ */
+export function pageSortKeys(
+  p: DashboardPage & { lastChangeAt?: TimeLike },
+): Record<'page' | 'state' | 'severity' | 'open' | 'since' | 'owner' | 'review', string> {
+  const sev = normalizeSeverity(p.maxSeverity);
+  return {
+    page: `page:${(p.title || '').toLowerCase()}:${p.pageId}`,
+    state: `state:${STATUS_RANK[p.status] ?? 0}`,
+    severity: `severity:${sev ? SEVERITY_RANK[sev] : 0}`,
+    open: `open:${p.openEvents ?? 0}`,
+    // Ascending is oldest first; pages with no time sort last.
+    since: `since:${toMs(p.since ?? p.lastChangeAt) ?? 9_999_999_999_999}`,
+    owner: `owner:${(p.ownerName || '').toLowerCase() || '~'}`,
+    review: `review:${p.pageId}`,
+  };
+}

@@ -1,15 +1,21 @@
 // Space dashboard (F8, UX flow 6), `confluence:spacePage` "Drift dashboard": KPI tiles, the pages
-// with drift ranked by severity, and the owner backlog. The space key comes from the module context.
+// with drift ranked by severity (sortable, filterable by state, a Review link per row), the owner
+// backlog, and "Anchor this space" (R-1). The space key comes from the module context.
 import React, { useCallback, useEffect, useState } from 'react';
 import ForgeReconciler, {
   Box,
+  Button,
   DynamicTable,
   EmptyState,
   Heading,
+  HelperMessage,
   Icon,
   Inline,
+  Label,
   Link,
+  LinkButton,
   SectionMessage,
+  Select,
   Stack,
   Text,
   User,
@@ -20,18 +26,22 @@ import { invoke } from '@forge/bridge';
 import { COPY, dashboardTitle, noAnchoredPages, pagesTableLabel, unwatchedBody } from '../shared/copy';
 import { ErrorState, Loading, Muted, SPACE, SeverityLozenge, StateBadge, UnwatchedNotice } from '../shared/components';
 import {
+  STATE_FILTERS,
   anchoredPctText,
   anchoredText,
   driftedPages,
   emptyDashboardText,
+  filterPagesByState,
   isConsentError,
   medianText,
+  pageSortKeys,
   plural,
   relativeTime,
   sortOwners,
   sortPages,
   stateMeta,
 } from '../shared/format';
+import { AnchorSpaceFlow } from './anchor-space';
 
 // Responsive KPI tiles: `Grid` is not exported by @forge/react 12.5.0 and xcss has no flexBasis, so
 // tiles grow to share a row and wrap below 200 px each.
@@ -69,19 +79,23 @@ function Tile({ label, value, detail, status }) {
   );
 }
 
+const filterStyle = xcss({ maxWidth: '240px' });
+
 function Owner({ ownerId, ownerName }) {
   if (ownerId) return <User accountId={ownerId} />;
   return <Text>{ownerName || COPY.noOwner}</Text>;
 }
 
+// UX-7: every column but the action sorts. Rows arrive in rank order, so no default sort key.
 const PAGE_HEAD = {
   cells: [
-    { key: 'page', content: 'Page' },
-    { key: 'state', content: 'State' },
-    { key: 'severity', content: 'Severity' },
-    { key: 'open', content: 'Open changes' },
-    { key: 'since', content: 'Since' },
-    { key: 'owner', content: 'Owner' },
+    { key: 'page', content: 'Page', isSortable: true },
+    { key: 'state', content: 'State', isSortable: true },
+    { key: 'severity', content: 'Severity', isSortable: true },
+    { key: 'open', content: 'Open changes', isSortable: true },
+    { key: 'since', content: 'Since', isSortable: true },
+    { key: 'owner', content: 'Owner', isSortable: true },
+    { key: 'review', content: 'Action' },
   ],
 };
 
@@ -97,11 +111,13 @@ const App = () => {
   const spaceKey = context?.extension?.space?.key || null;
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [filter, setFilter] = useState('all');
+  const [anchoring, setAnchoring] = useState(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async ({ quiet = false } = {}) => {
     if (!spaceKey) return;
     setError(null);
-    setData(null);
+    if (!quiet) setData(null);
     try {
       const res = await invoke('getSpaceDashboard', { spaceKey });
       if (res?.ok === false || res?.error) setError(res);
@@ -136,9 +152,9 @@ const App = () => {
       <Stack space={SPACE.group}>
         {heading}
         {isConsentError(error) ? (
-          <ErrorState appearance="warning" title={COPY.consentTitle} body={COPY.consentBody} onRetry={load} />
+          <ErrorState appearance="warning" title={COPY.consentTitle} body={COPY.consentBody} onRetry={() => load()} />
         ) : (
-          <ErrorState title={COPY.dashboardFailed} body={body} onRetry={load} />
+          <ErrorState title={COPY.dashboardFailed} body={body} onRetry={() => load()} />
         )}
       </Stack>
     );
@@ -168,6 +184,31 @@ const App = () => {
   const space = data.space || (typeof data.watched === 'boolean' ? { key: spaceKey, watched: data.watched } : null);
   const unwatched = <UnwatchedNotice space={space} body={unwatchedBody(spaceKey)} />;
 
+  // R-1: offered while pages are unanchored. `canAnchorSpace: false` explains the refusal up front;
+  // otherwise the resolver's permission check answers when the flow loads.
+  const unanchored = kpis.total > 0 ? Math.max(0, kpis.total - kpis.anchored) : null;
+  const canAnchor = data.canAnchorSpace !== false;
+  const anchorFlow = anchoring ? (
+    <AnchorSpaceFlow spaceKey={spaceKey} onClose={() => setAnchoring(false)} onSaved={() => load({ quiet: true })} />
+  ) : null;
+  const anchorEntry =
+    !anchoring && unanchored !== 0 ? (
+      <Stack space={SPACE.tight}>
+        <Inline>
+          <Button appearance={kpis.anchored === 0 ? 'primary' : 'default'} isDisabled={!canAnchor} onClick={() => setAnchoring(true)}>
+            {COPY.anchorSpace}
+          </Button>
+        </Inline>
+        <HelperMessage>
+          {canAnchor
+            ? unanchored
+              ? `${plural(unanchored, 'page')} in ${spaceKey} ${unanchored === 1 ? 'is' : 'are'} not anchored. Get suggestions for all of them at once.`
+              : 'Get anchor suggestions for every unanchored page at once.'
+            : `${COPY.anchorSpaceForbidden} ${COPY.anchorSpaceForbiddenBody}`}
+        </HelperMessage>
+      </Stack>
+    ) : null;
+
   const tiles = (
     <Inline space={SPACE.group} rowSpace={SPACE.group} alignBlock="stretch" shouldWrap>
       <Tile label={COPY.kpiAnchored} value={anchoredText(kpis)} detail={kpis.total > 0 ? `${anchoredPctText(kpis)} of the space` : null} />
@@ -182,7 +223,12 @@ const App = () => {
       <Stack space={SPACE.section}>
         {heading}
         {unwatched}
-        <EmptyState header={noAnchoredPages(spaceKey)} description={COPY.emptyAnchoredBody} headingLevel={2} />
+        {anchorFlow || (
+          <Stack space={SPACE.group}>
+            <EmptyState header={noAnchoredPages(spaceKey)} description={COPY.emptyAnchoredBody} headingLevel={2} />
+            {anchorEntry}
+          </Stack>
+        )}
       </Stack>
     );
   }
@@ -200,22 +246,31 @@ const App = () => {
         {intro}
         {unwatched}
         {tiles}
+        {anchorFlow || anchorEntry}
         <EmptyState header={emptyDashboardText(spaceKey, kpis)} description={COPY.emptyDriftBody} headingLevel={2} />
       </Stack>
     );
   }
 
-  const pageRows = pages.map((p) => ({
-    key: String(p.pageId),
-    cells: [
-      { key: 'page', content: p.url ? <Link href={p.url}>{p.title}</Link> : <Text>{p.title}</Text> },
-      { key: 'state', content: <StateBadge status={p.status} /> },
-      { key: 'severity', content: <SeverityLozenge severity={p.maxSeverity} /> },
-      { key: 'open', content: <Text>{String(p.openEvents ?? 0)}</Text> },
-      { key: 'since', content: <Text>{relativeTime(p.since, now)}</Text> },
-      { key: 'owner', content: <Owner ownerId={p.ownerId} ownerName={p.ownerName} /> },
-    ],
-  }));
+  const shown = filterPagesByState(pages, filter);
+  // Cell `key`s are the sort values (see pageSortKeys). Review opens the page, where the badge
+  // opens the review panel.
+  const pageRows = shown.map((p) => {
+    const k = pageSortKeys(p);
+    return {
+      key: String(p.pageId),
+      cells: [
+        { key: k.page, content: p.url ? <Link href={p.url}>{p.title}</Link> : <Text>{p.title}</Text> },
+        { key: k.state, content: <StateBadge status={p.status} /> },
+        { key: k.severity, content: <SeverityLozenge severity={p.maxSeverity} /> },
+        { key: k.open, content: <Text>{String(p.openEvents ?? 0)}</Text> },
+        { key: k.since, content: <Text>{relativeTime(p.since ?? p.lastChangeAt, now)}</Text> },
+        { key: k.owner, content: <Owner ownerId={p.ownerId} ownerName={p.ownerName} /> },
+        { key: k.review, content: p.url ? <LinkButton href={p.url}>{COPY.review}</LinkButton> : '' },
+      ],
+    };
+  });
+  const filterValue = STATE_FILTERS.find((f) => f.value === filter) || STATE_FILTERS[0];
 
   const ownerRows = owners.map((o, i) => ({
     key: String(o.ownerId || `none-${i}`),
@@ -230,12 +285,23 @@ const App = () => {
       {intro}
       {unwatched}
       {tiles}
+      {anchorFlow || anchorEntry}
       <Stack space={SPACE.row}>
         <Heading size="medium" as="h2">
           {COPY.pagesWithDrift}
         </Heading>
         <Muted>{COPY.rankedBy}</Muted>
-        <DynamicTable label={pagesTableLabel(spaceKey)} head={PAGE_HEAD} rows={pageRows} rowsPerPage={10} />
+        <Stack space={SPACE.tight}>
+          <Label labelFor="dds-state-filter">{COPY.stateFilter}</Label>
+          <Box xcss={filterStyle}>
+            <Select inputId="dds-state-filter" options={STATE_FILTERS} value={filterValue} onChange={(o) => setFilter(o?.value || 'all')} />
+          </Box>
+        </Stack>
+        {shown.length ? (
+          <DynamicTable label={pagesTableLabel(spaceKey)} head={PAGE_HEAD} rows={pageRows} rowsPerPage={10} />
+        ) : (
+          <Text>{COPY.noFilterMatch}</Text>
+        )}
       </Stack>
       {owners.length ? (
         <Stack space={SPACE.row}>

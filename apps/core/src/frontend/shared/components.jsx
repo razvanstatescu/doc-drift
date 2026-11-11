@@ -1,9 +1,11 @@
 // Shared UI Kit pieces for the byline modal and the space dashboard: state and severity lozenges,
 // the spacing scale, section headings, and the loading, error and notice states.
 import React from 'react';
-import { Box, Heading, Icon, Inline, Lozenge, SectionMessage, SectionMessageAction, Spinner, Stack, Text, xcss } from '@forge/react';
+import { Box, Button, Checkbox, Code, Heading, Icon, Inline, Label, Lozenge, SectionMessage, SectionMessageAction, Spinner, Stack, Text, xcss } from '@forge/react';
+import { suggestionDisplay, suggestionStrength } from './suggest';
+import { router } from '@forge/bridge';
 import { COPY } from './copy';
-import { normalizeSeverity, severityAppearance, severityLabel, stateMeta } from './format';
+import { inlineCodeParts, normalizeSeverity, severityAppearance, severityLabel, stateMeta } from './format';
 
 /**
  * One spacing scale for every surface (ADS space tokens on the 4 px grid):
@@ -25,6 +27,8 @@ export const cardStyle = xcss({
   borderWidth: 'border.width',
   borderRadius: 'radius.medium',
   padding: 'space.150',
+  // Cards without a diff must not shrink to their content (UX review persona 3).
+  width: '100%',
 });
 
 /**
@@ -97,13 +101,48 @@ export function ErrorState({ title, body, onRetry, appearance = 'error' }) {
   );
 }
 
-/** The result of the last action (success, warning or error). */
+/** Reloads the Confluence page around the app, so the byline reads its new content property. */
+export async function reloadHost() {
+  try {
+    await router.reload();
+  } catch {
+    // Nothing else to do: the notice already says to reload.
+  }
+}
+
+/**
+ * The result of the last action (success, warning or error). With `notice.reload`, it carries a
+ * Reload page button that takes focus when it appears (UX-8), so the result is scrolled into view
+ * wherever the click happened. Pass a fresh `notice.id` per action so the button mounts again.
+ */
 export function Notice({ notice }) {
   if (!notice) return null;
   return (
-    <SectionMessage appearance={notice.appearance} title={notice.title}>
-      {notice.body ? <Text>{notice.body}</Text> : null}
+    <SectionMessage key={notice.id} appearance={notice.appearance} title={notice.title}>
+      {notice.body || notice.reload ? (
+        <Stack space={SPACE.row}>
+          {notice.body ? <Text>{notice.body}</Text> : null}
+          {notice.reload ? (
+            <Inline>
+              <Button autoFocus onClick={reloadHost}>
+                {COPY.reloadButton}
+              </Button>
+            </Inline>
+          ) : null}
+        </Stack>
+      ) : null}
     </SectionMessage>
+  );
+}
+
+/** A backend sentence with `backticked` literals in code style (why sentences, reasons). */
+export function CodeText({ text, size, color }) {
+  const parts = inlineCodeParts(text);
+  if (!parts.length) return null;
+  return (
+    <Text size={size} color={color}>
+      {parts.map((p, i) => (p.kind === 'code' ? <Code key={i}>{p.text}</Code> : <React.Fragment key={i}>{p.text}</React.Fragment>))}
+    </Text>
   );
 }
 
@@ -127,3 +166,23 @@ export function UnwatchedNotice({ space, body }) {
     </SectionMessage>
   );
 }
+/**
+ * One suggestion: a checkbox labelled with the literal in code style (UX-10), a short note, and a
+ * Weak lozenge for suggestions that start unchecked. The label is a separate `Label` because a
+ * Checkbox label in UI Kit is a plain string.
+ */
+export function SuggestionRow({ id, suggestion, typedRepo = '', isChecked, isDisabled, onChange }) {
+  const d = suggestionDisplay(suggestion, typedRepo);
+  const weak = suggestionStrength(suggestion) === 'weak';
+  return (
+    <Inline space={SPACE.tight} alignBlock="center" shouldWrap>
+      <Checkbox id={id} value={suggestion.key} isChecked={isChecked} isDisabled={isDisabled} onChange={(e) => onChange(Boolean(e?.target?.checked))} />
+      <Label labelFor={id}>
+        <Code>{d.code}</Code>
+        {d.note ? ` ${d.note}` : ''}
+      </Label>
+      {weak ? <Lozenge>{COPY.weak}</Lozenge> : null}
+    </Inline>
+  );
+}
+

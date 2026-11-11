@@ -6,6 +6,7 @@ import {
   Box,
   Button,
   ButtonGroup,
+  Checkbox,
   Code,
   CodeBlock,
   Heading,
@@ -20,15 +21,29 @@ import {
   Strong,
   Text,
 } from '@forge/react';
-import { COPY, acceptAllHelp, dismissConfirm, dismissHelp, showAll } from '../shared/copy';
-import { Muted, Notice, SPACE, Section, SeverityLozenge, cardStyle } from '../shared/components';
+import { COPY, acceptAllHelp, dismissConfirm, dismissHelp, quickFixSource, showAll } from '../shared/copy';
+import { CodeText, Muted, Notice, SPACE, Section, SeverityLozenge, cardStyle } from '../shared/components';
 import { excerptBlocks } from '../shared/excerpt';
 import { PROPOSE_FIX_HELP, diffText, fixAttribution, groupBySection, proposalSource } from '../shared/fix';
-import { DISMISS_REASONS, clipLines, compactFile, gateNote, isViewOnly, jiraChangeLines, plural, refLabel, relativeTime } from '../shared/format';
+import {
+  DISMISS_REASONS,
+  clipLines,
+  compactFile,
+  gateNote,
+  isViewOnly,
+  jiraChangeLines,
+  plural,
+  quickFixButton,
+  quickFixPlaces,
+  refLabel,
+  relativeTime,
+  stopWatchTargets,
+  stripGitHeaders,
+} from '../shared/format';
 
 const MAX_FILES = 5;
 const MAX_EVENTS = 5;
-const MAX_DIFF_LINES = 40;
+const MAX_DIFF_LINES = 30;
 
 function FileLine({ file }) {
   const f = compactFile(file);
@@ -50,9 +65,12 @@ function FileLine({ file }) {
   );
 }
 
-/** D30: hunks only reach editors (`evidenceLevel: 'full'`). Long hunks are clipped, not scrolled. */
+/**
+ * D30: hunks only reach editors (`evidenceLevel: 'full'`). UX-4: the diff sits behind Show diff,
+ * without git plumbing lines, and long hunks are clipped, not scrolled.
+ */
 function DiffPreview({ text }) {
-  const clip = clipLines(text, MAX_DIFF_LINES);
+  const clip = clipLines(stripGitHeaders(text), MAX_DIFF_LINES);
   if (!clip.text) return null;
   return (
     <Stack space={SPACE.tight}>
@@ -62,8 +80,12 @@ function DiffPreview({ text }) {
   );
 }
 
-/** One change: ref, who and when on the left, severity on the right; files compact; reasons muted. */
+/**
+ * One change, summary first (UX-4): ref, who and when, severity; the why sentence; the files as a
+ * compact list; the anchor; the reasons. The raw diff waits behind Show diff.
+ */
 function EventRow({ event, now, evidence }) {
+  const [showDiff, setShowDiff] = useState(false);
   const isJira = event.source === 'jira';
   const when = relativeTime(event.at, now);
   const ref = refLabel(event.ref || '', event.source);
@@ -84,6 +106,7 @@ function EventRow({ event, now, evidence }) {
             <SeverityLozenge severity={event.severity} />
           </Inline>
         </Inline>
+        {event.whySentence ? <CodeText text={event.whySentence} /> : null}
         {!isJira && event.title ? <Text color="color.text.subtle">{event.title}</Text> : null}
         {!isJira && files.length ? (
           <Stack space="space.025">
@@ -99,8 +122,13 @@ function EventRow({ event, now, evidence }) {
             Anchor <Code>{event.anchor}</Code>
           </Text>
         ) : null}
-        {event.reasons?.length ? <Muted tone="subtlest">{event.reasons.join(' · ')}</Muted> : null}
-        {hunks ? <DiffPreview text={hunks} /> : null}
+        {event.reasons?.length && !event.whySentence ? (
+          <Stack space="space.025">
+            {event.reasons.map((r, i) => (
+              <CodeText key={i} text={r} size="small" color="color.text.subtlest" />
+            ))}
+          </Stack>
+        ) : null}
         {isJira && event.changelog?.length
           ? jiraChangeLines(event.changelog).map((line, i) => (
               <Text key={i} size="small" maxLines={3}>
@@ -108,11 +136,21 @@ function EventRow({ event, now, evidence }) {
               </Text>
             ))
           : null}
-        {event.url ? (
-          <Text size="small">
-            <Link href={event.url} openNewTab>{`View ${ref} in Bitbucket`}</Link>
-          </Text>
+        {hunks || event.url ? (
+          <Inline space={SPACE.row} alignBlock="center" shouldWrap>
+            {hunks ? (
+              <Button appearance="subtle" onClick={() => setShowDiff((v) => !v)}>
+                {showDiff ? COPY.hideDiff : COPY.showDiff}
+              </Button>
+            ) : null}
+            {event.url ? (
+              <Text size="small">
+                <Link href={event.url} openNewTab>{`View ${ref} in Bitbucket`}</Link>
+              </Text>
+            ) : null}
+          </Inline>
         ) : null}
+        {hunks && showDiff ? <DiffPreview text={hunks} /> : null}
       </Stack>
     </Box>
   );
@@ -233,6 +271,39 @@ export function ProposedFixSection({ proposals, events, caps, busy, onAccept, on
   );
 }
 
+/**
+ * R-4: "Replace `old` with `new` in 2 places", from a rename the matcher saw. No AI. Applying edits
+ * the page asUser() with a version message naming the PR (backend), so it needs canAcceptFix.
+ */
+function QuickFixSection({ fixes, events, canAccept, busy, onApply }) {
+  if (!fixes?.length) return null;
+  return (
+    <Section title={COPY.quickFix}>
+      {fixes.map((fix) => {
+        const event = (events || []).find((e) => e.id === fix.eventId);
+        const ref = event ? refLabel(event.ref || '', event.source) : '';
+        const n = quickFixPlaces(fix);
+        return (
+          <Box key={fix.eventId} xcss={cardStyle}>
+            <Stack space={SPACE.row}>
+              <Text>
+                Replace <Code>{fix.from}</Code> with <Code>{fix.to}</Code>
+                {n ? ` in ${plural(n, 'place')}.` : '.'}
+              </Text>
+              <Muted>{`${quickFixSource(ref)} ${COPY.quickFixHelp}`}</Muted>
+              <Inline>
+                <LoadingButton isLoading={busy === `qf:${fix.eventId}`} isDisabled={!canAccept || Boolean(busy)} onClick={() => onApply(fix)}>
+                  {quickFixButton(fix)}
+                </LoadingButton>
+              </Inline>
+            </Stack>
+          </Box>
+        );
+      })}
+    </Section>
+  );
+}
+
 function RenameRow({ proposal, canEdit, busy, onAccept, onKeep }) {
   const off = !canEdit || Boolean(busy);
   return (
@@ -254,10 +325,16 @@ function RenameRow({ proposal, canEdit, busy, onAccept, onKeep }) {
   );
 }
 
-/** Dismiss needs a reason: the footer's Dismiss opens this form, and the reason feeds the dampener. */
-function DismissForm({ count, busy, onConfirm, onCancel }) {
+/**
+ * Dismiss needs a reason: the footer's Dismiss opens this form, and the reason feeds the dampener.
+ * R-7: with "Not relevant", each anchored path can also stop being watched for this page.
+ */
+function DismissForm({ count, busy, targets, canNarrow, onConfirm, onCancel }) {
   const [reason, setReason] = useState(null);
+  const [stops, setStops] = useState({});
   const chosen = DISMISS_REASONS.find((r) => r.value === reason);
+  const narrowing = reason === 'not_relevant' && canNarrow && targets.length > 0;
+  const picked = narrowing ? targets.filter((t) => stops[t.path]) : [];
   return (
     <Box xcss={cardStyle}>
       <Stack space={SPACE.group}>
@@ -275,8 +352,27 @@ function DismissForm({ count, busy, onConfirm, onCancel }) {
           />
           <HelperMessage>{dismissHelp(count)}</HelperMessage>
         </Stack>
+        {narrowing ? (
+          <Stack space={SPACE.tight}>
+            {targets.map((t, i) => (
+              <Inline key={t.path} space={SPACE.tight} alignBlock="center">
+                <Checkbox
+                  id={`dds-stop-watch-${i}`}
+                  value={t.path}
+                  isChecked={Boolean(stops[t.path])}
+                  onChange={(e) => setStops((cur) => ({ ...cur, [t.path]: Boolean(e?.target?.checked) }))}
+                  isDisabled={Boolean(busy)}
+                />
+                <Label labelFor={`dds-stop-watch-${i}`}>
+                  Stop watching <Code>{t.path}</Code> for this page
+                </Label>
+              </Inline>
+            ))}
+            <HelperMessage>Changes to a path you check stop flagging this page. Other anchors keep watching.</HelperMessage>
+          </Stack>
+        ) : null}
         <ButtonGroup label="Dismiss">
-          <LoadingButton isLoading={busy === 'dismiss'} isDisabled={!chosen || Boolean(busy)} onClick={() => onConfirm(chosen.value, chosen.label)}>
+          <LoadingButton isLoading={busy === 'dismiss'} isDisabled={!chosen || Boolean(busy)} onClick={() => onConfirm(chosen.value, chosen.label, picked)}>
             {dismissConfirm(count)}
           </LoadingButton>
           <Button appearance="subtle" isDisabled={busy === 'dismiss'} onClick={onCancel}>
@@ -304,6 +400,8 @@ export function ReviewPanel({
   evidence,
   busy,
   notice,
+  quickFixes,
+  onQuickFix,
   onVerify,
   onDismiss,
   onSnooze,
@@ -323,7 +421,7 @@ export function ReviewPanel({
   // One primary per view: with drafts open, Accept fix is the primary action, not Mark verified.
   const hasDraft = draftCount > 0;
   const shown = showAllEvents ? events : events.slice(0, MAX_EVENTS);
-  const footerKeys = ['dismiss', 'snooze', 'verify', hasDraft ? 'acceptFix' : 'proposeFix'];
+  const footerKeys = ['dismiss', 'snooze', 'verify', hasDraft || quickFixes?.length ? 'acceptFix' : 'proposeFix'];
   // A view-only user already sees one "View only" notice at the top; no per-control reasons then.
   const note = isViewOnly(caps) ? '' : gateNote(caps, renameProposals?.length ? [...footerKeys, 'editAnchors'] : footerKeys);
 
@@ -351,6 +449,8 @@ export function ReviewPanel({
         )}
       </Section>
 
+      <QuickFixSection fixes={quickFixes} events={allEvents || events} canAccept={caps.acceptFix} busy={busy} onApply={onQuickFix} />
+
       <ProposedFixSection
         proposals={proposals}
         events={allEvents || events}
@@ -376,9 +476,11 @@ export function ReviewPanel({
           <DismissForm
             count={n}
             busy={busy}
+            targets={stopWatchTargets(events)}
+            canNarrow={caps.editAnchors}
             onCancel={() => setDismissing(false)}
-            onConfirm={async (value, label) => {
-              await onDismiss(value, label);
+            onConfirm={async (value, label, stops) => {
+              await onDismiss(value, label, stops);
               setDismissing(false);
             }}
           />

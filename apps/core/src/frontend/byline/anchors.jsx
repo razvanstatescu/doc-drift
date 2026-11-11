@@ -20,13 +20,15 @@ import {
 } from '@forge/react';
 import { invoke } from '@forge/bridge';
 import { COPY, anchorsSavedTitle } from '../shared/copy';
-import { Muted, SPACE, Section, cardStyle } from '../shared/components';
+import { Muted, SPACE, Section, SuggestionRow, cardStyle } from '../shared/components';
 import { anchorInputError, plural } from '../shared/format';
+import { defaultChecked, sortSuggestions, suggestionToAnchor } from '../shared/suggest';
 
+// UX-10: the whole repository is demoted and labelled weak: it flags the page on every merge.
 const TYPE_OPTIONS = [
   { label: 'File path or glob', value: 'path' },
   { label: 'Jira issue', value: 'jira' },
-  { label: 'Whole repository', value: 'repo' },
+  { label: 'Whole repository (weak: flags on every merge)', value: 'repo' },
 ];
 
 const EMPTY_MANUAL = { anchorType: 'path', repo: '', pattern: '', critical: false };
@@ -49,22 +51,18 @@ export function AnchorEditor({ bindings, suggestions, canEdit, gateNote, onSaved
   const [adding, setAdding] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const list = useMemo(() => sortSuggestions(suggestions || []), [suggestions]);
+
   useEffect(() => {
     setDraft((bindings || []).map((a) => ({ ...a, key: keyOf(a) })));
-    setChecked({});
-  }, [bindings]);
+    // A page's first anchors: strong suggestions start checked. Later, nothing is added unasked.
+    setChecked((bindings || []).length === 0 ? defaultChecked(list) : {});
+  }, [bindings, list]);
 
-  const list = suggestions || [];
   const pickedSuggestions = list.filter((s) => checked[s.key]);
   const needsRepo = useMemo(() => list.some((s) => s.needsRepo), [list]);
   const repoMissing = pickedSuggestions.some((s) => s.needsRepo) && !suggestRepo.trim();
   const dirty = pickedSuggestions.length > 0 || !sameAnchors(draft, bindings || []);
-
-  const suggestionToAnchor = (s) => {
-    if (s.anchorType === 'jira') return { anchorType: 'jira', jiraKey: s.jiraKey, weight: 'normal', label: s.label };
-    const repo = s.repo || suggestRepo.trim().toLowerCase();
-    return { anchorType: s.anchorType, repo, pattern: s.pattern || '', weight: 'normal' };
-  };
 
   const setField = (patch) => {
     setManual((m) => ({ ...m, ...patch }));
@@ -108,7 +106,7 @@ export function AnchorEditor({ bindings, suggestions, canEdit, gateNote, onSaved
 
   const save = async () => {
     if (repoMissing) return;
-    const fromSuggestions = pickedSuggestions.map(suggestionToAnchor);
+    const fromSuggestions = pickedSuggestions.map((sg) => suggestionToAnchor(sg, suggestRepo));
     const anchors = [...draft, ...fromSuggestions].map(({ anchorType, repo, pattern, jiraKey, weight }) => ({ anchorType, repo, pattern, jiraKey, weight }));
     setSaving(true);
     try {
@@ -174,6 +172,7 @@ export function AnchorEditor({ bindings, suggestions, canEdit, gateNote, onSaved
   return (
     <Stack space={SPACE.section}>
       <Section title={COPY.anchors}>
+        <Muted>{COPY.anchorExplainer}</Muted>
         {draft.length === 0 ? <Text>{COPY.noAnchors}</Text> : <DynamicTable label={COPY.anchorsTable} head={head} rows={rows} />}
         {draft.length ? <Muted tone="subtlest">{COPY.criticalHelp}</Muted> : null}
       </Section>
@@ -197,14 +196,15 @@ export function AnchorEditor({ bindings, suggestions, canEdit, gateNote, onSaved
               </Stack>
             ) : null}
             <Stack space={SPACE.tight}>
-              {list.map((s) => (
-                <Checkbox
+              {list.map((s, i) => (
+                <SuggestionRow
                   key={s.key}
-                  value={s.key}
-                  label={s.needsRepo && suggestRepo.trim() ? `${suggestRepo.trim().split('/').pop()}: ${s.pattern}` : s.label}
+                  id={`dds-suggestion-${i}`}
+                  suggestion={s}
+                  typedRepo={suggestRepo}
                   isChecked={Boolean(checked[s.key])}
-                  onChange={(e) => setChecked((c) => ({ ...c, [s.key]: Boolean(e?.target?.checked) }))}
                   isDisabled={!canEdit}
+                  onChange={(on) => setChecked((c) => ({ ...c, [s.key]: on }))}
                 />
               ))}
             </Stack>

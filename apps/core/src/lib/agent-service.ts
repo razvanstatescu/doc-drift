@@ -7,6 +7,11 @@ import { GlobCache } from '@dds/matcher';
 import { appCannotRead } from './access';
 import {
   CHECK_BEFORE_CITING,
+  citePolicyFor,
+  OTHER_SITE_GUIDANCE,
+  pageLead,
+  UNREADABLE_URL_GUIDANCE,
+  urlHost,
   diffForPaths,
   evidenceLevelFor,
   fitContext,
@@ -44,6 +49,7 @@ import {
 } from './db';
 import { fromSqlDate } from './ingest-rules';
 import { eventFiles, MAX_SECTIONS, severityName, tokenRegExp, tokensForEvents } from './review';
+import { sectionHits } from './quick-fix';
 import { markVerified, type Gate } from './review-service';
 
 type Requester = Parameters<typeof getPageInfo>[0];
@@ -61,13 +67,34 @@ export interface ToolDeps {
 
 type Result = Record<string, unknown>;
 
-/** Resolves the page from the inputs: ID, URL, exact title (asUser search), or the Rovo page context. */
-export async function resolvePage(input: Record<string, unknown>, deps: ToolDeps): Promise<{ pageId: string } | { result: Result }> {
+export type ResolvedFrom = 'pageId' | 'pageUrl' | 'tinyUrl' | 'title' | 'context';
+
+/**
+ * Resolves the page from the inputs: ID, URL (page, tiny or legacy link), exact title (asUser search),
+ * or, only when no page was named at all, the Rovo page context (BUG-04). A link we can't read is
+ * `no_page` asking which page, never the open page. A link to another site is `other_site`.
+ */
+export async function resolvePage(input: Record<string, unknown>, deps: ToolDeps): Promise<{ pageId: string; resolvedFrom: ResolvedFrom } | { result: Result }> {
   const ref = parsePageRef(input, deps.contextPageId);
-  if ('pageId' in ref) return { pageId: ref.pageId };
-  if (ref.via === 'none') return { result: { ok: false, pageId: null, title: null, status: 'unknown', error: 'no_page', guidance: NO_PAGE_GUIDANCE } };
+  if ('pageId' in ref) {
+    if (ref.host) {
+      // Observation 9: `other-site.atlassian.net/.../pages/2720129` is not page 2720129 on this site.
+      const info = await getPageInfo(deps.user, ref.pageId);
+      const here = info.url ? urlHost(info.url) : undefined;
+      if (here && here !== ref.host) {
+        return { result: { ok: false, pageId: null, title: null, status: 'unknown', citePolicy: 'do_not_cite', error: 'other_site', guidance: OTHER_SITE_GUIDANCE } };
+      }
+    }
+    return { pageId: ref.pageId, resolvedFrom: ref.via };
+  }
+  if (ref.via === 'none') {
+    const unreadable = ref.reason === 'unreadable_url';
+    return {
+      result: { ok: false, pageId: null, title: null, status: 'unknown', citePolicy: 'do_not_cite', error: 'no_page', guidance: unreadable ? UNREADABLE_URL_GUIDANCE : NO_PAGE_GUIDANCE },
+    };
+  }
   const found = await findPagesByTitle(deps.user, ref.title, 5);
-  if (found.pages.length === 0) return { result: unknownPage(null, 'No page you can view has that title. Do not cite it.') };
+  if (found.pages.length === 0) return { result: { ...unknownPage(null, 'No page you can view has that title. Ask the user for the page link. Do not cite it.'), citePolicy: 'do_not_cite' } };
   if (found.pages.length > 1) {
     return {
       result: {
@@ -75,13 +102,14 @@ export async function resolvePage(input: Record<string, unknown>, deps: ToolDeps
         pageId: null,
         title: null,
         status: 'unknown',
+        citePolicy: 'do_not_cite',
         error: 'ambiguous_title',
         candidates: found.pages.map((p) => ({ pageId: p.id, title: p.title, url: p.url ?? null })),
-        guidance: 'More than one page has this title. Call again with the pageId of the one you mean.',
+        guidance: 'More than one page has this title. Ask the user which one, or call again with the pageId of the one you mean.',
       },
     };
   }
-  return { pageId: found.pages[0]!.id };
+  return { pageId: found.pages[0]!.id, resolvedFrom: 'title' };
 }
 
 // ---------------------------------------------------------------------------
@@ -90,20 +118,21 @@ export async function resolvePage(input: Record<string, unknown>, deps: ToolDeps
 export async function checkPageFreshness(input: Record<string, unknown>, deps: ToolDeps): Promise<Result> {
   const resolved = await resolvePage(input, deps);
   if ('result' in resolved) return resolved.result;
-  const { pageId } = resolved;
-  const info = await getPageInfo(deps.user, pageId);
-  if (info.status >= 300) return unknownPage(pageId);
+  const { pageId, resolvedFrom } = resolved;
+  const info = await getPageStorage(deps.user, pageId);
+  if (info.status >= 300) return { ...unknownPage(pageId), citePolicy: 'do_not_cite' };
   await ensureSchema();
   const [restricted, state, events, bindings] = await Promise.all([
     appCannotRead(deps.app, pageId),
     getPageState(pageId),
-    openEventsForPage(pageId),
+    eventDetailsForPage(pageId),
     bindingsForPage(pageId),
   ]);
   const now = Date.now();
   let status: StoredPageState = state?.status ?? (bindings.length > 0 ? 'verified' : 'unanchored');
   if (restricted) status = 'unanchored';
   const names = state?.verifiedBy ? await displayNames(deps.user, [state.verifiedBy]) : new Map<string, string>();
+  if (state?.verifiedBy && !names.has(state.verifiedBy)) for (const [k, v] of await displayNames(deps.app, [state.verifiedBy])) names.set(k, v);
   const drift = restricted
     ? []
     : events.map((e) => {
@@ -121,22 +150,33 @@ export async function checkPageFreshness(input: Record<string, unknown>, deps: T
           _ref: e.ref,
         };
       });
+  // R-5: the sections that name the change (summary level: headings and block IDs only, D30).
+  const tokens = tokensForEvents(
+    events.map((e) => ({ files: e.source === 'bitbucket' ? eventFiles(e.files, e.changeFiles) : [], matchedTokens: e.matchedTokens, issueKey: e.source === 'jira' ? e.ref : null })),
+  );
+  const sections = !restricted && info.storage ? sectionHits(info.storage, tokens).map(({ heading, blockIds }) => ({ heading, blockIds })) : [];
+  const title = info.title ?? null;
+  const lead = pageLead(title, PAGE_STATE_LABELS[status]);
+  const where = sections.length > 0 ? ` Affected: ${sections.map((x) => `"${x.heading}"`).join(', ')}.` : '';
   return {
     ok: true,
     pageId,
-    title: info.title ?? null,
+    title,
     url: info.url ?? null,
+    resolvedFrom,
     status,
     statusLabel: PAGE_STATE_LABELS[status],
+    citePolicy: citePolicyFor(status, restricted),
     ...(restricted && { restricted: true }),
     verifiedAt: isoTime(fromSqlDate(state?.verifiedAt)),
     verifiedBy: state?.verifiedBy ? (names.get(state.verifiedBy) ?? null) : null,
     openDrift: drift.map(({ _at, _ref, ...d }) => d),
-    guidance: freshnessGuidance(
+    affectedSections: sections,
+    guidance: `${lead} ${freshnessGuidance(
       status,
       drift.map((d) => ({ source: d.source, ref: d._ref, at: d._at })),
       { now, restricted },
-    ),
+    )}${status === 'possibly_stale' || status === 'stale' ? where : ''}`,
   };
 }
 
@@ -154,12 +194,16 @@ export async function findDocsForPath(input: Record<string, unknown>, deps: Tool
   await ensureSchema();
   const bindings = await bindingsForRepoName(repo.full, repo.slug);
   const globs = new GlobCache();
-  const best = new Map<string, { match: PathMatch; anchor: string }>();
+  // Observation 8: within a match kind, the more specific anchor (longer static path) ranks first.
+  const best = new Map<string, { match: PathMatch; anchor: string; specificity: number }>();
   for (const b of bindings) {
     const match = matchBinding(b, path, globs);
     if (!match) continue;
     const cur = best.get(b.pageId);
-    if (!cur || MATCH_RANK[match] > MATCH_RANK[cur.match]) best.set(b.pageId, { match, anchor: anchorLabel(b) });
+    const specificity = (b.pattern ?? '').replace(/[*?[\]{}].*$/, '').length;
+    if (!cur || MATCH_RANK[match] > MATCH_RANK[cur.match] || (MATCH_RANK[match] === MATCH_RANK[cur.match] && specificity > cur.specificity)) {
+      best.set(b.pageId, { match, anchor: anchorLabel(b), specificity });
+    }
   }
   const candidates = [...best.entries()].sort((a, b) => MATCH_RANK[b[1].match] - MATCH_RANK[a[1].match]).slice(0, MAX_DOC_PAGES);
   // Permission-aware: only pages the caller can view are listed at all.
@@ -170,14 +214,15 @@ export async function findDocsForPath(input: Record<string, unknown>, deps: Tool
     .map(([pageId, m]) => {
       const info = infos[candidates.findIndex(([id]) => id === pageId)]!;
       const status: StoredPageState = states.get(pageId) ?? 'verified';
-      return { pageId, title: info.title ?? '', url: info.url ?? null, anchor: m.anchor, match: m.match, status, statusLabel: PAGE_STATE_LABELS[status] };
+      return { pageId, title: info.title ?? '', url: info.url ?? null, anchor: m.anchor, match: m.match, status, statusLabel: PAGE_STATE_LABELS[status], citePolicy: citePolicyFor(status), _spec: m.specificity };
     })
-    .sort((a, b) => MATCH_RANK[b.match] - MATCH_RANK[a.match] || driftRank(b.status) - driftRank(a.status) || a.title.localeCompare(b.title));
+    .sort((a, b) => MATCH_RANK[b.match] - MATCH_RANK[a.match] || b._spec - a._spec || driftRank(b.status) - driftRank(a.status) || a.title.localeCompare(b.title))
+    .map(({ _spec, ...p }) => p);
   const drifted = pages.filter((p) => p.status === 'possibly_stale' || p.status === 'stale').length;
   const guidance =
     pages.length === 0
       ? 'No Confluence page you can view is anchored to this path.'
-      : `${plural(pages.length, 'page')} ${pages.length === 1 ? 'documents' : 'document'} this path.${drifted > 0 ? ` ${drifted} of them ${drifted === 1 ? 'is' : 'are'} Possibly stale or Stale.` : ''} ${CHECK_BEFORE_CITING}`;
+      : `${plural(pages.length, 'page')} ${pages.length === 1 ? 'documents' : 'document'} this path: ${pages.slice(0, 5).map((p) => `"${p.title}" (${p.statusLabel})`).join(', ')}${pages.length > 5 ? ` and ${pages.length - 5} more` : ''}.${drifted > 0 ? ` ${drifted} of them ${drifted === 1 ? 'is' : 'are'} Possibly stale or Stale.` : ''} ${CHECK_BEFORE_CITING} Name each page by its title.`;
   return { ok: true, repo: repo.full ?? repo.slug, path, pages, guidance };
 }
 
@@ -191,6 +236,7 @@ function driftRank(s: StoredPageState): number {
 export async function listStalePages(input: Record<string, unknown>, deps: ToolDeps): Promise<Result> {
   const spaceKey = parseSpaceKey(input.spaceKey);
   const limit = parseLimit(input.limit, 10, 50);
+  const limitNote = input.limit !== undefined && input.limit !== null && input.limit !== '' && String(input.limit).trim() !== String(limit) ? ` limit ${JSON.stringify(input.limit)} is not 1 to 50, so ${limit} was used.` : '';
   await ensureSchema();
   const rows = await driftedPages(spaceKey, Math.min(150, limit * 3));
   const infos = await Promise.all(rows.map((r) => getPageInfo(deps.user, r.pageId)));
@@ -208,12 +254,13 @@ export async function listStalePages(input: Record<string, unknown>, deps: ToolD
     owner: r.ownerId ? (names.get(r.ownerId) ?? null) : null,
     since: isoTime(fromSqlDate(r.since)),
     lastChange: r.lastSummary,
+    citePolicy: citePolicyFor(r.status),
   }));
   const guidance =
     pages.length === 0
       ? `No Possibly stale or Stale pages that you can view${spaceKey ? ` in ${spaceKey}` : ''}.`
-      : `${plural(pages.length, 'page')} ${pages.length === 1 ? 'is' : 'are'} Possibly stale or Stale. Do not present steps from them as current. Call check-page-freshness for the caveat before citing one.`;
-  return { ok: true, spaceKey, pages, guidance };
+      : `${plural(pages.length, 'page')} ${pages.length === 1 ? 'is' : 'are'} Possibly stale or Stale: ${pages.slice(0, 5).map((p) => `"${p.title}" (${p.statusLabel})`).join(', ')}${pages.length > 5 ? ` and ${pages.length - 5} more` : ''}. Do not present steps from them as current. Call check-page-freshness for the caveat before citing one, and name each page by its title.`;
+  return { ok: true, spaceKey, limit, pages, guidance: `${guidance}${limitNote ? ` Note:${limitNote}` : ''}` };
 }
 
 // ---------------------------------------------------------------------------
@@ -224,13 +271,13 @@ export const SUMMARY_EVIDENCE_GUIDANCE =
   'You can view this page but not edit it, so diffs and full Jira text are left out. Explain the change from the summary; a person with edit rights can draft a fix.';
 
 export const CONTEXT_INSTRUCTIONS =
-  `${UNTRUSTED_RULE} Each section lists its blocks (paragraph, list-item, table-cell, heading, code). To propose a fix, call submit-fix-proposal once per block that must change, with pageId, blockId and proposedText: the block's full new text, copied verbatim from the block's text with only the needed change. For a code block, proposedText is the whole new code body; to change one line only, also pass that line, verbatim, as originalText. Never put two blocks in one proposal. Never edit the page; a person accepts or rejects each draft.`;
+  `${UNTRUSTED_RULE} Each section lists its blocks (paragraph, list-item, table-cell, heading, code). To propose a fix, call submit-fix-proposal once per block that must change, with pageId, blockId and proposedText: the block's full new text, copied verbatim from the block's text with only the needed change. For a code block, proposedText is the whole new code body; to change one line only, also pass that line, verbatim, as originalText. Never put two blocks in one proposal. Link text and @mention appear in the block text as the page shows them: keep them exactly, or the draft is refused. Never edit the page; a person accepts or rejects each draft.`;
 
 /** Blocks shown per section before unmatched ones are left out (the neighbours of a matched block stay). */
 export const MAX_SECTION_BLOCKS = 30;
 
 /** The blocks of one section for get-drift-context: verbatim text, `matched` where a token appears. */
-export function contextBlocks(blocks: PageBlock[], patterns: RegExp[]): { blocks: ContextBlock[]; blocksOmitted?: number } {
+export function contextBlocks(blocks: PageBlock[], patterns: RegExp[]): { blocks: ContextBlock[]; blocksOmitted?: number; matchedOmitted?: number } {
   const all: ContextBlock[] = blocks.map((b) => {
     const text = clip(b.text, SECTION_TEXT_MAX);
     return {
@@ -242,14 +289,18 @@ export function contextBlocks(blocks: PageBlock[], patterns: RegExp[]): { blocks
     };
   });
   if (all.length <= MAX_SECTION_BLOCKS) return { blocks: all };
-  const keep = all.filter((b, i) => b.matched || all[i - 1]?.matched || all[i + 1]?.matched).slice(0, MAX_SECTION_BLOCKS);
-  return { blocks: keep, blocksOmitted: all.length - keep.length };
+  const near = all.filter((b, i) => b.matched || all[i - 1]?.matched || all[i + 1]?.matched);
+  // Matched blocks first, so a section with more than 30 matches drops neighbours before matches.
+  const keepSet = new Set([...near.filter((b) => b.matched), ...near.filter((b) => !b.matched)].slice(0, MAX_SECTION_BLOCKS));
+  const keep = all.filter((b) => keepSet.has(b));
+  const matchedOmitted = all.filter((b) => b.matched && !keepSet.has(b)).length;
+  return { blocks: keep, blocksOmitted: all.length - keep.length, ...(matchedOmitted > 0 && { matchedOmitted }) };
 }
 
 export async function getDriftContext(input: Record<string, unknown>, deps: ToolDeps): Promise<Result> {
   const resolved = await resolvePage(input, deps);
   if ('result' in resolved) return resolved.result;
-  const { pageId } = resolved;
+  const { pageId, resolvedFrom } = resolved;
   const page = await getPageStorage(deps.user, pageId);
   if (page.status >= 300 || page.storage === undefined) return unknownPage(pageId);
   if (await appCannotRead(deps.app, pageId)) {
@@ -261,7 +312,18 @@ export async function getDriftContext(input: Record<string, unknown>, deps: Tool
   const evidenceLevel = evidenceLevelFor(ops.status < 300 && ops.ops.has('update'));
   const status: StoredPageState = state?.status ?? 'unanchored';
   if (events.length === 0) {
-    return { ok: true, pageId, title: page.title ?? null, status, statusLabel: PAGE_STATE_LABELS[status], sections: [], events: [], guidance: 'This page has no open changes, so there is nothing to draft.' };
+    return {
+      ok: true,
+      pageId,
+      title: page.title ?? null,
+      url: page.url ?? null,
+      resolvedFrom,
+      status,
+      statusLabel: PAGE_STATE_LABELS[status],
+      sections: [],
+      events: [],
+      guidance: `${pageLead(page.title, PAGE_STATE_LABELS[status])} It has no open changes, so there is nothing to draft.`,
+    };
   }
   const changes = await changesByIds([...new Set(events.map((e) => e.changeRecordId))]);
   const full = evidenceLevel === 'full';
@@ -303,22 +365,35 @@ export async function getDriftContext(input: Record<string, unknown>, deps: Tool
     sections.push({ heading: group[0]!.section, matchedTokens: matched, eventIds: hitEvents.map((v) => v.eventId), ...contextBlocks(group, matched.map(tokenRegExp)) });
     if (sections.length >= MAX_SECTIONS) break;
   }
+  const lead = pageLead(page.title, PAGE_STATE_LABELS[status]);
   const ctx = fitContext({
     ok: true,
     pageId,
     title: page.title ?? null,
+    url: page.url ?? null,
+    resolvedFrom,
     status,
     statusLabel: PAGE_STATE_LABELS[status],
     instructions: CONTEXT_INSTRUCTIONS,
     evidenceLevel,
     sections,
     events: views.map(({ _tokens, ...v }) => v),
-    guidance: !full
+    guidance: `${lead} ` + (!full
       ? `${SUMMARY_EVIDENCE_GUIDANCE} ${sections.length > 0 ? `${plural(sections.length, 'section')} ${sections.length === 1 ? 'mentions' : 'mention'} the change.` : 'No section mentions the changed files or identifiers.'}`
       : sections.length > 0
         ? `Draft replacement text only for the ${plural(sections.length, 'section')} listed. Call submit-fix-proposal once per block that must change (usually the blocks marked matched), with its blockId. Never merge blocks. Never edit the page.`
-        : 'No section of this page mentions the changed files or identifiers. Explain the change instead of drafting a fix.',
+        : 'No section of this page mentions the changed files or identifiers. Explain the change instead of drafting a fix.'),
   });
+  // Observation 4: say so when matched blocks were left out, so an agent never thinks it fixed every step.
+  const matchedOmitted = ctx.sections.reduce((n, sec) => n + ((sec as { matchedOmitted?: number }).matchedOmitted ?? 0), 0);
+  const omitted = ctx.sections.reduce((n, sec) => n + (sec.blocksOmitted ?? 0), 0);
+  if (omitted > 0 || matchedOmitted > 0) {
+    ctx.truncated = true;
+    if (matchedOmitted > 0) {
+      (ctx as Record<string, unknown>).matchedOmitted = matchedOmitted;
+      ctx.guidance = `${ctx.guidance} ${plural(matchedOmitted, 'matched block')} did not fit and ${matchedOmitted === 1 ? 'is' : 'are'} not listed: tell the user the draft covers only the blocks shown.`;
+    }
+  }
   return ctx;
 }
 
@@ -328,20 +403,28 @@ export async function getDriftContext(input: Record<string, unknown>, deps: Tool
 export async function recordAgentVerification(input: Record<string, unknown>, deps: ToolDeps): Promise<Result> {
   const resolved = await resolvePage(input, deps);
   if ('result' in resolved) return resolved.result;
-  const { pageId } = resolved;
+  const { pageId, resolvedFrom } = resolved;
   const r = await markVerified(pageId, deps.accountId, input.note, deps.gate, 'agent');
   if (!r.ok) {
     const f = r as { error: string; message: string; state?: string };
-    return { ok: false, pageId, title: null, status: f.state ?? 'unknown', error: f.error, guidance: f.message };
+    // A page the caller can see keeps its title in the answer (UX-1); an invisible one never does.
+    const info = f.error === 'not_visible' ? undefined : await getPageInfo(deps.user, pageId);
+    const title = info && info.status < 300 ? (info.title ?? null) : null;
+    return { ok: false, pageId, title, resolvedFrom, status: f.error === 'unanchored' ? 'unanchored' : (f.state ?? 'unknown'), error: f.error, guidance: title ? `"${title}": ${f.message}` : f.message };
   }
   const ok = r as { status: StoredPageState; closedEvents: number; message: string };
+  const info = await getPageInfo(deps.user, pageId);
+  const title = info.status < 300 ? (info.title ?? null) : null;
   return {
     ok: true,
     pageId,
+    title,
+    url: info.url ?? null,
+    resolvedFrom,
     status: ok.status,
     statusLabel: PAGE_STATE_LABELS[ok.status],
     verifiedAt: new Date().toISOString(),
     closedEvents: ok.closedEvents,
-    guidance: `${ok.message} The page reads ${PAGE_STATE_LABELS[ok.status]}.`,
+    guidance: `${title ? `"${title}": ` : ''}${ok.message} The page reads ${PAGE_STATE_LABELS[ok.status]}.`,
   };
 }

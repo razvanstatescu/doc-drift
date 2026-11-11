@@ -8,6 +8,8 @@ export interface AnchorInput {
   pattern?: string;
   jiraKey?: string;
   weight?: string;
+  /** BUG-15: clear this anchor's dismiss dampener when it is saved again (`dismissCount` back to 0). */
+  resetDismissCount?: boolean;
 }
 
 /** A validated anchor, ready to store. `repo` is lowercased; `pattern` has no leading `./` or `/`. */
@@ -19,12 +21,14 @@ export interface NormalizedAnchor {
   weight: AnchorWeight;
 }
 
-export type AnchorResult = { ok: true; value: NormalizedAnchor } | { ok: false; error: string };
+/** `warning`: the anchor is saved, but it may not do what the person meant (a folder without a glob). */
+export type AnchorResult = { ok: true; value: NormalizedAnchor; warning?: string } | { ok: false; error: string };
 
 const REPO = /^(?:[a-z0-9_.-]+\/)?[a-z0-9_.-]+$|^\{[0-9a-f-]{36}\}$/;
 const JIRA_KEY = /^[A-Z][A-Z0-9]+-\d+$/;
 const GLOB_CHARS = /[*?[\]{}]/;
-const PATTERN_CHARS = /^[A-Za-z0-9_.*?/{}[\],@+=~-]+$/;
+// Unicode letters and digits are allowed: the matcher compares paths exactly (observation 2 of the QA run).
+const PATTERN_CHARS = /^[\p{L}\p{N}\p{M}_.*?/{}[\],@+=~-]+$/u;
 const MAX_PATTERN = 512;
 
 /** Strips `./` and leading slashes, like the matcher does. */
@@ -63,14 +67,22 @@ export function normalizeAnchor(input: AnchorInput): AnchorResult {
   if (type === 'repo') return { ok: true, value: { anchorType: 'repo', repo, weight } };
   if (type !== 'path' && type !== 'glob') return { ok: false, error: 'Unknown anchor type.' };
 
-  const pattern = normalizePattern(input.pattern ?? '');
+  let pattern = normalizePattern(input.pattern ?? '');
   if (!pattern) return { ok: false, error: 'Enter an anchor path, for example scripts/rollback.sh.' };
   if (pattern.length > MAX_PATTERN) return { ok: false, error: 'That path is too long.' };
-  if (!PATTERN_CHARS.test(pattern) || pattern.split('/').includes('..')) {
-    return { ok: false, error: 'Use a repo-relative path without spaces or "..".' };
-  }
+  if (/\s/.test(pattern)) return { ok: false, error: 'Use a repo-relative path without spaces.' };
+  if (pattern.split('/').includes('..')) return { ok: false, error: 'Use a repo-relative path without "..".' };
+  if (!PATTERN_CHARS.test(pattern)) return { ok: false, error: 'Use letters, digits and . _ - / * ? { } [ ] in the path.' };
+  // BUG-06: `deploy/helm/` is a folder: watch everything in it, as auto-suggest already does.
+  if (pattern.endsWith('/')) pattern = `${pattern.replace(/\/+$/, '')}/**`;
+  if (pattern === '**' || pattern === '/**') return { ok: false, error: 'To watch the whole repository, use the whole-repo anchor.' };
   const anchorType = GLOB_CHARS.test(pattern) ? 'glob' : 'path';
-  return { ok: true, value: { anchorType, repo, pattern, weight } };
+  const last = pattern.split('/').at(-1) ?? '';
+  const warning =
+    anchorType === 'path' && pattern.includes('/') && !last.includes('.') && !/^[A-Z][A-Za-z]*file$|^(?:LICENSE|README|Makefile|Dockerfile|Procfile|CODEOWNERS)$/.test(last)
+      ? `This looks like a folder. Use ${pattern}/** to watch everything in it.`
+      : undefined;
+  return { ok: true, value: { anchorType, repo, pattern, weight }, ...(warning && { warning }) };
 }
 
 /** Identity of an anchor on a page, ignoring weight. Two anchors with the same key are the same anchor. */
@@ -100,7 +112,8 @@ export function repoCandidates(change: Pick<BitbucketChangeRecord, 'workspace' |
 export function planBindingChanges(
   existing: readonly Binding[],
   desired: readonly NormalizedAnchor[],
-): { insert: NormalizedAnchor[]; remove: Binding[]; reweight: { id: string; weight: AnchorWeight }[] } {
+  resetKeys: ReadonlySet<string> = new Set(),
+): { insert: NormalizedAnchor[]; remove: Binding[]; reweight: { id: string; weight: AnchorWeight }[]; resetDampener: string[] } {
   const want = new Map(desired.map((a) => [anchorKey(a), a]));
   const have = new Map(existing.map((b) => [anchorKey(b), b]));
   const insert = [...want.entries()].filter(([k]) => !have.has(k)).map(([, a]) => a);
@@ -108,5 +121,6 @@ export function planBindingChanges(
   const reweight = [...have.entries()]
     .filter(([k, b]) => want.has(k) && want.get(k)!.weight !== b.weight)
     .map(([k, b]) => ({ id: b.id, weight: want.get(k)!.weight }));
-  return { insert, remove, reweight };
+  const resetDampener = [...have.entries()].filter(([k, b]) => want.has(k) && resetKeys.has(k) && (b.dismissCount ?? 0) > 0).map(([, b]) => b.id);
+  return { insert, remove, reweight, resetDampener };
 }

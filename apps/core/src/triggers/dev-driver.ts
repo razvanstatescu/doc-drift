@@ -19,17 +19,18 @@ import {
   type ToolDeps,
 } from '../lib/agent-service';
 import { saveBindings } from '../lib/bindings-service';
-import { applyProposal, listProposals, rejectProposal, submitFixProposal } from '../lib/fix-service';
+import { applyProposal, applyRenameQuickFix, listProposals, rejectProposal, submitFixProposal } from '../lib/fix-service';
 import { getPageProperty, upsertPageProperty } from '../lib/confluence';
 import { BYLINE_PROPERTY_KEY } from '../lib/copy';
-import { devAgeOpenEvents, ensureSchema, recentChanges, relayActivity, snapshotForPage } from '../lib/db';
+import { allStatePages, devAgeOpenEvents, ensureSchema, recentChanges, relayActivity, snapshotForPage } from '../lib/db';
+import { saveSpaceAnchors, suggestSpaceAnchors } from '../lib/space-anchors';
 import { DEMO_CHANGE_RECORD, DEMO_PR_ID } from '../lib/demo';
 import { ingestRecord } from '../lib/ingest';
 import { headerValue, parseSettings } from '../lib/ingest-rules';
 import { processChange } from '../lib/matching';
 import { notifyPage } from '../lib/notifier';
 import { refreshPage } from '../lib/page-state';
-import { decideRename, dismissEvent, markVerified, pageDrift, snoozePage, spaceDashboard, type Gate } from '../lib/review-service';
+import { decideRename, dismissEvent, markVerified, pageDrift, snoozePage, spaceDashboard, stopWatchingPath, type Gate } from '../lib/review-service';
 import { fingerprint, getSettings, saveSettings } from '../lib/settings-store';
 import { confluencePageEvent, escalate, jiraEvent, purge } from './product-events';
 
@@ -58,6 +59,8 @@ type Body = {
   sync?: boolean;
   tool?: string;
   input?: Record<string, unknown>;
+  limit?: number;
+  items?: unknown;
 };
 
 export const DEV_RESULT_PROPERTY_KEY = 'dds-dev-result';
@@ -100,7 +103,30 @@ async function run(body: Body): Promise<unknown> {
     case 'changes':
       return recentChanges(10);
     case 'drift':
-      return pageDrift(pageId, api.asApp(), { canEdit: true });
+      return pageDrift(pageId, api.asApp(), { canEdit: true, appReader: api.asApp() });
+    // Phase 2 resolvers with an open gate and an asApp reader.
+    case 'stop-watching':
+      return stopWatchingPath(body.eventId, null, openGate);
+    case 'rename-quick-fix':
+      return applyRenameQuickFix(body.eventId, { user: api.asApp(), gate: openGate, accountId: null });
+    case 'suggest-space':
+      return suggestSpaceAnchors(body.spaceKey, body.limit, api.asApp(), api.asApp());
+    case 'save-space':
+      // The per-page D15 check reads operations asApp here (the app user has update on DDSTEST).
+      return saveSpaceAnchors(body.items, { user: api.asApp(), app: api.asApp(), accountId: null, spaceKey: body.spaceKey ?? null });
+    case 'refresh-all': {
+      const ids = await allStatePages(Number(body.limit ?? 500));
+      const out: { pageId: string; status: string; byline: number }[] = [];
+      for (const id of ids) {
+        try {
+          const r = await refreshPage(id);
+          out.push({ pageId: id, status: r.status, byline: r.byline.status });
+        } catch (e) {
+          out.push({ pageId: id, status: `error: ${String((e as Error)?.message ?? e).slice(0, 80)}`, byline: 0 });
+        }
+      }
+      return { refreshed: out.length, pages: out };
+    }
     case 'verify':
       return markVerified(pageId, null, body.note, openGate, 'dev');
     case 'dismiss':

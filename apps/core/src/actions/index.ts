@@ -68,7 +68,7 @@ export const getDriftContext = (payload: Payload, context: Context) => run('get-
 export const recordVerification = (payload: Payload, context: Context) => run('record-verification', payload, context, recordAgentVerification);
 export const submitFixProposal = (payload: Payload, context: Context) =>
   run('submit-fix-proposal', payload, context, async (input, deps) => {
-    const resolved = await resolvePage({ pageId: input.pageId, pageUrl: input.pageUrl }, deps);
+    const resolved = await resolvePage({ pageId: input.pageId, pageUrl: input.pageUrl, title: input.title }, deps);
     if ('result' in resolved) return resolved.result;
     return submitFix(resolved.pageId, input, deps);
   });

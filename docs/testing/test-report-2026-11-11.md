@@ -21,6 +21,34 @@ PLAT's demo state is unchanged (dashboard before and after: 18 of 24 anchored, 5
 
 Raw evidence: `scripts/qa/out/run2.log`, `scripts/qa/out/results.jsonl` (run 2), `scripts/qa/out/results-run1.jsonl` (run 1, Jira and Bitbucket groups), all git-ignored. Log lines below are from `forge logs -e development` (UTC).
 
+## Fix status (phase 2, Track A, 2026-11-12)
+
+Fixed in core 4.18.0 to 4.20.0 and relay 2.2.0 (development; no new scopes, major version still 4). Live checks: `python3 -I scripts/qa/phase2.py all` (results in `scripts/qa/out/phase2.jsonl`, case IDs `P2-*`), plus the real MCP server from Claude Code (asUser). Every `it.fails` reproduction is now a passing test named "(fixed)". Decisions: D32 to D34.
+
+| ID | Status | Verified by |
+| --- | --- | --- |
+| BUG-01 | Fixed: `validateGlob` refuses a leading `!`; the matcher treats a stored `!x` as an exception, never "ignore everything else" | Unit; live P2-SET-01 (field error, nothing saved) |
+| BUG-02 | Fixed: a revert closes the open events, then is scored as a change for every other page (D32) | Live P2-RVT-06 (`revert+scored`, Possibly stale), P2-RVT-01 regression |
+| BUG-03 | Fixed: the PR number comes only from the `(pull request #N)` / `(PR #N)` suffix, or a squash `(#N)` ending the title | Unit; live P2-RVT-04 |
+| BUG-04 | Fixed: the context page is used only when no page was named; tiny links decode; a title in `pageId` is a title; an unreadable link is `no_page`; another site's link is `other_site` | Unit; live P2-TOL-01 to 07; MCP asUser (tiny link `HIAu` resolved to 3047452, title in `pageId` resolved) |
+| BUG-05 | Fixed: link text and `@mention` are in the block text, mapped as one atomic object; an edit that would rewrite or cut into a link, mention, emoticon, image or macro is `unsupported_span` | Unit; live P2-FIX-01 to 03 (refused draft, accepted draft kept the link once) |
+| BUG-06 | Fixed: `dir/` saves as `dir/**`; `dir` without an extension saves with a `warning` (`checkAnchor` returns it) | Unit |
+| BUG-07 | Fixed: a query with no static prefix matches a glob anchor only when the query matches the anchor's own pattern | Unit; live P2-TOL-11; MCP `**/*.sh` (no `src/**` pages) |
+| BUG-08 | Fixed: the relay sends `filesTruncated` and `totalFiles`; each event says "This PR changed 812 files; only the first 500 were checked" | Unit (relay, shared, matcher); live P2-ING-08 (synthetic record; no real 500+ file merge yet) |
+| BUG-09 | Fixed: trash resets the byline to Unanchored; `restored:page` recomputes it | Live P2-LIF-05 (8 s) |
+| BUG-10 | Fixed: global space keys are uppercased in tools, dashboard and SQL | Live P2-TOL-09, P2-DSH-01; MCP `plat` |
+| BUG-11 | Fixed: `moved:page` moves bindings and state; the dashboard keys on the space listing | Live P2-LIF-02 (ENGS, 8 s) |
+| BUG-12 | Fixed: `submit-fix-proposal` needs edit rights | Unit (mocked gate); live needs a viewer account |
+| BUG-13 | Fixed: a change whose revert arrived first closes at once, and so do the revert's own events (D32) | Live P2-RVT-05 |
+| BUG-14 | Fixed: identifier and snippet reasons appear once per page (scores unchanged) | Unit |
+| BUG-15 | Fixed: `resetDismissCount: true` on a saved anchor clears its dampener | Live P2-RST-01 (3047452 counts 0, re-flagged) |
+| BUG-16 | Fixed: path tokens end at a word boundary that excludes `.x`, `/x`, `-x`; diff headers compare exactly | Unit |
+| BUG-17 | Fixed: `spans_blocks` lists the best run of adjacent blocks | Unit |
+| BUG-18 | Fixed: a Jira record without `changelogId` gets a key hashed from its changelog | Unit |
+| BUG-19 | Fixed: git C-quoted paths are decoded | Unit |
+
+UX observations: 1 fixed (`unanchored` error, P2-VER-01); 2 fixed (Unicode allowed, separate reasons for spaces and `..`); 3 not done; 4 fixed (`truncated` true and `matchedOmitted` when matched blocks are left out); 5 fixed (`limit` echoed, P2-TOL-10); 6 fixed (Stale bylines rewritten about daily; not observed over a day); 7 is BUG-14; 8 fixed (more specific anchor ranks first); 9 fixed (P2-TOL-06); 10 not done.
+
 ## High
 
 ### BUG-01: a negated ignore glob turns off all detection (High)

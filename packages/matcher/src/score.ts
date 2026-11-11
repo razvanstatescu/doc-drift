@@ -101,7 +101,7 @@ function scoreBitbucket(
   const files = change.files.filter((f) => !filePaths(f).every(isIgnored));
   if (files.length === 0) return { kind: 'skipped', reason: 'no_relevant_files' };
 
-  const revert = detectRevert(change.title);
+  const revert = config.scoreReverts ? undefined : detectRevert(change.title);
   if (revert) return { kind: 'revert', revert };
 
   const relevant = new Set(files.flatMap(filePaths));
@@ -141,6 +141,7 @@ function scoreBitbucket(
     if (identifiers.length > 0) reasons.push(reason.identifierReason(identifiers, evidence.label));
     if (snippetLines > 0) reasons.push(reason.snippetReason(snippetLines, evidence.label));
     if (binding.dismissCount) reasons.push(reason.dampenerReason(binding.dismissCount, effectiveWeight(binding, config.anchorWeights)));
+    if (change.filesTruncated) reasons.push(reason.truncatedReason(change.totalFiles, change.files.length));
 
     // Only an exact path anchor's file can be "gone": a glob such as src/** outlives any one file in it (D26).
     const fileGone = binding.anchorType === 'path' && match.matched.some((f) => f.status === 'removed' || f.status === 'renamed');
@@ -159,7 +160,22 @@ function scoreBitbucket(
       matchedSnippetLines: snippetLines,
     });
   }
-  return { kind: 'scored', events: sortEvents(events), renameProposals };
+  return { kind: 'scored', events: onceBoostReasons(sortEvents(events), evidence.label), renameProposals };
+}
+
+/**
+ * BUG-14: identifier and snippet evidence is change-wide, so every anchor of a page that the PR matched
+ * repeated "Page mentions --retries, removed in PR #15". Scores are unchanged; the reasons are kept only
+ * on the page's strongest event (events are sorted strongest first).
+ */
+function onceBoostReasons(events: DriftEvent[], label: string): DriftEvent[] {
+  const seen = new Set<string>();
+  const boost = (r: string) => r.startsWith('Page mentions ') || (r.includes("this page's code blocks") && r.endsWith(label));
+  for (const e of events) {
+    if (seen.has(e.pageId)) e.reasons = e.reasons.filter((r, i) => i === 0 || !boost(r));
+    else seen.add(e.pageId);
+  }
+  return events;
 }
 
 function scoreJira(change: JiraChangeRecord, bindings: readonly Binding[], config: MatcherConfig): MatchResult {

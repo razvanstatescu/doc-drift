@@ -18,6 +18,8 @@ export interface MergedPullRequest {
   prId: number;
   title?: string;
   author?: string;
+  /** The author's Atlassian account ID (`pullrequest.author.accountId`), for an @mention in Confluence (R-6). */
+  authorAccountId?: string;
   /** Head of the source branch at merge time. */
   sourceHash: string;
   /** Pre-merge tip of the destination branch (S1: the event carries the pre-merge hash). */
@@ -64,6 +66,8 @@ export function parseMergedEvent(event: unknown): ParseResult<MergedPullRequest>
   const repoSlug = str(obj(e['repository'])['slug']);
   const title = str(obj(pr['title'])['value']);
   const author = str(obj(pr['author'])['displayName']);
+  const rawAccount = str(obj(pr['author'])['accountId']);
+  const authorAccountId = rawAccount && /^[A-Za-z0-9:_-]{1,128}$/.test(rawAccount) ? rawAccount : undefined;
   return {
     ok: true,
     value: {
@@ -73,6 +77,7 @@ export function parseMergedEvent(event: unknown): ParseResult<MergedPullRequest>
       prId,
       ...(title && { title }),
       ...(author && { author }),
+      ...(authorAccountId && { authorAccountId }),
       sourceHash,
       destinationHash,
       mergeCommit,
@@ -274,6 +279,10 @@ export function buildChangeRecord(input: {
   repo: RepoInfo;
   files: ChangedFile[];
   hunks?: string;
+  /** The diffstat was cut (more files than MAX_FILES, or the page budget ran out): BUG-08. */
+  truncated?: boolean;
+  /** Every diffstat entry Bitbucket reported, when known. */
+  totalFiles?: number;
 }): BitbucketChangeRecord {
   const { pr, repo, files, hunks } = input;
   const [workspaceSlug, repoSlugFromName] = (repo.fullName ?? '').split('/');
@@ -292,6 +301,13 @@ export function buildChangeRecord(input: {
     files: files.slice(0, MAX_FILES),
   };
   if (repo.mainBranch) record.defaultBranch = repo.mainBranch;
+  if (pr.authorAccountId) record.authorAccountId = pr.authorAccountId;
+  // BUG-08: say when files were dropped, so the core can tell "not changed" from "not checked".
+  if (input.truncated || files.length > MAX_FILES) {
+    record.filesTruncated = true;
+    const total = Math.max(input.totalFiles ?? 0, files.length);
+    if (total > record.files.length) record.totalFiles = total;
+  }
   if (hunks !== undefined && hunks.length > 0) record.hunks = trimUtf8(hunks).text;
   return record;
 }

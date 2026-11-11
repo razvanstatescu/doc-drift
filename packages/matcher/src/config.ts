@@ -73,6 +73,12 @@ export interface MatcherConfig {
    * evidence. Off by default (D26): it caused the only false positive on the demo set.
    */
   plainWordIdentifiers?: boolean;
+  /**
+   * Score a revert PR as a normal change instead of returning `{kind: 'revert'}`. The core sets it once
+   * it has closed the reverted PR's open events, so pages whose drift was already verified or dismissed
+   * still see the code move back (BUG-02).
+   */
+  scoreReverts?: boolean;
 }
 
 export const DEFAULT_CONFIG: Readonly<MatcherConfig> = {

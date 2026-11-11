@@ -9,12 +9,26 @@ export function normalizePath(path: string): string {
   return path.trim().replace(/^(?:\.\/)+/, '').replace(/^\/+/, '');
 }
 
-/** Builds a predicate for ignore globs. Patterns without a slash match the file name at any depth. */
+const scoped = (g: string) => (g.includes('/') ? g : `**/${g}`);
+
+/**
+ * Builds a predicate for ignore globs. Patterns without a slash match the file name at any depth.
+ * A negated pattern (`!docs/keep.md`, the gitignore idiom) is an exception: a file is ignored only when
+ * a positive pattern matches it and no negated one does (BUG-01: OR'd into one picomatch list, the
+ * negation matched every other file and silenced all detection). Settings refuse `!` patterns
+ * (`validateGlob`); this keeps a stored legacy value safe.
+ */
 export function ignoreMatcher(globs: readonly string[]): Matcher {
-  if (globs.length === 0) return () => false;
-  const patterns = globs.map(normalizePath).map((g) => (g.includes('/') ? g : `**/${g}`));
-  const isMatch = picomatch(patterns, { dot: true });
-  return (path) => isMatch(normalizePath(path));
+  const all = globs.map(normalizePath).filter((g) => g !== '' && g !== '!');
+  const positive = all.filter((g) => !g.startsWith('!')).map(scoped);
+  const negative = all.filter((g) => g.startsWith('!')).map((g) => scoped(normalizePath(g.slice(1))));
+  if (positive.length === 0) return () => false;
+  const isMatch = picomatch(positive, { dot: true });
+  const isException = negative.length > 0 ? picomatch(negative, { dot: true }) : () => false;
+  return (path) => {
+    const p = normalizePath(path);
+    return isMatch(p) && !isException(p);
+  };
 }
 
 /** Longest glob accepted in settings and anchors. */
@@ -30,6 +44,7 @@ export function validateGlob(glob: string): string | null {
   if (g.length === 0) return 'is empty';
   if (g.length > MAX_GLOB_LENGTH) return `is longer than ${MAX_GLOB_LENGTH} characters`;
   if (/\s/.test(g)) return 'has a space';
+  if (g.startsWith('!')) return 'starts with "!". Negated globs are not supported: remove the glob to stop ignoring those files';
   try {
     picomatch.makeRe(g.includes('/') ? g : `**/${g}`, { dot: true, strictBrackets: true });
   } catch {
@@ -73,6 +88,7 @@ export function repoMatches(bindingRepo: string | undefined, change: BitbucketCh
  */
 export function pathMatchStrength(binding: Binding, file: ChangedFile, globs: GlobCache): number {
   const paths = [file.path, file.oldPath].filter((p): p is string => p !== undefined).map(normalizePath);
+  if (isExcluded(binding, paths, globs)) return 0;
   switch (binding.anchorType) {
     case 'path': {
       const pattern = binding.pattern ? normalizePath(binding.pattern) : undefined;
@@ -88,4 +104,17 @@ export function pathMatchStrength(binding: Binding, file: ChangedFile, globs: Gl
     default:
       return 0;
   }
+}
+
+/**
+ * True when every path of the file is on the binding's exclude list (R-7, "stop watching this path for
+ * this page"). An exclude entry is an exact path or a glob.
+ */
+export function isExcluded(binding: Pick<Binding, 'exclude'>, paths: string[], globs: GlobCache): boolean {
+  const ex = binding.exclude;
+  if (!ex || ex.length === 0 || paths.length === 0) return false;
+  return paths.every((p) => ex.some((e) => {
+    const n = normalizePath(e);
+    return n === p || (/[*?[\]{}]/.test(n) && globs.get(n)(p));
+  }));
 }

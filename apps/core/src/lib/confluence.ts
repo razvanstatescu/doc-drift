@@ -24,6 +24,8 @@ export interface PageBody {
   spaceId?: string;
   ownerId?: string;
   storage?: string;
+  /** Absolute web URL when the response has `_links.base`. */
+  url?: string;
 }
 
 /** GET a page with its storage-format body. A non-2xx status means "cannot read" (404 for restricted pages, D20). */
@@ -32,7 +34,8 @@ export async function getPageStorage(requester: Requester, pageId: string): Prom
     headers: { Accept: 'application/json' },
   });
   if (!res.ok) return { status: res.status };
-  const out = (await res.json()) as { id: string; title: string; spaceId: string; ownerId?: string; body?: { storage?: { value?: string } } };
+  const out = (await res.json()) as { id: string; title: string; spaceId: string; ownerId?: string; body?: { storage?: { value?: string } }; _links?: { webui?: string; base?: string } };
+  const url = out._links?.webui ? `${out._links.base ?? ''}${out._links.webui}` : undefined;
   return {
     status: res.status,
     id: out.id,
@@ -40,7 +43,20 @@ export async function getPageStorage(requester: Requester, pageId: string): Prom
     spaceId: out.spaceId,
     ...(out.ownerId && { ownerId: out.ownerId }),
     storage: out.body?.storage?.value ?? '',
+    ...(url && { url }),
   };
+}
+
+/**
+ * The page's status as the requester sees it: `current`, or `draft` for a page that was never
+ * published (GET /pages/{id} without a status filter is 404 for it). Undefined when not visible.
+ */
+export async function getPageStatus(requester: Requester, pageId: string): Promise<string | undefined> {
+  const res = await requester.requestConfluence(route`/wiki/api/v2/pages/${pageId}?status=current&status=draft&include-version=false`, {
+    headers: { Accept: 'application/json' },
+  });
+  if (!res.ok) return undefined;
+  return ((await res.json()) as { status?: string }).status;
 }
 
 export interface PageMeta {
@@ -370,4 +386,11 @@ export async function updatePageBody(
   if (!res.ok) return { status: res.status, error: await readBody(res) };
   const out = (await res.json()) as { version?: { number?: number } };
   return { status: res.status, version: out.version?.number ?? page.version + 1 };
+}
+
+/** A space's key by its ID (BUG-11 moved pages, when the event carries no key). Scope read:space:confluence. */
+export async function getSpaceKeyById(requester: Requester, spaceId: string): Promise<string | undefined> {
+  const res = await requester.requestConfluence(route`/wiki/api/v2/spaces/${spaceId}`, { headers: { Accept: 'application/json' } });
+  if (!res.ok) return undefined;
+  return ((await res.json()) as { key?: string }).key;
 }

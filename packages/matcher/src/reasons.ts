@@ -46,3 +46,10 @@ export function snippetReason(lines: number, changeLabel: string): string {
 export function dampenerReason(dismissals: number, weight: number): string {
   return `Anchor weight lowered to ${weight.toFixed(1)} after ${count(dismissals, 'dismissal')}`;
 }
+
+/** BUG-08: the relay keeps the first 500 files of a large PR. */
+export function truncatedReason(totalFiles: number | undefined, kept: number): string {
+  return totalFiles !== undefined && totalFiles > kept
+    ? `This PR changed ${totalFiles} files; only the first ${kept} were checked`
+    : `This PR changed more than ${kept} files; only the first ${kept} were checked`;
+}

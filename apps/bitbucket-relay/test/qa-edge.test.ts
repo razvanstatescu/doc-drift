@@ -2,7 +2,7 @@
 // `it.fails` marks a reproduced bug from docs/testing/test-report-2026-11-11.md.
 import { describe, expect, it } from 'vitest';
 import { parseChangeRecord } from '@dds/shared';
-import { buildChangeRecord, collectDiffstat, mapDiffstatEntry, trimUtf8, type DiffstatPage } from '../src/lib/record';
+import { buildChangeRecord, collectDiffstat, mapDiffstatEntry, parseMergedEvent, trimUtf8, type DiffstatPage } from '../src/lib/record';
 import { validateIngestUrl, validateSecret } from '../src/lib/ingest';
 
 const PR = {
@@ -48,10 +48,27 @@ describe('QA relay: diffstat edge cases', () => {
   });
   // BUG-08: the record does not say it was truncated, so the core cannot tell "file 501 changed but
   // was dropped" from "file 501 did not change"; an anchor on a dropped file silently gets no event.
-  it.fails('BUG-08: a truncated diffstat is visible in the change record', () => {
+  it('BUG-08 (fixed): a truncated diffstat is visible in the change record and validates', () => {
     const files = Array.from({ length: 500 }, (_, i) => ({ status: 'modified' as const, path: `f${i}`, linesAdded: 1, linesRemoved: 1 }));
-    const rec = buildChangeRecord({ pr: PR, repo: { mainBranch: 'main', fullName: 'nano-soft-dev/payments-api' }, files }) as unknown as Record<string, unknown>;
-    expect(rec).toHaveProperty('filesTruncated');
+    const rec = buildChangeRecord({ pr: PR, repo: { mainBranch: 'main', fullName: 'nano-soft-dev/payments-api' }, files, truncated: true, totalFiles: 812 });
+    expect(rec).toMatchObject({ filesTruncated: true, totalFiles: 812 });
+    expect(parseChangeRecord(rec)).toMatchObject({ ok: true, value: { filesTruncated: true, totalFiles: 812 } });
+    const small = buildChangeRecord({ pr: PR, repo: { mainBranch: 'main' }, files: files.slice(0, 3) });
+    expect(small).not.toHaveProperty('filesTruncated');
+  });
+  it('R-6: the PR author account ID is read from the event and sent', () => {
+    const parsed = parseMergedEvent({
+      workspace: { uuid: '{w}' },
+      repository: { uuid: '{r}', slug: 'payments-api' },
+      pullrequest: {
+        id: 7, title: { value: 'T' }, author: { displayName: 'Jane Smith', accountId: '712020:f44b4850-c6f6-54ce-9722-b800af117eb4' },
+        source: { branch: 'f', commit: { hash: 'a' } }, destination: { branch: 'main', commit: { hash: 'b' } }, mergeCommit: { hash: 'c' },
+      },
+    });
+    expect(parsed.ok && parsed.value.authorAccountId).toBe('712020:f44b4850-c6f6-54ce-9722-b800af117eb4');
+    if (!parsed.ok) return;
+    const rec = buildChangeRecord({ pr: parsed.value, repo: { mainBranch: 'main' }, files: [] });
+    expect(parseChangeRecord(rec)).toMatchObject({ ok: true, value: { authorAccountId: '712020:f44b4850-c6f6-54ce-9722-b800af117eb4' } });
   });
   it('trimUtf8 never splits an emoji and cuts after a full line', () => {
     const text = `${'a'.repeat(9)}\n🚀🚀🚀\n`;

@@ -49,4 +49,9 @@ export interface Binding {
   weight: AnchorWeight;
   /** Times an event from this binding was dismissed. Feeds the dismiss dampener. */
   dismissCount?: number;
+  /**
+   * Repo-relative paths or globs this binding no longer watches ("stop watching this path for this
+   * page", R-7). A file matching any of them never matches the binding.
+   */
+  exclude?: string[];
 }

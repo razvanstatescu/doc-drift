@@ -118,9 +118,18 @@ function verifiedTooltip(f: BylineFacts): string {
   return clampTooltip(`${when}${watching}`);
 }
 
+/**
+ * The byline title: the state word first, so it survives truncation and reads at a glance (UX-6):
+ * `Possibly stale · Doc Drift`. Returned as `stateTitle` by the resolvers too, so the UI can show
+ * the same words.
+ */
+export function stateTitle(state: StoredPageState | 'unknown'): string {
+  return `${PAGE_STATE_LABELS[state]} · Doc Drift`;
+}
+
 /** Builds the byline content-property value for a page state. */
 export function bylineValue(f: BylineFacts): BylineValue {
-  const title = `Doc Drift: ${PAGE_STATE_LABELS[f.state]}`;
+  const title = stateTitle(f.state);
   switch (f.state) {
     case 'verified':
       return { title, tooltip: verifiedTooltip(f) };

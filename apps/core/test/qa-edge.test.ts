@@ -1,6 +1,6 @@
-// QA edge cases for the core app's pure logic (docs/testing/test-plan.md, run 2026-11-11). Cases
-// marked `it.fails` reproduce a bug from docs/testing/test-report-2026-11-11.md: they pass while the
-// bug exists and start failing (flip them to `it`) once it is fixed.
+// QA edge cases for the core app's pure logic (docs/testing/test-plan.md, run 2026-11-11). Cases that
+// reproduced a bug from docs/testing/test-report-2026-11-11.md were `it.fails`; phase 2 fixed them, so
+// they are plain tests named "(fixed)" that assert the corrected behaviour.
 import { describe, expect, it } from 'vitest';
 import { matchBinding, parsePageRef, parseRepo, diffForPaths, validateFixInput } from '../src/lib/agent-tools';
 import { normalizeAnchor, normalizeRepo } from '../src/lib/anchors';
@@ -13,25 +13,36 @@ const code = (body: string) =>
 
 describe('QA: page references (tools)', () => {
   it('reads IDs from the URL forms Confluence shows', () => {
-    expect(parsePageRef({ pageUrl: 'https://one-atlas-jzzf.atlassian.net/wiki/spaces/PLAT/pages/2720129/Scale+payment+workers' })).toEqual({ pageId: '2720129', via: 'pageUrl' });
-    expect(parsePageRef({ pageUrl: 'https://x.atlassian.net/wiki/spaces/PLAT/pages/edit-v2/2720129' })).toEqual({ pageId: '2720129', via: 'pageUrl' });
-    expect(parsePageRef({ pageUrl: 'https://x.atlassian.net/wiki/pages/viewpage.action?pageId=2720129' })).toEqual({ pageId: '2720129', via: 'pageUrl' });
+    expect(parsePageRef({ pageUrl: 'https://one-atlas-jzzf.atlassian.net/wiki/spaces/PLAT/pages/2720129/Scale+payment+workers' })).toEqual({ pageId: '2720129', via: 'pageUrl', host: 'one-atlas-jzzf.atlassian.net' });
+    expect(parsePageRef({ pageUrl: 'https://x.atlassian.net/wiki/spaces/PLAT/pages/edit-v2/2720129' })).toEqual({ pageId: '2720129', via: 'pageUrl', host: 'x.atlassian.net' });
+    expect(parsePageRef({ pageUrl: 'https://x.atlassian.net/wiki/pages/viewpage.action?pageId=2720129' })).toEqual({ pageId: '2720129', via: 'pageUrl', host: 'x.atlassian.net' });
     expect(parsePageRef({ pageId: ' 2720129 ' })).toEqual({ pageId: '2720129', via: 'pageId' });
     expect(parsePageRef({ pageId: 2720129 })).toEqual({ pageId: '2720129', via: 'pageId' });
   });
-  it('a tiny link (/wiki/x/...) has no page ID: with no context it is no_page', () => {
-    expect(parsePageRef({ pageUrl: 'https://one-atlas-jzzf.atlassian.net/wiki/x/gQBH' })).toEqual({ via: 'none' });
+  it('BUG-04 (fixed): a tiny link (/wiki/x/...) is decoded to its page ID (checked against 5 real pages)', () => {
+    for (const [code, id] of [['2wAq', '2752731'], ['HIAu', '3047452'], ['WAAv', '3080280'], ['gYEp', '2720129'], ['EoIt', '2982418']]) {
+      expect(parsePageRef({ pageUrl: `https://one-atlas-jzzf.atlassian.net/wiki/x/${code}` }, '3080280')).toEqual({ pageId: id, via: 'tinyUrl', host: 'one-atlas-jzzf.atlassian.net' });
+    }
+    expect(parsePageRef({ pageUrl: 'https://one-atlas-jzzf.atlassian.net/wiki/x/gQBH' }, '3080280')).toMatchObject({ pageId: '4653185', via: 'tinyUrl' });
   });
   // BUG-04: an unreadable pageUrl (tiny link, legacy /display/ URL) or a non-numeric pageId silently
   // falls back to the Rovo page context, so the agent answers about the page it is on, not the one asked.
-  it.fails('BUG-04: an unparseable pageUrl does not fall back to the context page', () => {
-    expect(parsePageRef({ pageUrl: 'https://one-atlas-jzzf.atlassian.net/wiki/x/gQBH' }, '3080280')).toEqual({ via: 'none' });
+  it('BUG-04 (fixed): an unparseable pageUrl does not fall back to the context page', () => {
+    expect(parsePageRef({ pageUrl: 'https://one-atlas-jzzf.atlassian.net/wiki/spaces/PLAT/overview' }, '3080280')).toEqual({ via: 'none', reason: 'unreadable_url' });
+    expect(parsePageRef({ pageUrl: 'not a link at all' }, '3080280')).toEqual({ via: 'none', reason: 'unreadable_url' });
   });
-  it.fails('BUG-04: a non-numeric pageId does not fall back to the context page', () => {
-    expect(parsePageRef({ pageId: 'Payments rollback runbook' }, '3080280')).not.toEqual({ pageId: '3080280', via: 'context' });
+  it('BUG-04 (fixed): a non-numeric pageId is read as a title, never the context page', () => {
+    expect(parsePageRef({ pageId: 'DDS test: Payments rollback runbook' }, '3080280')).toEqual({ title: 'DDS test: Payments rollback runbook', via: 'title' });
   });
-  it('a URL from another site is read as a page ID on this site (observation)', () => {
-    expect(parsePageRef({ pageUrl: 'https://other-site.atlassian.net/wiki/spaces/X/pages/2720129/T' })).toEqual({ pageId: '2720129', via: 'pageUrl' });
+  it('a legacy /display/SPACE/Title URL is read as a title', () => {
+    expect(parsePageRef({ pageUrl: 'https://x.atlassian.net/wiki/display/PLAT/Scale+payment+workers' }, '1')).toEqual({ title: 'Scale payment workers', via: 'title' });
+  });
+  it('the context page is used only when no page was named at all', () => {
+    expect(parsePageRef({}, '3080280')).toEqual({ pageId: '3080280', via: 'context' });
+    expect(parsePageRef({ pageId: '', pageUrl: '  ', title: '' }, '3080280')).toEqual({ pageId: '3080280', via: 'context' });
+  });
+  it('a URL from another site carries its host, so the tool can refuse it (observation 9)', () => {
+    expect(parsePageRef({ pageUrl: 'https://other-site.atlassian.net/wiki/spaces/X/pages/2720129/T' })).toEqual({ pageId: '2720129', via: 'pageUrl', host: 'other-site.atlassian.net' });
   });
   it('repo inputs: URLs, ssh remotes, .git', () => {
     expect(parseRepo('git@bitbucket.org:nano-soft-dev/payments-api.git')).toEqual({ full: 'nano-soft-dev/payments-api', slug: 'payments-api' });
@@ -57,8 +68,11 @@ describe('QA: find-docs-for-path matching', () => {
     expect(matchBinding(path, 'Scripts/Rollback.sh')).toBeUndefined();
   });
   // BUG-07: a glob query with no static prefix (`**/*.sh`) matches every glob anchor, whatever it covers.
-  it.fails('BUG-07: "**/*.sh" does not match a src/** glob anchor', () => {
+  it('BUG-07 (fixed): "**/*.sh" does not match a src/** glob anchor, but matches scripts/*.sh', () => {
     expect(matchBinding(glob, '**/*.sh')).toBeUndefined();
+    expect(matchBinding(glob, '**/*.yaml')).toBeUndefined();
+    expect(matchBinding({ anchorType: 'glob', pattern: 'scripts/*.sh' }, '**/*.sh')).toBe('glob');
+    expect(matchBinding(path, '**/*.sh')).toBe('glob');
   });
 });
 
@@ -73,16 +87,19 @@ describe('QA: anchor input (binding modal)', () => {
   it('keeps path case (git is case-sensitive)', () => {
     expect(normalizeAnchor({ repo: 'payments-api', pattern: 'Scripts/Rollback.sh' })).toMatchObject({ ok: true, value: { pattern: 'Scripts/Rollback.sh' } });
   });
-  it('refuses spaces, "..", unicode and an ssh remote', () => {
-    expect(normalizeAnchor({ repo: 'payments-api', pattern: 'scripts/my script.sh' }).ok).toBe(false);
-    expect(normalizeAnchor({ repo: 'payments-api', pattern: '../etc/passwd' }).ok).toBe(false);
-    expect(normalizeAnchor({ repo: 'payments-api', pattern: 'docs/café.sh' })).toEqual({ ok: false, error: 'Use a repo-relative path without spaces or "..".' });
+  it('refuses spaces, ".." and an ssh remote, each with its own reason; Unicode is allowed (observation 2)', () => {
+    expect(normalizeAnchor({ repo: 'payments-api', pattern: 'scripts/my script.sh' })).toEqual({ ok: false, error: 'Use a repo-relative path without spaces.' });
+    expect(normalizeAnchor({ repo: 'payments-api', pattern: '../etc/passwd' })).toEqual({ ok: false, error: 'Use a repo-relative path without "..".' });
+    expect(normalizeAnchor({ repo: 'payments-api', pattern: 'docs/café.sh' })).toEqual({ ok: true, value: { anchorType: 'path', repo: 'payments-api', pattern: 'docs/café.sh', weight: 'normal' } });
+    expect(normalizeAnchor({ repo: 'payments-api', pattern: 'docs/a|b.sh' })).toMatchObject({ ok: false });
     expect(normalizeAnchor({ repo: 'git@bitbucket.org:nano-soft-dev/payments-api.git', pattern: 'a.sh' }).ok).toBe(false);
   });
   // BUG-06: a folder anchor typed without a glob is saved as an exact path anchor that can never match.
-  it.fails('BUG-06: "deploy/helm/" becomes a glob (deploy/helm/**) or is refused', () => {
-    const r = normalizeAnchor({ repo: 'payments-api', pattern: 'deploy/helm/' });
-    expect(r.ok && r.value.anchorType === 'path').toBe(false);
+  it('BUG-06 (fixed): "deploy/helm/" becomes the glob deploy/helm/**; "deploy/helm" is saved with a warning', () => {
+    expect(normalizeAnchor({ repo: 'payments-api', pattern: 'deploy/helm/' })).toEqual({ ok: true, value: { anchorType: 'glob', repo: 'payments-api', pattern: 'deploy/helm/**', weight: 'normal' } });
+    expect(normalizeAnchor({ repo: 'payments-api', pattern: 'deploy/helm' })).toMatchObject({ ok: true, value: { anchorType: 'path' }, warning: 'This looks like a folder. Use deploy/helm/** to watch everything in it.' });
+    expect(normalizeAnchor({ repo: 'payments-api', pattern: 'deploy/Dockerfile' })).not.toHaveProperty('warning');
+    expect(normalizeAnchor({ repo: 'payments-api', pattern: '/' })).toMatchObject({ ok: false });
   });
   it('Bitbucket URL as repo; Jira key in lower case', () => {
     expect(normalizeRepo('https://bitbucket.org/nano-soft-dev/payments-api/src/main/')).toBe('nano-soft-dev/payments-api');
@@ -120,17 +137,21 @@ describe('QA: settings validation', () => {
     expect(r).toMatchObject({ ok: true, value: { ignoreGlobs: ['**/*.{snap,lock}'] } });
   });
   // BUG-01 at the settings layer: the negated glob is saved, and then every change is ignored.
-  it.fails('BUG-01: a negated ignore glob ("!docs/keep.md") is refused with a field error', () => {
-    expect(parseSettings({ ignoreGlobs: ['**/*.md', '!docs/keep.md'] }).ok).toBe(false);
+  it('BUG-01 (fixed): a negated ignore glob ("!docs/keep.md") is refused with a field error', () => {
+    const r = parseSettings({ ignoreGlobs: ['**/*.md', '!docs/keep.md'] });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.fieldErrors.ignoreGlobs).toMatch(/!docs\/keep\.md starts with "!"/);
   });
   it('space keys compare case-insensitively', () => {
     expect(spaceWatched({ spaceMode: 'selected', spaceKeys: ['plat'] }, 'PLAT')).toBe(true);
     expect(spaceWatched({ spaceMode: 'selected', spaceKeys: ['PLAT'] }, null)).toBe(false);
   });
-  it('a Jira record without changelogId gets a key shared by every such change of that issue', () => {
-    // The Jira trigger always sets changelogId (event id or timestamp), so this only bites a relay-sent
-    // or hand-built Jira record: the second change of the issue would be dropped as a duplicate.
-    expect(changeDedupeKey({ source: 'jira', issueKey: 'PAY-21', changelog: [] })).toBe('jira#PAY-21#');
+  it('BUG-18 (fixed): a Jira record without changelogId gets a key from its changelog', () => {
+    const a = changeDedupeKey({ source: 'jira', issueKey: 'PAY-21', changelog: [{ field: 'status', from: 'To Do', to: 'Done' }] });
+    const b = changeDedupeKey({ source: 'jira', issueKey: 'PAY-21', changelog: [{ field: 'fixVersions', from: '2026.12', to: '2027.01' }] });
+    expect(a).toMatch(/^jira#PAY-21#h[0-9a-f]{16}$/);
+    expect(a).not.toBe(b);
+    expect(changeDedupeKey({ source: 'jira', issueKey: 'PAY-21', changelogId: '1001', changelog: [] })).toBe('jira#PAY-21#1001');
   });
 });
 
@@ -184,29 +205,35 @@ describe('QA: fix proposals on tricky storage (D29)', () => {
   // link text on accept; when the changed characters span the link, the link itself is destroyed.
   const LINK = '<ac:link><ri:page ri:content-title="Rollback runbook" /><ac:plain-text-link-body><![CDATA[the runbook]]></ac:plain-text-link-body></ac:link>';
   const LINKED = `<p>Read ${LINK} then run <code>--retries</code> <strong>twice</strong>.</p>`;
-  it('BUG-05: the block text the agent sees has a hole where the link text is', () => {
-    expect(extractBlocks(LINKED)[0]!.text).toBe('Read then run --retries twice.');
+  it('BUG-05 (fixed): the block text the agent sees includes the link text', () => {
+    expect(extractBlocks(LINKED)[0]!.text).toBe('Read the runbook then run --retries twice.');
   });
-  it.fails('BUG-05: a whole-block proposal that restores the sentence does not duplicate the link text', () => {
+  it('BUG-05 (fixed): a whole-block proposal that keeps the sentence does not duplicate the link text', () => {
     const r = applyBlockEdit(LINKED, { blockId: 'b1', originalText: extractBlocks(LINKED)[0]!.text, proposedText: 'Read the runbook, then run --attempts 3 times.' });
     expect(r.ok && (r.storage.match(/the runbook/g) ?? []).length).toBe(1);
+    expect(r.ok && r.storage).toBe(`<p>Read ${LINK}, then run --attempts 3 times.</p>`);
   });
-  it('BUG-05 impact (a): the link text appears twice after accept', () => {
-    const r = applyBlockEdit(LINKED, { blockId: 'b1', originalText: extractBlocks(LINKED)[0]!.text, proposedText: 'Read the runbook, then run --attempts 3 times.' });
-    expect(r.ok && r.storage).toBe(`<p>Read ${LINK} the runbook, then run --attempts 3 times.</p>`);
+  it('BUG-05 (fixed): a narrow edit next to the link keeps the link and the code formatting', () => {
+    const r = applyBlockEdit(LINKED, { blockId: 'b1', originalText: extractBlocks(LINKED)[0]!.text, proposedText: 'Read the runbook then run --attempts twice.' });
+    expect(r.ok && r.storage).toBe(`<p>Read ${LINK} then run <code>--attempts</code> <strong>twice</strong>.</p>`);
   });
-  it.fails('BUG-05: a rewrite whose changed characters span the link keeps the link', () => {
+  it('BUG-05 (fixed): a rewrite whose changed characters span the link is refused, the link is never destroyed', () => {
     const r = applyBlockEdit(LINKED, { blockId: 'b1', originalText: extractBlocks(LINKED)[0]!.text, proposedText: 'Open it and pass --attempts 3.' });
-    expect(r.ok && r.storage).toContain('<ac:link>');
+    expect(r).toEqual({ ok: false, error: 'unsupported_span' });
+    const t = resolveTarget(extractBlocks(LINKED), { blockId: 'b1' });
+    expect(t.ok && editBlock(LINKED, t.target, 'Read the docs then run --retries twice.')).toEqual({ ok: false, error: 'unsupported_span' });
   });
-  it('BUG-05 impact (b): the link, its target and the bold are gone', () => {
-    const r = applyBlockEdit(LINKED, { blockId: 'b1', originalText: extractBlocks(LINKED)[0]!.text, proposedText: 'Open it and pass --attempts 3.' });
-    expect(r.ok && r.storage).toBe('<p>Open it and pass --attempts 3.</p>');
-  });
-  it('the same holds for a user mention', () => {
+  it('BUG-05 (fixed): a user mention shows as @mention and a rewrite through it is refused', () => {
     const s = '<p>Ask <ac:link><ri:user ri:account-id="5e8d4e6bacb63e0b834222ee" /></ac:link> before running <code>--retries</code>.</p>';
-    const r = applyBlockEdit(s, { blockId: 'b1', originalText: extractBlocks(s)[0]!.text, proposedText: 'Before running --attempts, ask on-call.' });
-    expect(r.ok && r.storage).not.toContain('ri:user');
+    expect(extractBlocks(s)[0]!.text).toBe('Ask @mention before running --retries.');
+    expect(applyBlockEdit(s, { blockId: 'b1', originalText: extractBlocks(s)[0]!.text, proposedText: 'Before running --attempts, ask on-call.' })).toEqual({ ok: false, error: 'unsupported_span' });
+    const ok = applyBlockEdit(s, { blockId: 'b1', originalText: extractBlocks(s)[0]!.text, proposedText: 'Ask @mention before running --attempts.' });
+    expect(ok.ok && ok.storage).toBe('<p>Ask <ac:link><ri:user ri:account-id="5e8d4e6bacb63e0b834222ee" /></ac:link> before running <code>--attempts</code>.</p>');
+  });
+  it('BUG-05: page links without a body show the page title; an edit through an emoticon is refused', () => {
+    expect(extractBlocks('<p>See <ac:link><ri:page ri:content-title="Rollback &amp; restore" /></ac:link>.</p>')[0]!.text).toBe('See Rollback & restore.');
+    const s = '<p>Run <code>--retries</code> <ac:emoticon ac:name="warning" /> twice.</p>';
+    expect(applyBlockEdit(s, { blockId: 'b1', originalText: 'Run --retries twice.', proposedText: 'Run it once.' })).toEqual({ ok: false, error: 'unsupported_span' });
   });
   it('a status macro inside the range is refused (unsupported_span), not destroyed', () => {
     const status = '<ac:structured-macro ac:name="status"><ac:parameter ac:name="title">BETA</ac:parameter></ac:structured-macro>';
@@ -238,14 +265,16 @@ describe('QA: fix proposals on tricky storage (D29)', () => {
 });
 
 describe('QA: tokens and diffs', () => {
-  it('whole-token match: identifiers yes, path tokens leak into longer file names', () => {
+  it('BUG-16 (fixed): whole-token match for identifiers and paths; a full stop still matches', () => {
     expect(tokenRegExp('ROLLBACK_TIMEOUT').test('ROLLBACK_TIMEOUT_SECS')).toBe(false);
-    // Observation: a path token also matches a longer file name that starts with it.
-    expect(tokenRegExp('scripts/a.sh').test('scripts/a.sh.bak')).toBe(true);
+    expect(tokenRegExp('scripts/a.sh').test('scripts/a.sh.bak')).toBe(false);
+    expect(tokenRegExp('scripts/a.sh').test('Run scripts/a.sh.')).toBe(true);
+    expect(tokenRegExp('scripts/a.sh').test('./scripts/a.sh --x')).toBe(true);
   });
-  it('diffForPaths keeps only the asked file, not a file whose name extends it', () => {
+  it('BUG-16 (fixed): diffForPaths keeps only the asked file, not a file whose name extends it', () => {
     const diff = 'diff --git a/scripts/a.sh b/scripts/a.sh\n@@ -1 +1 @@\n-x\n+y\ndiff --git a/scripts/a.sh.bak b/scripts/a.sh.bak\n@@ -1 +1 @@\n-x\n+y\n';
-    // Observation: header.includes(" a/scripts/a.sh") also matches "a/scripts/a.sh.bak".
-    expect(diffForPaths(diff, ['scripts/a.sh'])).toContain('a.sh.bak');
+    const out = diffForPaths(diff, ['scripts/a.sh']);
+    expect(out).toContain('a/scripts/a.sh b/scripts/a.sh');
+    expect(out).not.toContain('a.sh.bak');
   });
 });

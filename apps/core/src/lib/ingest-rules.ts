@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 // Pure rules for the ingest path and matcher configuration. No Forge imports, unit-tested.
 import { DEFAULT_IGNORE_GLOBS, SENSITIVITY_THRESHOLDS, validateGlob, type MatcherConfig, type Sensitivity } from '@dds/matcher';
 import {
@@ -17,7 +18,10 @@ import {
  */
 export function changeDedupeKey(record: ChangeRecord): string {
   if (record.source === 'bitbucket') return `${record.repoUuid}#${record.prId}#${record.mergeCommit}`;
-  return `jira#${record.issueKey}#${record.changelogId ?? ''}`;
+  if (record.changelogId) return `jira#${record.issueKey}#${record.changelogId}`;
+  // BUG-18: without a changelog ID, two different changes of one issue must not share a key.
+  const digest = createHash('sha256').update(JSON.stringify([record.author ?? null, record.statusCategory ?? null, record.changelog])).digest('hex').slice(0, 16);
+  return `jira#${record.issueKey}#h${digest}`;
 }
 
 /** Web trigger headers arrive as `{ name: [value] }` with lowercased names; look up case-insensitively. */

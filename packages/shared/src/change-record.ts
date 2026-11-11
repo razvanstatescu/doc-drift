@@ -29,6 +29,15 @@ export interface BitbucketChangeRecord {
   files: ChangedFile[];
   /** Raw unified diff (`/diff`), at most 150 KB. Absent for PRs over 300 files. */
   hunks?: string;
+  /**
+   * True when the PR changed more files than the record carries (the relay keeps the first 500). The core
+   * then cannot tell "not changed" from "dropped" for the rest (BUG-08), so it says so on the event.
+   */
+  filesTruncated?: boolean;
+  /** How many files the PR changed in total, when the relay knows (at least `files.length`). */
+  totalFiles?: number;
+  /** The PR author's Atlassian account ID (Bitbucket `author.account_id`), for an @mention (R-6). */
+  authorAccountId?: string;
 }
 
 /** One changelog item of a Jira issue update, normalized (not the raw webhook). */

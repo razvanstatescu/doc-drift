@@ -2,8 +2,9 @@
 // Background work runs asApp. Never log whole events: they carry a contextToken JWT.
 import api, { route } from '@forge/api';
 import { parseChangeRecord } from '@dds/shared';
-import { displayNames } from '../lib/confluence';
-import { bindingsForJiraKey, dropPage, ensureSchema, escalationCandidates, purgeHunksBefore } from '../lib/db';
+import { BYLINE_PROPERTY_KEY, bylineValue } from '../lib/copy';
+import { displayNames, getPageMeta, getSpaceKeyById, upsertPageProperty } from '../lib/confluence';
+import { bindingsForJiraKey, dropPage, ensureSchema, escalationCandidates, purgeHunksBefore, updatePageSpace } from '../lib/db';
 import { ingestRecord } from '../lib/ingest';
 import { toSqlDate } from '../lib/ingest-rules';
 import { refreshPage } from '../lib/page-state';
@@ -96,18 +97,48 @@ export async function jiraEvent(event: JiraIssueEvent): Promise<void> {
 interface ConfluencePageEvent {
   eventType?: string;
   selfGenerated?: boolean;
-  content?: { id?: string | number; type?: string };
+  content?: { id?: string | number; type?: string; space?: { key?: string; id?: string | number }; spaceId?: string | number };
+  prevContent?: { space?: { key?: string } };
 }
 
-/** `avi:confluence:trashed:page` / `avi:confluence:deleted:page`: close the page's events and drop its bindings. */
+/**
+ * Page lifecycle:
+ * - `trashed` / `deleted`: close the page's events and drop its bindings; reset the byline to Unanchored
+ *   (BUG-09: the property survived, so a restored page showed its old badge).
+ * - `restored`: recompute the page (no bindings left, so Unanchored) and rewrite the byline.
+ * - `moved` (BUG-11): bindings and state follow the page to its new space.
+ */
 export async function confluencePageEvent(event: ConfluencePageEvent): Promise<void> {
   if (event?.selfGenerated) return;
   const id = event?.content?.id;
   if (id === undefined || id === null) return;
   const pageId = String(id);
   await ensureSchema();
+  const type = event.eventType ?? '';
+  if (type.endsWith(':restored:page')) {
+    const r = await refreshPage(pageId);
+    log('DDS_PAGE_RESTORED', { pageId, status: r.status, byline: r.byline.status });
+    return;
+  }
+  if (type.endsWith(':moved:page')) {
+    let key = event.content?.space?.key;
+    const spaceId = event.content?.space?.id ?? event.content?.spaceId;
+    if (!key && spaceId !== undefined) key = await getSpaceKeyById(api.asApp(), String(spaceId));
+    if (!key) {
+      const meta = await getPageMeta(api.asApp(), pageId);
+      if (meta.spaceId) key = await getSpaceKeyById(api.asApp(), meta.spaceId);
+    }
+    if (!key || key === event.prevContent?.space?.key) return;
+    const n = await updatePageSpace(pageId, key);
+    if (n > 0) log('DDS_PAGE_MOVED', { pageId, spaceKey: key, from: event.prevContent?.space?.key ?? null, bindings: n });
+    return;
+  }
   const res = await dropPage(pageId);
-  if (res.bindings > 0 || res.closed > 0) log('DDS_PAGE_REMOVED', { pageId, eventType: event.eventType, ...res });
+  if (res.bindings > 0 || res.closed > 0) {
+    // Trashed pages still have properties; a deleted page's write fails harmlessly (logged).
+    const byline = await upsertPageProperty(api.asApp(), pageId, BYLINE_PROPERTY_KEY, bylineValue({ state: 'unanchored' }));
+    log('DDS_PAGE_REMOVED', { pageId, eventType: event.eventType, ...res, byline: byline.status });
+  }
 }
 
 /** Hourly scheduled trigger: Possibly stale to Stale after escalationDays (D27), and snoozes that ended. */

@@ -2,7 +2,7 @@
 // page per 24 h. Inside the window the existing comment gets a new paragraph instead, and the record
 // keeps every line. Debounced by the queue's delayInSeconds. Comments are written asApp (no page text changes).
 import api from '@forge/api';
-import { createFooterComment, getPageMeta, updateFooterComment } from './confluence';
+import { createFooterComment, displayNames, getPageMeta, updateFooterComment } from './confluence';
 import { ensureSchema, eventDetailsForPage, getNotification, getPageState, saveNotification } from './db';
 import { fromSqlDate, toSqlDate } from './ingest-rules';
 import { groupForNotification, notificationBody, notificationLine, planNotification } from './review';
@@ -26,8 +26,12 @@ export async function notifyPage(pageId: string): Promise<NotifyOutcome> {
   const [events, existing, state] = await Promise.all([eventDetailsForPage(pageId), getNotification(pageId), getPageState(pageId)]);
   const sent = new Set(existing?.eventIds ?? []);
   const fresh = events.filter((e) => !sent.has(sentKey(e)) && !(e.snoozedUntil && (fromSqlDate(e.snoozedUntil) ?? 0) > now));
+  // R-6: mention the PR author too, but only when their account resolves on this site (else name them).
+  const authorIds = [...new Set(fresh.map((e) => e.changeAuthorAccountId).filter((a): a is string => !!a))];
+  const known = authorIds.length > 0 ? await displayNames(api.asApp(), authorIds) : new Map<string, string>();
+  const withAuthors = fresh.map((e) => ({ ...e, changeAuthorAccountId: e.changeAuthorAccountId && known.has(e.changeAuthorAccountId) ? e.changeAuthorAccountId : null }));
   // eventDetailsForPage is newest first; the comment reads oldest first.
-  const lines = groupForNotification([...fresh].reverse()).map(notificationLine);
+  const lines = groupForNotification([...withAuthors].reverse()).map(notificationLine);
   const plan = planNotification(
     existing && { windowStart: fromSqlDate(existing.windowStart) ?? 0, commentId: existing.commentId },
     lines.length,

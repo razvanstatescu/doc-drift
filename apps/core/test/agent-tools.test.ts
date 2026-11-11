@@ -28,14 +28,16 @@ describe('parsePageRef', () => {
     expect(parsePageRef({ pageId: 2752731 })).toEqual({ pageId: '2752731', via: 'pageId' });
   });
   it('reads page URLs, including a URL put in pageId', () => {
-    expect(parsePageRef({ pageUrl: 'https://x.atlassian.net/wiki/spaces/PLAT/pages/123456/Rollback+runbook' })).toEqual({ pageId: '123456', via: 'pageUrl' });
-    expect(parsePageRef({ pageUrl: 'https://x.atlassian.net/wiki/pages/viewpage.action?pageId=987' })).toEqual({ pageId: '987', via: 'pageUrl' });
-    expect(parsePageRef({ pageId: 'https://x.atlassian.net/wiki/spaces/A/pages/42' })).toEqual({ pageId: '42', via: 'pageUrl' });
+    expect(parsePageRef({ pageUrl: 'https://x.atlassian.net/wiki/spaces/PLAT/pages/123456/Rollback+runbook' })).toEqual({ pageId: '123456', via: 'pageUrl', host: 'x.atlassian.net' });
+    expect(parsePageRef({ pageUrl: 'https://x.atlassian.net/wiki/pages/viewpage.action?pageId=987' })).toEqual({ pageId: '987', via: 'pageUrl', host: 'x.atlassian.net' });
+    expect(parsePageRef({ pageId: 'https://x.atlassian.net/wiki/spaces/A/pages/42' })).toEqual({ pageId: '42', via: 'pageUrl', host: 'x.atlassian.net' });
+    expect(parsePageRef({ pageUrl: '/wiki/spaces/A/pages/42' })).toEqual({ pageId: '42', via: 'pageUrl' });
   });
   it('falls back to the title, then the Rovo page context', () => {
     expect(parsePageRef({ title: ' Rollback runbook ' })).toEqual({ title: 'Rollback runbook', via: 'title' });
     expect(parsePageRef({}, '555')).toEqual({ pageId: '555', via: 'context' });
-    expect(parsePageRef({ pageId: 'abc' })).toEqual({ via: 'none' });
+    // BUG-04: a non-numeric pageId is a title, never "fall back to the open page".
+    expect(parsePageRef({ pageId: 'abc' }, '555')).toEqual({ title: 'abc', via: 'title' });
   });
 });
 

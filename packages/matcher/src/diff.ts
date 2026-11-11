@@ -11,10 +11,44 @@ export interface FileDiff {
 
 const HUNK_HEADER = /^@@ -\d+(?:,(\d+))? \+\d+(?:,(\d+))? @@/;
 const GIT_HEADER = /^diff --git a\/(.+) b\/(.+)$/;
+/** `diff --git "a/caf\303\251.sh" "b/caf\303\251.sh"` (core.quotePath), either side quoted. */
+const GIT_HEADER_QUOTED = /^diff --git ("a\/(?:[^"\\]|\\.)*"|a\/\S+) ("b\/(?:[^"\\]|\\.)*"|b\/\S+)$/;
+
+const C_ESCAPES: Readonly<Record<string, number>> = { n: 10, t: 9, r: 13, '"': 34, '\\': 92, a: 7, b: 8, f: 12, v: 11 };
+
+/**
+ * Decodes a git C-quoted path (`"caf\303\251.sh"` → `café.sh`): octal escapes are UTF-8 bytes (BUG-19).
+ * Unquoted input is returned unchanged.
+ */
+export function unquoteGitPath(p: string): string {
+  if (p.length < 2 || p[0] !== '"' || p[p.length - 1] !== '"') return p;
+  const bytes: number[] = [];
+  const body = p.slice(1, -1);
+  for (let i = 0; i < body.length; i++) {
+    const c = body[i]!;
+    if (c === '\\' && i + 1 < body.length) {
+      const oct = /^[0-7]{3}/.exec(body.slice(i + 1, i + 4));
+      if (oct) {
+        bytes.push(parseInt(oct[0], 8));
+        i += 3;
+        continue;
+      }
+      const e = C_ESCAPES[body[i + 1]!];
+      if (e !== undefined) {
+        bytes.push(e);
+        i++;
+        continue;
+      }
+    }
+    for (const b of Buffer.from(c, 'utf8')) bytes.push(b);
+  }
+  return Buffer.from(bytes).toString('utf8');
+}
 
 function stripPrefix(path: string): string | undefined {
-  if (path === '/dev/null') return undefined;
-  return path.replace(/^[ab]\//, '').replace(/\t.*$/, '');
+  const p = unquoteGitPath(path.replace(/\t.*$/, ''));
+  if (p === '/dev/null') return undefined;
+  return p.replace(/^[ab]\//, '');
 }
 
 /**
@@ -58,13 +92,16 @@ export function parseUnifiedDiff(diff: string): FileDiff[] {
       newLeft = 0;
     }
 
-    const git = GIT_HEADER.exec(line);
-    if (git?.[1] && git[2]) {
+    const quoted = line.includes('"') ? GIT_HEADER_QUOTED.exec(line) : null;
+    const git = quoted ? null : GIT_HEADER.exec(line);
+    if (quoted?.[1] && quoted[2]) {
+      current = start(stripPrefix(quoted[2]) ?? '', stripPrefix(quoted[1]));
+    } else if (git?.[1] && git[2]) {
       current = start(git[2], git[1]);
     } else if (line.startsWith('rename from ') && current) {
-      current.oldPath = line.slice('rename from '.length);
+      current.oldPath = unquoteGitPath(line.slice('rename from '.length));
     } else if (line.startsWith('rename to ') && current) {
-      current.path = line.slice('rename to '.length);
+      current.path = unquoteGitPath(line.slice('rename to '.length));
     } else if (line.startsWith('--- ')) {
       const oldPath = stripPrefix(line.slice(4));
       const seenHunk = current && (current.removed.length > 0 || current.added.length > 0);

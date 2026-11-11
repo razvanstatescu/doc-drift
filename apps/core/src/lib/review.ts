@@ -74,9 +74,13 @@ function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/** Whole-token match: `ROLLBACK_TIMEOUT` must not match inside `ROLLBACK_TIMEOUT_SECS`. */
+/**
+ * Whole-token match: `ROLLBACK_TIMEOUT` must not match inside `ROLLBACK_TIMEOUT_SECS`, and a path must
+ * not match a longer file name that starts with it (`scripts/a.sh` in `scripts/a.sh.bak`, BUG-16).
+ * A sentence's full stop after the token still matches.
+ */
 export function tokenRegExp(token: string): RegExp {
-  return new RegExp(`(?<![A-Za-z0-9_])${escapeRegExp(token)}(?![A-Za-z0-9_])`);
+  return new RegExp(`(?<![A-Za-z0-9_])${escapeRegExp(token)}(?![A-Za-z0-9_]|[./-][A-Za-z0-9_])`);
 }
 
 /** A window of at most `max` characters around `index`, on word boundaries, with ellipses where cut. */
@@ -260,7 +264,13 @@ export interface NotifyGroup {
   fileCount: number;
   /** The strongest reason, for Jira (`PAY-142 moved to Done`). */
   reason: string | null;
+  /** R-6: the PR author's Atlassian account, when it resolves on this site: they get an @mention. */
+  authorAccountId?: string | null;
 }
+
+/** A mention placeholder inside a stored line; `notificationBody` turns it into an ac:link. */
+export const mentionToken = (accountId: string) => `{{@${accountId}}}`;
+const MENTION_TOKEN = /\{\{@([A-Za-z0-9:_-]{1,128})\}\}/g;
 
 /** One sentence per change: "PR #482 (merged by Sam) changed 2 files this page documents." */
 export function notificationLine(g: NotifyGroup): string {
@@ -269,18 +279,26 @@ export function notificationLine(g: NotifyGroup): string {
     const what = g.reason ?? `${label} changed`;
     return `${what}. This page is anchored to it.`;
   }
-  const by = g.author ? ` (merged by ${g.author})` : '';
+  const by = g.authorAccountId ? ` (merged by ${mentionToken(g.authorAccountId)})` : g.author ? ` (merged by ${g.author})` : '';
   const files = g.fileCount > 0 ? plural(g.fileCount, 'file') : 'an anchor';
   return `${label}${by} changed ${files} this page documents.`;
 }
 
 /** Groups a page's new events by change, one line each. */
 export function groupForNotification(
-  events: { source: 'bitbucket' | 'jira'; ref: string; files: string[]; reasons: string[]; changeAuthor: string | null }[],
+  events: { source: 'bitbucket' | 'jira'; ref: string; files: string[]; reasons: string[]; changeAuthor: string | null; changeAuthorAccountId?: string | null }[],
 ): NotifyGroup[] {
   const groups = new Map<string, NotifyGroup & { files: Set<string> }>();
   for (const e of events) {
-    const g = groups.get(e.ref) ?? { source: e.source, ref: e.ref, author: e.changeAuthor, fileCount: 0, reason: e.reasons[0] ?? null, files: new Set<string>() };
+    const g = groups.get(e.ref) ?? {
+      source: e.source,
+      ref: e.ref,
+      author: e.changeAuthor,
+      fileCount: 0,
+      reason: e.reasons[0] ?? null,
+      ...(e.changeAuthorAccountId && { authorAccountId: e.changeAuthorAccountId }),
+      files: new Set<string>(),
+    };
     for (const f of e.files) g.files.add(f);
     g.fileCount = g.files.size;
     groups.set(e.ref, g);
@@ -301,8 +319,9 @@ export const REVIEW_HINT = 'Review in the Doc Drift badge.';
 export function notificationBody(ownerId: string | null, lines: string[]): string {
   const [first, ...rest] = lines;
   const mention = ownerId ? `<ac:link><ri:user ri:account-id="${xml(ownerId)}" /></ac:link> ` : '';
-  const head = `<p>${mention}${xml(first ?? '')} ${REVIEW_HINT}</p>`;
-  return head + rest.map((l) => `<p>Since then: ${xml(l)}</p>`).join('');
+  const line = (l: string) => xml(l).replace(MENTION_TOKEN, (_m, id: string) => `<ac:link><ri:user ri:account-id="${xml(id)}" /></ac:link>`);
+  const head = `<p>${mention}${line(first ?? '')} ${REVIEW_HINT}</p>`;
+  return head + rest.map((l) => `<p>Since then: ${line(l)}</p>`).join('');
 }
 
 /** Post a new comment, add to the one in the current 24 h window, or do nothing. */
@@ -467,4 +486,78 @@ export function median(values: number[]): number | null {
 export function medianDaysToVerify(pairs: { at: number; since: number }[]): number | null {
   const m = median(pairs.filter((p) => p.at >= p.since).map((p) => (p.at - p.since) / DAY_MS));
   return m === null ? null : Math.round(m * 10) / 10;
+}
+
+// ---------------------------------------------------------------------------
+// "Why flagged" sentence (R-2): deterministic, built from what the matcher recorded. No LLM.
+// ---------------------------------------------------------------------------
+export interface WhyInput {
+  source: 'bitbucket' | 'jira';
+  /** Display label: `PR #482` or `PAY-21`. */
+  ref: string;
+  files: EventView['files'];
+  /** `payments-api: scripts/rollback.sh`, `payments-api (whole repo)`, `PAY-21`. */
+  anchor: string | null;
+  reasons: string[];
+  score: number;
+  /** Removed identifiers the page mentions. */
+  matchedTokens?: string[];
+}
+
+const GLOB = /[*?[\]{}]/;
+
+function quoteList(items: string[], max = 2): string {
+  const shown = items.slice(0, max);
+  const rest = items.length - shown.length;
+  const head = shown.length > 1 ? `${shown.slice(0, -1).join(', ')} and ${shown.at(-1)}` : (shown[0] ?? '');
+  return rest > 0 ? `${shown.join(', ')} and ${plural(rest, 'more')}` : head;
+}
+
+/**
+ * One plain sentence that says why an event flagged the page, from its reasons:
+ * `PR #482 renamed scripts/rollback.sh to scripts/rollback-v2.sh, an anchor of this page. Section
+ * "Roll back" names it. Score 0.71 (threshold 0.5).` Never says the page is wrong.
+ */
+export function whySentence(e: WhyInput, opts: { threshold?: number; section?: string | null } = {}): string {
+  const parts: string[] = [];
+  const pattern = e.anchor?.split(': ').slice(1).join(': ') ?? '';
+  if (e.source === 'jira') {
+    const lead = (e.reasons[0] ?? `${e.ref} changed`).replace(/\.$/, '');
+    parts.push(`${lead}, and this page is anchored to it.`);
+  } else if (e.anchor?.endsWith('(whole repo)')) {
+    parts.push(`${e.ref} changed ${plural(Math.max(1, e.files.length), 'file')} in a repository this page is anchored to as a whole.`);
+  } else {
+    const f = e.files[0];
+    const more = e.files.length > 1 ? ` and ${plural(e.files.length - 1, 'more anchored file')}` : '';
+    const cosmetic = e.reasons[0]?.includes('comments or whitespace only');
+    const verb = !f
+      ? 'changed an anchored file'
+      : f.status === 'renamed'
+        ? `renamed ${f.oldPath ?? f.path} to ${f.path}`
+        : f.status === 'removed'
+          ? `removed ${f.path}`
+          : f.status === 'added'
+            ? `added ${f.path}`
+            : cosmetic
+              ? `changed comments or whitespace in ${f.path}`
+              : `changed ${f.path}${typeof f.linesAdded === 'number' && typeof f.linesRemoved === 'number' ? ` (${plural(f.linesAdded + f.linesRemoved, 'line')})` : ''}`;
+    const where = GLOB.test(pattern) ? `, under this page's anchor ${pattern}` : ', an anchor of this page';
+    parts.push(`${e.ref} ${verb}${more}${where}.`);
+  }
+  const ids = (e.matchedTokens ?? []).filter((t) => t.length > 0);
+  if (ids.length > 0) parts.push(`The page mentions ${quoteList(ids)}, which ${e.ref} removed.`);
+  if (opts.section) parts.push(`Section "${opts.section}" names it.`);
+  const truncated = e.reasons.find((r) => r.startsWith('This PR changed ') && r.includes('only the first'));
+  if (truncated) parts.push(`${truncated}.`);
+  parts.push(`Score ${e.score.toFixed(2)}${opts.threshold !== undefined ? ` (threshold ${opts.threshold})` : ''}.`);
+  return parts.join(' ');
+}
+
+/** The page-level sentence: the strongest open event's, plus how many other changes are open. */
+export function pageWhySentence(events: (WhyInput & { severity: 'high' | 'medium'; whySentence: string })[]): string | null {
+  if (events.length === 0) return null;
+  const top = [...events].sort((a, b) => (a.severity === b.severity ? b.score - a.score : a.severity === 'high' ? -1 : 1))[0]!;
+  const others = new Set(events.map((e) => e.ref));
+  others.delete(top.ref);
+  return others.size > 0 ? `${top.whySentence} ${plural(others.size, 'more change')} ${others.size === 1 ? 'is' : 'are'} open.` : top.whySentence;
 }

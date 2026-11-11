@@ -87,6 +87,27 @@ function decodedChars(storage: string, start: number, end: number): Ch[] {
   return out;
 }
 
+/** Shown for a user mention: storage has only the account ID, never the name. Keep it verbatim. */
+export const MENTION_TEXT = '@mention';
+
+function decodeAttr(v: string): string {
+  return v.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, name: string) => decodeEntity(name) ?? m);
+}
+
+/** The visible text of an <ac:link> body: its plain-text or rich body, a mention, a page title or a file name. */
+export function linkText(inner: string): string {
+  const plain = /<ac:plain-text-link-body>\s*<!\[CDATA\[([\s\S]*?)\]\]>/.exec(inner);
+  if (plain) return plain[1] ?? '';
+  const rich = /<ac:link-body>([\s\S]*?)<\/ac:link-body>/.exec(inner);
+  if (rich) return decodedChars(rich[1] ?? '', 0, (rich[1] ?? '').length).map((c) => c.c).join('');
+  if (/<ri:user\b/.test(inner)) return MENTION_TEXT;
+  const title = /\bri:content-title="([^"]*)"/.exec(inner) ?? /\bri:filename="([^"]*)"/.exec(inner) ?? /\bri:value="([^"]*)"/.exec(inner);
+  return title ? decodeAttr(title[1] ?? '') : '';
+}
+
+/** Inline objects a prose edit must never cut through or rewrite as plain text (BUG-05). */
+const INLINE_OBJECT = /<ac:(?:structured-macro|link|emoticon|image)\b|<ri:/;
+
 // ---------------------------------------------------------------------------
 // Extraction
 // ---------------------------------------------------------------------------
@@ -201,6 +222,18 @@ export function extractBlocks(storage: string): PageBlock[] {
           }
         }
         i = macroEnd;
+        continue;
+      }
+      if (!isClose && name === 'ac:link' && !selfClosing) {
+        // BUG-05: a link (or @mention) is one atomic inline object. Its visible text joins the block so
+        // the agent sees the real sentence, and every character maps to the whole <ac:link>…</ac:link>
+        // range, so an edit that touches it is refused (`unsafe` below) instead of duplicating or
+        // destroying it.
+        const stopAt = storage.indexOf('</ac:link>', close);
+        const linkEnd = stopAt < 0 ? n : stopAt + '</ac:link>'.length;
+        const text = linkText(storage.slice(close + 1, stopAt < 0 ? n : stopAt));
+        for (const c of text) sink().push({ c, from: i, to: linkEnd });
+        i = linkEnd;
         continue;
       }
       if (!isClose && name === 'pre' && !selfClosing) {
@@ -378,10 +411,23 @@ export function spannedBlocks(blocks: PageBlock[], original: string): string[] {
     }
     if (best.prefix.id) add(best.prefix.id, best.prefix.n);
     if (best.suffix.id) add(best.suffix.id, best.suffix.n);
-    const covered = [...cover.values()].reduce((a, n) => a + n, 0);
-    if (cover.size >= 2 && covered >= 0.6 * o.length) {
-      return blocks.filter((b) => cover.has(b.blockId)).map((b) => b.blockId);
+    // BUG-17: a passage runs across neighbouring blocks. Keep the best run of blocks that are adjacent
+    // in document order, so a table cell or code block that only shares a phrase is not listed.
+    const idx = blocks.map((b, i) => (cover.has(b.blockId) ? i : -1)).filter((i) => i >= 0);
+    let best2: number[] = [];
+    let bestScore = 0;
+    for (let a = 0; a < idx.length; ) {
+      let z = a;
+      while (z + 1 < idx.length && idx[z + 1] === idx[z]! + 1) z++;
+      const run = idx.slice(a, z + 1);
+      const score = run.reduce((n, i) => n + (cover.get(blocks[i]!.blockId) ?? 0), 0);
+      if (score > bestScore) {
+        best2 = run;
+        bestScore = score;
+      }
+      a = z + 1;
     }
+    if (best2.length >= 2 && bestScore >= 0.6 * o.length) return best2.map((i) => blocks[i]!.blockId);
   }
   return [];
 }
@@ -462,8 +508,12 @@ function editProse(storage: string, block: PageBlock, s: number, e: number, text
   const ns = s + p;
   const ne = e - q;
   const mid = text.slice(p, text.length - q);
-  const safe = (r: [number, number] | undefined): r is [number, number] => !!r && !/<ac:structured-macro\b/.test(storage.slice(r[0], r[1]));
+  const safe = (r: [number, number] | undefined): r is [number, number] => !!r && !INLINE_OBJECT.test(storage.slice(r[0], r[1]));
   if (ns === ne) {
+    // An insertion between two characters of one link or mention would land outside it: refuse.
+    if (ns > 0 && ns < m.text.length && m.from[ns - 1] === m.from[ns] && m.to[ns - 1] === m.to[ns] && INLINE_OBJECT.test(storage.slice(m.from[ns]!, m.to[ns]!))) {
+      return undefined;
+    }
     const at = ns > 0 ? m.to[ns - 1]! : m.from[0]!;
     return splice(storage, at, at, escapeXml(mid));
   }

@@ -30,8 +30,11 @@ describe('QA: revert detection', () => {
   });
   // BUG-03: the first "#N" anywhere in the title wins, so a "#77" inside the original title is taken
   // as the reverted PR, and PR #77's events (not PR #10's) are closed.
-  it.fails('BUG-03: takes the PR number from the "(pull request #N)" suffix, not from the original title', () => {
+  it('BUG-03 (fixed): takes the PR number from the "(pull request #N)" suffix, not from the original title', () => {
     expect(detectRevert('Revert "Fix #77: raise pool" (pull request #10)')?.revertedPrId).toBe(10);
+    expect(detectRevert('Revert "Fix #77: raise pool" (PR #10)')).toEqual({ revertedTitle: 'Fix #77: raise pool', revertedPrId: 10 });
+    // No suffix: a "#77" inside the title is not a PR number; the core looks the title up instead.
+    expect(detectRevert('Revert "Fix #77: raise pool"')).toEqual({ revertedTitle: 'Fix #77: raise pool' });
   });
   it('case: lowercase "revert" is not detected (git always writes "Revert")', () => {
     expect(detectRevert('revert "Raise pool"')).toBeUndefined();
@@ -75,10 +78,10 @@ describe('QA: unified diff parsing', () => {
     // `git diff` (default core.quotePath=true) writes "a/caf\303\251.sh"; Bitbucket's /diff may too.
     const diff = 'diff --git "a/caf\\303\\251.sh" "b/caf\\303\\251.sh"\n--- "a/caf\\303\\251.sh"\n+++ "b/caf\\303\\251.sh"\n@@ -1 +1 @@\n-A_FLAG\n+B_FLAG\n';
     const files = parseUnifiedDiff(diff);
-    // Observed: the quoted form is not decoded, so the diff can't be joined to the diffstat path
-    // `café.sh`. Low impact (boosts and cosmetic check only); recorded as an observation.
-    expect(files.length).toBeGreaterThan(0);
-    expect(files.some((f) => f.path === 'café.sh')).toBe(false);
+    // BUG-19 (fixed): the quoted form is decoded, so the diff joins the diffstat path `café.sh`.
+    expect(files).toHaveLength(1);
+    expect(files[0]!.path).toBe('café.sh');
+    expect(files[0]!.removed).toEqual(['A_FLAG']);
   });
 });
 
@@ -109,17 +112,19 @@ describe('QA: paths and globs', () => {
   });
   // BUG-01: a negated ignore glob (gitignore idiom "!docs/keep.md") passes validation and, OR'd with
   // the others, matches every other file: every change is "all files ignored" and nothing ever flags.
-  it.fails('BUG-01: a "!pattern" ignore glob is refused by validateGlob', () => {
-    expect(validateGlob('!docs/keep.md')).not.toBeNull();
+  it('BUG-01 (fixed): a "!pattern" ignore glob is refused by validateGlob', () => {
+    expect(validateGlob('!docs/keep.md')).toMatch(/^starts with "!"/);
   });
-  it('BUG-01 impact: with "!docs/keep.md" in the ignore list every file is ignored', () => {
+  it('BUG-01 (fixed): a stored "!docs/keep.md" is an exception, not "ignore everything else"', () => {
     const isIgnored = ignoreMatcher([...DEFAULT_IGNORE_GLOBS, '!docs/keep.md']);
-    expect(isIgnored('scripts/rollback.sh')).toBe(true);
-    expect(isIgnored('src/app.ts')).toBe(true);
+    expect(isIgnored('scripts/rollback.sh')).toBe(false);
+    expect(isIgnored('src/app.ts')).toBe(false);
+    expect(isIgnored('docs/other.md')).toBe(true);
+    expect(isIgnored('docs/keep.md')).toBe(false);
     const r = scoreChange(change([modified('scripts/rollback.sh', 50, 50)]), [binding('b', 'path', 'scripts/rollback.sh', { weight: 'critical' })], new Map(), {
       ignoreGlobs: [...DEFAULT_IGNORE_GLOBS, '!docs/keep.md'],
     });
-    expect(r).toEqual({ kind: 'skipped', reason: 'no_relevant_files' });
+    expect(r.kind).toBe('scored');
   });
   it('a name-only negated glob ("!README.md") is harmless (prefixed with **/)', () => {
     expect(ignoreMatcher(['!README.md'])('scripts/a.sh')).toBe(false);

@@ -6,10 +6,10 @@ const DAY = 24 * 60 * 60 * 1000;
 
 describe('bylineValue', () => {
   it('puts the state word in the title for every state', () => {
-    expect(bylineValue({ state: 'verified' }).title).toBe('Doc Drift: Verified');
-    expect(bylineValue({ state: 'possibly_stale' }).title).toBe('Doc Drift: Possibly stale');
-    expect(bylineValue({ state: 'stale' }).title).toBe('Doc Drift: Stale');
-    expect(bylineValue({ state: 'unanchored' }).title).toBe('Doc Drift: Unanchored');
+    expect(bylineValue({ state: 'verified' }).title).toBe('Verified · Doc Drift');
+    expect(bylineValue({ state: 'possibly_stale' }).title).toBe('Possibly stale · Doc Drift');
+    expect(bylineValue({ state: 'stale' }).title).toBe('Stale · Doc Drift');
+    expect(bylineValue({ state: 'unanchored' }).title).toBe('Unanchored · Doc Drift');
   });
 
   it('never writes an icon (the property icon renders as the generic hexagon)', () => {

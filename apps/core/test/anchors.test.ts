@@ -76,6 +76,6 @@ describe('planBindingChanges', () => {
 
   it('is a no-op when nothing changed', () => {
     const plan = planBindingChanges(existing, existing.map(({ anchorType, repo, pattern, weight }) => ({ anchorType: anchorType as 'path', repo, pattern, weight })));
-    expect(plan).toEqual({ insert: [], remove: [], reweight: [] });
+    expect(plan).toEqual({ insert: [], remove: [], reweight: [], resetDampener: [] });
   });
 });

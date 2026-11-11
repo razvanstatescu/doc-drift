@@ -7,12 +7,18 @@
 import { randomUUID } from 'node:crypto';
 import { PAGE_STATE_LABELS } from '@dds/shared';
 import { FIX_LIMITS, validateFixInput, versionMessage } from './agent-tools';
-import { plural, refLabel } from './copy';
+import { plural, refLabel, stateTitle } from './copy';
+import { renameQuickFixes, renameVersionMessage, type RenameQuickFix } from './quick-fix';
 import { applyBlockEdit, blockSummary, editBlock, extractBlocks, isNoOp, resolveTarget, targetOriginal, type PageBlock, type TargetResult } from './blocks';
 import { displayNames, getPageForEdit, getPageStorage, updatePageBody } from './confluence';
 import {
   decideFixProposal,
+  decideRenameProposal,
   ensureSchema,
+  getBinding,
+  getEventFull,
+  openRenameProposals,
+  updateBindingPattern,
   eventDetailsForPage,
   fixProposalsForPage,
   getFixProposal,
@@ -39,6 +45,8 @@ export interface FixDeps {
 
 export const FIX_MESSAGES = {
   needsEdit: 'You need edit rights on this page to accept or reject a draft.',
+  needsEditToDraft: 'Drafting a fix needs edit rights on this page. Tell the user that someone with edit rights can draft and accept fixes.',
+  needsEditToFix: 'You need edit rights on this page to apply a fix.',
   handled: 'This draft was already handled. Reload to see the latest.',
   nothingOpen: 'This page has no open changes, so there is nothing to draft.',
   tooMany: `This page already has ${FIX_LIMITS.openPerPage} open drafts. Accept or reject some in the review panel first.`,
@@ -50,6 +58,10 @@ function fail(error: string, message: string): Failure {
 }
 
 const headingKey = (h: string) => normalizeWhitespace(h).toLowerCase();
+
+/** BUG-05: a draft that would rewrite a link, @mention, emoticon, image or macro is refused. */
+export const UNSUPPORTED_SPAN_GUIDANCE =
+  'This draft changes or removes a link, @mention, emoticon, image or macro in the block. Keep link text and @mention exactly as the block shows them and change only the words around them.';
 
 const RETRY_ONCE = 'Retry at most once, then tell the user in one sentence why no draft was saved.';
 
@@ -122,7 +134,9 @@ export function targetFailure(pageId: string, r: Extract<TargetResult, { ok: fal
 export async function submitFixProposal(pageId: string, input: Record<string, unknown>, deps: FixDeps): Promise<Record<string, unknown>> {
   const valid = validateFixInput(input);
   if (!valid.ok) return { ok: false, pageId, error: valid.error, guidance: valid.message };
-  const denied = await deps.gate(pageId, 'read');
+  // BUG-12 (D30): drafting needs edit rights, so a viewer can't fill the draft cap or replace an
+  // editor's open draft for the same block.
+  const denied = await deps.gate(pageId, 'update', FIX_MESSAGES.needsEditToDraft);
   if (denied) return { ok: false, pageId, title: null, status: denied.state ?? 'unknown', error: denied.error, guidance: denied.message };
   await ensureSchema();
   const page = await getPageStorage(deps.user, pageId);
@@ -143,7 +157,10 @@ export async function submitFixProposal(pageId: string, input: Record<string, un
     return { ok: false, pageId, error: 'bad_request', guidance: `proposedText is the same as the current text of block ${target.block.blockId}. Nothing was saved.` };
   }
   const dry = editBlock(page.storage, target, v.proposedText);
-  if (!dry.ok) return { ok: false, pageId, error: dry.error, guidance: `${EDIT_MESSAGES.unsupported_span} Nothing was saved.` };
+  if (!dry.ok) {
+    console.log(`DDS_FIX_REFUSED ${JSON.stringify({ pageId, error: dry.error, blockId: target.block.blockId })}`);
+    return { ok: false, pageId, error: dry.error, blockId: target.block.blockId, guidance: `${UNSUPPORTED_SPAN_GUIDANCE} Nothing was saved. ${RETRY_ONCE}` };
+  }
 
   // A new draft for the same block replaces the open one.
   const open = await fixProposalsForPage(pageId, true, 50);
@@ -283,6 +300,7 @@ export async function applyProposal(proposalId: unknown, deps: FixDeps): Promise
     state: state.status,
     status: state.status,
     statusLabel: PAGE_STATE_LABELS[state.status],
+    stateTitle: stateTitle(state.status),
     message: `Accepted. Version ${put.version} names ${names}.${pending}`,
   };
 }
@@ -297,4 +315,109 @@ export async function rejectProposal(proposalId: unknown, deps: FixDeps): Promis
   if (!(await decideFixProposal(proposalId, 'rejected', deps.accountId))) return fail('not_open', FIX_MESSAGES.handled);
   console.log(`DDS_FIX_REJECTED ${JSON.stringify({ proposalId, pageId: p.pageId })}`);
   return { ok: true, pageId: p.pageId, message: 'Rejected the draft. The page is unchanged.' };
+}
+
+// ---------------------------------------------------------------------------
+// Rename quick fix (R-4): deterministic, no AI. Applied with the same block edit as an accepted draft.
+// ---------------------------------------------------------------------------
+export async function applyRenameQuickFix(eventId: unknown, deps: FixDeps): Promise<Record<string, unknown>> {
+  if (typeof eventId !== 'string' || eventId === '') return fail('bad_request', FIX_MESSAGES.handled);
+  await ensureSchema();
+  const event = await getEventFull(eventId);
+  if (!event || event.status !== 'open') return fail('not_open', 'This change is no longer open. Reload to see the latest.');
+  const denied = await deps.gate(event.pageId, 'update');
+  if (denied) return denied.error === 'forbidden' ? fail('forbidden', FIX_MESSAGES.needsEditToFix) : denied;
+  const ref = refLabel(event.ref, event.source);
+  const files = event.source === 'bitbucket' ? eventFiles(event.files, event.changeFiles) : [];
+
+  let put: { status: number; version?: number; error?: unknown } = { status: 0 };
+  let applied: { blockId: string; kind: string; section: string; text: string; proposedText: string; occurrences: number }[] = [];
+  let fix: RenameQuickFix | undefined;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const page = await getPageForEdit(deps.user, event.pageId);
+    if (page.status >= 300 || page.storage === undefined || !page.id || !page.title || page.version === undefined) {
+      return fail('not_visible', 'Page not found or not visible to you.');
+    }
+    fix = renameQuickFixes(page.storage, [{ eventId, ref, files }])[0];
+    if (!fix) return fail('not_found', 'No block on this page still names the old path. Reload to see the latest.');
+    let storage = page.storage;
+    applied = [];
+    for (const b of fix.blocks) {
+      const r = applyBlockEdit(storage, { blockId: b.blockId, sectionHeading: b.section, originalText: b.text, proposedText: b.proposedText });
+      if (!r.ok) continue;
+      storage = r.storage;
+      applied.push(b);
+    }
+    if (applied.length === 0) return fail('unsupported_span', EDIT_MESSAGES.unsupported_span);
+    put = await updatePageBody(deps.user, { id: page.id, title: page.title, version: page.version }, storage, renameVersionMessage(fix.from, fix.to, ref));
+    if (put.status !== 409) break;
+  }
+  if (!fix || put.status >= 300 || put.version === undefined) {
+    console.warn(`DDS_RENAME_FIX_FAILED ${JSON.stringify({ eventId, pageId: event.pageId, status: put.status, error: JSON.stringify(put.error ?? null).slice(0, 300) })}`);
+    return fail('update_failed', `Confluence did not accept the change (status ${put.status}). The page is unchanged.`);
+  }
+  const message = renameVersionMessage(fix.from, fix.to, ref);
+  // History: one applied draft per block, so the review panel lists what changed and who applied it.
+  for (const b of applied) {
+    const id = randomUUID();
+    await insertFixProposal({
+      id,
+      pageId: event.pageId,
+      eventIds: [eventId],
+      refs: [ref],
+      sectionHeading: b.section || TOP_OF_PAGE,
+      blockId: b.blockId,
+      blockKind: b.kind,
+      originalText: b.text,
+      proposedText: b.proposedText,
+      rationale: `Suggested from ${ref}, no AI used: ${fix.from} renamed to ${fix.to}.`,
+      createdBy: deps.accountId,
+    });
+    await decideFixProposal(id, 'accepted', deps.accountId, put.version);
+  }
+  // The anchor follows the rename when the matcher proposed it and the binding still points at the old path.
+  let anchorUpdated = false;
+  for (const rp of await openRenameProposals(event.pageId)) {
+    if (rp.from !== fix.from || rp.to !== fix.to) continue;
+    const binding = await getBinding(rp.bindingId);
+    if (binding && binding.pattern === rp.from) {
+      await updateBindingPattern(binding.id, rp.to);
+      anchorUpdated = true;
+    }
+    await decideRenameProposal(rp.id, binding && binding.pattern === rp.to ? 'accepted' : 'rejected', deps.accountId);
+  }
+  const closed = await resolveEvents(event.pageId, [eventId], deps.accountId);
+  if (closed.length > 0) {
+    const current = await getPageState(event.pageId);
+    await recordVerification({
+      id: randomUUID(),
+      pageId: event.pageId,
+      spaceKey: current?.spaceKey ?? null,
+      userId: deps.accountId,
+      closedEventIds: [...closed],
+      note: `${message} (version ${put.version})`,
+      method: 'rename_fix',
+      driftSince: closed.oldest ?? null,
+    });
+  }
+  const state = await refreshPage(event.pageId);
+  const replaced = applied.reduce((n, b) => n + b.occurrences, 0);
+  console.log(`DDS_RENAME_FIX_APPLIED ${JSON.stringify({ eventId, pageId: event.pageId, version: put.version, blocks: applied.length, replaced, anchorUpdated, status: state.status })}`);
+  return {
+    ok: true,
+    pageId: event.pageId,
+    version: put.version,
+    versionMessage: message,
+    from: fix.from,
+    to: fix.to,
+    blocks: applied.map((b) => b.blockId),
+    replaced,
+    anchorUpdated,
+    closedEvents: closed.length,
+    state: state.status,
+    status: state.status,
+    statusLabel: PAGE_STATE_LABELS[state.status],
+    stateTitle: stateTitle(state.status),
+    message: `Replaced ${plural(replaced, 'mention')} of ${fix.from} in ${plural(applied.length, 'block')}. Version ${put.version} names ${ref}.${anchorUpdated ? ` The anchor now watches ${fix.to}.` : ''}`,
+  };
 }

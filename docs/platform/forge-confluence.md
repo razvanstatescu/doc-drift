@@ -292,3 +292,10 @@ Source: the Forge MCP server (`search-forge-docs`, `get-api-required-scopes`), w
 - **Live refresh.** The docs name `confluence:backgroundScript` as the place to refresh byline properties. Verified: same page.
 - **Scope for `GET /wiki/api/v2/pages/{id}/operations`:** `read:page:confluence` (granular only). Verified: Confluence REST v2 OpenAPI spec, via `get-api-required-scopes`.
 - The old Connect format (`name.value`, `icon.url`, `tooltip.value`) appears in the Connect tutorial "Changing a byline dynamically". It does not apply to Forge, which uses the flat `{title, icon, tooltip}`.
+
+## Update (2026-11-12, phase 2 backend)
+
+- **Tiny links decode to page IDs.** `/wiki/x/<code>` is URL-safe base64 (`-` for `/`, `_` for `+`, padded with `A`) of the page ID's little-endian bytes. Verified live: the decoder matched `_links.tinyui` for 5 DDSTEST/PLAT pages (`2wAq` = 2752731, `HIAu` = 3047452, `WAAv` = 3080280, `gYEp` = 2720129, `EoIt` = 2982418). Page responses carry `_links.tinyui`. Used by `parsePageRef` (BUG-04).
+- **Moved and restored page events** (`avi:confluence:moved:page`, `avi:confluence:restored:page`) need only `read:confluence-content.summary`; trashed and deleted also need `write:confluence-content`. `moved:page` carries `prevContent`. Verified: https://developer.atlassian.com/platform/forge/events-reference/confluence/ (via the Forge MCP). Live: a page moved to ENGS had its bindings follow in 8 s; adding the two events did not trigger a major version (core 4.18.0).
+- **The byline content property can be written on a trashed page** (live: the Unanchored value was in place 8 s after the trash, before the restore).
+- **Draft pages.** `GET /wiki/api/v2/pages/{id}` takes `status` as an array (`current`, `draft`, ...) and `get-draft`; a never-published page needs `status=draft`. The app user gets 404 on drafts, which the byline previously read as "restricted" (UX-2). The resolver now asks `?status=current&status=draft` asUser. Spec Verified (OpenAPI via the Forge MCP); the asUser draft read is **Unverified** live (needs a browser).

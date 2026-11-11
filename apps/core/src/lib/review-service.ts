@@ -2,17 +2,26 @@
 // asUser first (D15, D20) through a `Gate`; these functions then write app-owned state asApp.
 // The dev driver passes an open gate and an asApp reader, so it exercises the same code headlessly.
 import { randomUUID } from 'node:crypto';
-import { PAGE_STATE_LABELS, type StoredPageState } from '@dds/shared';
+import { PAGE_STATE_LABELS, type Binding, type StoredPageState } from '@dds/shared';
 import { anchorLabel } from './anchors';
+import { GlobCache, normalizePath, pathMatchStrength, SENSITIVITY_THRESHOLDS } from '@dds/matcher';
 import { displayNames, getPageStorage, getSpaceIdByKey, listSpacePages } from './confluence';
+import { plural, stateTitle } from './copy';
+import { renameQuickFixes } from './quick-fix';
 import {
   backfillOwners,
   bindingsForPage,
   changesByIds,
   dashboardRows,
   decideRenameProposal,
+  changesSince,
+  deleteBinding,
   dismissEventRow,
   ensureSchema,
+  eventChangesSince,
+  getEventFull,
+  openEventsForPage,
+  setBindingExclude,
   eventDetailsForPage,
   getBinding,
   getEvent,
@@ -24,7 +33,7 @@ import {
   recordVerification,
   resolveOpenEvents,
   snoozeOpenEvents,
-  statePagesInSpace,
+  statePagesAmong,
   statusCounts,
   updateBindingPattern,
   verifyDurations,
@@ -41,10 +50,12 @@ import {
   eventView,
   isDismissReason,
   medianDaysToVerify,
+  pageWhySentence,
   parseSnoozeDays,
   rankPages,
   severityName,
   tokensForEvents,
+  whySentence,
   type DismissReason,
 } from './review';
 import { suggestionsFor } from './suggestions';
@@ -70,6 +81,9 @@ export const MESSAGES = {
   badReason: 'Pick a reason: Not relevant, Already updated or False positive.',
   badDays: 'Snooze for 1 to 30 days.',
   nothingToSnooze: 'Nothing to snooze. This page has no open changes.',
+  nothingToVerify: 'This page has no anchors, so there is nothing to verify. Add anchors first.',
+  draft: 'Publish this page first, then add anchors.',
+  stopWatchingNothing: 'This change has no file this anchor still watches.',
   bindingChanged: 'This anchor changed since the rename was proposed. Edit anchors instead.',
 } as const;
 
@@ -77,9 +91,9 @@ function fail(error: string, message: string, extra: Partial<Failure> = {}): Fai
   return { ok: false, error, message, ...extra };
 }
 
-/** `state` is the contract name; `status` mirrors it for the M1 modal code. */
-function stateWords(status: StoredPageState): { state: StoredPageState; status: StoredPageState; statusLabel: string } {
-  return { state: status, status, statusLabel: PAGE_STATE_LABELS[status] };
+/** `state` is the contract name; `status` mirrors it for the M1 modal code; `stateTitle` is the byline title. */
+export function stateWords(status: StoredPageState): { state: StoredPageState; status: StoredPageState; statusLabel: string; stateTitle: string } {
+  return { state: status, status, statusLabel: PAGE_STATE_LABELS[status], stateTitle: stateTitle(status) };
 }
 
 // ---------------------------------------------------------------------------
@@ -94,6 +108,8 @@ export interface DriftAccess {
   /** The caller is a Confluence administrator, so the panel can link to the settings page. */
   canConfigure?: boolean;
   settingsUrl?: string | null;
+  /** asApp, for display names the caller's own lookup could not resolve. */
+  appReader?: Requester;
 }
 
 export async function pageDrift(pageId: string, reader: Requester, access: DriftAccess): Promise<Record<string, unknown>> {
@@ -111,7 +127,8 @@ export async function pageDrift(pageId: string, reader: Requester, access: Drift
   const evidenceLevel = evidenceLevelFor(access.canEdit);
   const changes = evidenceLevel === 'full' ? await changesByIds([...new Set(events.map((e) => e.changeRecordId))]) : new Map<string, ChangeDetail>();
   const status: StoredPageState = state?.status ?? (bindings.length > 0 ? 'verified' : 'unanchored');
-  const names = await displayNames(reader, [state?.verifiedBy]);
+  const names = await namesWithFallback(reader, access.appReader, [state?.verifiedBy]);
+  const threshold = SENSITIVITY_THRESHOLDS[settings.sensitivity] ?? SENSITIVITY_THRESHOLDS.balanced;
   const views = events.map((e) => {
     const { snoozedUntil: rawSnooze, createdAt, ...rest } = e;
     const snoozedUntil = fromSqlDate(rawSnooze);
@@ -134,16 +151,32 @@ export async function pageDrift(pageId: string, reader: Requester, access: Drift
       issueKey: e.source === 'jira' ? e.ref : null,
     })),
   );
+  const sections = page.storage ? affectedSections(page.storage, tokens) : [];
+  // R-2: one deterministic sentence per event, naming the first section that mentions it.
+  const eventById = new Map(events.map((e) => [e.id, e]));
+  const withWhy = views.map((v) => {
+    const e = eventById.get(v.id)!;
+    const own = tokensForEvents([{ files: v.files, matchedTokens: e.matchedTokens, issueKey: e.source === 'jira' ? e.ref : null }]);
+    const section = sections.find((sec) => sec.matchedTokens.some((t) => own.includes(t)))?.heading ?? null;
+    return { ...v, whySentence: whySentence({ ...v, matchedTokens: e.matchedTokens }, { threshold, section }) };
+  });
   const bindingById = new Map(bindings.map((b) => [b.id, b]));
   // Snoozed: every open event is snoozed into the future. The events are still returned.
   const snoozes = views.map((v) => v.snoozedUntil);
   const snoozedUntil = snoozes.length > 0 && snoozes.every((t) => t !== null && t > now) ? Math.max(...(snoozes as number[])) : null;
   const spaceKey = access.spaceKeyHint ?? state?.spaceKey ?? bindings.find((b) => b.spaceKey)?.spaceKey ?? null;
+  const verifiedAt = fromSqlDate(state?.verifiedAt) ?? null;
+  const verifiedContext = verifiedAt !== null ? await verifiedContextFor(pageId, bindings, state!.verifiedAt!) : null;
+  const renameQuickFix = page.storage
+    ? renameQuickFixes(page.storage, withWhy.map((v) => ({ eventId: v.id, ref: v.ref, files: v.files })))
+    : [];
   return {
     ok: true,
     pageId,
     title: page.title ?? '',
+    page: { status: 'current' as const },
     ...stateWords(status),
+    whySentence: pageWhySentence(withWhy.map((v) => ({ ...v, matchedTokens: eventById.get(v.id)!.matchedTokens }))),
     canEdit: access.canEdit,
     canVerify: true,
     canDismiss: access.canEdit,
@@ -159,10 +192,12 @@ export async function pageDrift(pageId: string, reader: Requester, access: Drift
       settingsUrl: access.canConfigure ? (access.settingsUrl ?? null) : null,
     },
     restricted: false,
-    verifiedAt: fromSqlDate(state?.verifiedAt) ?? null,
+    verifiedAt,
     verifiedBy: state?.verifiedBy ? { accountId: state.verifiedBy, displayName: names.get(state.verifiedBy) ?? null } : null,
-    events: views,
-    affectedSections: page.storage ? affectedSections(page.storage, tokens) : [],
+    verifiedContext,
+    events: withWhy,
+    affectedSections: sections,
+    renameQuickFix,
     renameProposals: proposals
       .filter((p) => bindingById.has(p.bindingId))
       .map((p) => ({ id: p.id, bindingId: p.bindingId, from: p.from, to: p.to, anchor: anchorLabel(bindingById.get(p.bindingId)!) })),
@@ -174,6 +209,7 @@ export async function pageDrift(pageId: string, reader: Requester, access: Drift
       jiraKey: b.jiraKey ?? '',
       weight: b.weight,
       dismissCount: b.dismissCount ?? 0,
+      exclude: b.exclude ?? [],
       label: anchorLabel(b),
     })),
     suggestions: page.storage ? suggestionsFor(page.storage, bindings) : [],
@@ -187,6 +223,8 @@ export async function markVerified(pageId: string, actor: string | null, rawNote
   const denied = await gate(pageId, 'read');
   if (denied) return denied;
   await ensureSchema();
+  // UX observation 1: an Unanchored page has nothing to verify; "Marked verified." would mislead.
+  if ((await bindingsForPage(pageId)).length === 0) return fail('unanchored', MESSAGES.nothingToVerify);
   const note = cleanNote(rawNote);
   const closed = await resolveOpenEvents(pageId, actor);
   const current = await getPageState(pageId);
@@ -222,6 +260,21 @@ export async function dismissEvent(eventId: unknown, reason: unknown, actor: str
     return fail('not_open', MESSAGES.eventGone);
   }
   await incrementDismissCount(event.bindingId);
+  // UX observation: dismissing the last open change is a review. Record who did it, so the panel says
+  // "Verified by Dana" instead of an anonymous "Verified".
+  if ((await openEventsForPage(event.pageId)).length === 0) {
+    const current = await getPageState(event.pageId);
+    await recordVerification({
+      id: randomUUID(),
+      pageId: event.pageId,
+      spaceKey: current?.spaceKey ?? null,
+      userId: actor,
+      closedEventIds: [eventId],
+      note: `Dismissed the last open change (${reason})`,
+      method: 'dismissed',
+      driftSince: null,
+    });
+  }
   const state = await refreshPage(event.pageId);
   console.log(`DDS_DISMISSED ${JSON.stringify({ eventId, pageId: event.pageId, reason, status: state.status, open: state.openEventCount })}`);
   return {
@@ -276,7 +329,9 @@ export async function decideRename(proposalId: unknown, decision: 'accepted' | '
 // ---------------------------------------------------------------------------
 // getSpaceDashboard
 // ---------------------------------------------------------------------------
-export async function spaceDashboard(spaceKey: string, reader: Requester, spaceIdHint?: string) {
+export async function spaceDashboard(rawSpaceKey: string, reader: Requester, spaceIdHint?: string) {
+  // BUG-10: `plat` means PLAT (global keys are uppercase); personal `~` keys keep their case.
+  const spaceKey = rawSpaceKey.startsWith('~') ? rawSpaceKey : rawSpaceKey.toUpperCase();
   await ensureSchema();
   const space = await getSpaceIdByKey(reader, spaceKey);
   const spaceId = spaceIdHint ?? space.id;
@@ -287,7 +342,8 @@ export async function spaceDashboard(spaceKey: string, reader: Requester, spaceI
   const listed = listing.pages.filter((p) => p.id !== space.homepageId);
   const visible = new Map(listed.map((p) => [p.id, p]));
   // Permission-aware: only pages the caller can see count or show.
-  const pageIds = (await statePagesInSpace(spaceKey)).filter((id) => visible.has(id));
+  // BUG-11: keyed on the space's page listing, not the stored space key, so a page moved in counts here.
+  const pageIds = await statePagesAmong([...visible.keys()]);
   await backfillOwners(pageIds.flatMap((id) => (visible.get(id)?.ownerId ? [{ pageId: id, ownerId: visible.get(id)!.ownerId! }] : [])));
   const [counts, owners, rows, durations] = await Promise.all([
     statusCounts(pageIds),
@@ -312,6 +368,7 @@ export async function spaceDashboard(spaceKey: string, reader: Requester, spaceI
         maxSeverity: r.maxSeverity,
         openEvents: r.openEvents,
         since: fromSqlDate(r.since) ?? null,
+        lastChangeAt: fromSqlDate(r.lastAt) ?? null,
         ownerId,
         ownerName: ownerId ? (names.get(ownerId) ?? null) : null,
       };
@@ -334,5 +391,90 @@ export async function spaceDashboard(spaceKey: string, reader: Requester, spaceI
     pages,
     owners: owners.map((o) => ({ ownerId: o.ownerId, ownerName: o.ownerId ? (names.get(o.ownerId) ?? null) : null, open: o.open, pages: o.pages })),
     truncated: listing.truncated,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Helpers for getPageDrift (phase 2)
+// ---------------------------------------------------------------------------
+/** Display names via the caller, then asApp for any the caller's lookup missed ("always set when known"). */
+async function namesWithFallback(reader: Requester, app: Requester | undefined, ids: (string | null | undefined)[]): Promise<Map<string, string>> {
+  const names = await displayNames(reader, ids);
+  const missing = ids.filter((id): id is string => !!id && !names.has(id));
+  if (app && missing.length > 0) for (const [k, v] of await displayNames(app, missing)) names.set(k, v);
+  return names;
+}
+
+const shortRepo = (r: string | null | undefined) => (r ?? '').toLowerCase().split('/').at(-1) ?? '';
+
+/**
+ * R-8: changes to the page's anchored code or Jira work since it was verified (`changesSince`), and how
+ * many of them flagged it (`relevant`). "12 changes since, none relevant" shows the watch is working.
+ */
+export async function verifiedContextFor(pageId: string, bindings: Binding[], verifiedAtSql: string): Promise<{ changesSince: number; relevant: number; since: number | null }> {
+  const code = bindings.filter((b) => b.anchorType === 'path' || b.anchorType === 'glob' || b.anchorType === 'repo');
+  const jiraKeys = [...new Set(bindings.filter((b) => b.anchorType === 'jira' && b.jiraKey).map((b) => b.jiraKey!))];
+  const repos = [...new Map(code.filter((b) => b.repo).map((b) => {
+    const r = b.repo!.toLowerCase();
+    return [r, r.includes('/') ? { full: r, slug: shortRepo(r) } : { full: null, slug: r }] as const;
+  })).values()];
+  const since = fromSqlDate(verifiedAtSql) ?? null;
+  if (repos.length === 0 && jiraKeys.length === 0) return { changesSince: 0, relevant: 0, since };
+  const [changes, flagged] = await Promise.all([changesSince(repos, jiraKeys, verifiedAtSql), eventChangesSince(pageId, verifiedAtSql)]);
+  const globs = new GlobCache();
+  const touching = changes.filter((c) => {
+    if (c.source === 'jira') return c.issueKey !== null && jiraKeys.includes(c.issueKey);
+    return code.some((b) => shortRepo(b.repo) === shortRepo(c.repo) && c.files.some((f) => pathMatchStrength(b, f, globs) > 0));
+  });
+  return { changesSince: touching.length, relevant: touching.filter((c) => flagged.has(c.id)).length, since };
+}
+
+// ---------------------------------------------------------------------------
+// stopWatchingPath (R-7): "Not relevant" narrows the anchor
+// ---------------------------------------------------------------------------
+/**
+ * Stops watching an event's files for its page. An exact path anchor is removed; a glob or whole-repo
+ * anchor gets the files on its exclude list. A still-open event is dismissed as `not_relevant` (without
+ * raising the dampener: the anchor no longer sees these files). Needs edit rights (D31).
+ */
+export async function stopWatchingPath(eventId: unknown, actor: string | null, gate: Gate) {
+  if (typeof eventId !== 'string' || eventId === '') return fail('bad_request', MESSAGES.eventGone);
+  await ensureSchema();
+  const event = await getEventFull(eventId);
+  if (!event) return fail('not_found', MESSAGES.eventGone);
+  const denied = await gate(event.pageId, 'update', MESSAGES.needsEdit);
+  if (denied) return denied;
+  if (event.source !== 'bitbucket') return fail('bad_request', 'Only code anchors can stop watching a path. Remove the Jira anchor in Anchors instead.');
+  const binding = await getBinding(event.bindingId);
+  if (!binding || binding.pageId !== event.pageId) return fail('binding_changed', 'This anchor was changed or removed since. Reload to see the latest.');
+  const files = eventFiles(event.files, event.changeFiles);
+  const paths = [...new Set(files.flatMap((f) => (f.oldPath ? [f.path, f.oldPath] : [f.path])).map(normalizePath))];
+  let action: 'removed' | 'narrowed';
+  let excluded: string[] = [];
+  if (binding.anchorType === 'path') {
+    await deleteBinding(binding.id);
+    action = 'removed';
+  } else {
+    const current = binding.exclude ?? [];
+    excluded = paths.filter((p) => !current.includes(p));
+    if (excluded.length === 0 && current.length > 0) return fail('nothing_open', MESSAGES.stopWatchingNothing);
+    await setBindingExclude(binding.id, [...current, ...excluded]);
+    action = 'narrowed';
+  }
+  if (event.status === 'open') await dismissEventRow(eventId, 'not_relevant', actor);
+  const state = await refreshPage(event.pageId);
+  const label = anchorLabel(binding);
+  const what = paths.length === 1 ? paths[0]! : plural(paths.length, 'file');
+  console.log(`DDS_STOP_WATCHING ${JSON.stringify({ eventId, pageId: event.pageId, bindingId: binding.id, action, excluded, status: state.status })}`);
+  return {
+    ok: true,
+    pageId: event.pageId,
+    action,
+    bindingId: binding.id,
+    anchor: label,
+    excluded,
+    ...stateWords(state.status),
+    openEvents: state.openEventCount,
+    message: action === 'removed' ? `Stopped watching ${what} for this page. The anchor is removed.` : `Stopped watching ${what} for this page. ${label} still watches the rest.`,
   };
 }

@@ -181,6 +181,8 @@ const MIGRATIONS: [string, string][] = [
   // drafts stored before: they apply by section and text as before.
   ['v012_fix_proposal_block_id', 'ALTER TABLE fix_proposal ADD COLUMN block_id VARCHAR(16) NULL'],
   ['v013_fix_proposal_block_kind', 'ALTER TABLE fix_proposal ADD COLUMN block_kind VARCHAR(16) NULL'],
+  // Phase 2 (R-7). Paths or globs a binding no longer watches ("stop watching this path for this page").
+  ['v014_binding_exclude_paths', 'ALTER TABLE binding ADD COLUMN exclude_paths JSON NULL'],
 ];
 
 /** Applies pending migrations. Idempotent: the runner skips entries recorded in `__migrations`. */
@@ -336,6 +338,7 @@ interface BindingRow {
   jira_key: string | null;
   weight: AnchorWeight;
   dismiss_count: number;
+  exclude_paths?: unknown;
 }
 
 export interface StoredBinding extends Binding {
@@ -353,10 +356,16 @@ function toBinding(r: BindingRow): StoredBinding {
     ...(r.pattern !== null && { pattern: r.pattern }),
     ...(r.jira_key !== null && { jiraKey: r.jira_key }),
     ...(r.space_key !== null && { spaceKey: r.space_key }),
+    ...excludeOf(r.exclude_paths),
   };
 }
 
-const BINDING_COLS = 'id, page_id, space_key, anchor_type, repo, pattern, jira_key, weight, dismiss_count';
+function excludeOf(v: unknown): { exclude?: string[] } {
+  const list = parseJson<unknown>(v, null);
+  return Array.isArray(list) && list.length > 0 ? { exclude: list.filter((x): x is string => typeof x === 'string') } : {};
+}
+
+const BINDING_COLS = 'id, page_id, space_key, anchor_type, repo, pattern, jira_key, weight, dismiss_count, exclude_paths';
 
 export async function bindingsForRepos(repos: string[]): Promise<StoredBinding[]> {
   if (repos.length === 0) return [];
@@ -400,6 +409,24 @@ export async function deleteBinding(id: string): Promise<void> {
 
 export async function setBindingWeight(id: string, weight: AnchorWeight): Promise<void> {
   await exec('UPDATE binding SET weight = ? WHERE id = ?', weight, id);
+}
+
+/** BUG-15: clears an anchor's dismiss dampener. */
+export async function resetDismissCount(id: string): Promise<void> {
+  await exec('UPDATE binding SET dismiss_count = 0 WHERE id = ?', id);
+}
+
+/** R-7: the paths or globs a binding no longer watches (at most 50). */
+export async function setBindingExclude(id: string, exclude: string[]): Promise<void> {
+  await exec('UPDATE binding SET exclude_paths = ? WHERE id = ?', exclude.length > 0 ? JSON.stringify(exclude.slice(0, 50)) : null, id);
+}
+
+/** BUG-11: a page moved to another space. Its bindings and state follow it. */
+export async function updatePageSpace(pageId: string, spaceKey: string): Promise<number> {
+  const rows = await query<{ id: string }>('SELECT id FROM binding WHERE page_id = ?', pageId);
+  await exec('UPDATE binding SET space_key = ? WHERE page_id = ?', spaceKey, pageId);
+  await exec('UPDATE page_state SET space_key = ? WHERE page_id = ?', spaceKey, pageId);
+  return rows.length;
 }
 
 // ---------------------------------------------------------------------------
@@ -544,6 +571,69 @@ export async function resolveEvents(pageId: string, eventIds: string[], closedBy
   return ids;
 }
 
+/**
+ * BUG-13: stored revert PRs in a repo (titles starting `Revert "`), newest first, so a change that
+ * arrives after its own revert can be closed at once. The caller runs detectRevert on the titles.
+ */
+export async function revertCandidates(repo: string, receivedBeforeChangeId: string, limit = 100): Promise<{ id: string; title: string; prId: number | null }[]> {
+  // Only reverts received before this change: a revert that arrives later closes the change itself.
+  const rows = await query<{ id: string; title: string | null; pr_id: number | null }>(
+    `SELECT id, title, pr_id FROM change_record WHERE repo = ? AND title LIKE ?
+       AND received_at < (SELECT received_at FROM change_record WHERE id = ?)
+     ORDER BY received_at DESC LIMIT ${Math.min(500, Math.max(1, Math.floor(limit)))}`,
+    repo.toLowerCase(),
+    'Revert "%',
+    receivedBeforeChangeId,
+  );
+  return rows.filter((r) => r.title).map((r) => ({ id: r.id, title: r.title!, prId: r.pr_id === null ? null : Number(r.pr_id) }));
+}
+
+/** Change records received since `since` (SQL DATETIME) for these repos or Jira keys (R-8, verified context). */
+export async function changesSince(
+  repos: { full: string | null; slug: string }[],
+  jiraKeys: string[],
+  since: string,
+  limit = 300,
+): Promise<{ id: string; source: 'bitbucket' | 'jira'; repo: string | null; issueKey: string | null; files: ChangedFile[] }[]> {
+  const conds: string[] = [];
+  const params: Param[] = [since];
+  for (const r of repos) {
+    if (r.full) {
+      conds.push('repo = ?');
+      params.push(r.full.toLowerCase());
+    } else {
+      conds.push('(repo = ? OR repo LIKE ?)');
+      params.push(r.slug.toLowerCase(), `%/${escapeLike(r.slug.toLowerCase())}`);
+    }
+  }
+  if (jiraKeys.length > 0) {
+    conds.push(`issue_key IN (${placeholders(jiraKeys.length)})`);
+    params.push(...jiraKeys);
+  }
+  if (conds.length === 0) return [];
+  const rows = await query<{ id: string; source: 'bitbucket' | 'jira'; repo: string | null; issue_key: string | null; files: unknown }>(
+    `SELECT id, source, repo, issue_key, files FROM change_record WHERE received_at >= ? AND (${conds.join(' OR ')}) ORDER BY received_at DESC LIMIT ${Math.min(1000, Math.max(1, Math.floor(limit)))}`,
+    ...params,
+  );
+  return rows.map((r) => ({ id: r.id, source: r.source, repo: r.repo, issueKey: r.issue_key, files: parseJson<ChangedFile[]>(r.files, []) }));
+}
+
+/** Distinct change records that created or reopened an event on a page since `since` (R-8). */
+export async function eventChangesSince(pageId: string, since: string): Promise<Set<string>> {
+  const rows = await query<{ change_record_id: string }>(
+    'SELECT DISTINCT change_record_id FROM drift_event WHERE page_id = ? AND created_at >= ?',
+    pageId,
+    since,
+  );
+  return new Set(rows.map((r) => r.change_record_id));
+}
+
+/** Pages that have an event for this ref already closed by a revert (keeps the revert pass idempotent). */
+export async function pagesRevertedForRef(ref: string): Promise<string[]> {
+  const rows = await query<{ page_id: string }>("SELECT DISTINCT page_id FROM drift_event WHERE ref = ? AND status = 'reverted'", ref);
+  return rows.map((r) => r.page_id);
+}
+
 /** Closes the open events of a reverted PR. Returns the affected page IDs. */
 export async function revertEventsForRef(ref: string): Promise<string[]> {
   const rows = await query<{ page_id: string }>("SELECT DISTINCT page_id FROM drift_event WHERE ref = ? AND status = 'open'", ref);
@@ -619,7 +709,7 @@ export async function recordVerification(v: {
   userId: string | null;
   closedEventIds: string[];
   note: string | null;
-  method: 'manual' | 'accepted_proposal' | 'agent' | 'binding' | 'dev';
+  method: 'manual' | 'accepted_proposal' | 'agent' | 'binding' | 'dev' | 'dismissed' | 'rename_fix';
   /** Creation time (SQL DATETIME) of the oldest event this verification closed. */
   driftSince?: string | null;
 }): Promise<void> {
@@ -647,6 +737,8 @@ export interface EventDetailRow extends OpenEventRow {
   repo: string | null;
   prId: number | null;
   issueKey: string | null;
+  /** The PR author's Atlassian account ID, when the relay sent one (R-6). */
+  changeAuthorAccountId: string | null;
 }
 
 /** Open events of a page with the title, author and file statuses of their change record. Newest first. */
@@ -654,8 +746,9 @@ export async function eventDetailsForPage(pageId: string): Promise<EventDetailRo
   const events = await openEventsForPage(pageId);
   const ids = [...new Set(events.map((e) => e.changeRecordId))];
   if (ids.length === 0) return [];
-  const rows = await query<{ id: string; title: string | null; author: string | null; files: unknown; repo: string | null; pr_id: number | null; issue_key: string | null }>(
-    `SELECT id, title, author, files, repo, pr_id, issue_key FROM change_record WHERE id IN (${placeholders(ids.length)})`,
+  const rows = await query<{ id: string; title: string | null; author: string | null; files: unknown; repo: string | null; pr_id: number | null; issue_key: string | null; author_account_id: string | null }>(
+    `SELECT id, title, author, files, repo, pr_id, issue_key, JSON_UNQUOTE(JSON_EXTRACT(record, '$.authorAccountId')) AS author_account_id
+     FROM change_record WHERE id IN (${placeholders(ids.length)})`,
     ...ids,
   );
   const byId = new Map(rows.map((r) => [r.id, r]));
@@ -669,6 +762,7 @@ export async function eventDetailsForPage(pageId: string): Promise<EventDetailRo
       repo: c?.repo ?? null,
       prId: c?.pr_id === null || c?.pr_id === undefined ? null : Number(c.pr_id),
       issueKey: c?.issue_key ?? null,
+      changeAuthorAccountId: c?.author_account_id && c.author_account_id !== 'null' ? c.author_account_id : null,
     };
   });
 }
@@ -687,6 +781,46 @@ export async function getEvent(id: string): Promise<EventRef | undefined> {
   );
   const r = rows[0];
   return r && { id: r.id, pageId: r.page_id, bindingId: r.binding_id, status: r.status };
+}
+
+/** One event in any status, with its change record's files (stop watching, rename quick fix). */
+export interface EventFull {
+  id: string;
+  pageId: string;
+  bindingId: string;
+  changeRecordId: string;
+  source: 'bitbucket' | 'jira';
+  ref: string;
+  status: string;
+  files: string[];
+  changeFiles: ChangedFile[];
+  matchedAnchor: string | null;
+}
+
+export async function getEventFull(id: string): Promise<EventFull | undefined> {
+  const rows = await query<{
+    id: string; page_id: string; binding_id: string; change_record_id: string; source: 'bitbucket' | 'jira'; ref: string; status: string;
+    files: unknown; matched_anchor: string | null; change_files: unknown;
+  }>(
+    `SELECT e.id, e.page_id, e.binding_id, e.change_record_id, e.source, e.ref, e.status, e.files, e.matched_anchor, c.files AS change_files
+     FROM drift_event e LEFT JOIN change_record c ON c.id = e.change_record_id WHERE e.id = ?`,
+    id,
+  );
+  const r = rows[0];
+  return (
+    r && {
+      id: r.id,
+      pageId: r.page_id,
+      bindingId: r.binding_id,
+      changeRecordId: r.change_record_id,
+      source: r.source,
+      ref: r.ref,
+      status: r.status,
+      files: parseJson<string[]>(r.files, []),
+      changeFiles: parseJson<ChangedFile[]>(r.change_files, []),
+      matchedAnchor: r.matched_anchor,
+    }
+  );
 }
 
 /** Dismisses one open event with a reason. Returns false if it was not open. */
@@ -844,10 +978,38 @@ export async function saveNotification(n: NotificationRow): Promise<void> {
 // ---------------------------------------------------------------------------
 // Space dashboard (Forge SQL GROUP BY, D16)
 // ---------------------------------------------------------------------------
-/** Pages with a page_state row in a space (anchored now or before). */
+/** Pages with a page_state row in a space (anchored now or before). Case-insensitive key. */
 export async function statePagesInSpace(spaceKey: string): Promise<string[]> {
-  const rows = await query<{ page_id: string }>('SELECT page_id FROM page_state WHERE space_key = ?', spaceKey);
+  const rows = await query<{ page_id: string }>('SELECT page_id FROM page_state WHERE UPPER(space_key) = ?', spaceKey.toUpperCase());
   return rows.map((r) => r.page_id);
+}
+
+/**
+ * BUG-11: which of these pages have a page_state row, whatever space key it stored. The dashboard keys
+ * on the space's REST listing, so a page moved in from another space counts where it is now.
+ */
+export async function statePagesAmong(pageIds: string[]): Promise<string[]> {
+  const out: string[] = [];
+  for (let i = 0; i < pageIds.length; i += 500) {
+    const chunk = pageIds.slice(i, i + 500);
+    const rows = await query<{ page_id: string }>(`SELECT page_id FROM page_state WHERE page_id IN (${placeholders(chunk.length)})`, ...chunk);
+    out.push(...rows.map((r) => r.page_id));
+  }
+  return out;
+}
+
+/** Bindings of several pages, keyed by page (space bulk anchoring and R-8). */
+export async function bindingCountsFor(pageIds: string[]): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  for (let i = 0; i < pageIds.length; i += 500) {
+    const chunk = pageIds.slice(i, i + 500);
+    const rows = await query<{ page_id: string; n: number | string }>(
+      `SELECT page_id, COUNT(*) AS n FROM binding WHERE page_id IN (${placeholders(chunk.length)}) GROUP BY page_id`,
+      ...chunk,
+    );
+    for (const r of rows) out.set(r.page_id, Number(r.n));
+  }
+  return out;
 }
 
 /** Fills in page owners that rows created before M2 lack (the owner comes from the Confluence page listing). */
@@ -890,14 +1052,16 @@ export interface DashboardRow {
   openEvents: number;
   ownerId: string | null;
   since: string | null;
+  /** The newest open event (SQL DATETIME). */
+  lastAt: string | null;
 }
 
 export async function dashboardRows(pageIds: string[]): Promise<DashboardRow[]> {
   if (pageIds.length === 0) return [];
-  const rows = await query<{ page_id: string; status: StoredPageState; max_severity: number; open_event_count: number; owner_id: string | null; since: string | null }>(
-    `SELECT p.page_id, p.status, p.max_severity, p.open_event_count, p.owner_id, s.since
+  const rows = await query<{ page_id: string; status: StoredPageState; max_severity: number; open_event_count: number; owner_id: string | null; since: string | null; last_at: string | null }>(
+    `SELECT p.page_id, p.status, p.max_severity, p.open_event_count, p.owner_id, s.since, s.last_at
      FROM page_state p
-     LEFT JOIN (SELECT page_id, MIN(created_at) AS since FROM drift_event WHERE status = 'open' GROUP BY page_id) s ON s.page_id = p.page_id
+     LEFT JOIN (SELECT page_id, MIN(created_at) AS since, MAX(created_at) AS last_at FROM drift_event WHERE status = 'open' GROUP BY page_id) s ON s.page_id = p.page_id
      WHERE p.page_id IN (${placeholders(pageIds.length)}) AND p.status <> 'unanchored'`,
     ...pageIds,
   );
@@ -908,6 +1072,7 @@ export async function dashboardRows(pageIds: string[]): Promise<DashboardRow[]> 
     openEvents: Number(r.open_event_count),
     ownerId: r.owner_id,
     since: r.since,
+    lastAt: r.last_at ?? null,
   }));
 }
 
@@ -925,18 +1090,30 @@ export async function verifyDurations(pageIds: string[], days = 90): Promise<{ a
 // ---------------------------------------------------------------------------
 // Escalation (hourly scheduled trigger)
 // ---------------------------------------------------------------------------
-/** Pages the hourly run must look at: Possibly stale pages, and pages whose snooze ended in the last `windowMs`. */
+/** Pages the hourly run must look at: Possibly stale pages, pages whose snooze ended in the last `windowMs`, and Stale pages not rewritten for a day (`snoozeEnded: true` means rewrite the byline). */
 export async function escalationCandidates(now: number, windowMs: number): Promise<{ pageId: string; snoozeEnded: boolean }[]> {
   const possibly = await query<{ page_id: string }>("SELECT page_id FROM page_state WHERE status = 'possibly_stale' LIMIT 2000");
   const snooze = await query<{ page_id: string }>(
     "SELECT DISTINCT page_id FROM drift_event WHERE status = 'open' AND snoozed_until IS NOT NULL AND snoozed_until <= ? AND snoozed_until > ?",
     toSqlDate(now), toSqlDate(now - windowMs),
   );
+  // Observation 6: a Stale tooltip says "Unreviewed drift for 8 days"; rewrite it about daily so the count moves.
+  const staleDue = await query<{ page_id: string }>(
+    "SELECT page_id FROM page_state WHERE status = 'stale' AND updated_at < ? LIMIT 500",
+    toSqlDate(now - 23 * 60 * 60 * 1000),
+  );
   const ended = new Set(snooze.map((r) => r.page_id));
   const all = new Map<string, boolean>();
   for (const r of possibly) all.set(r.page_id, ended.has(r.page_id));
   for (const id of ended) all.set(id, true);
+  for (const r of staleDue) all.set(r.page_id, true);
   return [...all].map(([pageId, snoozeEnded]) => ({ pageId, snoozeEnded }));
+}
+
+/** Every page with a state row (dev driver `refresh-all`: rewrite bylines after a copy change). */
+export async function allStatePages(limit = 500): Promise<string[]> {
+  const rows = await query<{ page_id: string }>(`SELECT page_id FROM page_state ORDER BY updated_at DESC LIMIT ${Math.min(2000, Math.max(1, Math.floor(limit)))}`);
+  return rows.map((r) => r.page_id);
 }
 
 /** Development only (dev driver): moves a page's open events back in time, to test time-based escalation. */
@@ -1078,7 +1255,7 @@ export async function driftedPages(spaceKey: string | null, limit: number): Prom
      WHERE p.status IN ('possibly_stale', 'stale')`;
   const order = `ORDER BY CASE WHEN p.status = 'stale' THEN 0 ELSE 1 END, p.max_severity DESC, s.since ASC LIMIT ${n}`;
   const rows = spaceKey
-    ? await query<StateLiteRow>(`${base} AND p.space_key = ? ${order}`, spaceKey)
+    ? await query<StateLiteRow>(`${base} AND UPPER(p.space_key) = ? ${order}`, spaceKey.toUpperCase())
     : await query<StateLiteRow>(`${base} ${order}`);
   return rows.map(toStateLite);
 }

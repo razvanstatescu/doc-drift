@@ -7,12 +7,13 @@ import Resolver from '@forge/resolver';
 import { PAGE_STATE_LABELS } from '@dds/shared';
 import { anchorLabel, normalizeAnchor, type AnchorInput } from '../lib/anchors';
 import { saveBindings, suggestionsFor } from '../lib/bindings-service';
-import { refLabel } from '../lib/copy';
+import { refLabel, stateTitle } from '../lib/copy';
+import { normalizeSpaceKey, saveSpaceAnchors, suggestSpaceAnchors } from '../lib/space-anchors';
 import { appCannotRead as appCannotReadAs, makeGate, notVisible } from '../lib/access';
 import { AGENT } from '../lib/agent-meta';
-import { currentUserIsAdmin, getPageStorage, pageOperations } from '../lib/confluence';
+import { currentUserIsAdmin, getPageStatus, getPageStorage, pageOperations } from '../lib/confluence';
 import { getSettingsLocation } from '../lib/settings-store';
-import { applyProposal, listProposals, rejectProposal } from '../lib/fix-service';
+import { applyProposal, applyRenameQuickFix, listProposals, rejectProposal } from '../lib/fix-service';
 import { bindingsForPage, ensureSchema, getPageState, openEventsForPage } from '../lib/db';
 import { fromSqlDate } from '../lib/ingest-rules';
 import {
@@ -23,6 +24,8 @@ import {
   pageDrift,
   snoozePage,
   spaceDashboard,
+  stateWords,
+  stopWatchingPath,
   type Gate,
 } from '../lib/review-service';
 
@@ -56,8 +59,13 @@ resolver.define('getPageDrift', async ({ payload, context }) => {
   const user = await pageOperations(api.asUser(), pageId);
   if (user.status >= 300 || !user.ops.has('read')) return notVisible();
   if (await appCannotRead(pageId)) {
+    // UX-2: an unpublished draft is not restricted; the app can't read it until it is published.
+    if ((await getPageStatus(api.asUser(), pageId)) === 'draft') {
+      console.log(`DDS_BYLINE_DRAFT pageId=${pageId}`);
+      return { ok: true, pageId, draft: true, page: { status: 'draft' }, restricted: false, ...stateWords('unanchored'), canEdit: user.ops.has('update'), message: MESSAGES.draft };
+    }
     console.log(`DDS_BYLINE_RESTRICTED pageId=${pageId}`);
-    return { ok: true, pageId, restricted: true, state: 'unanchored', canEdit: user.ops.has('update'), message: MESSAGES.restricted };
+    return { ok: true, pageId, restricted: true, page: { status: 'current' }, state: 'unanchored', canEdit: user.ops.has('update'), message: MESSAGES.restricted };
   }
   const canConfigure = await currentUserIsAdmin(api.asUser());
   return pageDrift(pageId, api.asUser(), {
@@ -65,6 +73,7 @@ resolver.define('getPageDrift', async ({ payload, context }) => {
     spaceKeyHint: ctx.extension?.space?.key ?? null,
     canConfigure,
     settingsUrl: canConfigure ? await settingsUrlFor(ctx) : null,
+    appReader: api.asApp(),
   });
 });
 
@@ -126,6 +135,32 @@ resolver.define('rejectProposal', async ({ payload, context }) => {
   return rejectProposal((payload as { proposalId?: unknown })?.proposalId, fixDeps(context as ResolverContext));
 });
 
+// ---------------------------------------------------------------------------
+// Phase 2: stop watching a path (R-7), rename quick fix (R-4), anchor a whole space (R-1)
+// ---------------------------------------------------------------------------
+resolver.define('stopWatchingPath', async ({ payload, context }) => {
+  return stopWatchingPath((payload as { eventId?: unknown })?.eventId, (context as ResolverContext).accountId ?? null, userGate);
+});
+
+resolver.define('applyRenameQuickFix', async ({ payload, context }) => {
+  return applyRenameQuickFix((payload as { eventId?: unknown })?.eventId, fixDeps(context as ResolverContext));
+});
+
+resolver.define('suggestSpaceAnchors', async ({ payload, context }) => {
+  const ctx = context as ResolverContext;
+  const p = (payload ?? {}) as { spaceKey?: unknown; limit?: unknown };
+  const key = String(p.spaceKey ?? ctx.extension?.space?.key ?? '').trim();
+  const hint = ctx.extension?.space?.key && key && ctx.extension.space.key.toUpperCase() === key.toUpperCase() && ctx.extension.space.id !== undefined ? String(ctx.extension.space.id) : undefined;
+  return suggestSpaceAnchors(key, p.limit, api.asUser(), api.asApp(), hint);
+});
+
+resolver.define('saveSpaceAnchors', async ({ payload, context }) => {
+  const ctx = context as ResolverContext;
+  const p = (payload ?? {}) as { items?: unknown; spaceKey?: unknown };
+  const key = String(p.spaceKey ?? ctx.extension?.space?.key ?? '').trim();
+  return saveSpaceAnchors(p.items, { user: api.asUser(), app: api.asApp(), accountId: ctx.accountId ?? null, spaceKey: key ? normalizeSpaceKey(key) : null });
+});
+
 /** What `rovo.open({type: 'forge', agentName, agentKey})` needs: the manifest's rovo:agent name and key. */
 resolver.define('getRovoAgentInfo', async () => ({ ok: true, agentName: AGENT.name, agentKey: AGENT.key }));
 
@@ -134,9 +169,12 @@ resolver.define('getRovoAgentInfo', async () => ({ ok: true, agentName: AGENT.na
 // ---------------------------------------------------------------------------
 resolver.define('getSpaceDashboard', async ({ payload, context }) => {
   const ctx = context as ResolverContext;
-  const spaceKey = String((payload as { spaceKey?: unknown })?.spaceKey ?? ctx.extension?.space?.key ?? '').trim();
-  if (!spaceKey) return { ok: false, error: 'not_visible', message: 'Space not found or not visible to you.' };
-  const hint = ctx.extension?.space?.key === spaceKey && ctx.extension?.space?.id !== undefined ? String(ctx.extension.space.id) : undefined;
+  const raw = String((payload as { spaceKey?: unknown })?.spaceKey ?? ctx.extension?.space?.key ?? '').trim();
+  if (!raw) return { ok: false, error: 'not_visible', message: 'Space not found or not visible to you.' };
+  // BUG-10: case-insensitive (`plat` is PLAT).
+  const spaceKey = normalizeSpaceKey(raw);
+  const ctxKey = ctx.extension?.space?.key;
+  const hint = ctxKey && normalizeSpaceKey(ctxKey) === spaceKey && ctx.extension?.space?.id !== undefined ? String(ctx.extension.space.id) : undefined;
   return spaceDashboard(spaceKey, api.asUser(), hint);
 });
 
@@ -195,7 +233,7 @@ resolver.define('load', async ({ context }) => {
 /** Validates one anchor typed in the manual form, so the modal can show the error inline. */
 resolver.define('checkAnchor', async ({ payload }) => {
   const r = normalizeAnchor((payload ?? {}) as AnchorInput);
-  return r.ok ? { ok: true, anchor: { ...r.value, label: anchorLabel(r.value) } } : r;
+  return r.ok ? { ok: true, anchor: { ...r.value, label: anchorLabel(r.value) }, ...(r.warning && { warning: r.warning }) } : r;
 });
 
 resolver.define('save', async ({ payload, context }) => {
@@ -220,7 +258,7 @@ resolver.define('save', async ({ payload, context }) => {
     method: 'binding',
   });
   if (!result.ok) return { ok: false, errors: result.errors, message: 'Some anchors need a fix.' };
-  return { ok: true, status: result.state.status, statusLabel: PAGE_STATE_LABELS[result.state.status], closedEvents: result.closedEvents };
+  return { ok: true, status: result.state.status, statusLabel: PAGE_STATE_LABELS[result.state.status], stateTitle: stateTitle(result.state.status), closedEvents: result.closedEvents };
 });
 
 export const handler = resolver.getDefinitions();

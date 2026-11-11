@@ -4,8 +4,8 @@
 // Idempotent: event upserts are keyed by the matcher's dedupeKey, and page refresh is a pure recompute.
 import { randomUUID } from 'node:crypto';
 import api from '@forge/api';
-import { indexPages, scoreChange, type PageSource } from '@dds/matcher';
-import type { ChangeRecord } from '@dds/shared';
+import { detectRevert, indexPages, scoreChange, type PageSource } from '@dds/matcher';
+import type { BitbucketChangeRecord, ChangeRecord } from '@dds/shared';
 import { repoCandidates } from './anchors';
 import { getPageStorage } from './confluence';
 import {
@@ -16,6 +16,8 @@ import {
   getChange,
   insertRenameProposal,
   markChangeProcessed,
+  pagesRevertedForRef,
+  revertCandidates,
   revertEventsForRef,
   upsertEvent,
   type StoredBinding,
@@ -122,21 +124,61 @@ export async function processChange(changeRecordId: string): Promise<MatchOutcom
   if (probe.kind === 'revert' && record.source === 'bitbucket') {
     const repo = `${record.workspace}/${record.repoSlug}`;
     const prId = probe.revert.revertedPrId ?? (await findPrIdByTitle(repo, probe.revert.revertedTitle));
-    const pageIds = prId !== undefined ? await revertEventsForRef(`${repo}#${prId}`) : [];
+    const revertedRef = prId !== undefined ? `${repo}#${prId}` : undefined;
+    const closedPages = revertedRef ? await revertEventsForRef(revertedRef) : [];
     const pages = [];
-    for (const pageId of pageIds) pages.push(await refreshPage(pageId));
-    log('DDS_MATCH_REVERT', { changeRecordId, revertedPrId: prId ?? null, pages: pageIds });
-    await markChangeProcessed(changeRecordId, 'revert');
-    return { changeRecordId, outcome: 'revert', events: 0, pages: pages.map((p) => ({ pageId: p.pageId, status: p.status })) };
+    for (const pageId of closedPages) pages.push(await refreshPage(pageId));
+    log('DDS_MATCH_REVERT', { changeRecordId, revertedPrId: prId ?? null, pages: closedPages });
+    // BUG-02: a page whose drift for that PR was already verified (or dismissed) now describes code the
+    // revert removed. Score the revert as a normal change, except on the pages whose events for that PR
+    // a revert closed (now or on an earlier run of this job: redeliveries must not flag them).
+    const skip = new Set([...closedPages, ...(revertedRef ? await pagesRevertedForRef(revertedRef) : [])]);
+    const rest = bindings.filter((b) => !skip.has(b.pageId));
+    const scored = rest.length > 0 ? await scoreAndStore(changeRecordId, record, rest, { ...config, scoreReverts: true }, spaceByPage, notifyDelaySeconds, false) : undefined;
+    const n = scored?.events ?? 0;
+    await markChangeProcessed(changeRecordId, n > 0 ? `revert+scored:${n}` : 'revert');
+    const all = [...pages, ...(scored?.refreshed ?? [])];
+    return { changeRecordId, outcome: n > 0 ? 'revert+scored' : 'revert', events: n, pages: all.map((p) => ({ pageId: p.pageId, status: p.status })) };
   }
 
-  const candidatePages = probe.kind === 'scored' ? [...new Set(probe.events.map((e) => e.pageId))] : [];
+  const scored = await scoreAndStore(changeRecordId, record, bindings, config, spaceByPage, notifyDelaySeconds, probe.kind === 'scored' ? probe : undefined);
+  if (scored.outcome !== 'scored') {
+    await markChangeProcessed(changeRecordId, scored.outcome);
+    return { changeRecordId, outcome: scored.outcome, events: 0, pages: [] };
+  }
+  await markChangeProcessed(changeRecordId, `scored:${scored.events}${scored.earlyRevert ? ':reverted' : ''}`);
+  return {
+    changeRecordId,
+    outcome: scored.earlyRevert ? 'scored+reverted' : 'scored',
+    events: scored.events,
+    pages: scored.refreshed.map((p) => ({ pageId: p.pageId, status: p.status })),
+  };
+}
+
+type Probe = Extract<ReturnType<typeof scoreChange>, { kind: 'scored' }>;
+
+/**
+ * Pass 2: fetches the candidate pages' bodies, scores for real, upserts events and rename proposals,
+ * refreshes the pages and queues the owner notifications. `probe` is the paths-only pass 1 result
+ * (computed here when false). A change whose revert was already stored is closed at once (BUG-13).
+ */
+async function scoreAndStore(
+  changeRecordId: string,
+  record: ChangeRecord,
+  bindings: StoredBinding[],
+  config: ReturnType<typeof matcherConfigFor> & { scoreReverts?: boolean },
+  spaceByPage: Map<string, string | null>,
+  notifyDelaySeconds: number,
+  probe: Probe | undefined | false,
+): Promise<{ outcome: string; events: number; refreshed: RefreshResult[]; earlyRevert?: string }> {
+  const first = probe || scoreChange(record, bindings, new Map(), { ...config, threshold: 0 });
+  if (first.kind !== 'scored') return { outcome: first.kind === 'skipped' ? `skipped:${first.reason}` : first.kind, events: 0, refreshed: [] };
+  const candidatePages = [...new Set(first.events.map((e) => e.pageId))];
   const pages = await loadPages(candidatePages);
   const result = scoreChange(record, bindings, indexPages(pages), config);
   if (result.kind !== 'scored') {
-    await markChangeProcessed(changeRecordId, result.kind);
     log('DDS_MATCH_DONE', { changeRecordId, candidates: candidatePages.length, fetched: pages.length, events: 0, outcome: result.kind });
-    return { changeRecordId, outcome: result.kind, events: 0, pages: [] };
+    return { outcome: result.kind, events: 0, refreshed: [] };
   }
 
   const notify = new Set<string>();
@@ -173,6 +215,23 @@ export async function processChange(changeRecordId: string): Promise<MatchOutcom
     log('DDS_MATCH_RENAME_PROPOSAL', { ...rename, stored });
   }
 
+  // BUG-13: the revert of this PR was delivered first (relay retries can reorder deliveries).
+  let earlyRevert: string | undefined;
+  if (record.source === 'bitbucket' && result.events.length > 0) {
+    const early = await storedRevertOf(changeRecordId, record);
+    if (early) {
+      earlyRevert = early.id;
+      const repo = `${record.workspace}/${record.repoSlug}`;
+      const ref = `${repo}#${record.prId}`;
+      const closed = await revertEventsForRef(ref);
+      // The revert, delivered first, had nothing to close and was scored as a change (BUG-02); the two
+      // cancel out, so its events close as well.
+      const closedRevert = early.prId !== null ? await revertEventsForRef(`${repo}#${early.prId}`) : [];
+      for (const id of [...closed, ...closedRevert]) notify.delete(id);
+      log('DDS_MATCH_EARLY_REVERT', { changeRecordId, revertChangeRecordId: early.id, ref, pages: closed, revertPages: closedRevert });
+    }
+  }
+
   const touched = [...new Set(result.events.map((e) => e.pageId))];
   const refreshed = await refreshAll(touched, spaceByPage);
   try {
@@ -180,20 +239,27 @@ export async function processChange(changeRecordId: string): Promise<MatchOutcom
   } catch (e) {
     log('DDS_NOTIFY_QUEUE_FAILED', { message: String((e as Error)?.message ?? e).slice(0, 300) });
   }
-  await markChangeProcessed(changeRecordId, `scored:${result.events.length}`);
   log('DDS_MATCH_DONE', {
     changeRecordId,
     candidates: candidatePages.length,
     fetched: pages.length,
     events: result.events.length,
+    ...(earlyRevert && { earlyRevert }),
     pages: refreshed.map((p) => ({ pageId: p.pageId, status: p.status, maxSeverity: p.maxSeverity })),
   });
-  return {
-    changeRecordId,
-    outcome: 'scored',
-    events: result.events.length,
-    pages: refreshed.map((p) => ({ pageId: p.pageId, status: p.status })),
-  };
+  return { outcome: 'scored', events: result.events.length, refreshed, ...(earlyRevert && { earlyRevert }) };
+}
+
+/** The ID of a stored revert PR that reverts this change (by PR number, else by title), if any. */
+async function storedRevertOf(changeRecordId: string, record: BitbucketChangeRecord): Promise<{ id: string; prId: number | null } | undefined> {
+  const candidates = await revertCandidates(`${record.workspace}/${record.repoSlug}`, changeRecordId);
+  for (const c of candidates) {
+    if (c.id === changeRecordId || c.prId === record.prId) continue;
+    const info = detectRevert(c.title);
+    if (!info) continue;
+    if (info.revertedPrId !== undefined ? info.revertedPrId === record.prId : info.revertedTitle === record.title) return { id: c.id, prId: c.prId };
+  }
+  return undefined;
 }
 
 /** Readable reason for the closing log line when the probe skips a change. */

@@ -95,7 +95,7 @@ export async function onMerged(event: unknown): Promise<InvocationError | void> 
     if (diffstat.totalEntries > 0 && diffstat.totalEntries <= DIFF_FILE_LIMIT) {
       hunks = await getDiff(pr, diffstat.via);
     }
-    const record = buildChangeRecord({ pr, repo, files: diffstat.files, ...(hunks !== undefined && { hunks }) });
+    const record = buildChangeRecord({ pr, repo, files: diffstat.files, ...(hunks !== undefined && { hunks }), truncated: diffstat.truncated, totalFiles: diffstat.totalEntries });
 
     // Check against the shared schema before sending: the core would reject it anyway.
     const check = parseChangeRecord(record);

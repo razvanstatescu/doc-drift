@@ -341,3 +341,7 @@ Verified [JIRA-API]:
 - `GET /2.0/repositories/{ws}/{repo}?fields=mainbranch.name` returned `{"mainbranch":{"name":"main"}}`. Verified (live).
 - Repo creation through the API failed with "You can't create repositories under this project" for a token without project scopes. Create repos in the UI, or use a token with project scopes.
 - The `/src` endpoint (multipart form, `write:repository`) is enough to seed files, create branches (`branch` + `parents`) and delete files (`files` field) without git credentials.
+
+## Update (2026-11-12, phase 2)
+
+- **PR author account.** `avi:bitbucket:fulfilled:pullrequest` carries `pullrequest.author.accountId` (an Atlassian account ID, e.g. `712020:f44b...`) next to `displayName`. The relay (2.2.0) forwards it as `authorAccountId`; the core mentions the author in the drift comment only when `GET /wiki/rest/api/user?accountId=` resolves it on the site (R-6). Verified: https://developer.atlassian.com/platform/forge/events-reference/bitbucket/ (via the Forge MCP). A real merge has not been relayed since.

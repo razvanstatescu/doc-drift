@@ -74,3 +74,23 @@ describe('parseChangeRecord', () => {
     expect(parseChangeRecord({ source: 'jira', issueKey: 'PAY-1', changelog: [{ field: 'status', to: 3 }] }).ok).toBe(false);
   });
 });
+
+describe('phase 2 record fields (BUG-08, R-6)', () => {
+  const base = {
+    source: 'bitbucket', workspace: 'w', repoSlug: 'r', repoUuid: '{u}', prId: 1, title: 'T', author: 'A',
+    mergeCommit: 'c', sourceBranch: 's', destinationBranch: 'main', files: [],
+  };
+  it('keeps filesTruncated, totalFiles and authorAccountId', () => {
+    expect(parseChangeRecord({ ...base, filesTruncated: true, totalFiles: 812, authorAccountId: '712020:abc' })).toMatchObject({
+      ok: true,
+      value: { filesTruncated: true, totalFiles: 812, authorAccountId: '712020:abc' },
+    });
+  });
+  it('drops filesTruncated: false and refuses bad values', () => {
+    const ok = parseChangeRecord({ ...base, filesTruncated: false });
+    expect(ok.ok && 'filesTruncated' in ok.value).toBe(false);
+    expect(parseChangeRecord({ ...base, filesTruncated: 'yes' }).ok).toBe(false);
+    expect(parseChangeRecord({ ...base, totalFiles: -1 }).ok).toBe(false);
+    expect(parseChangeRecord({ ...base, authorAccountId: '<script>' }).ok).toBe(false);
+  });
+});

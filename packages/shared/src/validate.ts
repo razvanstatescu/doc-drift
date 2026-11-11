@@ -127,15 +127,23 @@ function readBitbucket(raw: Json): ValidationResult<BitbucketChangeRecord> {
       r.fail('hunks', `must be at most ${CHANGE_RECORD_LIMITS.maxHunksBytes} bytes`);
     }
   }
+  const filesTruncated = raw['filesTruncated'];
+  if (filesTruncated !== undefined && typeof filesTruncated !== 'boolean') r.fail('filesTruncated', 'must be a boolean');
+  const totalFiles = raw['totalFiles'] === undefined ? undefined : r.count('totalFiles');
+  const authorAccountId = r.string('authorAccountId', { optional: true });
+  if (authorAccountId !== undefined && !/^[A-Za-z0-9:_-]{1,128}$/.test(authorAccountId)) r.fail('authorAccountId', 'must be an Atlassian account ID');
   if (r.errors.length > 0) return { ok: false, errors: r.errors };
   return {
     ok: true,
     value: {
       source: 'bitbucket',
-      ...(fields as Omit<BitbucketChangeRecord, 'source' | 'files' | 'hunks' | 'defaultBranch'>),
+      ...(fields as Omit<BitbucketChangeRecord, 'source' | 'files' | 'hunks' | 'defaultBranch' | 'filesTruncated' | 'totalFiles' | 'authorAccountId'>),
       ...(defaultBranch !== undefined && { defaultBranch }),
       files,
       ...(typeof hunks === 'string' && { hunks }),
+      ...(filesTruncated === true && { filesTruncated: true }),
+      ...(totalFiles !== undefined && { totalFiles }),
+      ...(authorAccountId !== undefined && { authorAccountId }),
     },
   };
 }

@@ -330,7 +330,7 @@ export function applySectionEdit(storage: string, sectionHeading: string, origin
   const [start, end] = range;
   const slice = storage.slice(start, end);
   // A match that runs into a code macro would rewrite code as prose: refuse it.
-  if (/<ac:structured-macro\b/.test(slice)) return { ok: false, error: 'unsupported_span' };
+  if (/<ac:(?:structured-macro|link|emoticon|image)\b|<ri:/.test(slice)) return { ok: false, error: 'unsupported_span' };
   const blockTags = tagsIn(slice, start).filter((t) => BLOCK_TAGS.has(t.name) && !VOID_TAGS.has(t.name));
   const replacement = blockTags.length > 0 ? blockXhtml(proposed, blockTags[0]!.name) : inlineXhtml(proposed);
   return { ok: true, kind: 'text', storage: storage.slice(0, start) + replacement + storage.slice(end) };

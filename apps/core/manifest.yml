@@ -1,0 +1,127 @@
+modules:
+  confluence:contentBylineItem:
+    # State comes from the page content property, so page views run no function (S2).
+    # The manifest icon renders; an icon set through the property does not (live test 2026-11-11),
+    # so the state lives in the title ("Doc Drift: Possibly stale") and the tooltip.
+    - key: dds-byline
+      resource: byline
+      render: native
+      resolver:
+        function: byline-resolver
+      viewportContainer: modal
+      viewportSize: large
+      title: 'Doc Drift: Unanchored'
+      tooltip: Not linked to code or Jira. Add anchors.
+      icon: resource:icons;doc-drift.svg
+      contentPropertyKey: dds-byline-7f3c2a
+  confluence:globalSettings:
+    - key: dds-settings
+      resource: settings
+      render: native
+      resolver:
+        function: settings-resolver
+      title: Doc Drift Sentinel
+      useAsConfig: true
+  sql:
+    - key: main
+      engine: mysql
+  trigger:
+    - key: dds-migration-trigger
+      function: enqueue-migration
+      events:
+        - avi:forge:installed:app
+        - avi:forge:upgraded:app
+  consumer:
+    - key: dds-migration-consumer
+      queue: dds-migration-queue
+      function: run-migration
+    - key: dds-match-consumer
+      queue: match-queue
+      function: match
+  webtrigger:
+    # The relay POSTs HMAC-signed change records here. Static response keeps Runs on Atlassian eligibility.
+    - key: ingest-change
+      function: ingest
+      urlFormat: v2
+      response:
+        type: static
+        outputs:
+          - key: accepted
+            statusCode: 202
+            contentType: application/json
+            body: '{"status":"accepted"}'
+          - key: bad-request
+            statusCode: 400
+            contentType: application/json
+            body: '{"status":"bad_request"}'
+          - key: unauthorized
+            statusCode: 401
+            contentType: application/json
+            body: '{"status":"unauthorized"}'
+    # Development-only driver for end-to-end checks. Inert unless DDS_DEV_TOKEN is set. Remove in M4.
+    - key: dds-dev
+      function: dev-driver
+      urlFormat: v2
+      response:
+        type: static
+        outputs:
+          - key: accepted
+            statusCode: 202
+            contentType: application/json
+            body: '{"status":"accepted"}'
+          - key: bad-request
+            statusCode: 400
+            contentType: application/json
+            body: '{"status":"bad_request"}'
+          - key: unauthorized
+            statusCode: 401
+            contentType: application/json
+            body: '{"status":"unauthorized"}'
+          - key: failed
+            statusCode: 500
+            contentType: application/json
+            body: '{"status":"failed"}'
+  function:
+    - key: byline-resolver
+      handler: index.bylineHandler
+    - key: settings-resolver
+      handler: index.settingsHandler
+    - key: ingest
+      handler: index.ingest
+    - key: match
+      handler: index.match
+      timeoutSeconds: 120
+    - key: enqueue-migration
+      handler: index.enqueueMigration
+    - key: run-migration
+      handler: index.runMigration
+      timeoutSeconds: 900
+    - key: dev-driver
+      handler: index.devDriver
+resources:
+  - key: byline
+    path: src/frontend/byline/index.jsx
+  - key: settings
+    path: src/frontend/settings/index.jsx
+  - key: icons
+    path: static/icons
+permissions:
+  scopes:
+    # Pages, page operations and content properties (REST v2). write:page is required for property writes.
+    - read:page:confluence
+    - write:page:confluence
+    # Current user with operations (admin check on the settings page).
+    - read:confluence-user
+    # KVS settings and the relay secret.
+    - storage:app
+app:
+  runtime:
+    name: nodejs24.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/12e968a1-a45d-4524-ba28-d47e2315db1a
+  compatibility:
+    confluence:
+      required: true
+    jira:
+      required: false

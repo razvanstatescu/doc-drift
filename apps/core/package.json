@@ -1,0 +1,32 @@
+{
+  "name": "@dds/core-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Doc Drift Sentinel core Forge app (Confluence required, Jira optional)",
+  "license": "UNLICENSED",
+  "scripts": {
+    "prebuild:packages": "pnpm --filter @dds/shared --filter @dds/matcher build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "lint": "forge lint",
+    "deploy:dev": "pnpm run prebuild:packages && forge deploy -e development --non-interactive"
+  },
+  "dependencies": {
+    "@dds/matcher": "workspace:*",
+    "@dds/shared": "workspace:*",
+    "@forge/api": "8.5.0",
+    "@forge/bridge": "7.3.0",
+    "@forge/events": "3.0.10",
+    "@forge/kvs": "2.1.2",
+    "@forge/react": "12.5.0",
+    "@forge/resolver": "2.0.2",
+    "@forge/sql": "4.0.10",
+    "react": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@types/react": "^18.3.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.12"
+  }
+}

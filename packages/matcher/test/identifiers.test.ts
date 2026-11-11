@@ -65,4 +65,20 @@ describe('removedIdentifiers', () => {
     const diffs = parseUnifiedDiff(fileDiff('gone.ts', ['export const REFUNDS_V1 = true;'], []) + fileDiff('config.ts', ['REFUNDS_V1_ENABLED=true'], []));
     expect([...removedIdentifiers(diffs, new Set(['gone.ts'])).codeShaped]).toEqual(['REFUNDS_V1_ENABLED']);
   });
+
+  it('ignores added lines that only announce a removal (a renamed flag kept as a shim)', () => {
+    const diffs = parseUnifiedDiff(
+      fileDiff(
+        'scripts/scale-workers.sh',
+        ['    --count) COUNT="$2"; shift 2 ;;', '  echo "--count is required" >&2'],
+        ['    --replicas) REPLICAS="$2"; shift 2 ;;', '    --count) echo "--count was renamed to --replicas" >&2; exit 2 ;;', '  echo "--replicas is required" >&2'],
+      ),
+    );
+    expect([...removedIdentifiers(diffs).codeShaped]).toContain('--count');
+  });
+
+  it('still treats an identifier as used when a normal added line keeps it', () => {
+    const diffs = parseUnifiedDiff(fileDiff('a.sh', ['run --count 3'], ['run --count 4 # renamed the variable only', 'run --count 5']));
+    expect([...removedIdentifiers(diffs).codeShaped]).not.toContain('--count');
+  });
 });

@@ -1020,12 +1020,13 @@
           "pageId": "scale-payment-workers",
           "expected": true,
           "actual": true,
-          "score": 0.83,
-          "rawScore": 0.83,
+          "score": 1,
+          "rawScore": 1,
           "severity": "high",
           "expectedSeverity": "high",
           "reasons": [
-            "scripts/scale-workers.sh changed: 10 lines added, 9 removed"
+            "scripts/scale-workers.sh changed: 10 lines added, 9 removed",
+            "Page mentions --count, removed in PR #490"
           ]
         }
       ]

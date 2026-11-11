@@ -66,6 +66,17 @@ function isPlainWord(token: string): boolean {
   return /^[a-z]+$/.test(token);
 }
 
+/**
+ * An added line that only tells the user an identifier is gone (`--count) echo "--count was renamed to --replicas"`).
+ * Such a shim does not keep the identifier in use, so its tokens don't cancel the removal: a page that still
+ * documents `--count` should hear that the PR removed it.
+ */
+const REMOVAL_NOTICE = /\b(?:renamed|deprecated|obsolete|no longer (?:supported|used|available|exists?|accepted)|(?:was|were|has been|have been) removed|replaced by)\b/i;
+
+export function isRemovalNotice(line: string): boolean {
+  return REMOVAL_NOTICE.test(line);
+}
+
 export interface RemovedIdentifiers {
   /** Matched against all page text. */
   codeShaped: ReadonlySet<string>;
@@ -79,7 +90,9 @@ export interface RemovedIdentifiers {
 
 /**
  * Identifiers on removed (`-`) lines that no added (`+`) line still uses, across the whole change.
- * Change-wide, so a rename that moves code between files still counts as one change.
+ * Change-wide, so a rename that moves code between files still counts as one change. Added lines that are
+ * removal notices ({@link isRemovalNotice}: "was renamed to", "deprecated", "no longer supported") don't count
+ * as uses, so a flag kept only to print "--count was renamed to --replicas" still counts as removed.
  *
  * Files in `deletedPaths` add no removed identifiers (D26): every token of a deleted file is on a `-`
  * line, yet most of them (`charge_id`, `pool.query`) live on elsewhere in the repo. The deletion itself
@@ -87,7 +100,7 @@ export interface RemovedIdentifiers {
  * leaves a modified file (a flag in config, a route registration).
  */
 export function removedIdentifiers(diffs: readonly FileDiff[], deletedPaths: ReadonlySet<string> = new Set()): RemovedIdentifiers {
-  const added = new Set(diffs.flatMap((d) => d.added.flatMap(tokenize)));
+  const added = new Set(diffs.flatMap((d) => d.added.filter((line) => !isRemovalNotice(line)).flatMap(tokenize)));
   const codeShaped = new Set<string>();
   const plain = new Set<string>();
   for (const token of diffs.filter((d) => !deletedPaths.has(d.path)).flatMap((d) => d.removed.flatMap(tokenize))) {

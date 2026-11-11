@@ -50,7 +50,7 @@ What that means in practice, at Balanced (0.5):
 
 So a normal anchor on a shared file needs evidence that the page uses what changed, a glob never alerts on paths alone, and a critical anchor alerts on any real change to its file.
 
-Removed identifiers are tokens on `-` lines that no `+` line in the change still uses, taken from modified and renamed files only (not deleted ones). Code-shaped tokens (`ROLLBACK_TIMEOUT`, `log.info`, `replicaCount`, `--count`, `/v1/refunds`) are matched against all page text. SQL and shell keywords are stopwords. Plain lowercase words (`router`, `wait`) are not evidence unless `plainWordIdentifiers: true`, and then only against page code.
+Removed identifiers are tokens on `-` lines that no `+` line in the change still uses, taken from modified and renamed files only (not deleted ones). A `+` line that only announces a removal (`renamed`, `deprecated`, `no longer supported`, `was removed`, `replaced by`) does not count as a use, so a flag kept as a shim (`--count) echo "--count was renamed to --replicas"`) still counts as removed. Code-shaped tokens (`ROLLBACK_TIMEOUT`, `log.info`, `replicaCount`, `--count`, `/v1/refunds`) are matched against all page text. SQL and shell keywords are stopwords. Plain lowercase words (`router`, `wait`) are not evidence unless `plainWordIdentifiers: true`, and then only against page code.
 
 Config is `Partial<MatcherConfig>`: `threshold`, `ignoreGlobs`, `ignoreNonDefaultBranches`, and the optional `anchorWeights` (`{ critical, normal }`) and `plainWordIdentifiers`.
 
@@ -101,6 +101,8 @@ Each change, why, and what it fixed on the set. None is specific to one fixture.
 5. **SQL and shell keywords are stopwords** (`SELECT`, `FROM`, `WHERE`, `RETURNING`, `EOF`, ...). They are ALL CAPS, so code-shaped, but they are language, not identifiers.
 6. **Glob anchors never count as "anchored file removed or renamed"** for High severity. A glob such as `src/**` outlives any one file in it; only an exact path anchor's file can be gone. Fixes the service overview severity in demo 03 (Medium, 0.72) and hand-written 03 (updated).
 7. **Cosmetic factor 0.4** (was 0.5). At 0.5 a 100+ line comment change on a critical anchor scored exactly 0.5 and alerted (`edge-28`). At 0.4 a cosmetic-only change caps at 0.4 and never alerts alone at Balanced; it can still alert with a quoted line or identifier.
+
+8. **Removal notices don't keep an identifier alive** (M3, polish item 5). Demo 09 renames `--count` to `--replicas` and keeps `--count) echo "--count was renamed to --replicas"; exit 2` so old callers get a message. That added line used to cancel the removal, so the Scale payment workers page (step 3 runs `--count 6`) got only the file reason. Now `+` lines matching a removal notice are skipped when collecting identifiers still in use, and the event reads "Page mentions --count, removed in PR #N" (score 0.83 to 1.00, still High). Only demo-09 changed in the eval; precision 1.00, recall 0.94 as before.
 
 Known limit: a value stated only in prose ("up to 8 worker pods") is invisible to path, identifier and snippet signals (`edge-20`). The Propose fix flow (LLM, on demand) is where that belongs.
 

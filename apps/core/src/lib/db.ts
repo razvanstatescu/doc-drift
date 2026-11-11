@@ -154,6 +154,29 @@ const MIGRATIONS: [string, string][] = [
       PRIMARY KEY (page_id)
     )`,
   ],
+  // M3. Fix proposals drafted by Drift Reviewer (submit-fix-proposal). A person accepts or rejects them in
+  // the review panel; the page text changes only on accept, asUser (D6). Free text is TEXT: it is not indexed.
+  [
+    'v011_create_fix_proposal',
+    `CREATE TABLE IF NOT EXISTS fix_proposal (
+      id VARCHAR(36) NOT NULL,
+      page_id VARCHAR(32) NOT NULL,
+      event_ids JSON NULL,
+      refs JSON NULL,
+      section_heading VARCHAR(512) NOT NULL,
+      original_text TEXT NOT NULL,
+      proposed_text TEXT NOT NULL,
+      rationale TEXT NULL,
+      status VARCHAR(10) NOT NULL,
+      created_by VARCHAR(128) NULL,
+      created_at DATETIME(3) NOT NULL,
+      decided_by VARCHAR(128) NULL,
+      decided_at DATETIME(3) NULL,
+      applied_version INT NULL,
+      PRIMARY KEY (id),
+      INDEX idx_fix_page_status (page_id, status)
+    )`,
+  ],
 ];
 
 /** Applies pending migrations. Idempotent: the runner skips entries recorded in `__migrations`. */
@@ -499,6 +522,24 @@ export async function resolveOpenEvents(pageId: string, closedBy: string | null 
   return ids;
 }
 
+/** Closes the given events if they are still open (an accepted fix proposal). Returns the closed IDs and the oldest one's creation time. */
+export async function resolveEvents(pageId: string, eventIds: string[], closedBy: string | null = null): Promise<string[] & { oldest?: string }> {
+  if (eventIds.length === 0) return [];
+  const open = await query<{ id: string; created_at: string }>(
+    `SELECT id, created_at FROM drift_event WHERE page_id = ? AND status = 'open' AND id IN (${placeholders(eventIds.length)}) ORDER BY created_at`,
+    pageId,
+    ...eventIds,
+  );
+  const ids: string[] & { oldest?: string } = open.map((r) => r.id);
+  if (open.length === 0) return ids;
+  await exec(
+    `UPDATE drift_event SET status = 'resolved', closed_by = ?, updated_at = ? WHERE status = 'open' AND id IN (${placeholders(ids.length)})`,
+    closedBy, toSqlDate(), ...ids,
+  );
+  ids.oldest = open[0]!.created_at;
+  return ids;
+}
+
 /** Closes the open events of a reverted PR. Returns the affected page IDs. */
 export async function revertEventsForRef(ref: string): Promise<string[]> {
   const rows = await query<{ page_id: string }>("SELECT DISTINCT page_id FROM drift_event WHERE ref = ? AND status = 'open'", ref);
@@ -684,6 +725,7 @@ export async function dropPage(pageId: string): Promise<{ closed: number; bindin
   if (bindings.length > 0) await exec('DELETE FROM binding WHERE page_id = ?', pageId);
   await exec('DELETE FROM rename_proposal WHERE page_id = ?', pageId);
   await exec('DELETE FROM notification WHERE page_id = ?', pageId);
+  await exec("UPDATE fix_proposal SET status = 'rejected', decided_at = ? WHERE page_id = ? AND status = 'open'", toSqlDate(), pageId);
   await exec('DELETE FROM page_state WHERE page_id = ?', pageId);
   return { closed: open.length, bindings: bindings.length };
 }
@@ -914,6 +956,10 @@ export async function snapshotForPage(pageId: string): Promise<Record<string, un
     ),
     verifications: await query('SELECT id, user_id, at, method, closed_event_ids, drift_since, note FROM verification WHERE page_id = ? ORDER BY at DESC LIMIT 5', pageId),
     rename_proposals: await query(`SELECT ${RENAME_COLS} FROM rename_proposal WHERE page_id = ? ORDER BY created_at DESC LIMIT 5`, pageId),
+    fix_proposals: await query(
+      'SELECT id, section_heading, status, created_by, created_at, decided_by, decided_at, applied_version, refs, event_ids FROM fix_proposal WHERE page_id = ? ORDER BY created_at DESC LIMIT 5',
+      pageId,
+    ),
     notification: await query('SELECT comment_id, comment_version, window_start, body_lines, owner_id FROM notification WHERE page_id = ?', pageId),
   };
 }
@@ -922,4 +968,214 @@ export async function recentChanges(limit = 5): Promise<unknown[]> {
   return query(
     `SELECT id, origin, source, repo, pr_id, title, received_at, processed_at, outcome FROM change_record ORDER BY received_at DESC LIMIT ${Math.min(50, Math.max(1, Math.floor(limit)))}`,
   );
+}
+
+// ---------------------------------------------------------------------------
+// Agent tools (M3)
+// ---------------------------------------------------------------------------
+function escapeLike(s: string): string {
+  return s.replace(/[\\%_]/g, (c) => `\\${c}`);
+}
+
+/**
+ * Path, glob and repo bindings for a repository named as `workspace/slug` or just `slug`.
+ * With a workspace: bindings on `workspace/slug` or on the bare slug. Without: the slug in any workspace.
+ */
+export async function bindingsForRepoName(full: string | null, slug: string, limit = 500): Promise<StoredBinding[]> {
+  const rows = full
+    ? await query<BindingRow>(
+        `SELECT ${BINDING_COLS} FROM binding WHERE anchor_type IN ('path', 'glob', 'repo') AND repo IN (?, ?) LIMIT ${limit}`,
+        full.toLowerCase(),
+        slug.toLowerCase(),
+      )
+    : await query<BindingRow>(
+        `SELECT ${BINDING_COLS} FROM binding WHERE anchor_type IN ('path', 'glob', 'repo') AND (repo = ? OR repo LIKE ?) LIMIT ${limit}`,
+        slug.toLowerCase(),
+        `%/${escapeLike(slug.toLowerCase())}`,
+      );
+  return rows.map(toBinding);
+}
+
+export interface PageStateLite {
+  pageId: string;
+  spaceKey: string | null;
+  ownerId: string | null;
+  status: StoredPageState;
+  maxSeverity: number;
+  openEvents: number;
+  lastSummary: string | null;
+  since: string | null;
+}
+
+type StateLiteRow = {
+  page_id: string; space_key: string | null; owner_id: string | null; status: StoredPageState; max_severity: number;
+  open_event_count: number; last_summary: string | null; since: string | null;
+};
+
+const toStateLite = (r: StateLiteRow): PageStateLite => ({
+  pageId: r.page_id,
+  spaceKey: r.space_key,
+  ownerId: r.owner_id,
+  status: r.status,
+  maxSeverity: Number(r.max_severity),
+  openEvents: Number(r.open_event_count),
+  lastSummary: r.last_summary,
+  since: r.since,
+});
+
+/** Possibly stale and Stale pages, Stale first, then severity, then the oldest open drift. */
+export async function driftedPages(spaceKey: string | null, limit: number): Promise<PageStateLite[]> {
+  const n = Math.min(200, Math.max(1, Math.floor(limit)));
+  const base = `SELECT p.page_id, p.space_key, p.owner_id, p.status, p.max_severity, p.open_event_count, p.last_summary, s.since
+     FROM page_state p
+     LEFT JOIN (SELECT page_id, MIN(created_at) AS since FROM drift_event WHERE status = 'open' GROUP BY page_id) s ON s.page_id = p.page_id
+     WHERE p.status IN ('possibly_stale', 'stale')`;
+  const order = `ORDER BY CASE WHEN p.status = 'stale' THEN 0 ELSE 1 END, p.max_severity DESC, s.since ASC LIMIT ${n}`;
+  const rows = spaceKey
+    ? await query<StateLiteRow>(`${base} AND p.space_key = ? ${order}`, spaceKey)
+    : await query<StateLiteRow>(`${base} ${order}`);
+  return rows.map(toStateLite);
+}
+
+/** page_state rows for some pages (find-docs-for-path statuses). */
+export async function pageStatesFor(pageIds: string[]): Promise<Map<string, StoredPageState>> {
+  if (pageIds.length === 0) return new Map();
+  const rows = await query<{ page_id: string; status: StoredPageState }>(
+    `SELECT page_id, status FROM page_state WHERE page_id IN (${placeholders(pageIds.length)})`,
+    ...pageIds,
+  );
+  return new Map(rows.map((r) => [r.page_id, r.status]));
+}
+
+export interface ChangeDetail {
+  id: string;
+  source: 'bitbucket' | 'jira';
+  title: string | null;
+  author: string | null;
+  repo: string | null;
+  prId: number | null;
+  issueKey: string | null;
+  record: ChangeRecord | null;
+  hunks: string | null;
+}
+
+/** Change records with their hunks (get-drift-context). */
+export async function changesByIds(ids: string[]): Promise<Map<string, ChangeDetail>> {
+  if (ids.length === 0) return new Map();
+  const rows = await query<{ id: string; source: 'bitbucket' | 'jira'; title: string | null; author: string | null; repo: string | null; pr_id: number | null; issue_key: string | null; record: unknown; hunks: string | null }>(
+    `SELECT id, source, title, author, repo, pr_id, issue_key, record, hunks FROM change_record WHERE id IN (${placeholders(ids.length)})`,
+    ...ids,
+  );
+  return new Map(
+    rows.map((r) => [
+      r.id,
+      {
+        id: r.id,
+        source: r.source,
+        title: r.title,
+        author: r.author,
+        repo: r.repo,
+        prId: r.pr_id === null || r.pr_id === undefined ? null : Number(r.pr_id),
+        issueKey: r.issue_key,
+        record: parseJson<ChangeRecord | null>(r.record, null),
+        hunks: r.hunks,
+      },
+    ]),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// fix_proposal (M3)
+// ---------------------------------------------------------------------------
+export type FixProposalStatus = 'open' | 'accepted' | 'rejected';
+
+export interface FixProposalRow {
+  id: string;
+  pageId: string;
+  eventIds: string[];
+  /** Display refs of the changes it answers: `PR #482`, `PAY-21`. */
+  refs: string[];
+  sectionHeading: string;
+  originalText: string;
+  proposedText: string;
+  rationale: string | null;
+  status: FixProposalStatus;
+  createdBy: string | null;
+  createdAt: string;
+  decidedBy: string | null;
+  decidedAt: string | null;
+  appliedVersion: number | null;
+}
+
+type FixRow = {
+  id: string; page_id: string; event_ids: unknown; refs: unknown; section_heading: string; original_text: string; proposed_text: string;
+  rationale: string | null; status: FixProposalStatus; created_by: string | null; created_at: string; decided_by: string | null;
+  decided_at: string | null; applied_version: number | null;
+};
+const FIX_COLS =
+  'id, page_id, event_ids, refs, section_heading, original_text, proposed_text, rationale, status, created_by, created_at, decided_by, decided_at, applied_version';
+const toFix = (r: FixRow): FixProposalRow => ({
+  id: r.id,
+  pageId: r.page_id,
+  eventIds: parseJson<string[]>(r.event_ids, []),
+  refs: parseJson<string[]>(r.refs, []),
+  sectionHeading: r.section_heading,
+  originalText: r.original_text,
+  proposedText: r.proposed_text,
+  rationale: r.rationale,
+  status: r.status,
+  createdBy: r.created_by,
+  createdAt: r.created_at,
+  decidedBy: r.decided_by,
+  decidedAt: r.decided_at,
+  appliedVersion: r.applied_version === null || r.applied_version === undefined ? null : Number(r.applied_version),
+});
+
+export async function insertFixProposal(p: {
+  id: string;
+  pageId: string;
+  eventIds: string[];
+  refs: string[];
+  sectionHeading: string;
+  originalText: string;
+  proposedText: string;
+  rationale: string | null;
+  createdBy: string | null;
+}): Promise<void> {
+  await exec(
+    `INSERT INTO fix_proposal (id, page_id, event_ids, refs, section_heading, original_text, proposed_text, rationale, status, created_by, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', ?, ?)`,
+    p.id, p.pageId, JSON.stringify(p.eventIds), JSON.stringify(p.refs), p.sectionHeading.slice(0, 512), p.originalText, p.proposedText,
+    p.rationale, p.createdBy, toSqlDate(),
+  );
+}
+
+export async function getFixProposal(id: string): Promise<FixProposalRow | undefined> {
+  const rows = await query<FixRow>(`SELECT ${FIX_COLS} FROM fix_proposal WHERE id = ?`, id);
+  return rows[0] && toFix(rows[0]);
+}
+
+/** A page's proposals, newest first. `openOnly` by default. */
+export async function fixProposalsForPage(pageId: string, openOnly = true, limit = 20): Promise<FixProposalRow[]> {
+  const rows = await query<FixRow>(
+    `SELECT ${FIX_COLS} FROM fix_proposal WHERE page_id = ? ${openOnly ? "AND status = 'open'" : ''} ORDER BY created_at DESC LIMIT ${Math.min(100, Math.max(1, limit))}`,
+    pageId,
+  );
+  return rows.map(toFix);
+}
+
+export async function countOpenFixProposals(pageId: string): Promise<number> {
+  const rows = await query<{ n: number }>("SELECT COUNT(*) AS n FROM fix_proposal WHERE page_id = ? AND status = 'open'", pageId);
+  return Number(rows[0]?.n ?? 0);
+}
+
+/** Decides an open proposal. Returns false if it was no longer open. */
+export async function decideFixProposal(id: string, status: 'accepted' | 'rejected', by: string | null, appliedVersion: number | null = null): Promise<boolean> {
+  const before = await getFixProposal(id);
+  if (!before || before.status !== 'open') return false;
+  await exec(
+    "UPDATE fix_proposal SET status = ?, decided_by = ?, decided_at = ?, applied_version = ? WHERE id = ? AND status = 'open'",
+    status, by, toSqlDate(), appliedVersion, id,
+  );
+  return true;
 }

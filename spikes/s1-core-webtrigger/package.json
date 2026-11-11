@@ -1,0 +1,12 @@
+{
+  "name": "s1-core-webtrigger",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Spike S1: Confluence app with a static v2 web trigger that verifies an HMAC and stores the last change record in KVS",
+  "main": "src/index.js",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@forge/api": "^8.5.0",
+    "@forge/kvs": "^2.1.2"
+  }
+}

@@ -1,0 +1,96 @@
+modules:
+  action:
+    - key: check-page-freshness
+      name: Check page freshness
+      function: check-freshness-fn
+      actionVerb: GET
+      description: >
+        Call before citing a Confluence page. Returns whether the page is
+        Verified, Possibly stale, Stale or Unanchored, plus guidance on how to
+        cite it. Pass pageId, or a page URL or title.
+      inputs:
+        pageId:
+          title: Page ID
+          type: string
+          required: false
+          description: Numeric Confluence page ID
+        pageUrl:
+          title: Page URL
+          type: string
+          required: false
+          description: Full Confluence page URL
+        title:
+          title: Page title
+          type: string
+          required: false
+          description: Exact Confluence page title
+    - key: record-verification
+      name: Record verification
+      function: record-verification-fn
+      actionVerb: UPDATE
+      description: >
+        Record that a person re-verified a Confluence page against the current
+        code. Only call when the user explicitly confirms they checked the page.
+      inputs:
+        pageId:
+          title: Page ID
+          type: string
+          required: true
+          description: Numeric Confluence page ID
+        note:
+          title: Note
+          type: string
+          required: false
+          description: What the user checked
+  rovo:skill:
+    - key: check-page-freshness-skill
+      source:
+        dir: skills/check-page-freshness
+      dependencies:
+        tools:
+          - check-page-freshness
+  rovo:agent:
+    - key: drift-reviewer-spike
+      name: Drift Reviewer (spike)
+      description: Checks whether a Confluence page's code anchors changed before you
+        cite it.
+      prompt: resource:agent-prompt;drift-reviewer.md
+      conversationStarters:
+        - Is this page still current?
+      actions:
+        - check-page-freshness
+        - record-verification
+      skills:
+        - check-page-freshness-skill
+  rovo:mcp:
+    - key: dds-spike-mcp
+      name: Doc Drift spike MCP
+      tools:
+        - check-page-freshness
+  confluence:globalPage:
+    - key: dds-spike-page
+      title: Doc Drift spike
+      route: dds-spike
+      resource: spike-page
+      render: native
+      resolver:
+        function: spike-page-resolver
+  function:
+    - key: spike-page-resolver
+      handler: resolver.handler
+    - key: check-freshness-fn
+      handler: index.checkPageFreshness
+    - key: record-verification-fn
+      handler: index.recordVerification
+resources:
+  - key: agent-prompt
+    path: prompts
+  - key: spike-page
+    path: src/frontend/index.jsx
+permissions:
+  scopes:
+    - read:page:confluence
+app:
+  runtime:
+    name: nodejs24.x
+  id: ari:cloud:ecosystem::app/d212a098-2b02-40ea-93df-b05bc2670754

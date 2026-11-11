@@ -43,3 +43,10 @@ Apply these when writing the real manifests. The sketches are in [source/plan-v1
 - [ ] **Default branch:** `GET /2.0/repositories/{ws}/{repo}?fields=mainbranch.name`, cached, to ignore merges to non-default branches. `pagelen` defaults to 500 (max 5000), so the 5×100 loop is unnecessary. Handle status 555.
 - [ ] **Imports:** `routeFromAbsolute` and `fetch` from `@forge/api`. Use `@forge/kvs` (including `kvs.setSecret`) instead of the legacy `storage`.
 - [ ] The core web trigger URL is per product context and environment, so it is configurable in the relay settings.
+
+### From the spikes (2026-11-11)
+- [ ] **Idempotent event handling:** a crashing handler gets the event redelivered (S1 saw 3 retries). Dedupe on `repoUuid#prId#mergeCommit` before any write.
+- [ ] **Never log whole Forge events.** They carry a `contextToken` JWT. Log the field paths you need.
+- [ ] **Diffstat spec:** `route\`/2.0/repositories/${ws}/${repo}/diffstat/${src}..${dst}?topic=true\`` with `src` and `dst` as separate interpolations. A single value containing `..` makes `route()` throw.
+- [ ] Web triggers have an undocumented `request.authentication: hmacSharedSecret` option (seen in S1, untested). Keep our own HMAC.
+- [ ] Missing user consent in actions surfaces as `NeedsAuthenticationError` (`NEEDS_AUTHENTICATION_ERR`, 401). Map it to `error: consent_required` (D21).

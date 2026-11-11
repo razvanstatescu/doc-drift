@@ -1,0 +1,24 @@
+modules:
+  trigger:
+    - key: pr-merged
+      function: on-merged
+      events:
+        - avi:bitbucket:fulfilled:pullrequest
+  function:
+    - key: on-merged
+      handler: index.onMerged
+app:
+  runtime:
+    name: nodejs24.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/10b5bea9-56ce-415b-a355-71cfb5bace46
+permissions:
+  scopes:
+    - read:pullrequest:bitbucket
+    - read:repository:bitbucket
+  external:
+    fetch:
+      backend:
+        - address: '*.webtrigger.atlassian.app'
+          inScopeEUD: false

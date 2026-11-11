@@ -1,0 +1,16 @@
+{
+  "name": "dds-spike-s3-rovo",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Spike S3/S4/S11: actions + rovo:agent + rovo:skill + rovo:mcp (throwaway)",
+  "main": "index.js",
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "@forge/api": "8.5.0",
+    "@forge/bridge": "7.3.0",
+    "@forge/react": "12.5.0",
+    "@forge/resolver": "2.0.2",
+    "react": "18.3.1"
+  }
+}

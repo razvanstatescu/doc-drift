@@ -1,0 +1,11 @@
+{
+  "name": "s1-relay",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Spike S1: Bitbucket app that relays merged PRs to the core app's web trigger with an HMAC signature",
+  "main": "src/index.js",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@forge/api": "^8.5.0"
+  }
+}

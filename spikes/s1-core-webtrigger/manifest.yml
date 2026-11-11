@@ -1,0 +1,32 @@
+modules:
+  webtrigger:
+    - key: ingest-change
+      function: ingest
+      urlFormat: v2
+      response:
+        type: static
+        outputs:
+          - key: accepted
+            statusCode: 202
+            contentType: application/json
+            body: '{"status":"accepted"}'
+          - key: bad-request
+            statusCode: 400
+            contentType: application/json
+            body: '{"status":"bad_request"}'
+          - key: unauthorized
+            statusCode: 401
+            contentType: application/json
+            body: '{"status":"unauthorized"}'
+  function:
+    - key: ingest
+      handler: index.ingest
+app:
+  runtime:
+    name: nodejs24.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/2e68abfe-b88b-4f3a-a3b3-242085ee080c
+permissions:
+  scopes:
+    - storage:app

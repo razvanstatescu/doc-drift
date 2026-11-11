@@ -83,3 +83,33 @@ In scope: admin settings, UI polish, testing and bug fixing. **Out of scope unti
 | D. Live QA | orchestrator in Chrome | Live scenario matrix on PLAT (Bitbucket scenarios 02 to 10 + Jira beats) vs the expected outcomes; relay settings page; edge states; bugs go to track A or B |
 
 Exit: every scenario behaves as its `scenario.json` says on the live site, settings take effect live, no open High findings, and UI polish is merged.
+
+### M4 live QA results (2026-11-11, orchestrator)
+
+All 10 Bitbucket scenarios were merged for real in nano-soft-dev/payments-api, and the live core (v4.10.0) was checked against each `scenario.json`:
+
+| Scenario | PR | Expected | Live result |
+| --- | --- | --- | --- |
+| 01 rename rollback script | #4 | Rollback runbook flags, High | Pass (score 1.00, High) |
+| 09 rename scale flag | #5 | Scale payment workers flags, High | Pass (now names `--count`) |
+| 04 tests only | #6 | No alert | Pass (all files ignored, probe skipped) |
+| 05 lockfile bump | #7 | No alert | Pass (ignored, probe skipped) |
+| 06 comment typo | #8 | No alert | Pass (1 candidate, 0 events) |
+| 07 unrelated dir | #9 | No alert | Pass (0 candidates) |
+| 02 raise DB pool | #10 | Fail over DB High; Helm chart page Medium | Pass (0.83 High; 0.66 Medium) |
+| 08 revert of 02 | #11 | Revert closes both events | Pass (revertedPrId 10, 2 pages) |
+| 03 remove v1 refunds | #12 | Refunds guide High; API overview Medium | Pass (1.00 High; 0.72 Medium with REFUNDS_V1_ENABLED) |
+| 10 structured logging | #13 | 3 of 11 candidates flag (2 High, 1 Medium) | Pass (11 candidates, 3 events: 1.00, 1.00, 0.68) |
+
+Small issue: when every file is ignored (04, 05), the consumer logs `probe: skipped` but no closing `DDS_MATCH_DONE` line. Add a closing line with the reason.
+Note: after 08 (a revert), `bb_seed.py prepare 03` needs `--force`, because 02's change is no longer on main.
+
+### Open findings to schedule (from the M4 review and UI agents, 2026-11-11)
+- H1: the `dds-dev` web trigger must be removed (or excluded from the manifest) before any production deploy.
+- M1: Confluence viewers (including over MCP) can see Bitbucket diff hunks and Jira details for pages they can view. Decide on the policy: summary only, or full hunks for editors.
+- M2: diff hunks are never purged; trust-safety promises 30 days. Add a purge job.
+- M3 and D15 mismatch: view-only users can dismiss (and so dampen anchors), but the UI disables it. Align: dismiss and snooze need update rights.
+- M4: missing tests for ingest HMAC, action consent mapping and permission gates.
+- Snoozed pages show the binding UI instead of "Snoozed until …".
+- UI Kit limits: no `Grid` export in @forge/react 12.5.0, and `Select` has no aria-label. Use Inline tiles and a "Critical" checkbox.
+- The 3 dependency-audit advisories in transitive Forge SDK packages are to triage.

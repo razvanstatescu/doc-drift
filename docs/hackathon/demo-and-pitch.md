@@ -54,5 +54,6 @@ A submission can win one Grand Prize plus at most one Bonus Prize. Lead with **M
 1. Install the core app (link), connect Jira.
 2. Optional: install the Bitbucket relay in a team workspace, paste the URL and secret.
 3. Or use Demo mode: Settings > Replay seeded PR.
-4. Enable external MCP: Apps > Sites > site > Connected apps. Add the MCP URL to Claude Code.
-5. Ask Drift Reviewer in Rovo chat.
+4. Open the app once in Confluence (the Doc Drift badge or the settings page) and click **Allow access**. MCP sign-in alone does not grant this, and without it every tool returns `consent_required` (S3).
+5. Enable external MCP: Admin > Apps > Sites > site > Connected apps > Doc Drift Sentinel > Details > Tools > "Expose tools to MCP-compatible apps". Then run `claude mcp add --transport http doc-drift https://mcp.atlassian.com/forge/<appId>` and `/mcp` to sign in.
+6. Ask Drift Reviewer in Rovo chat.

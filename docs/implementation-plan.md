@@ -70,3 +70,16 @@ Fix during M3/M4; none blocks the demo.
 4. ~~Dashboard: "Pages with drift" lists Verified pages. Show only drifted pages, and use the empty state when there are none. Remove the duplicate "Pages to review" heading.~~ Done (M3).
 5. ~~Matcher reason: for PR #5 (`--count` renamed to `--replicas`), the reasons list only the file change. The removed flag `--count`, which the page mentions, should appear as "Page mentions --count, removed in PR #5". Check the identifier extraction for flags on modified (not removed) lines.~~ Done (M3): removal notices on + lines no longer keep a flag alive.
 6. ~~Affected section excerpts flatten code blocks into prose. Consider showing the matched code line in code style.~~ Done (M3).
+
+## M4 working plan (2026-11-11, scoped by Razvan)
+
+In scope: admin settings, UI polish, testing and bug fixing. **Out of scope until Razvan says so:** production deploy, share links, the judge setup guide, the video and Devpost.
+
+| Track | Owner | Work |
+| --- | --- | --- |
+| A. Settings + backend fixes | settings agent (main tree, only deployer) | F13 admin settings (sensitivity, ignore globs, per-space opt-in, escalation days, notifications, branch filter, demo replay); fixes from QA |
+| B. UI polish | UI agent (worktree) | Review panel, Anchors tab, dashboard: consistency, states, a11y (ADS MCP), copy per voice-and-copy |
+| C. Reviews | review agent (read-only) | forge-security-review + forge-app-review on both apps, as a findings report |
+| D. Live QA | orchestrator in Chrome | Live scenario matrix on PLAT (Bitbucket scenarios 02 to 10 + Jira beats) vs the expected outcomes; relay settings page; edge states; bugs go to track A or B |
+
+Exit: every scenario behaves as its `scenario.json` says on the live site, settings take effect live, no open High findings, and UI polish is merged.

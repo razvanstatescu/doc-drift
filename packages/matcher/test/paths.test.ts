@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_IGNORE_GLOBS } from '../src/index.js';
-import { GlobCache, ignoreMatcher, normalizePath, pathMatchStrength, repoMatches } from '../src/paths.js';
+import { GlobCache, ignoreMatcher, normalizePath, pathMatchStrength, repoMatches, validateGlob } from '../src/paths.js';
 import { binding, change, modified } from './helpers.js';
 
 describe('ignore globs', () => {
@@ -62,5 +62,22 @@ describe('repoMatches', () => {
   it('rejects other repos and missing values', () => {
     expect(repoMatches('nano-soft-dev/billing-api', c)).toBe(false);
     expect(repoMatches(undefined, c)).toBe(false);
+  });
+});
+
+describe('validateGlob', () => {
+  it('accepts every default ignore glob', () => {
+    for (const g of DEFAULT_IGNORE_GLOBS) expect(validateGlob(g)).toBeNull();
+  });
+  it('accepts braces and leading slashes', () => {
+    expect(validateGlob('{src,lib}/**/*.ts')).toBeNull();
+    expect(validateGlob('/deploy/helm/**')).toBeNull();
+  });
+  it('names the problem', () => {
+    expect(validateGlob('  ')).toBe('is empty');
+    expect(validateGlob('src/a b.ts')).toBe('has a space');
+    expect(validateGlob('src/[a-b.ts')).toMatch(/unclosed/);
+    expect(validateGlob('**/*.{ts')).toMatch(/unclosed/);
+    expect(validateGlob(`a/${'x'.repeat(200)}`)).toMatch(/longer than 200/);
   });
 });

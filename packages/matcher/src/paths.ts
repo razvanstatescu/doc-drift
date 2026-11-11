@@ -17,6 +17,27 @@ export function ignoreMatcher(globs: readonly string[]): Matcher {
   return (path) => isMatch(normalizePath(path));
 }
 
+/** Longest glob accepted in settings and anchors. */
+export const MAX_GLOB_LENGTH = 200;
+
+/**
+ * Checks one glob before it is saved (ignore globs in settings). Returns a short reason, or null when
+ * the glob is usable: not empty, no whitespace, at most {@link MAX_GLOB_LENGTH} characters, and balanced
+ * brackets, braces and parentheses (picomatch `strictBrackets`).
+ */
+export function validateGlob(glob: string): string | null {
+  const g = normalizePath(glob);
+  if (g.length === 0) return 'is empty';
+  if (g.length > MAX_GLOB_LENGTH) return `is longer than ${MAX_GLOB_LENGTH} characters`;
+  if (/\s/.test(g)) return 'has a space';
+  try {
+    picomatch.makeRe(g.includes('/') ? g : `**/${g}`, { dot: true, strictBrackets: true });
+  } catch {
+    return 'has an unclosed bracket, brace or parenthesis';
+  }
+  return null;
+}
+
 /** Caches compiled anchor globs for the duration of one scoring run. */
 export class GlobCache {
   private readonly cache = new Map<string, Matcher>();

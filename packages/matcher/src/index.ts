@@ -14,7 +14,7 @@ export {
   type Sensitivity,
 } from './config.js';
 export { parseUnifiedDiff, type FileDiff } from './diff.js';
-export { GlobCache, normalizePath, pathMatchStrength } from './paths.js';
+export { GlobCache, MAX_GLOB_LENGTH, normalizePath, pathMatchStrength, validateGlob } from './paths.js';
 export { detectRevert } from './revert.js';
 export { indexPage, indexPages, type PageIndex, type PageSource } from './page-index.js';
 export { extractPageText, type ExtractedPage } from './page-text.js';

@@ -109,3 +109,11 @@ The app could still read and write a page it had created after the page was rest
 6. **Not yet:** a revert of a revert scores as a normal change; `page`-type anchors are not scored.
 
 Precision and recall of 1.00 on the first 10 fixtures are not evidence of quality: they were written with the code. The real check is the 30 demo-derived scenarios in M2.
+
+### D25. Seed Jira keys are templated, not forced
+2026-11-11 · Accepted
+Pages reference issues as tokens (for example `{{PAY:rollback-epic}}`) that the seed scripts replace with the real keys after creating the issues. That avoids creating and deleting 155 placeholder issues to land on "PAY-142". The story uses whatever key Jira assigns. Demo mode and the copy library may keep PAY-142 as an illustrative example.
+
+### D26. Anchor weights are set by the eval, not by assumption
+2026-11-11 · Proposed
+The matcher (D24) scores every anchor at 1.0; the demo scenarios were authored assuming normal ≈ 0.7 and critical 1.0. The M1 eval agent runs the real matcher over all 10 demo scenarios × 24 pages and picks the weights that meet recall ≥ 0.9, precision ≥ 0.8, zero lockfile/test-only alerts. The result is recorded here.

@@ -30,7 +30,7 @@ The Forge apps bundle their own dependencies. They import `packages/*` through w
 
 | M | Dates | Scope | Exit criteria | Status |
 | --- | --- | --- | --- | --- |
-| **M0** | Nov 11 to 16 | Root scaffold. `packages/shared` + `packages/matcher` v0 with 10 fixtures. Spikes S1 (relay to web trigger), S2 (byline content property), S3 (external MCP), S4 (agent + skill), S7 (Forge SQL), S11 (Rovo on the demo site), S12 (`forge eligibility`). S5 (Jira filter) if time allows. | Matcher tests green. A go/no-go for every spike. | In progress |
+| **M0** | Nov 11 to 16 | Root scaffold. `packages/shared` + `packages/matcher` v0 with 10 fixtures. Spikes S1 (relay to web trigger), S2 (byline content property), S3 (external MCP), S4 (agent + skill), S7 (Forge SQL), S11 (Rovo on the demo site), S12 (`forge eligibility`). S5 (Jira filter) if time allows. | Matcher tests green. A go/no-go for every spike. | **Done** 2026-11-11 (S1, S3, S4, S6, S7, S11, S12 GO; S2 GO except icon; D20 test pending) |
 | **M1** | Nov 17 to 23 | `apps/core` skeleton: manifest, SQL schema + migrations, static ingest web trigger, `match-queue` consumer, byline writes, binding modal (UI Kit) with auto-suggest, settings page with the ingest URL/secret and the demo replay. `apps/bitbucket-relay` v1 with its workspace settings page. Confluence seed script for 24 PLAT pages. | Merging scenario 01 flips the right pages to Possibly stale within 15 min, and no others. Demo replay does the same. |  |
 | **M2** | Nov 24 to 30 | Jira trigger + rules, review panel (Verify/Dismiss/Snooze), notifier footer comments, space dashboard, escalation trigger, revert and rename handling. 30 fixtures + eval report. | Recall ≥ 0.9, precision ≥ 0.8, zero lockfile/test-only alerts. Dashboard shows real counts. |  |
 | **M3** | Dec 1 to 7 | Actions, Drift Reviewer agent, skill, `rovo:mcp`, Propose fix flow, apply-as-version. Dec 1: F12/F16 decision (major-version trap). | The Rovo chat demo and the Claude Code demo work end to end. |  |
@@ -47,6 +47,8 @@ The Forge apps bundle their own dependencies. They import `packages/*` through w
 | Rovo and MCP | `spikes/s3-rovo/`, later `apps/core` actions/agent/mcp | Rovo spike agent (S3, S4, S11) |
 | Demo content | `demo/` | orchestrator (M1) |
 | Docs and decisions | `docs/`, `CLAUDE.md` | orchestrator |
+
+**M1 agents (started 2026-11-11):** core app (`apps/core/`), relay (`apps/bitbucket-relay/`), eval and weights (`packages/matcher/`, `fixtures/`), seeding (`demo/`). `packages/shared` is frozen: additive changes only, and only via the orchestrator.
 
 ## Steps that need Razvan
 

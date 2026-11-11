@@ -26,7 +26,7 @@ Start with [product/overview.md](product/overview.md), then [architecture/overvi
 - [hackathon/demo-and-pitch.md](hackathon/demo-and-pitch.md): demo environment, video script, Devpost outline, bonus strategy
 
 ## Cross-cutting
-- [decisions.md](decisions.md): decision log (D1 to D24)
+- [decisions.md](decisions.md): decision log (D1 to D26)
 - [glossary.md](glossary.md): shared vocabulary
 - [source/](source/): original plan, logo zip, artifact links
 - Brand: [../brand/](../brand/)

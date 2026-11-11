@@ -21,7 +21,7 @@ import {
   type StoredBinding,
 } from './db';
 import { pushNotify } from './ingest';
-import { matcherConfigFor } from './ingest-rules';
+import { matcherConfigFor, spaceWatched } from './ingest-rules';
 import { refreshPage, type RefreshResult } from './page-state';
 import { deletedIssueEvents, isDeletedIssueRecord } from './review';
 import { getSettings } from './settings-store';
@@ -68,7 +68,21 @@ export async function processChange(changeRecordId: string): Promise<MatchOutcom
   const record = stored.record;
   const settings = await getSettings();
   const config = matcherConfigFor(settings);
-  const bindings = await candidateBindings(record);
+  const notifyDelaySeconds = settings.notifyDebounceMinutes * 60;
+
+  // F13: Jira turned off in settings. The trigger also checks, but a queued record may predate the switch.
+  if (record.source === 'jira' && !settings.jiraEnabled) {
+    await markChangeProcessed(changeRecordId, 'skipped:jira disabled');
+    log('DDS_MATCH_DONE', { changeRecordId, skipped: 'jira disabled', events: 0 });
+    return { changeRecordId, outcome: 'skipped:jira disabled', events: 0, pages: [] };
+  }
+
+  // F13 per-space opt-in: anchors on pages outside the watched spaces create no events.
+  const allBindings = await candidateBindings(record);
+  const bindings = allBindings.filter((b) => spaceWatched(settings, b.spaceKey ?? null));
+  if (bindings.length < allBindings.length) {
+    log('DDS_MATCH_SPACES', { changeRecordId, spaceMode: settings.spaceMode, kept: bindings.length, dropped: allBindings.length - bindings.length });
+  }
   const spaceByPage = new Map(bindings.map((b) => [b.pageId, b.spaceKey ?? null]));
 
   // A deleted Jira issue: the matcher has no rule for it, so every page anchored to it gets an event.
@@ -80,7 +94,7 @@ export async function processChange(changeRecordId: string): Promise<MatchOutcom
       if (upsert !== 'refreshed') notify.push(e.pageId);
     }
     const pages = await refreshAll([...new Set(events.map((e) => e.pageId))], spaceByPage);
-    await pushNotify([...new Set(notify)], settings.notifyDelaySeconds);
+    await pushNotify([...new Set(notify)], notifyDelaySeconds);
     await markChangeProcessed(changeRecordId, `deleted-issue:${events.length}`);
     log('DDS_MATCH_DELETED_ISSUE', { changeRecordId, issueKey: record.issueKey, events: events.length });
     return { changeRecordId, outcome: 'deleted-issue', events: events.length, pages: pages.map((p) => ({ pageId: p.pageId, status: p.status })) };
@@ -101,6 +115,7 @@ export async function processChange(changeRecordId: string): Promise<MatchOutcom
 
   if (probe.kind === 'skipped') {
     await markChangeProcessed(changeRecordId, `skipped:${probe.reason}`);
+    log('DDS_MATCH_DONE', { changeRecordId, skipped: skipLabel(probe.reason), events: 0 });
     return { changeRecordId, outcome: `skipped:${probe.reason}`, events: 0, pages: [] };
   }
 
@@ -120,6 +135,7 @@ export async function processChange(changeRecordId: string): Promise<MatchOutcom
   const result = scoreChange(record, bindings, indexPages(pages), config);
   if (result.kind !== 'scored') {
     await markChangeProcessed(changeRecordId, result.kind);
+    log('DDS_MATCH_DONE', { changeRecordId, candidates: candidatePages.length, fetched: pages.length, events: 0, outcome: result.kind });
     return { changeRecordId, outcome: result.kind, events: 0, pages: [] };
   }
 
@@ -160,7 +176,7 @@ export async function processChange(changeRecordId: string): Promise<MatchOutcom
   const touched = [...new Set(result.events.map((e) => e.pageId))];
   const refreshed = await refreshAll(touched, spaceByPage);
   try {
-    await pushNotify([...notify], settings.notifyDelaySeconds);
+    await pushNotify([...notify], notifyDelaySeconds);
   } catch (e) {
     log('DDS_NOTIFY_QUEUE_FAILED', { message: String((e as Error)?.message ?? e).slice(0, 300) });
   }
@@ -178,6 +194,11 @@ export async function processChange(changeRecordId: string): Promise<MatchOutcom
     events: result.events.length,
     pages: refreshed.map((p) => ({ pageId: p.pageId, status: p.status })),
   };
+}
+
+/** Readable reason for the closing log line when the probe skips a change. */
+function skipLabel(reason: string): string {
+  return reason === 'no_relevant_files' ? 'all files ignored' : reason === 'non_default_branch' ? 'not the main branch' : reason;
 }
 
 async function refreshAll(pageIds: string[], spaceByPage: Map<string, string | null>): Promise<RefreshResult[]> {

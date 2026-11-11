@@ -239,6 +239,10 @@ modules:
     - key: dds-escalation
       function: escalate
       interval: hour
+    # Trust-safety retention (M2 finding): raw diff hunks older than 30 days are dropped; metadata stays.
+    - key: dds-purge
+      function: purge
+      interval: day
   consumer:
     - key: dds-migration-consumer
       queue: dds-migration-queue
@@ -270,7 +274,10 @@ modules:
             statusCode: 401
             contentType: application/json
             body: '{"status":"unauthorized"}'
-    # Development-only driver for end-to-end checks. Inert unless DDS_DEV_TOKEN is set. Remove in M4.
+    # DEVELOPMENT ONLY (finding H1). Driver for headless end-to-end checks; inert unless the encrypted
+    # variable DDS_DEV_TOKEN is set (every request without a matching token gets 401 and runs nothing).
+    # REMOVE this web trigger, the `dev-driver` function below and src/triggers/dev-driver.ts before any
+    # production deploy: it runs actions asApp with no user permission checks.
     - key: dds-dev
       function: dev-driver
       urlFormat: v2
@@ -318,6 +325,10 @@ modules:
     - key: escalate
       handler: index.escalate
       timeoutSeconds: 300
+    - key: purge
+      handler: index.purge
+      timeoutSeconds: 120
+    # DEVELOPMENT ONLY (H1): remove with the dds-dev web trigger before production.
     - key: dev-driver
       handler: index.devDriver
     - key: action-check-freshness

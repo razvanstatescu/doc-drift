@@ -1,15 +1,13 @@
-// Byline modal. With open changes it is the review panel (F5) with the anchors in a second tab;
-// otherwise it is the binding UI (F1). The modal chrome already names the app, so the content
-// starts with the page and its state (word and icon), never a second product heading.
+// Byline modal. With changes to review (open or snoozed) it is the review panel (F5) with the anchors
+// in a second tab; otherwise it is the binding UI (F1). The modal chrome already names the app, so the
+// content starts with the page and its state (word and icon), never a second product heading.
 import React, { useCallback, useEffect, useState } from 'react';
 import ForgeReconciler, {
   Box,
-  Button,
-  ButtonGroup,
   Heading,
   Inline,
   SectionMessage,
-  Spinner,
+  SectionMessageAction,
   Stack,
   Tab,
   TabList,
@@ -19,28 +17,23 @@ import ForgeReconciler, {
   useProductContext,
 } from '@forge/react';
 import { invoke, rovo, view } from '@forge/bridge';
-import { StateBadge } from '../shared/components';
-import { FIX_NOT_FOUND_BODY, FIX_NOT_FOUND_TITLE, acceptedTitle, fixPrompt, joinList, openProposals, proposalSource, rovoOpenPayload } from '../shared/fix';
-import { headerLine, openEvents, plural, sortEvents } from '../shared/format';
+import { COPY, dismissedTitle, snoozedBody, tabLabel, unwatchedBody } from '../shared/copy';
+import { ErrorState, Loading, Notice, SPACE, StateBadge, UnwatchedNotice } from '../shared/components';
+import { FIX_NOT_FOUND_BODY, FIX_NOT_FOUND_TITLE, acceptedTitle, fixPrompt, joinList, openProposals, pageOrder, proposalSource, rovoOpenPayload } from '../shared/fix';
+import { capabilities, evidenceLevel, gateNote, headerLine, isConsentError, isViewOnly, reviewEvents, snoozedUntilOf, sortEvents } from '../shared/format';
 import { AnchorEditor } from './anchors';
 import { ProposedFixSection, ReviewPanel } from './review';
 
-const EDIT_RIGHTS = 'You need edit rights on this page to change its anchors.';
-const RELOAD = 'Reload the page to update the badge.';
 const EMPTY = [];
 const errorText = (e) => String(e?.message || e || 'Unknown error');
 
 /** A resolver result counts as failed only when it says so (`ok: false` or an `error`). */
 const failed = (res) => res?.ok === false || Boolean(res?.error);
-const failMessage = (res) => res?.message || res?.error || 'Try again in a minute.';
+const failMessage = (res) => res?.message || res?.error || COPY.tryLater;
+const notFound = (res) => (res?.error === 'not_found' ? { appearance: 'warning', title: FIX_NOT_FOUND_TITLE, body: FIX_NOT_FOUND_BODY } : null);
 
-function Notice({ notice }) {
-  if (!notice) return null;
-  return (
-    <SectionMessage appearance={notice.appearance} title={notice.title}>
-      {notice.body ? <Text>{notice.body}</Text> : null}
-    </SectionMessage>
-  );
+function ConsentNeeded({ onRetry }) {
+  return <ErrorState appearance="warning" title={COPY.consentTitle} body={COPY.consentBody} onRetry={onRetry} />;
 }
 
 const App = () => {
@@ -48,13 +41,13 @@ const App = () => {
   const pageId = context?.extension?.content?.id ? String(context.extension.content.id) : null;
   const [data, setData] = useState(null);
   const [proposals, setProposals] = useState(EMPTY);
-  const [loadError, setLoadError] = useState('');
+  const [loadError, setLoadError] = useState(null);
   const [notice, setNotice] = useState(null);
   const [busy, setBusy] = useState('');
 
   const load = useCallback(async () => {
     if (!pageId) return;
-    setLoadError('');
+    setLoadError(null);
     // Drafts are optional: if they fail to load, the rest of the panel still works.
     const drafts = invoke('getProposals', { pageId }).catch(() => EMPTY);
     try {
@@ -63,9 +56,14 @@ const App = () => {
       setProposals(openProposals(Array.isArray(list) ? list : Array.isArray(list?.proposals) ? list.proposals : EMPTY));
       setData(res || {});
     } catch (e) {
-      setLoadError(errorText(e));
+      setLoadError(e || new Error('Unknown error'));
     }
   }, [pageId]);
+
+  const retry = useCallback(() => {
+    setData(null);
+    load();
+  }, [load]);
 
   useEffect(() => {
     load();
@@ -80,77 +78,61 @@ const App = () => {
       const res = await call();
       if (failed(res)) {
         const known = onFail?.(res);
-        setNotice(known || { appearance: 'error', title: "That didn't go through.", body: failMessage(res) });
+        setNotice(known || { appearance: 'error', title: COPY.actionFailed, body: failMessage(res) });
         if (known) await load();
         return;
       }
       setNotice({ appearance: 'success', ...success });
       await load();
     } catch (e) {
-      setNotice({ appearance: 'error', title: "That didn't go through.", body: errorText(e) });
+      setNotice({ appearance: 'error', title: COPY.actionFailed, body: errorText(e) });
     } finally {
       setBusy('');
     }
   };
 
-  if (context && !pageId) return <Text>Page not found or not visible to you.</Text>;
+  if (context && !pageId) return <Text>{COPY.notVisible}</Text>;
 
   if (loadError) {
-    return (
-      <Stack space="space.200">
-        <SectionMessage appearance="error" title="Couldn't load the drift for this page.">
-          <Text>{loadError}</Text>
-        </SectionMessage>
-        <ButtonGroup label="Retry">
-          <Button onClick={load}>Try again</Button>
-          <Button appearance="subtle" onClick={() => view.close()}>
-            Close
-          </Button>
-        </ButtonGroup>
-      </Stack>
-    );
+    return isConsentError(loadError) ? <ConsentNeeded onRetry={retry} /> : <ErrorState title={COPY.loadFailed} body={errorText(loadError)} onRetry={retry} />;
   }
 
-  if (!data) {
-    return (
-      <Inline space="space.100" alignBlock="center">
-        <Spinner size="medium" label="Loading" />
-        <Text>Checking this page's anchors…</Text>
-      </Inline>
-    );
-  }
+  if (!data) return <Loading text={COPY.loadingPage} />;
 
+  if (isConsentError(data)) return <ConsentNeeded onRetry={retry} />;
   if (data.error === 'not_visible' || data.error === 'no_page' || data.status === 'unknown' || data.state === 'unknown') {
-    return <Text>Page not found or not visible to you.</Text>;
+    return <Text>{COPY.notVisible}</Text>;
   }
-  if (data.error) {
-    return (
-      <SectionMessage appearance="error" title="Couldn't load the drift for this page.">
-        <Text>{failMessage(data)}</Text>
-      </SectionMessage>
-    );
-  }
+  if (data.error) return <ErrorState title={COPY.loadFailed} body={failMessage(data)} onRetry={retry} />;
 
   // D20: restricted pages are unsupported in v1. Show nothing else, and save nothing.
   if (data.restricted) {
     return (
-      <Stack space="space.200">
-        <SectionMessage appearance="warning" title="Restricted pages can't be watched yet.">
-          <Text>This page has view restrictions, so Doc Drift Sentinel can't read it or receive its updates. Remove the restriction to add anchors.</Text>
-        </SectionMessage>
-        <ButtonGroup label="Close">
-          <Button onClick={() => view.close()}>Close</Button>
-        </ButtonGroup>
-      </Stack>
+      <SectionMessage
+        appearance="warning"
+        title={COPY.restrictedTitle}
+        actions={[
+          <SectionMessageAction key="close" onClick={() => view.close()}>
+            {COPY.close}
+          </SectionMessageAction>,
+        ]}
+      >
+        <Text>{COPY.restrictedBody}</Text>
+      </SectionMessage>
     );
   }
 
   const state = data.state || data.status || 'unanchored';
-  const canEdit = Boolean(data.canEdit);
+  const caps = capabilities(data);
+  const viewOnly = isViewOnly(caps);
+  const evidence = evidenceLevel(data.evidenceLevel);
   const bindings = data.bindings || data.anchors || EMPTY;
   const allEvents = data.events || EMPTY;
-  const events = sortEvents(openEvents(allEvents));
+  // Open and snoozed events are the review list; a snoozed page keeps its review panel.
+  const events = sortEvents(reviewEvents(allEvents));
+  const snoozedUntil = snoozedUntilOf(data.snoozedUntil, allEvents);
   const reviewing = events.length > 0;
+  const n = events.length;
 
   // F11: open Drift Reviewer in Rovo with a prefilled prompt. The agent drafts; it never writes (D6).
   const proposeFix = async () => {
@@ -159,19 +141,19 @@ const App = () => {
     try {
       const [info, enabled] = await Promise.all([invoke('getRovoAgentInfo'), rovo.isEnabled().catch(() => true)]);
       if (enabled === false || info?.enabled === false || info?.rovoEnabled === false) {
-        setNotice({ appearance: 'warning', title: "Rovo isn't turned on for this site.", body: 'An admin can turn it on in Atlassian Administration.' });
+        setNotice({ appearance: 'warning', title: COPY.rovoOff, body: COPY.rovoOffBody });
         return;
       }
       const payload = rovoOpenPayload(info, fixPrompt(data.title, pageId));
       if (!payload) {
-        setNotice({ appearance: 'error', title: "Couldn't open Drift Reviewer.", body: failMessage(info) });
+        setNotice({ appearance: 'error', title: COPY.rovoFailed, body: failMessage(info) });
         return;
       }
       await rovo.open(payload);
       // The chat opens beside the page; close the modal so it is not covered.
       view.close();
     } catch (e) {
-      setNotice({ appearance: 'error', title: "Couldn't open Drift Reviewer.", body: errorText(e) });
+      setNotice({ appearance: 'error', title: COPY.rovoFailed, body: errorText(e) });
     } finally {
       setBusy('');
     }
@@ -179,12 +161,7 @@ const App = () => {
 
   const acceptFix = (p) => {
     const source = proposalSource(p, allEvents);
-    return run(
-      `fix:${p.id}`,
-      () => invoke('applyProposal', { proposalId: p.id }),
-      { title: acceptedTitle(source), body: 'Reload the page to see the change.' },
-      (res) => (res?.error === 'not_found' ? { appearance: 'warning', title: FIX_NOT_FOUND_TITLE, body: FIX_NOT_FOUND_BODY } : null),
-    );
+    return run(`fix:${p.id}`, () => invoke('applyProposal', { proposalId: p.id }), { title: acceptedTitle(source), body: COPY.reloadPage }, notFound);
   };
 
   // D29: a section can have one draft per block. Accept them in page order; stop at the first refusal.
@@ -200,40 +177,45 @@ const App = () => {
         }
         return res;
       },
-      { title: acceptedTitle(source), body: 'Reload the page to see the change.' },
-      (res) => (res?.error === 'not_found' ? { appearance: 'warning', title: FIX_NOT_FOUND_TITLE, body: FIX_NOT_FOUND_BODY } : null),
+      { title: acceptedTitle(source), body: COPY.reloadPage },
+      notFound,
     );
   };
 
-  const rejectFix = (p) =>
-    run(`reject:${p.id}`, () => invoke('rejectProposal', { proposalId: p.id }), { title: 'Rejected the draft. The page is unchanged.', body: '' });
-
-  const drafts = (
-    <ProposedFixSection proposals={proposals} events={allEvents} canEdit={canEdit} busy={busy} onAccept={acceptFix} onReject={rejectFix} onAcceptAll={acceptAllFix} />
-  );
+  const rejectFix = (p) => run(`reject:${p.id}`, () => invoke('rejectProposal', { proposalId: p.id }), { title: COPY.draftRejected, body: '' });
 
   const header = (
-    <Stack space="space.100">
+    <Stack space={SPACE.row}>
       <Inline space="space.150" alignBlock="center" shouldWrap>
-        {data.title ? <Heading size="medium">{data.title}</Heading> : null}
+        {data.title ? (
+          <Heading size="medium" as="h2">
+            {data.title}
+          </Heading>
+        ) : null}
         <StateBadge status={state} />
       </Inline>
-      <Text>{headerLine(state, { events, verifiedBy: data.verifiedBy, verifiedAt: data.verifiedAt, anchorCount: bindings.length })}</Text>
+      <Text>{headerLine(state, { events, verifiedBy: data.verifiedBy, verifiedAt: data.verifiedAt, anchorCount: bindings.length, snoozedUntil })}</Text>
     </Stack>
   );
 
-  // D15: view-only users see everything, and every write is disabled.
-  const viewOnly = canEdit ? null : (
-    <SectionMessage appearance="information" title="View only">
-      <Text>{EDIT_RIGHTS}</Text>
-    </SectionMessage>
+  const banners = (
+    <>
+      <UnwatchedNotice space={data.space} body={unwatchedBody(data.space?.key)} />
+      {/* D15: view-only users see everything, and every write is off. One notice, not one per control. */}
+      {viewOnly ? (
+        <SectionMessage appearance="information" title={COPY.viewOnlyTitle}>
+          <Text>{COPY.viewOnlyBody}</Text>
+        </SectionMessage>
+      ) : null}
+    </>
   );
 
   const editor = (
     <AnchorEditor
       bindings={bindings}
       suggestions={data.suggestions || EMPTY}
-      canEdit={canEdit}
+      canEdit={caps.editAnchors}
+      gateNote={viewOnly ? '' : gateNote(caps, ['editAnchors'])}
       onSaved={async (msg) => {
         setNotice({ appearance: 'success', ...msg });
         await load();
@@ -244,17 +226,16 @@ const App = () => {
 
   if (!reviewing) {
     return (
-      <Stack space="space.300">
+      <Stack space={SPACE.section}>
         {header}
         <Notice notice={notice} />
-        {viewOnly}
-        {drafts}
+        {banners}
+        <ProposedFixSection proposals={proposals} events={allEvents} caps={caps} busy={busy} onAccept={acceptFix} onReject={rejectFix} onAcceptAll={acceptAllFix} />
         {editor}
       </Stack>
     );
   }
 
-  const n = events.length;
   const review = (
     <ReviewPanel
       events={events}
@@ -262,24 +243,17 @@ const App = () => {
       affectedSections={data.affectedSections || EMPTY}
       renameProposals={data.renameProposals || EMPTY}
       proposals={proposals}
-      canEdit={canEdit}
+      caps={caps}
+      evidence={evidence}
       busy={busy}
+      notice={notice}
       onProposeFix={proposeFix}
       onAcceptFix={acceptFix}
-      onAcceptAllFix={acceptAllFix}
+      onAcceptSectionFix={acceptAllFix}
+      onAcceptAllFix={() => acceptAllFix(pageOrder(proposals), 'all')}
       onRejectFix={rejectFix}
-      onVerify={() =>
-        run('verify', () => invoke('markVerified', { pageId }), {
-          title: 'Marked Verified. Agents can cite this page again.',
-          body: RELOAD,
-        })
-      }
-      onSnooze={() =>
-        run('snooze', () => invoke('snoozePage', { pageId, days: 7 }), {
-          title: 'Snoozed for 7 days.',
-          body: `The ${plural(n, 'open change')} stay on the page until someone reviews them. ${RELOAD}`,
-        })
-      }
+      onVerify={() => run('verify', () => invoke('markVerified', { pageId }), { title: COPY.verified, body: COPY.reloadBadge })}
+      onSnooze={() => run('snooze', () => invoke('snoozePage', { pageId, days: 7 }), { title: COPY.snoozed, body: `${snoozedBody(n)} ${COPY.reloadBadge}` })}
       onDismiss={(reason, reasonLabel) =>
         run(
           'dismiss',
@@ -290,39 +264,33 @@ const App = () => {
             }
             return { ok: true };
           },
-          { title: `Dismissed ${plural(n, 'change')} as ${reasonLabel.toLowerCase()}.`, body: RELOAD },
+          { title: dismissedTitle(n, reasonLabel), body: COPY.reloadBadge },
         )
       }
-      onAcceptRename={(p) =>
-        run(`accept:${p.id}`, () => invoke('acceptRename', { proposalId: p.id }), {
-          title: `Anchor moved to ${p.to}.`,
-          body: '',
-        })
-      }
-      onRejectRename={(p) =>
-        run(`keep:${p.id}`, () => invoke('rejectRename', { proposalId: p.id }), {
-          title: `Kept the anchor on ${p.from}.`,
-          body: '',
-        })
-      }
+      onAcceptRename={(p) => run(`accept:${p.id}`, () => invoke('acceptRename', { proposalId: p.id }), { title: `Anchor moved to ${p.to}.`, body: '' })}
+      onRejectRename={(p) => run(`keep:${p.id}`, () => invoke('rejectRename', { proposalId: p.id }), { title: `Kept the anchor on ${p.from}.`, body: '' })}
     />
   );
 
   return (
-    <Stack space="space.300">
+    <Stack space={SPACE.section}>
       {header}
-      <Notice notice={notice} />
-      {viewOnly}
+      {banners}
       <Tabs id="dds-byline-tabs">
         <TabList>
-          <Tab>{`Review (${n})`}</Tab>
-          <Tab>{`Anchors (${bindings.length})`}</Tab>
+          <Tab>{tabLabel('Review', n)}</Tab>
+          <Tab>{tabLabel('Anchors', bindings.length)}</Tab>
         </TabList>
         <TabPanel>
           <Box paddingBlockStart="space.200">{review}</Box>
         </TabPanel>
         <TabPanel>
-          <Box paddingBlockStart="space.200">{editor}</Box>
+          <Box paddingBlockStart="space.200">
+            <Stack space={SPACE.group}>
+              <Notice notice={notice} />
+              {editor}
+            </Stack>
+          </Box>
         </TabPanel>
       </Tabs>
     </Stack>

@@ -23,7 +23,7 @@ Hackathon scope in MoSCoW order. The numbers are stable IDs. Refer to them in is
 | F10 | `rovo:skill` "check-page-freshness": SKILL.md tells Drift Reviewer to call the tool before citing a page and to caveat answers from Possibly stale pages. Skills attach only to our own agent; other agents get the same instruction from action descriptions and the `guidance` field. |
 | F11 | Apply accepted proposal as a new page version, `asUser()` |
 | F12 | Teamwork Graph "Suggest anchors from links" (persisted query) in the binding modal. TWG scopes need an org admin to install, may spend customer Rovo credits, and adding them later forces a major version: decide by Dec 1. |
-| F13 | Admin settings: sensitivity preset, ignore globs, per-space opt-in, notification routing |
+| F13 | Admin settings: sensitivity preset, ignore globs, per-space opt-in, escalation days, notifications and debounce, branch filter, Jira on/off, relay connection status (built M4, honoured live) |
 | F14 | Footer comment notification mentioning the owner |
 
 ## Could
@@ -81,8 +81,10 @@ KPI tiles: anchored pages %, Possibly stale count, Stale count, median time-to-v
 In Claude Code: "Before I edit deploy/helm/values.yaml, which docs describe it?" calls `find-docs-for-path`. After the change, "Is the rollback runbook still trustworthy?" calls `check-page-freshness`.
 
 ### 9. Admin settings
-- Sensitivity: Strict 0.4 / Balanced 0.5 / Quiet 0.65 threshold.
-- Ignore globs, default: `**/*.test.*, **/__tests__/**, **/*.lock, package-lock.json, yarn.lock, pnpm-lock.yaml, **/*.snap, **/dist/**, **/*.md`.
-- Per-space opt-in.
-- Escalation days (default 7).
-- Ignore merges to non-default branches (default on).
+Confluence administrators only (others see a short note). Grouped sections, help text under each field, inline errors for every bad field at once, and "Saved" next to the button. Changes apply to the next change received.
+- **Detection.** Sensitivity: Strict 0.4 / Balanced 0.5 / Quiet 0.65 threshold. Ignore globs (at most 50, each validated), default `**/*.test.*, **/__tests__/**, **/*.lock, package-lock.json, yarn.lock, pnpm-lock.yaml, **/*.snap, **/dist/**, **/*.md`, with "Reset to defaults". Ignore merges to non-default branches (default on).
+- **Spaces.** All spaces (default) or selected spaces (per-space opt-in). Pages outside the watched spaces keep their anchors, but new changes create no events; the review panel says so (`space.watched`).
+- **Escalation and notifications.** Escalation days 1 to 30 (default 7). Footer-comment notifications on/off (default on), with a debounce of 0 to 60 minutes (default 10; 0 for demos).
+- **Jira.** On (default) or off. Off: Jira issue changes are ignored.
+- **Bitbucket relay.** Connected or not, the workspace, the last test ping, the last change received, the repositories seen, the ingest URL, and the relay secret (generate or rotate, shown once).
+- **Demo mode.** Replay seeded PR #482.

@@ -1,9 +1,8 @@
 // Function entry points for manifest.yml (`handler: index.<export>`).
 import { Queue } from '@forge/events';
-import { isPingBody, parseChangeRecord, parsePingRecord, SIGNATURE_HEADER, TIMESTAMP_HEADER, verifyBody } from '@dds/shared';
 import { runMigrationsWithRetry } from './lib/db';
-import { ingestRecord, type MatchJob } from './lib/ingest';
-import { headerValue } from './lib/ingest-rules';
+import { ingestRecord, requeueNotify, type MatchJob } from './lib/ingest';
+import { checkIngestRequest, nextNotifyHop } from './lib/ingest-rules';
 import { processChange } from './lib/matching';
 import { notifyPage } from './lib/notifier';
 import { getRelaySecret, recordRelayPing } from './lib/settings-store';
@@ -19,7 +18,7 @@ export {
 export { handler as bylineHandler } from './resolvers/byline';
 export { handler as settingsHandler } from './resolvers/settings';
 export { devDriver } from './triggers/dev-driver';
-export { confluencePageEvent, escalate, jiraEvent } from './triggers/product-events';
+export { confluencePageEvent, escalate, jiraEvent, purge } from './triggers/product-events';
 
 interface WebTriggerRequest {
   method?: string;
@@ -37,41 +36,18 @@ type Output = { outputKey: 'accepted' | 'bad-request' | 'unauthorized' };
  * the signature or the secret.
  */
 export async function ingest(request: WebTriggerRequest): Promise<Output> {
-  const body = request.body ?? '';
-  const secret = await getRelaySecret();
-  if (!secret) {
-    console.warn('DDS_INGEST rejected: no relay secret configured (generate one in settings)');
-    return { outputKey: 'unauthorized' };
-  }
-  const verdict = verifyBody(secret, body, headerValue(request.headers, SIGNATURE_HEADER), headerValue(request.headers, TIMESTAMP_HEADER));
-  if (!verdict.ok) {
-    console.warn(`DDS_INGEST rejected: ${verdict.reason} bytes=${Buffer.byteLength(body)}`);
-    return { outputKey: 'unauthorized' };
-  }
-  let json: unknown;
-  try {
-    json = JSON.parse(body);
-  } catch {
-    console.warn('DDS_INGEST rejected: body is not JSON');
-    return { outputKey: 'bad-request' };
+  const check = checkIngestRequest(await getRelaySecret(), request);
+  if (!check.ok) {
+    console.warn(`DDS_INGEST rejected: ${check.reason}`);
+    return { outputKey: check.outputKey };
   }
   // The relay's "Send test ping": same signature, records the connection, never runs the matcher.
-  if (isPingBody(json)) {
-    const ping = parsePingRecord(json);
-    if (!ping.ok) {
-      console.warn(`DDS_INGEST rejected: invalid ping ${JSON.stringify(ping.errors.slice(0, 5))}`);
-      return { outputKey: 'bad-request' };
-    }
-    await recordRelayPing(ping.value.workspaceUuid, ping.value.sentAt);
-    console.log(`DDS_INGEST ping workspace=${ping.value.workspaceUuid}`);
+  if (check.kind === 'ping') {
+    await recordRelayPing(check.ping.workspaceUuid, check.ping.sentAt);
+    console.log(`DDS_INGEST ping workspace=${check.ping.workspaceUuid}`);
     return { outputKey: 'accepted' };
   }
-  const parsed = parseChangeRecord(json);
-  if (!parsed.ok) {
-    console.warn(`DDS_INGEST rejected: invalid change record ${JSON.stringify(parsed.errors.slice(0, 5))}`);
-    return { outputKey: 'bad-request' };
-  }
-  await ingestRecord(parsed.value, parsed.value.source === 'jira' ? 'jira' : 'relay');
+  await ingestRecord(check.record, check.record.source === 'jira' ? 'jira' : 'relay');
   return { outputKey: 'accepted' };
 }
 
@@ -86,10 +62,18 @@ export async function match(event: { body?: Partial<MatchJob> }): Promise<void> 
 }
 
 /** notify-queue consumer (F7). The event body holds only a page ID. */
-export async function notify(event: { body?: { pageId?: unknown } }): Promise<void> {
+export async function notify(event: { body?: { pageId?: unknown; notBefore?: unknown } }): Promise<void> {
   const pageId = event?.body?.pageId;
   if (typeof pageId !== 'string' || pageId.length === 0) {
     console.warn('DDS_NOTIFY skipped: event without pageId');
+    return;
+  }
+  // A debounce over 900 s (the queue maximum) arrives in hops: wait again until notBefore.
+  const notBefore = event.body?.notBefore;
+  const hop = nextNotifyHop(notBefore, Date.now());
+  if (hop !== null && typeof notBefore === 'number') {
+    await requeueNotify({ pageId, notBefore }, hop);
+    console.log(`DDS_NOTIFY_HOP ${JSON.stringify({ pageId, waitSeconds: hop })}`);
     return;
   }
   await notifyPage(pageId);

@@ -5,7 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { Queue } from '@forge/events';
 import type { ChangeRecord } from '@dds/shared';
 import { ensureSchema, findChangeByDedupe, insertChange } from './db';
-import { changeDedupeKey } from './ingest-rules';
+import { changeDedupeKey, notifyFirstHop } from './ingest-rules';
 
 export const MATCH_QUEUE_KEY = 'match-queue';
 const matchQueue = new Queue({ key: MATCH_QUEUE_KEY });
@@ -71,18 +71,28 @@ async function pushMatch(changeRecordId: string): Promise<void> {
 export const NOTIFY_QUEUE_KEY = 'notify-queue';
 const notifyQueue = new Queue({ key: NOTIFY_QUEUE_KEY });
 
-export type NotifyJob = { pageId: string };
+/** `notBefore` (epoch ms) is set when the debounce is longer than one queue delay (900 s). */
+export type NotifyJob = { pageId: string; notBefore?: number };
 
 /**
  * Queues a footer-comment notification for a page. `delayInSeconds` debounces a burst of changes:
- * the job that runs first sends every event not yet notified, later ones find nothing new.
+ * the job that runs first sends every event not yet notified, later ones find nothing new. A debounce
+ * over 900 s (the queue maximum) is split into re-queue hops by the consumer (`requeueNotify`).
  */
 export async function pushNotify(pageIds: string[], delayInSeconds: number): Promise<void> {
   if (pageIds.length === 0) return;
-  const delay = Math.max(0, Math.min(900, Math.floor(delayInSeconds)));
+  const hop = notifyFirstHop(delayInSeconds, Date.now());
   // Queue.push takes up to 50 events per call.
   for (let i = 0; i < pageIds.length; i += 50) {
-    const batch = pageIds.slice(i, i + 50).map((pageId) => ({ body: { pageId } satisfies NotifyJob, ...(delay > 0 && { delayInSeconds: delay }) }));
+    const batch = pageIds.slice(i, i + 50).map((pageId) => ({
+      body: { pageId, ...(hop.notBefore !== undefined && { notBefore: hop.notBefore }) } satisfies NotifyJob,
+      ...(hop.delayInSeconds > 0 && { delayInSeconds: hop.delayInSeconds }),
+    }));
     await notifyQueue.push(batch);
   }
+}
+
+/** One more debounce hop for a job that is not due yet. */
+export async function requeueNotify(job: Required<NotifyJob>, delayInSeconds: number): Promise<void> {
+  await notifyQueue.push({ body: job, delayInSeconds });
 }

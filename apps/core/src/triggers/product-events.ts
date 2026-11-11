@@ -3,9 +3,11 @@
 import api, { route } from '@forge/api';
 import { parseChangeRecord } from '@dds/shared';
 import { displayNames } from '../lib/confluence';
-import { bindingsForJiraKey, dropPage, ensureSchema, escalationCandidates } from '../lib/db';
+import { bindingsForJiraKey, dropPage, ensureSchema, escalationCandidates, purgeHunksBefore } from '../lib/db';
 import { ingestRecord } from '../lib/ingest';
+import { toSqlDate } from '../lib/ingest-rules';
 import { refreshPage } from '../lib/page-state';
+import { getSettings } from '../lib/settings-store';
 import { deletedIssueRecord, jiraChangeRecord, relevantJiraItems, type JiraChangelogItem, type JiraIssueFields } from '../lib/review';
 
 const log = (tag: string, obj: unknown) => console.log(`${tag} ${JSON.stringify(obj)}`);
@@ -49,6 +51,11 @@ async function currentIssueFields(key: string): Promise<JiraIssueFields | undefi
 export async function jiraEvent(event: JiraIssueEvent): Promise<void> {
   const key = event?.issue?.key;
   if (!key || event.selfGenerated) return;
+  // F13: Jira turned off in settings. Nothing is stored or fetched.
+  if (!(await getSettings()).jiraEnabled) {
+    log('DDS_JIRA_SKIPPED', { key, eventType: event.eventType, reason: 'disabled' });
+    return;
+  }
   await ensureSchema();
   const bindings = await bindingsForJiraKey(key);
   const fieldIds = (event.changelog?.items ?? []).map((i) => i.fieldId ?? i.field);
@@ -121,4 +128,20 @@ export async function escalate(): Promise<void> {
     }
   }
   log('DDS_ESCALATE', { candidates: candidates.length, changed: escalated, rewritten, ms: Date.now() - started });
+}
+
+/** Retention for raw diffs (trust-safety.md): hunks older than this are purged daily; metadata stays. */
+export const HUNK_RETENTION_DAYS = 30;
+
+/** Daily scheduled trigger `dds-purge` (M2 finding): drops diff hunks older than 30 days, keeping the change metadata. */
+export async function purge(): Promise<void> {
+  await ensureSchema();
+  const before = toSqlDate(Date.now() - HUNK_RETENTION_DAYS * 24 * 60 * 60 * 1000);
+  let purged = 0;
+  for (let i = 0; i < 20; i++) {
+    const n = await purgeHunksBefore(before);
+    purged += n;
+    if (n === 0) break;
+  }
+  log('DDS_PURGE', { purged, before, retentionDays: HUNK_RETENTION_DAYS });
 }

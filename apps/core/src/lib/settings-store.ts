@@ -2,12 +2,13 @@
 // encrypted secret store; only a short fingerprint is kept in plain storage, for display.
 import { createHash, randomBytes } from 'node:crypto';
 import { kvs } from '@forge/kvs';
-import { DEFAULT_SETTINGS, type AppSettings } from './ingest-rules';
+import { normalizeSettings, type AppSettings } from './ingest-rules';
 
 const SETTINGS_KEY = 'settings';
 const SECRET_KEY = 'relay-secret';
 const SECRET_META_KEY = 'relay-secret-meta';
 const PING_KEY = 'relay-ping';
+const LOCATION_KEY = 'settings-location';
 
 export interface SecretMeta {
   fingerprint: string;
@@ -15,9 +16,9 @@ export interface SecretMeta {
   createdBy: string | null;
 }
 
+/** Stored settings, normalized: defaults filled in, legacy `notifyDelaySeconds` mapped to minutes. */
 export async function getSettings(): Promise<AppSettings> {
-  const stored = (await kvs.get<AppSettings>(SETTINGS_KEY)) ?? undefined;
-  return { ...DEFAULT_SETTINGS, ...(stored ?? {}) };
+  return normalizeSettings((await kvs.get<unknown>(SETTINGS_KEY)) ?? undefined);
 }
 
 export async function saveSettings(settings: AppSettings): Promise<void> {
@@ -61,4 +62,26 @@ export async function recordRelayPing(workspaceUuid: string, sentAt: string): Pr
 
 export async function getRelayPing(): Promise<RelayPing | undefined> {
   return (await kvs.get<RelayPing>(PING_KEY)) ?? undefined;
+}
+
+/**
+ * The settings page URL, saved when an administrator opens it (`location` from the module context), so
+ * the review panel can link "Watch this space" to it. Only an https URL on an Atlassian site is kept.
+ */
+export async function saveSettingsLocation(location: unknown): Promise<string | undefined> {
+  if (typeof location !== 'string' || location.length > 2000) return undefined;
+  let url: URL;
+  try {
+    url = new URL(location);
+  } catch {
+    return undefined;
+  }
+  if (url.protocol !== 'https:' || !/\.(atlassian\.net|jira\.com|atlassian\.com)$/.test(url.hostname)) return undefined;
+  const clean = `${url.origin}${url.pathname}${url.search}`;
+  if ((await kvs.get<string>(LOCATION_KEY)) !== clean) await kvs.set(LOCATION_KEY, clean);
+  return clean;
+}
+
+export async function getSettingsLocation(): Promise<string | undefined> {
+  return (await kvs.get<string>(LOCATION_KEY)) ?? undefined;
 }

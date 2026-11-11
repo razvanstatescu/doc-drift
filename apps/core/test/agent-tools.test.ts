@@ -4,7 +4,9 @@ import {
   CONSENT_GUIDANCE,
   consentRequired,
   diffForPaths,
+  evidenceLevelFor,
   fitContext,
+  jiraChangelogView,
   freshnessGuidance,
   matchBinding,
   parseLimit,
@@ -169,5 +171,35 @@ describe('fix proposals', () => {
     expect(validateFixInput({ blockId: 'B4', proposedText: 'x' })).toMatchObject({ ok: true, value: { blockId: 'b4', originalText: '' } });
     expect(validateFixInput({ blockId: 'paragraph 4', proposedText: 'x' }).ok).toBe(false);
     expect(validateFixInput({ proposedText: 'x' }).ok).toBe(false);
+  });
+});
+
+describe('evidence level (D30)', () => {
+  it('gives full evidence only to callers with update rights', () => {
+    expect(evidenceLevelFor(true)).toBe('full');
+    expect(evidenceLevelFor(false)).toBe('summary');
+  });
+
+  const changelog = [
+    { field: 'status', from: 'In Progress', to: 'Done' },
+    { field: 'description', from: 'Old body with a secret plan', to: `New body ${'x'.repeat(3000)}` },
+    { field: 'summary', from: 'Old title', to: 'New title' },
+  ];
+
+  it('hides free-text Jira values from viewers', () => {
+    expect(jiraChangelogView(changelog, 'summary')).toEqual([
+      { field: 'status', from: 'In Progress', to: 'Done' },
+      { field: 'description', changed: true },
+      { field: 'summary', changed: true },
+    ]);
+    expect(JSON.stringify(jiraChangelogView(changelog, 'summary'))).not.toContain('secret plan');
+  });
+
+  it('shows full values to editors, clipped to 2,000 characters', () => {
+    const full = jiraChangelogView(changelog, 'full');
+    expect(full[1]).toMatchObject({ field: 'description', from: 'Old body with a secret plan' });
+    expect(((full[1] as { to: string }).to).length).toBeLessThan(2_100);
+    expect(full[2]).toEqual({ field: 'summary', from: 'Old title', to: 'New title' });
+    expect(jiraChangelogView(undefined, 'full')).toEqual([]);
   });
 });

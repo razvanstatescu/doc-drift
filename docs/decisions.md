@@ -151,3 +151,7 @@ Live in Rovo on DDSTEST 3080280, Drift Reviewer put a paragraph and the code lin
 ### D30. Drift evidence visibility: summaries for viewers, full diffs for editors
 2026-11-11 · Accepted (Razvan; from review finding M1)
 Anyone who can view a page sees *that* it drifted and a summary: ref, author, time, file paths with status and line counts, severity, matched anchor, and reasons. Raw diff hunks and full Jira field values (description bodies) are returned only to callers with **update** rights on the page (`/pages/{id}/operations`, asUser). Applies to `getPageDrift`, `get-drift-context` (agent), and every MCP tool. MCP tools never return hunks at all. Propose fix already needs edit rights, so drafting is unaffected.
+
+### D31. Dismiss and snooze need edit rights; verify needs view rights
+2026-11-11 · Accepted (from review finding M3)
+Dismissing an event lowers that anchor's future scores (the dampener), and snoozing hides drift, so both change detection for everyone and require **update** rights on the page. Mark verified only records that a person re-read the page, so view rights are enough. Accept fix, rename proposals and anchor edits keep requiring update rights. The review panel gates each control by its own flag (`canVerify`, `canDismiss`, `canSnooze`, `canEditAnchors`, `canAcceptFix`) and shows the reason when one is off.

@@ -175,11 +175,40 @@ export interface DriftEventView {
   severity?: Severity;
   anchor?: string | null;
   status?: string;
+  snoozedUntil?: TimeLike;
 }
 
 /** Open events only; an event without a status counts as open. */
 export function openEvents<T extends { status?: string }>(events: T[] | null | undefined): T[] {
   return (events ?? []).filter((e) => !e.status || e.status === 'open');
+}
+
+/**
+ * The review list: open and snoozed events. Snoozing only quiets the reminders; the changes still
+ * wait for a person, so a fully snoozed page keeps its review panel (it must not drop to the binding UI).
+ */
+export function reviewEvents<T extends { status?: string }>(events: T[] | null | undefined): T[] {
+  return (events ?? []).filter((e) => !e.status || e.status === 'open' || e.status === 'snoozed');
+}
+
+/**
+ * When the page's snooze ends (epoch ms), or null when it is not snoozed now. Uses the page-level
+ * `snoozedUntil` first, then the latest `snoozedUntil` of a snoozed event. Past times count as not snoozed.
+ */
+export function snoozedUntilOf(
+  pageSnooze: TimeLike,
+  events: { status?: string; snoozedUntil?: TimeLike }[] | null | undefined,
+  now: number = Date.now(),
+): number | null {
+  const page = toMs(pageSnooze);
+  if (page !== null && page > now) return page;
+  let latest: number | null = null;
+  for (const e of events ?? []) {
+    if (e.status !== 'snoozed') continue;
+    const ms = toMs(e.snoozedUntil);
+    if (ms !== null && ms > now && (latest === null || ms > latest)) latest = ms;
+  }
+  return latest;
 }
 
 /**
@@ -217,10 +246,18 @@ export function verifiedLine(
 /** The one-line summary under the modal header, per state. */
 export function headerLine(
   status: string,
-  opts: { events?: DriftEventView[]; verifiedBy?: { displayName?: string } | null; verifiedAt?: TimeLike; anchorCount?: number; now?: number },
+  opts: {
+    events?: DriftEventView[];
+    verifiedBy?: { displayName?: string } | null;
+    verifiedAt?: TimeLike;
+    anchorCount?: number;
+    /** Epoch ms when the page's snooze ends; adds "Snoozed until Nov 18." */
+    snoozedUntil?: number | null;
+    now?: number;
+  },
 ): string {
   const now = opts.now ?? Date.now();
-  const open = openEvents(opts.events);
+  const open = reviewEvents(opts.events);
   switch (status) {
     case 'verified':
       return verifiedLine(opts.verifiedBy, opts.verifiedAt, opts.anchorCount ?? 0, now);
@@ -231,7 +268,8 @@ export function headerLine(
       const when = relativeTime(first.at, now);
       const more = open.length > 1 ? ` (+${plural(open.length - 1, 'change')})` : '';
       const lead = `${refLabel(first.ref, first.source)} changed an anchor${when ? ` ${midSentence(when)}` : ''}${more}.`;
-      return `${lead} Agents are told not to trust this page until someone reviews it.`;
+      const snooze = opts.snoozedUntil && opts.snoozedUntil > now ? ` Snoozed until ${absoluteDate(opts.snoozedUntil, now)}.` : '';
+      return `${lead}${snooze} Agents are told not to trust this page until someone reviews it.`;
     }
     case 'unanchored':
     default:
@@ -331,4 +369,198 @@ export function sortOwners<T extends OwnerBacklog>(owners: T[]): T[] {
   return owners
     .filter((o) => o.open > 0)
     .sort((a, b) => b.open - a.open || (a.ownerName ?? '').localeCompare(b.ownerName ?? ''));
+}
+
+// ---------------------------------------------------------------------------
+// Permissions (D15): each write control is gated by its own flag, with a short reason when it is off
+// ---------------------------------------------------------------------------
+
+export type Capability = 'verify' | 'dismiss' | 'snooze' | 'editAnchors' | 'acceptFix' | 'proposeFix';
+
+const CAPABILITY_FIELD: Record<Capability, string> = {
+  verify: 'canVerify',
+  dismiss: 'canDismiss',
+  snooze: 'canSnooze',
+  editAnchors: 'canEditAnchors',
+  acceptFix: 'canAcceptFix',
+  // Propose fix needs edit rights (D30), the same as accepting one.
+  proposeFix: 'canAcceptFix',
+};
+
+const CAPABILITY_VERB: Record<Capability, string> = {
+  verify: 'mark it verified',
+  dismiss: 'dismiss changes',
+  snooze: 'snooze it',
+  editAnchors: 'change its anchors',
+  acceptFix: 'accept a fix',
+  proposeFix: 'propose a fix',
+};
+
+export type Capabilities = Record<Capability, boolean>;
+
+/** Reads `canVerify`, `canDismiss`, ... from `getPageDrift`; a missing flag falls back to `canEdit`. */
+export function capabilities(data: Record<string, unknown> | null | undefined): Capabilities {
+  const d = data ?? {};
+  const fallback = d.canEdit === true;
+  const out = {} as Capabilities;
+  for (const cap of Object.keys(CAPABILITY_FIELD) as Capability[]) {
+    const v = d[CAPABILITY_FIELD[cap]];
+    out[cap] = typeof v === 'boolean' ? v : fallback;
+  }
+  return out;
+}
+
+/** True when the user can do none of the writes: the panel shows one "View only" notice instead of per-control reasons. */
+export function isViewOnly(caps: Capabilities): boolean {
+  return (Object.keys(caps) as Capability[]).every((c) => !caps[c]);
+}
+
+/** "A", "A or B", "A, B or C". */
+export function joinOr(items: string[]): string {
+  if (items.length <= 1) return items[0] ?? '';
+  return `${items.slice(0, -1).join(', ')} or ${items.at(-1)}`;
+}
+
+/**
+ * One short reason for the controls in `keys` that are off, or '' when all are on.
+ * "You need edit rights on this page to dismiss changes or snooze it."
+ */
+export function gateNote(caps: Capabilities, keys: Capability[]): string {
+  const verbs = [...new Set(keys.filter((k) => !caps[k]).map((k) => CAPABILITY_VERB[k]))];
+  return verbs.length ? `You need edit rights on this page to ${joinOr(verbs)}.` : '';
+}
+
+// ---------------------------------------------------------------------------
+// Evidence (D30): summaries for viewers, full diffs for editors
+// ---------------------------------------------------------------------------
+
+/** 'full' only when the resolver says so; anything else (or nothing) is a summary. */
+export function evidenceLevel(v: unknown): 'summary' | 'full' {
+  return v === 'full' ? 'full' : 'summary';
+}
+
+export interface FileChangeCounts extends FileChange {
+  linesAdded?: number;
+  linesRemoved?: number;
+  added?: number;
+  removed?: number;
+  additions?: number;
+  deletions?: number;
+}
+
+const num = (...vals: unknown[]): number | null => {
+  for (const v of vals) if (typeof v === 'number' && Number.isFinite(v) && v >= 0) return v;
+  return null;
+};
+
+/** "+12 −3", "+4", "−2", or '' when the change record has no line counts. */
+export function lineCounts(f: FileChangeCounts): string {
+  const plus = num(f.linesAdded, f.added, f.additions);
+  const minus = num(f.linesRemoved, f.removed, f.deletions);
+  return [plus ? `+${plus}` : '', minus ? `\u2212${minus}` : ''].filter(Boolean).join(' ');
+}
+
+/** A compact file row: `old → new` for renames, otherwise the path and a status word. */
+export function compactFile(f: FileChangeCounts): { from?: string; path: string; status: 'renamed' | 'added' | 'removed' | 'changed'; counts: string } {
+  const p = fileChangeParts(f);
+  const counts = lineCounts(f);
+  if (p.from) return { from: p.from, path: p.path, status: 'renamed', counts };
+  const status = p.verb === 'added' ? 'added' : p.verb === 'removed' ? 'removed' : 'changed';
+  return { path: p.path, status, counts };
+}
+
+/** The first `max` lines of a diff, and how many were left out. Keeps long hunks from swamping the modal. */
+export function clipLines(text: string | null | undefined, max: number): { text: string; hidden: number } {
+  const all = String(text ?? '').replace(/\r\n/g, '\n').replace(/\n+$/, '').split('\n');
+  if (all.length === 1 && all[0] === '') return { text: '', hidden: 0 };
+  return all.length <= max ? { text: all.join('\n'), hidden: 0 } : { text: all.slice(0, max).join('\n'), hidden: all.length - max };
+}
+
+export interface JiraChange {
+  field: string;
+  from?: string | null;
+  to?: string | null;
+  changed?: boolean;
+}
+
+/**
+ * One line per Jira field change: "Status: In progress → Done", "Assignee: set to Dana",
+ * "Description changed" (summary level hides text bodies). Capped at `max` lines.
+ */
+export function jiraChangeLines(changelog: JiraChange[] | null | undefined, max = 5): string[] {
+  return (changelog ?? []).slice(0, max).map((c) => {
+    const from = c.from ?? '';
+    const to = c.to ?? '';
+    if (!from && !to) return `${c.field} changed`;
+    if (!from) return `${c.field}: set to ${to}`;
+    if (!to) return `${c.field}: cleared (was ${from})`;
+    return `${c.field}: ${from} \u2192 ${to}`;
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Load errors
+// ---------------------------------------------------------------------------
+
+/** True for a missing-consent result or error (`consent_required`, or the platform's auth error). */
+export function isConsentError(v: unknown): boolean {
+  if (!v) return false;
+  if (typeof v === 'object') {
+    const r = v as Record<string, unknown>;
+    if (r.error === 'consent_required' || r.code === 'consent_required') return true;
+    return isConsentError(r.message);
+  }
+  return /consent_required|NEEDS_AUTHENTICATION|consent/i.test(String(v));
+}
+
+// ---------------------------------------------------------------------------
+// Anchor form validation (the resolver's checkAnchor stays authoritative)
+// ---------------------------------------------------------------------------
+
+export interface AnchorInput {
+  anchorType: string;
+  repo?: string;
+  pattern?: string;
+}
+
+export interface FieldError {
+  field: 'repo' | 'pattern';
+  message: string;
+}
+
+const ISSUE_KEY = /^[A-Za-z][A-Za-z0-9_]*-\d+$/;
+
+function balanced(s: string): boolean {
+  const pairs: Record<string, string> = { ']': '[', '}': '{', ')': '(' };
+  const stack: string[] = [];
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i]!;
+    if (c === '\\') {
+      i++;
+      continue;
+    }
+    if (c === '[' || c === '{' || c === '(') stack.push(c);
+    else if (c in pairs) {
+      if (stack.pop() !== pairs[c]) return false;
+    }
+  }
+  return stack.length === 0;
+}
+
+/** The first problem with a manual anchor, tied to its field, or null when it looks fine. */
+export function anchorInputError(a: AnchorInput): FieldError | null {
+  const repo = (a.repo ?? '').trim();
+  const pattern = (a.pattern ?? '').trim();
+  if (a.anchorType === 'jira') {
+    if (!pattern) return { field: 'pattern', message: 'Enter an issue key, for example PAY-142.' };
+    if (!ISSUE_KEY.test(pattern)) return { field: 'pattern', message: 'Use an issue key like PAY-142.' };
+    return null;
+  }
+  if (!repo) return { field: 'repo', message: 'Enter a repository, for example payments-api.' };
+  if (/\s/.test(repo)) return { field: 'repo', message: 'A repository name has no spaces.' };
+  if (a.anchorType === 'repo') return null;
+  if (!pattern) return { field: 'pattern', message: 'Enter a path or glob, for example scripts/rollback.sh.' };
+  if (/\s/.test(pattern)) return { field: 'pattern', message: 'A path or glob has no spaces.' };
+  if (!balanced(pattern)) return { field: 'pattern', message: 'Close every bracket, brace or parenthesis in the glob.' };
+  return null;
 }

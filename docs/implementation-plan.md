@@ -106,10 +106,16 @@ Note: after 08 (a revert), `bb_seed.py prepare 03` needs `--force`, because 02's
 
 ### Open findings to schedule (from the M4 review and UI agents, 2026-11-11)
 - H1: the `dds-dev` web trigger must be removed (or excluded from the manifest) before any production deploy.
-- M1: Confluence viewers (including over MCP) can see Bitbucket diff hunks and Jira details for pages they can view. Decide on the policy: summary only, or full hunks for editors.
-- M2: diff hunks are never purged; trust-safety promises 30 days. Add a purge job.
-- M3 and D15 mismatch: view-only users can dismiss (and so dampen anchors), but the UI disables it. Align: dismiss and snooze need update rights.
-- M4: missing tests for ingest HMAC, action consent mapping and permission gates.
-- Snoozed pages show the binding UI instead of "Snoozed until …".
-- UI Kit limits: no `Grid` export in @forge/react 12.5.0, and `Select` has no aria-label. Use Inline tiles and a "Critical" checkbox.
+- ~~M1: viewers could see diff hunks.~~ Done: D30 (summaries for viewers, full diffs for editors; MCP never returns hunks).
+- ~~M2: hunks never purged.~~ Done: daily `dds-purge` (30 days).
+- ~~M3: view-only users could dismiss.~~ Done: D31.
+- ~~M4: missing security tests.~~ Done (HMAC, consent mapping, gates, dev-driver refusal).
+- ~~Snoozed pages showed the binding UI.~~ Done: "Snoozed until …".
+- ~~UI Kit limits.~~ Done: wrapping Inline tiles, "Critical anchor" checkbox.
 - The 3 dependency-audit advisories in transitive Forge SDK packages are to triage.
+
+### M4 build results (2026-11-11)
+- F13 settings are honoured live and verified headless: Quiet suppresses a borderline replay, an excluded space gets no events, and Jira off ignores issue changes. Defaults restored.
+- D30 and D31 are implemented. There is a 30-day hunk purge, and new security tests.
+- UI polish: copy constants, review hierarchy, per-control gating with reasons, a Snoozed until display, a summary-evidence note, the Critical checkbox, wrapping KPI tiles, and 0 issues in the ADS a11y check.
+- 387 tests. Core redeployed. **Pending:** a browser pass of settings, the review panel and the dashboard. H1 (remove the dev driver) stays open until the production step, which is out of scope for now.

@@ -3,7 +3,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import ForgeReconciler, {
   Box,
-  Button,
   DynamicTable,
   EmptyState,
   Heading,
@@ -11,7 +10,6 @@ import ForgeReconciler, {
   Inline,
   Link,
   SectionMessage,
-  Spinner,
   Stack,
   Text,
   User,
@@ -19,12 +17,14 @@ import ForgeReconciler, {
   xcss,
 } from '@forge/react';
 import { invoke } from '@forge/bridge';
-import { SeverityLozenge, StateBadge } from '../shared/components';
+import { COPY, dashboardTitle, noAnchoredPages, pagesTableLabel, unwatchedBody } from '../shared/copy';
+import { ErrorState, Loading, Muted, SPACE, SeverityLozenge, StateBadge, UnwatchedNotice } from '../shared/components';
 import {
   anchoredPctText,
   anchoredText,
-  emptyDashboardText,
   driftedPages,
+  emptyDashboardText,
+  isConsentError,
   medianText,
   plural,
   relativeTime,
@@ -33,21 +33,27 @@ import {
   stateMeta,
 } from '../shared/format';
 
+// Responsive KPI tiles: `Grid` is not exported by @forge/react 12.5.0 and xcss has no flexBasis, so
+// tiles grow to share a row and wrap below 200 px each.
 const tileStyle = xcss({
   borderColor: 'color.border',
   borderStyle: 'solid',
   borderWidth: 'border.width',
   borderRadius: 'radius.medium',
   padding: 'space.200',
-  minWidth: '180px',
+  flexGrow: '1',
+  minWidth: '200px',
 });
 
-/** A KPI tile. State tiles carry the state icon next to the state word. */
+/**
+ * A KPI tile. State tiles carry the state icon beside the state word; the icon repeats the word, so
+ * it is decorative.
+ */
 function Tile({ label, value, detail, status }) {
   const ui = status ? stateMeta(status) : null;
   return (
     <Box xcss={tileStyle}>
-      <Stack space="space.050">
+      <Stack space={SPACE.tight}>
         <Inline space="space.075" alignBlock="center">
           {ui ? <Icon glyph={ui.glyph} label="" primaryColor={ui.color} size="small" /> : null}
           <Text size="small" color="color.text.subtle">
@@ -57,7 +63,7 @@ function Tile({ label, value, detail, status }) {
         <Heading size="large" as="div">
           {value}
         </Heading>
-        {detail ? <Text size="small">{detail}</Text> : null}
+        {detail ? <Muted>{detail}</Muted> : null}
       </Stack>
     </Box>
   );
@@ -65,7 +71,7 @@ function Tile({ label, value, detail, status }) {
 
 function Owner({ ownerId, ownerName }) {
   if (ownerId) return <User accountId={ownerId} />;
-  return <Text>{ownerName || 'No owner'}</Text>;
+  return <Text>{ownerName || COPY.noOwner}</Text>;
 }
 
 const PAGE_HEAD = {
@@ -90,18 +96,18 @@ const App = () => {
   const context = useProductContext();
   const spaceKey = context?.extension?.space?.key || null;
   const [data, setData] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
 
   const load = useCallback(async () => {
     if (!spaceKey) return;
-    setError('');
+    setError(null);
     setData(null);
     try {
       const res = await invoke('getSpaceDashboard', { spaceKey });
-      if (res?.ok === false || res?.error) setError(res.message || res.error);
+      if (res?.ok === false || res?.error) setError(res);
       else setData(res || {});
     } catch (e) {
-      setError(String(e?.message || e));
+      setError(e || new Error('Unknown error'));
     }
   }, [spaceKey]);
 
@@ -109,36 +115,41 @@ const App = () => {
     load();
   }, [load]);
 
-  const title = spaceKey ? `Drift in ${spaceKey}` : 'Drift dashboard';
+  const title = dashboardTitle(spaceKey);
+  const heading = (
+    <Heading size="large" as="h1">
+      {title}
+    </Heading>
+  );
 
   if (context && !spaceKey) {
     return (
-      <SectionMessage appearance="warning" title="No space in context">
-        <Text>Open the Drift dashboard from a space's sidebar.</Text>
+      <SectionMessage appearance="warning" title={COPY.noSpace}>
+        <Text>{COPY.noSpaceBody}</Text>
       </SectionMessage>
     );
   }
 
   if (error) {
+    const body = error?.error === 'not_visible' ? COPY.spaceNotVisible : String(error?.message || error?.error || error);
     return (
-      <Stack space="space.200">
-        <Heading size="large">{title}</Heading>
-        <SectionMessage appearance="error" title="Couldn't load the dashboard.">
-          <Text>{error}</Text>
-        </SectionMessage>
-        <Inline>
-          <Button onClick={load}>Try again</Button>
-        </Inline>
+      <Stack space={SPACE.group}>
+        {heading}
+        {isConsentError(error) ? (
+          <ErrorState appearance="warning" title={COPY.consentTitle} body={COPY.consentBody} onRetry={load} />
+        ) : (
+          <ErrorState title={COPY.dashboardFailed} body={body} onRetry={load} />
+        )}
       </Stack>
     );
   }
 
   if (!data) {
     return (
-      <Inline space="space.100" alignBlock="center">
-        <Spinner size="medium" label="Loading" />
-        <Text>Counting drift{spaceKey ? ` in ${spaceKey}` : ''}…</Text>
-      </Inline>
+      <Stack space={SPACE.group}>
+        {heading}
+        <Loading text={COPY.loadingDashboard} />
+      </Stack>
     );
   }
 
@@ -150,38 +161,46 @@ const App = () => {
     medianTimeToVerifyDays: null,
     ...(data.kpis || {}),
   };
-  // Polish item 4: only drifted pages are listed; Verified pages stay out of the table.
+  // Only drifted pages are listed; Verified pages stay out of the table.
   const pages = sortPages(driftedPages(data.pages));
   const owners = sortOwners(data.owners || []);
   const now = Date.now();
+  const space = data.space || (typeof data.watched === 'boolean' ? { key: spaceKey, watched: data.watched } : null);
+  const unwatched = <UnwatchedNotice space={space} body={unwatchedBody(spaceKey)} />;
 
   const tiles = (
-    <Inline space="space.200" shouldWrap>
-      <Tile label="Pages anchored" value={anchoredText(kpis)} detail={kpis.total > 0 ? `${anchoredPctText(kpis)} of the space` : null} />
-      <Tile label="Possibly stale" status="possibly_stale" value={String(kpis.possiblyStale)} detail={kpis.possiblyStale > 0 ? plural(kpis.possiblyStale, 'page') : null} />
-      <Tile label="Stale" status="stale" value={String(kpis.stale)} detail={kpis.stale > 0 ? plural(kpis.stale, 'page') : null} />
-      <Tile label="Median time to verify" value={medianText(kpis.medianTimeToVerifyDays)} />
+    <Inline space={SPACE.group} rowSpace={SPACE.group} alignBlock="stretch" shouldWrap>
+      <Tile label={COPY.kpiAnchored} value={anchoredText(kpis)} detail={kpis.total > 0 ? `${anchoredPctText(kpis)} of the space` : null} />
+      <Tile label={COPY.kpiPossiblyStale} status="possibly_stale" value={String(kpis.possiblyStale)} detail={plural(kpis.possiblyStale, 'page')} />
+      <Tile label={COPY.kpiStale} status="stale" value={String(kpis.stale)} detail={plural(kpis.stale, 'page')} />
+      <Tile label={COPY.kpiMedian} value={medianText(kpis.medianTimeToVerifyDays)} />
     </Inline>
   );
 
-  if (kpis.total === 0) {
+  if (kpis.total === 0 || kpis.anchored === 0) {
     return (
-      <Stack space="space.300">
-        <Heading size="large">{title}</Heading>
-        <EmptyState
-          header={`No pages in ${spaceKey} are anchored yet.`}
-          description="Open a page and click the Doc Drift badge to anchor it to code or Jira work."
-        />
+      <Stack space={SPACE.section}>
+        {heading}
+        {unwatched}
+        <EmptyState header={noAnchoredPages(spaceKey)} description={COPY.emptyAnchoredBody} headingLevel={2} />
       </Stack>
     );
   }
 
+  const intro = (
+    <Stack space={SPACE.row}>
+      {heading}
+      <Text>{COPY.dashboardLead}</Text>
+    </Stack>
+  );
+
   if (pages.length === 0) {
     return (
-      <Stack space="space.300">
-        <Heading size="large">{title}</Heading>
+      <Stack space={SPACE.section}>
+        {intro}
+        {unwatched}
         {tiles}
-        <EmptyState header={emptyDashboardText(spaceKey, kpis)} description="Pages show up here when the code or Jira work they describe changes." />
+        <EmptyState header={emptyDashboardText(spaceKey, kpis)} description={COPY.emptyDriftBody} headingLevel={2} />
       </Stack>
     );
   }
@@ -207,22 +226,23 @@ const App = () => {
   }));
 
   return (
-    <Stack space="space.400">
-      <Stack space="space.100">
-        <Heading size="large">{title}</Heading>
-        <Text>Agents are told not to trust Possibly stale and Stale pages until someone reviews them.</Text>
-      </Stack>
+    <Stack space={SPACE.page}>
+      {intro}
+      {unwatched}
       {tiles}
-      <Stack space="space.100">
-        <DynamicTable caption={`Pages with drift in ${spaceKey}`} head={PAGE_HEAD} rows={pageRows} rowsPerPage={10} />
-        <Text size="small" color="color.text.subtle">
-          Ranked by severity, then state and open changes.
-        </Text>
+      <Stack space={SPACE.row}>
+        <Heading size="medium" as="h2">
+          {COPY.pagesWithDrift}
+        </Heading>
+        <Muted>{COPY.rankedBy}</Muted>
+        <DynamicTable label={pagesTableLabel(spaceKey)} head={PAGE_HEAD} rows={pageRows} rowsPerPage={10} />
       </Stack>
       {owners.length ? (
-        <Stack space="space.100">
-          <Heading size="medium">Owner backlog</Heading>
-          <DynamicTable caption="Open changes by page owner" head={OWNER_HEAD} rows={ownerRows} />
+        <Stack space={SPACE.row}>
+          <Heading size="medium" as="h2">
+            {COPY.ownerBacklog}
+          </Heading>
+          <DynamicTable label={COPY.ownerTable} head={OWNER_HEAD} rows={ownerRows} />
         </Stack>
       ) : null}
     </Stack>

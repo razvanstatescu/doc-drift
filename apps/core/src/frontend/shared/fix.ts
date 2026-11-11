@@ -107,6 +107,14 @@ export function groupBySection<T extends ProposalView>(proposals: T[] | null | u
   return [...groups.values()].map((g) => ({ ...g, proposals: [...g.proposals].sort((a, b) => blockOrder(a) - blockOrder(b)) }));
 }
 
+/**
+ * All drafts in page order (block order across the page), for the footer "Accept fix", which accepts
+ * them one by one. Drafts without a block ID (older than D29) go last, oldest first.
+ */
+export function pageOrder<T extends ProposalView>(proposals: T[] | null | undefined): T[] {
+  return [...(proposals ?? [])].sort((a, b) => blockOrder(a) - blockOrder(b) || (a.createdAt ?? 0) - (b.createdAt ?? 0));
+}
+
 /** "A", "A and B", "A, B and C". */
 export function joinList(items: string[]): string {
   if (items.length <= 1) return items[0] ?? '';

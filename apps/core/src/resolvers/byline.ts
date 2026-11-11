@@ -10,7 +10,8 @@ import { saveBindings, suggestionsFor } from '../lib/bindings-service';
 import { refLabel } from '../lib/copy';
 import { appCannotRead as appCannotReadAs, makeGate, notVisible } from '../lib/access';
 import { AGENT } from '../lib/agent-meta';
-import { getPageStorage, pageOperations } from '../lib/confluence';
+import { currentUserIsAdmin, getPageStorage, pageOperations } from '../lib/confluence';
+import { getSettingsLocation } from '../lib/settings-store';
 import { applyProposal, listProposals, rejectProposal } from '../lib/fix-service';
 import { bindingsForPage, ensureSchema, getPageState, openEventsForPage } from '../lib/db';
 import { fromSqlDate } from '../lib/ingest-rules';
@@ -27,6 +28,8 @@ import {
 
 interface ResolverContext {
   accountId?: string;
+  siteUrl?: string;
+  localId?: string;
   extension?: { content?: { id?: string | number }; space?: { key?: string; id?: string | number } };
 }
 
@@ -41,7 +44,7 @@ function pageIdOf(context: ResolverContext, payload?: unknown): string | undefin
 const appCannotRead = (pageId: string) => appCannotReadAs(api.asApp(), pageId);
 
 /** asUser permission check, then the D20 restriction check. Logged, never trusted from the client. */
-const userGate: Gate = (pageId, need) => makeGate(api.asUser(), api.asApp())(pageId, need);
+const userGate: Gate = (pageId, need, message) => makeGate(api.asUser(), api.asApp())(pageId, need, message);
 
 // ---------------------------------------------------------------------------
 // Review panel (M2 contract)
@@ -56,8 +59,25 @@ resolver.define('getPageDrift', async ({ payload, context }) => {
     console.log(`DDS_BYLINE_RESTRICTED pageId=${pageId}`);
     return { ok: true, pageId, restricted: true, state: 'unanchored', canEdit: user.ops.has('update'), message: MESSAGES.restricted };
   }
-  return pageDrift(pageId, api.asUser(), { canEdit: user.ops.has('update') });
+  const canConfigure = await currentUserIsAdmin(api.asUser());
+  return pageDrift(pageId, api.asUser(), {
+    canEdit: user.ops.has('update'),
+    spaceKeyHint: ctx.extension?.space?.key ?? null,
+    canConfigure,
+    settingsUrl: canConfigure ? await settingsUrlFor(ctx) : null,
+  });
 });
+
+/**
+ * The settings page URL: the location saved the last time an administrator opened settings, else the
+ * Manage apps page (its Configure link opens the same settings).
+ */
+async function settingsUrlFor(ctx: ResolverContext): Promise<string> {
+  const saved = await getSettingsLocation();
+  if (saved) return saved;
+  const site = typeof ctx.siteUrl === 'string' && /^https:\/\//.test(ctx.siteUrl) ? ctx.siteUrl.replace(/\/+$/, '') : '';
+  return `${site}/wiki/plugins/servlet/upm`;
+}
 
 resolver.define('markVerified', async ({ payload, context }) => {
   const ctx = context as ResolverContext;

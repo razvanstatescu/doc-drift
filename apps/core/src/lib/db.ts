@@ -968,6 +968,48 @@ export async function snapshotForPage(pageId: string): Promise<Record<string, un
   };
 }
 
+/** What the settings page's connection panel shows: the latest relay record and the repos seen. */
+export interface RelayActivity {
+  lastRecord: { repo: string | null; prId: number | null; title: string | null; receivedAt: string; outcome: string | null } | null;
+  repos: { repo: string; records: number; lastAt: string }[];
+  /** Change records received from the relay in the last 30 days. */
+  records30d: number;
+}
+
+export async function relayActivity(now = Date.now()): Promise<RelayActivity> {
+  const last = await query<{ repo: string | null; pr_id: number | null; title: string | null; received_at: string; outcome: string | null }>(
+    "SELECT repo, pr_id, title, received_at, outcome FROM change_record WHERE origin = 'relay' ORDER BY received_at DESC LIMIT 1",
+  );
+  const repos = await query<{ repo: string; records: number | string; last_at: string }>(
+    "SELECT repo, COUNT(*) AS records, MAX(received_at) AS last_at FROM change_record WHERE origin = 'relay' AND repo IS NOT NULL GROUP BY repo ORDER BY last_at DESC LIMIT 20",
+  );
+  const recent = await query<{ n: number | string }>(
+    "SELECT COUNT(*) AS n FROM change_record WHERE origin = 'relay' AND received_at >= ?",
+    toSqlDate(now - 30 * 24 * 60 * 60 * 1000),
+  );
+  const row = last[0];
+  return {
+    lastRecord: row ? { repo: row.repo, prId: row.pr_id, title: row.title, receivedAt: row.received_at, outcome: row.outcome } : null,
+    repos: repos.map((r) => ({ repo: r.repo, records: Number(r.records), lastAt: r.last_at })),
+    records30d: Number(recent[0]?.n ?? 0),
+  };
+}
+
+/**
+ * Trust-safety retention: drops the raw diff text of change records received before `before` (SQL
+ * DATETIME), keeping the metadata (files, title, author, outcome) that events and the dashboard use.
+ * Returns how many records were purged. Batched so one run stays small.
+ */
+export async function purgeHunksBefore(before: string, batch = 500): Promise<number> {
+  const ids = await query<{ id: string }>(
+    `SELECT id FROM change_record WHERE hunks IS NOT NULL AND received_at < ? LIMIT ${Math.max(1, Math.min(1000, Math.floor(batch)))}`,
+    before,
+  );
+  if (ids.length === 0) return 0;
+  await exec(`UPDATE change_record SET hunks = NULL WHERE id IN (${placeholders(ids.length)})`, ...ids.map((r) => r.id));
+  return ids.length;
+}
+
 export async function recentChanges(limit = 5): Promise<unknown[]> {
   return query(
     `SELECT id, origin, source, repo, pr_id, title, received_at, processed_at, outcome FROM change_record ORDER BY received_at DESC LIMIT ${Math.min(50, Math.max(1, Math.floor(limit)))}`,

@@ -8,9 +8,11 @@ import { appCannotRead } from './access';
 import {
   CHECK_BEFORE_CITING,
   diffForPaths,
+  evidenceLevelFor,
   fitContext,
   freshnessGuidance,
   isoTime,
+  jiraChangelogView,
   MATCH_RANK,
   matchBinding,
   NO_PAGE_GUIDANCE,
@@ -28,7 +30,7 @@ import {
 import { anchorLabel } from './anchors';
 import { extractBlocks, type PageBlock } from './blocks';
 import { plural, refLabel } from './copy';
-import { displayNames, findPagesByTitle, getPageInfo, getPageStorage } from './confluence';
+import { displayNames, findPagesByTitle, getPageInfo, getPageStorage, pageOperations } from './confluence';
 import {
   bindingsForPage,
   bindingsForRepoName,
@@ -217,6 +219,10 @@ export async function listStalePages(input: Record<string, unknown>, deps: ToolD
 // ---------------------------------------------------------------------------
 // get-drift-context (agent only)
 // ---------------------------------------------------------------------------
+/** D30: a viewer without edit rights gets summaries only. */
+export const SUMMARY_EVIDENCE_GUIDANCE =
+  'You can view this page but not edit it, so diffs and full Jira text are left out. Explain the change from the summary; a person with edit rights can draft a fix.';
+
 export const CONTEXT_INSTRUCTIONS =
   `${UNTRUSTED_RULE} Each section lists its blocks (paragraph, list-item, table-cell, heading, code). To propose a fix, call submit-fix-proposal once per block that must change, with pageId, blockId and proposedText: the block's full new text, copied verbatim from the block's text with only the needed change. For a code block, proposedText is the whole new code body; to change one line only, also pass that line, verbatim, as originalText. Never put two blocks in one proposal. Never edit the page; a person accepts or rejects each draft.`;
 
@@ -250,12 +256,15 @@ export async function getDriftContext(input: Record<string, unknown>, deps: Tool
     return { ok: false, pageId, title: page.title ?? null, status: 'unanchored', restricted: true, error: 'restricted', guidance: freshnessGuidance('unanchored', [], { restricted: true }) };
   }
   await ensureSchema();
-  const [state, events] = await Promise.all([getPageState(pageId), eventDetailsForPage(pageId)]);
+  // D30: raw diffs and full Jira values only for callers with update rights on the page (asUser).
+  const [state, events, ops] = await Promise.all([getPageState(pageId), eventDetailsForPage(pageId), pageOperations(deps.user, pageId)]);
+  const evidenceLevel = evidenceLevelFor(ops.status < 300 && ops.ops.has('update'));
   const status: StoredPageState = state?.status ?? 'unanchored';
   if (events.length === 0) {
     return { ok: true, pageId, title: page.title ?? null, status, statusLabel: PAGE_STATE_LABELS[status], sections: [], events: [], guidance: 'This page has no open changes, so there is nothing to draft.' };
   }
   const changes = await changesByIds([...new Set(events.map((e) => e.changeRecordId))]);
+  const full = evidenceLevel === 'full';
   const now = Date.now();
   const views = events
     .map((e) => {
@@ -276,8 +285,8 @@ export async function getDriftContext(input: Record<string, unknown>, deps: Tool
         reasons: e.reasons,
         files,
         ...(e.matchedTokens.length > 0 && { removedIdentifiers: e.matchedTokens }),
-        diff: e.source === 'bitbucket' ? diffForPaths(change?.hunks, paths) : null,
-        ...(jira && { changelog: jira.slice(0, 20) }),
+        ...(full && { diff: e.source === 'bitbucket' ? diffForPaths(change?.hunks, paths) : null }),
+        ...(jira && { changelog: jiraChangelogView(jira, evidenceLevel) }),
         _tokens: tokens,
       };
     })
@@ -301,10 +310,12 @@ export async function getDriftContext(input: Record<string, unknown>, deps: Tool
     status,
     statusLabel: PAGE_STATE_LABELS[status],
     instructions: CONTEXT_INSTRUCTIONS,
+    evidenceLevel,
     sections,
     events: views.map(({ _tokens, ...v }) => v),
-    guidance:
-      sections.length > 0
+    guidance: !full
+      ? `${SUMMARY_EVIDENCE_GUIDANCE} ${sections.length > 0 ? `${plural(sections.length, 'section')} ${sections.length === 1 ? 'mentions' : 'mention'} the change.` : 'No section mentions the changed files or identifiers.'}`
+      : sections.length > 0
         ? `Draft replacement text only for the ${plural(sections.length, 'section')} listed. Call submit-fix-proposal once per block that must change (usually the blocks marked matched), with its blockId. Never merge blocks. Never edit the page.`
         : 'No section of this page mentions the changed files or identifiers. Explain the change instead of drafting a fix.',
   });

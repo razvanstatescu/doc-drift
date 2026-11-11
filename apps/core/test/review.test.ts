@@ -109,7 +109,8 @@ describe('eventView', () => {
       author: 'Sam Rivera',
       at: NOW - DAY,
       summary: base.summary,
-      files: [{ path: 'scripts/rollback-v2.sh', status: 'renamed', oldPath: 'scripts/rollback.sh' }],
+      // D30 summary: paths with status and line counts.
+      files: [{ path: 'scripts/rollback-v2.sh', status: 'renamed', oldPath: 'scripts/rollback.sh', linesAdded: 3, linesRemoved: 3 }],
       severity: 'high',
       score: 1,
       anchor: 'payments-api: scripts/rollback.sh',

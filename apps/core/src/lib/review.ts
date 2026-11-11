@@ -170,7 +170,7 @@ export interface EventView {
   /** Epoch ms. */
   at: number;
   summary: string;
-  files: { path: string; status: ChangedFile['status']; oldPath?: string }[];
+  files: { path: string; status: ChangedFile['status']; oldPath?: string; linesAdded?: number; linesRemoved?: number }[];
   severity: 'high' | 'medium';
   score: number;
   anchor: string | null;
@@ -187,7 +187,13 @@ export function eventFiles(paths: string[], changeFiles: ChangedFile[]): EventVi
   return paths.map((path) => {
     const f = changeFiles.find((c) => c.path === path || c.oldPath === path);
     if (!f) return { path, status: 'modified' as const };
-    return { path: f.path, status: f.status, ...(f.oldPath !== undefined && { oldPath: f.oldPath }) };
+    return {
+      path: f.path,
+      status: f.status,
+      ...(f.oldPath !== undefined && { oldPath: f.oldPath }),
+      ...(typeof f.linesAdded === 'number' && { linesAdded: f.linesAdded }),
+      ...(typeof f.linesRemoved === 'number' && { linesRemoved: f.linesRemoved }),
+    };
   });
 }
 

@@ -152,6 +152,31 @@ export async function listSpacePages(requester: Requester, spaceId: string, maxP
   return { status: 200, pages, truncated: true };
 }
 
+/**
+ * Current spaces the requester can see (settings space picker), sorted by name. Scope
+ * `read:space:confluence`. `truncated` is true when the cap was hit.
+ */
+export async function listSpaces(requester: Requester, max = 1000): Promise<{ status: number; spaces: { key: string; name: string; type?: string }[]; truncated: boolean }> {
+  const spaces: { key: string; name: string; type?: string }[] = [];
+  let cursor: string | undefined;
+  for (let i = 0; i < Math.ceil(max / 250); i++) {
+    const res = cursor
+      ? await requester.requestConfluence(route`/wiki/api/v2/spaces?status=current&limit=250&cursor=${cursor}`, { headers: { Accept: 'application/json' } })
+      : await requester.requestConfluence(route`/wiki/api/v2/spaces?status=current&limit=250`, { headers: { Accept: 'application/json' } });
+    if (!res.ok) return { status: res.status, spaces, truncated: false };
+    const out = (await res.json()) as { results?: { key: string; name?: string; type?: string }[]; _links?: { next?: string } };
+    for (const sp of out.results ?? []) spaces.push({ key: sp.key, name: sp.name ?? sp.key, ...(sp.type && { type: sp.type }) });
+    const next = out._links?.next;
+    cursor = next ? (new URLSearchParams(next.split('?')[1] ?? '').get('cursor') ?? undefined) : undefined;
+    if (!cursor) return { status: res.status, spaces: sortSpaces(spaces), truncated: false };
+  }
+  return { status: 200, spaces: sortSpaces(spaces), truncated: true };
+}
+
+function sortSpaces<T extends { name: string }>(list: T[]): T[] {
+  return [...list].sort((a, b) => a.name.localeCompare(b.name));
+}
+
 /** Display names by account ID (v1 user lookup, one call per distinct user). Unknown users are left out. */
 export async function displayNames(requester: Requester, accountIds: (string | null | undefined)[]): Promise<Map<string, string>> {
   const out = new Map<string, string>();

@@ -19,15 +19,15 @@ export const restricted = (): Failure => ({ ok: false, error: 'restricted', rest
 
 /**
  * A gate that checks `user`'s rights on the page (`read` or `update`), then the D20 restriction check
- * with `app`. `needsEdit` overrides the message for a missing `update` right.
+ * with `app`. `needsEdit` (or the call's `message`) is the message for a missing `update` right.
  */
 export function makeGate(user: Requester, app: Requester, needsEdit: string = MESSAGES.needsEdit): Gate {
-  return async (pageId, need) => {
+  return async (pageId, need, message) => {
     const ops = await pageOperations(user, pageId);
     if (ops.status >= 300 || !ops.ops.has('read')) return notVisible();
     if (need === 'update' && !ops.ops.has('update')) {
       console.log(`DDS_GATE_DENIED pageId=${pageId} need=${need}`);
-      return { ok: false, error: 'forbidden', message: needsEdit };
+      return { ok: false, error: 'forbidden', message: message ?? needsEdit };
     }
     if (await appCannotRead(app, pageId)) {
       console.log(`DDS_BYLINE_RESTRICTED pageId=${pageId}`);

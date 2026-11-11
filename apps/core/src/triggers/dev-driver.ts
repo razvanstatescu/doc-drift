@@ -4,7 +4,8 @@
 // (`forge logs`) and also written to the content property `dds-dev-result` of `resultPageId`
 // (default: DDSTEST test page 2752731), where a test script can read it at once over REST.
 // Resolver-equivalent actions use an open permission gate and an asApp reader: the asUser checks
-// themselves need a browser (README, manual checks). Remove this module before production (M4).
+// themselves need a browser (README, manual checks).
+// H1: REMOVE this module, the `dds-dev` web trigger and the `dev-driver` function before any production deploy.
 import { timingSafeEqual } from 'node:crypto';
 import api from '@forge/api';
 import { kvs } from '@forge/kvs';
@@ -21,7 +22,7 @@ import { saveBindings } from '../lib/bindings-service';
 import { applyProposal, listProposals, rejectProposal, submitFixProposal } from '../lib/fix-service';
 import { getPageProperty, upsertPageProperty } from '../lib/confluence';
 import { BYLINE_PROPERTY_KEY } from '../lib/copy';
-import { devAgeOpenEvents, ensureSchema, recentChanges, snapshotForPage } from '../lib/db';
+import { devAgeOpenEvents, ensureSchema, recentChanges, relayActivity, snapshotForPage } from '../lib/db';
 import { DEMO_CHANGE_RECORD, DEMO_PR_ID } from '../lib/demo';
 import { ingestRecord } from '../lib/ingest';
 import { headerValue, parseSettings } from '../lib/ingest-rules';
@@ -30,7 +31,7 @@ import { notifyPage } from '../lib/notifier';
 import { refreshPage } from '../lib/page-state';
 import { decideRename, dismissEvent, markVerified, pageDrift, snoozePage, spaceDashboard, type Gate } from '../lib/review-service';
 import { fingerprint, getSettings, saveSettings } from '../lib/settings-store';
-import { confluencePageEvent, escalate, jiraEvent } from './product-events';
+import { confluencePageEvent, escalate, jiraEvent, purge } from './product-events';
 
 interface Req {
   body?: string;
@@ -142,6 +143,11 @@ async function run(body: Body): Promise<unknown> {
     case 'escalate':
       await escalate();
       return { ok: true };
+    case 'purge':
+      await purge();
+      return { ok: true };
+    case 'relay-activity':
+      return relayActivity();
     case 'notify':
       return notifyPage(pageId);
     case 'age':

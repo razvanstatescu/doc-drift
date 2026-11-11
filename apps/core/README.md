@@ -6,7 +6,7 @@ The core Forge app. Confluence is required and Jira is optional (`app.compatibil
 | --- | --- |
 | App ID | `ari:cloud:ecosystem::app/12e968a1-a45d-4524-ba28-d47e2315db1a` |
 | Developer Space | Doc Drift (`af90295c-aad7-4188-9754-122ee3c4c6f4`) |
-| Development env ID | `b7eadd8c-211c-4cdf-98c0-86172909ead2` (version 4.10.0 on 2026-11-11, M3 with block-targeted fixes, D29; 4.0.0 was the M2 scope change) |
+| Development env ID | `b7eadd8c-211c-4cdf-98c0-86172909ead2` (version 4.13.0 on 2026-11-11, M4 settings and review fixes; 4.10.0 was M3 with D29; 4.0.0 was the M2 scope change) |
 | MCP endpoint | `https://mcp.atlassian.com/forge/12e968a1-a45d-4524-ba28-d47e2315db1a` (`rovo:mcp` "Doc Drift": `check-page-freshness`, `find-docs-for-path`, `list-stale-pages`) |
 | Installed | development, one-atlas-jzzf.atlassian.net: Confluence (required) + Jira (connected). Installation `27236af5-036e-44ad-bb1d-d3bec72a5122` |
 | Runs on Atlassian | Eligible (every deploy so far) |
@@ -23,6 +23,7 @@ match consumer: bindings by repo or Jira key ─▶ candidate page bodies asApp 
    ─▶ recompute page_state (nextPageState, D27) ─▶ byline property ─▶ notify-queue (delayInSeconds)
 notify consumer ─▶ footer comment @owner (1 per page per 24 h; appends inside the window)
 hourly dds-escalation ─▶ Possibly stale past escalationDays ─▶ Stale; bylines whose snooze ended
+daily dds-purge ─▶ diff hunks older than 30 days set to NULL (metadata kept)
 avi:confluence:trashed|deleted:page ─▶ close events, drop bindings, proposals, state
 byline-resolver (asUser checks, D15/D20) ─▶ review panel, binding modal, dashboard ─▶ asApp writes
 Rovo chat / Rovo Studio / MCP client ─▶ action (asUser only, D21) ─▶ freshness, docs for a path, stale pages,
@@ -55,8 +56,8 @@ review panel Accept fix ─▶ applyProposal: edit check asUser ─▶ storage-e
 | `src/lib/copy.ts`, `anchors.ts`, `ingest-rules.ts`, `suggestions.ts` | Pure helpers (byline copy, anchor validation, dedupe keys, settings parsing, anchor suggestions). Unit-tested |
 | `src/lib/demo.ts` | The seeded scenario 01 change record (PR #482), built from `demo/seed/payments-api` with `git diff -M`; identical to `fixtures/scenarios/01-*.json` |
 | `src/resolvers/byline.ts`, `src/frontend/byline/` | `byline-resolver`: the byline modal (binding UI F1, review panel F5) **and** the space dashboard (F8). All UI resolvers live on this one function |
-| `src/resolvers/settings.ts`, `src/frontend/settings/` | Global settings (`useAsConfig`): ingest URL, relay secret, relay ping status, sensitivity, ignore globs, demo replay |
-| `src/triggers/dev-driver.ts` | Development-only web trigger `dds-dev` for headless end-to-end checks. Inert unless `DDS_DEV_TOKEN` is set. **Remove in M4** |
+| `src/resolvers/settings.ts`, `src/frontend/settings/` | Global settings (`useAsConfig`, F13): sensitivity, ignore globs, branch filter, watched spaces, escalation days, notifications and debounce, Jira on/off, the relay connection panel (last ping, last record, workspace, repos seen), ingest URL, relay secret, demo replay |
+| `src/triggers/dev-driver.ts` | Development-only web trigger `dds-dev` for headless end-to-end checks. Inert unless `DDS_DEV_TOKEN` is set (unit-tested). **Must be removed before any production deploy (H1)**: see the warning under Dev driver |
 | `static/icons/doc-drift.svg` | Byline manifest icon: `brand/logos/doc-drift-mark.svg` with its metadata block stripped |
 
 ### Data (Forge SQL, [data-model.md](../../docs/architecture/data-model.md))
@@ -81,7 +82,8 @@ Migrations run from `avi:forge:installed:app` / `avi:forge:upgraded:app` through
 
 ### Permissions (D15, D20, D21)
 
-- Every resolver checks the user's rights asUser with `GET /wiki/api/v2/pages/{id}/operations` before any asApp write. `read` is enough for Mark verified, Dismiss and Snooze (architecture/overview.md: "read for verify"); saving anchors and accepting or rejecting a rename need `update`. A page the user can't read returns `{ok:false, error:'not_visible', state:'unknown', message:'Page not found or not visible to you.'}` with no title.
+- Every resolver checks the user's rights asUser with `GET /wiki/api/v2/pages/{id}/operations` before any asApp write. `read` is enough for Mark verified; Dismiss and Snooze need `update` since M4 (finding M3: a dismissal dampens the anchor for everyone), as do saving anchors, renames and fixes. A view-only user gets `forbidden`, "You need edit rights on this page to dismiss or snooze its changes."
+- **Evidence (D30)**: viewers get summaries (ref, author, time, paths with status and line counts, severity, anchor, reasons); `getPageDrift` and `get-drift-context` add raw diffs (`diff`) and full Jira values (`changelog`) only for callers with `update`. Viewers' Jira changelogs keep short values (status, versions) and mark free-text fields `{field, changed: true}`. MCP tools never return hunks. A page the user can't read returns `{ok:false, error:'not_visible', state:'unknown', message:'Page not found or not visible to you.'}` with no title.
 - The dashboard reads asUser: only pages in the caller's space listing count or show.
 - Restricted pages (D20, confirmed live): if the user can see the page but the asApp `GET /pages/{id}` returns 404/403, the modal shows "Restricted pages can't be watched yet." and saves nothing.
 - Settings resolvers check that the caller is a Confluence admin (`/wiki/rest/api/user/current?expand=operations` has `administer` on `application`). Display conditions are not authorization.
@@ -100,7 +102,7 @@ All calls go to the `byline-resolver` function (the byline modal and the dashboa
 
 | Call | Payload | Returns |
 | --- | --- | --- |
-| `getPageDrift` | `{pageId?}` (defaults to the context page) | `{ok, pageId, title, state, status, statusLabel, canEdit, restricted, verifiedAt, verifiedBy:{accountId, displayName}\|null, events, affectedSections, renameProposals, bindings, suggestions}`. A restricted page returns `{ok:true, restricted:true, message}` and nothing else |
+| `getPageDrift` | `{pageId?}` (defaults to the context page) | `{ok, pageId, title, state, status, statusLabel, canEdit, canVerify, canDismiss, canSnooze, canEditAnchors, canAcceptFix, evidenceLevel, snoozedUntil, space, restricted, verifiedAt, verifiedBy:{accountId, displayName}\|null, events, affectedSections, renameProposals, bindings, suggestions}` (M4 fields below). A restricted page returns `{ok:true, restricted:true, message}` and nothing else |
 | `markVerified` | `{pageId?, note?}` | `{ok, state, statusLabel, closedEvents, message}` |
 | `dismissEvent` | `{eventId, reason: 'not_relevant'\|'already_updated'\|'false_positive'}` | `{ok, pageId, state, openEvents, message}` |
 | `snoozePage` | `{pageId?, days: 1..30}` | `{ok, state, snoozedUntil, message}` |
@@ -112,7 +114,12 @@ All calls go to the `byline-resolver` function (the byline modal and the dashboa
 | `getRovoAgentInfo` | none | `{ok, agentName: 'Drift Reviewer', agentKey: 'drift-reviewer'}` for `rovo.open({type: 'forge', agentName, agentKey, prompt})` |
 | `load`, `checkAnchor`, `save` | M1, unchanged | M1 shapes (`load` is kept as an alias) |
 
-- **`events[]`**: `{id, source, ref ('PR #482' or 'PAY-21'), title (PR title or issue summary), author, at, summary, files:[{path, status, oldPath?}], severity, score, anchor, reasons, status: 'open'|'snoozed', snoozedUntil, url (Bitbucket PR link or null)}`, High before Medium, newest first within a severity (M3). Only open events (snoozed ones included, with `status: 'snoozed'`).
+- **M4 fields of `getPageDrift`**:
+  - `canVerify` (read: always true here), `canDismiss`, `canSnooze`, `canEditAnchors`, `canAcceptFix` (all `update`).
+  - `evidenceLevel`: `'full'` for `update` callers, else `'summary'` (D30).
+  - `snoozedUntil`: epoch ms when every open event is snoozed (the latest end), else `null`. Snoozed events are still in `events`.
+  - `space: {key, watched, canConfigure, settingsUrl}`: `key` from the module context, else the stored state or bindings; `watched` is false when settings watch selected spaces and this is not one (new changes create no events); `canConfigure` is true for Confluence administrators, who also get `settingsUrl` (the URL saved when an admin last opened settings, else `{siteUrl}/wiki/plugins/servlet/upm`); `null` for others.
+- **`events[]`**: `{id, source, ref ('PR #482' or 'PAY-21'), title (PR title or issue summary), author, at, summary, files:[{path, status, oldPath?, linesAdded?, linesRemoved?}], severity, score, anchor, reasons, status: 'open'|'snoozed', snoozedUntil, url (Bitbucket PR link or null)}`, plus for `evidenceLevel: 'full'` only `diff` (the event's files from the PR diff, 4 KB cap, `null` once purged or for Jira) and, for Jira, `changelog:[{field, from, to}]`. High before Medium, newest first within a severity (M3). Only open events (snoozed ones included, with `status: 'snoozed'`).
 - **`affectedSections[]`**: `{heading, excerpt (≤ 300 chars, `…` where cut), matchedTokens, codeLines?}` (`codeLines`: up to 5 exact code lines of the section that contain a token; omitted when none) from the page body (asUser, storage format), split at headings (`Top of page` before the first). Tokens: changed paths and old paths, distinctive file names, removed identifiers the page mentions, Jira keys. Whole-token match (`ROLLBACK_TIMEOUT` does not match `ROLLBACK_TIMEOUT_SECS`). At most 5.
 - **`renameProposals[]`**: `{id, bindingId, from, to, anchor}`. Accept rewrites the binding's pattern; a binding edited since is refused with `binding_changed`.
 - **`bindings[]`**: the M1 `anchors` shape plus `dismissCount`.
@@ -133,7 +140,7 @@ All calls go to the `byline-resolver` function (the byline modal and the dashboa
 
 ### Notifier (F7)
 
-- After a match, every page with a new or reopened event is pushed to `notify-queue` with `delayInSeconds` = `notifyDelaySeconds` (settings, default 600, 0 for demos, max 900). The first job to run sends everything not yet notified; later jobs find nothing new (debounce).
+- After a match, every page with a new or reopened event is pushed to `notify-queue`, debounced by `notifyDebounceMinutes` (settings, default 10, 0 for demos, max 60). The queue's `delayInSeconds` caps at 900, so a longer debounce carries `notBefore` and the consumer re-queues itself in hops of up to 900 s (`DDS_NOTIFY_HOP`). The first job to run sends everything not yet notified; later jobs find nothing new.
 - Comment: `@owner PR #482 (merged by Sam Rivera) changed 2 files this page documents. Review in the Doc Drift badge.` Jira: `@owner PAY-21 moved to Done. This page is anchored to it. Review in the Doc Drift badge.` Owner = the page's `ownerId`.
 - At most 1 comment per page per 24 h. Inside the window the same comment gets `Since then: …` paragraphs (PUT with the stored version), and the `notification` row keeps every line. Snoozed events don't notify. `notifyEnabled: false` turns it off.
 
@@ -152,7 +159,7 @@ The app is a pnpm workspace member (`apps/core` in `pnpm-workspace.yaml`). `forg
 pnpm install                         # at the repo root
 cd apps/core
 pnpm run prebuild:packages           # tsc for @dds/shared and @dds/matcher
-pnpm typecheck && pnpm test          # 122 Vitest tests over the pure helpers
+pnpm typecheck && pnpm test          # Vitest: pure helpers plus mocked gate, consent and ingest tests
 forge lint
 forge deploy -e development --non-interactive     # or: pnpm deploy:dev (builds packages first)
 forge install -e development --site one-atlas-jzzf.atlassian.net --product confluence --non-interactive --confirm-scopes
@@ -171,9 +178,28 @@ Web trigger URLs: the settings page shows the ingest URL (`webTrigger.getUrl`). 
 | Relay secret | KVS secret store, key `relay-secret` (`kvs.setSecret`) | HMAC key. Generated on the settings page and shown once. `relay-secret-meta` keeps only an 8-character SHA-256 fingerprint for display |
 | `DDS_DEV_TOKEN` | Forge variable, **development only**, encrypted | Enables the `dds-dev` driver. Never set it in staging or production |
 
-KVS also holds `settings` (`{sensitivity, ignoreGlobs, escalationDays, notifyEnabled, notifyDelaySeconds}`; `saveSettings` keeps the current value of any field the form leaves out) and `relay-ping`. No secret is ever logged.
+KVS also holds `settings`, `relay-ping` and `settings-location` (the settings page URL, saved when an admin opens it). No secret is ever logged.
+
+### Settings (F13, M4)
+
+| Field | Values | Default | Effect |
+| --- | --- | --- | --- |
+| `sensitivity` | `strict` 0.4, `balanced` 0.5, `quiet` 0.65 | `balanced` | Matcher threshold |
+| `ignoreGlobs` | at most 50, each checked by `validateGlob` | the 9 matcher defaults ("Reset to defaults") | Files never scored |
+| `ignoreNonDefaultBranches` | on/off | on | Matcher skips a record whose destination is not its `defaultBranch` (the relay also sends main-branch merges only) |
+| `spaceMode`, `spaceKeys` | `all`, or `selected` with at least 1 space key | `all` | Bindings outside the watched spaces are dropped before scoring (`DDS_MATCH_SPACES`); existing events stay |
+| `escalationDays` | 1 to 30 | 7 | D27 time escalation (stored values above 30 are clamped) |
+| `notifyEnabled` | on/off | on | Footer comments |
+| `notifyDebounceMinutes` | 0 to 60 | 10 | Notifier debounce; the M2 field `notifyDelaySeconds` is mapped (rounded up to minutes) on read and on save |
+| `jiraEnabled` | on/off | on | Off: the Jira trigger logs `DDS_JIRA_SKIPPED reason=disabled`, and queued Jira records end `skipped:jira disabled` |
+
+- `saveSettings` validates every field and returns `{ok:false, error:'invalid', message, fieldErrors:{field: message}}` with every bad field at once, and saves nothing; fields left out keep their current value. The page also checks inline before saving and shows "Saved" next to the button.
+- `load` also returns `defaults`, `limits`, the spaces the admin can see (`GET /wiki/api/v2/spaces`, `read:space:confluence`) and `connection: {workspaceUuid, lastPingAt, lastRecord:{repo, prId, title, receivedAt, outcome}|null, repos:[{repo, records, lastAt}], records30d}` (relay-origin change records only).
+- A non-admin sees "Only Confluence administrators can change Doc Drift Sentinel settings. Ask an administrator to make changes here." (`error: 'forbidden'`).
 
 ### Dev driver (development only)
+
+> **Warning (H1): remove before production.** The `dds-dev` web trigger, the `dev-driver` function and `src/triggers/dev-driver.ts` must be deleted from the manifest and the code before any production deploy. The driver runs resolver actions asApp with an open permission gate. It is inert without the `DDS_DEV_TOKEN` variable (every request returns 401 and runs nothing; unit-tested), but it must not ship.
 
 `POST` to the `dds-dev` web trigger URL with header `x-dds-dev-token` and a JSON body. Each result is logged (`DDS_DEV_<ACTION>`) **and** written to the content property `dds-dev-result` of `resultPageId` (default DDSTEST page 2752731), so a script reads it over REST at once instead of waiting for `forge logs`. Get the URL with `forge webtrigger create -f dds-dev ...`.
 
@@ -188,6 +214,8 @@ KVS also holds `settings` (`{sensitivity, ignoreGlobs, escalationDays, notifyEna
 | `verify`, `snooze`, `dismiss`, `accept-rename`, `reject-rename` | as the resolvers | The resolver services with an open gate (no user) |
 | `dashboard` | `spaceKey` | `getSpaceDashboard` with an asApp reader |
 | `escalate`, `notify` | `pageId` for notify | Run the hourly job or the notifier now |
+| `purge` | | Run the daily hunk purge now |
+| `relay-activity` | | The settings page's connection data (last relay record, repos seen) |
 | `age` | `pageId, days` | Move the page's open events back in time (escalation tests) |
 | `jira-event`, `page-event` | `event` | Feed a synthetic product event to the handler |
 | `settings` | `settings` | Merge into the stored settings (validated) |
@@ -196,6 +224,21 @@ KVS also holds `settings` (`{sensitivity, ignoreGlobs, escalationDays, notifyEna
 | `proposals`, `apply-proposal`, `reject-proposal` | `pageId` / `proposalId` | The review panel's proposal calls; apply writes the page **asApp** here (development only) |
 
 The asUser permission checks can't run here (no user): they are in the browser checks below.
+
+## Status (2026-11-11, M4 settings and review fixes, version 4.13.0)
+
+Verified live with the dev driver on DDSTEST page **3080365** ("Doc Drift M4 settings test page", anchor `payments-api: config/workers/pool.yaml`, normal; synthetic PRs #9401 to #9407 change `config/workers/pool.yaml` by 10+10 lines, score 0.58):
+- **Sensitivity**: Quiet (0.65): 0 events. Balanced (0.5): 1 event, page Possibly stale.
+- **Spaces**: watching only PLAT, the same change created 0 events (`DDS_MATCH_SPACES kept 25 dropped 5`) and `getPageDrift` reported `space: {key: DDSTEST, watched: false}`; with PLAT and DDSTEST selected it flagged again.
+- **Jira off**: a synthetic `avi:jira:updated:issue` for PAY-21 logged `DDS_JIRA_SKIPPED reason=disabled`, and a Jira record ended `skipped:jira disabled`; page 3047452 kept 1 open PAY-21 event. Jira on: the same record created an event (left open on that test page).
+- **Closing log**: a change touching only `config/workers/pool.test.ts` logged `DDS_MATCH_DONE {"skipped":"all files ignored"}`.
+- **getPageDrift** returned the M4 fields (`evidenceLevel: full`, permission flags, `snoozedUntil: null`, `space`), file line counts, and `diff`. `get-drift-context` returned `evidenceLevel: full`.
+- **Purge** ran (`DDS_PURGE purged 0`, nothing older than 30 days yet). **Relay activity**: last record PR #13, 11 records from `nano-soft-dev/payments-api`.
+- Stored settings migrated from `notifyDelaySeconds: 600` to `notifyDebounceMinutes: 10`; defaults restored afterwards (Balanced, all spaces, notifications on with 10 min, Jira on, branch filter on, 7 days).
+
+Unit tests: HMAC ingest (good, bad, wrong secret, tampered, stale and future, replay and dedupe, oversize over 512 KB, not JSON), consent mapping (`NEEDS_AUTHENTICATION_ERR` to `consent_required`), `makeGate`, dismiss and snooze needing `update`, dev driver inert without its token, settings validation with `fieldErrors`, debounce hops, D30 Jira changelog views.
+
+Needs a browser: the settings page itself (sections, inline errors, Saved, space picker, connection panel, non-admin message), `space.canConfigure`/`settingsUrl` for an admin (open settings once so the location is saved), and `evidenceLevel: 'summary'` for a view-only user.
 
 ## Status (2026-11-11, M3 backend, version 4.8.0)
 
@@ -242,7 +285,6 @@ All on DDSTEST page 3047452 ("Doc Drift M2 test page", anchors `scripts/deploy.s
 ### Not done
 
 - Live byline refresh without a reload (`confluence:backgroundScript`).
-- 30-day hunk purge (scheduled trigger).
 - A real `avi:jira:deleted:issue` (needs an account with delete permission).
 - The byline icon is the light-theme mark; it has low contrast in Confluence dark mode.
 
@@ -267,7 +309,7 @@ Log in to one-atlas-jzzf.atlassian.net as yourself. Tail logs meanwhile: `cd app
 12. **Footer comment.** Page 3047452 has one Doc Drift comment that mentions you and lists every change since its first line. Check that Confluence sent you a mention notification.
 13. **Dashboard.** Open the DDSTEST space, then the Doc Drift space page. Expect KPI tiles (3 pages, 2 anchored), pages ranked by severity, and you as owner. Repeat in PLAT: 25 pages, 18 anchored, the rollback runbook Stale on top.
 14. **Restricted page (D20).** On the restricted page from check 5, `getPageDrift` returns `restricted: true` and the panel says "Restricted pages can't be watched yet."
-15. **Settings.** `escalationDays`, `notifyEnabled` and `notifyDelaySeconds` are stored with the other settings (current values: 7, on, 600). If the settings form does not show them yet, saving it keeps them.
+15. **Settings.** Superseded by the M4 checks below.
 
 ### M3 checks (Rovo, review panel, Claude Code)
 
@@ -282,5 +324,13 @@ Rovo messages cost about 10 credits each; keep it to the steps below. Tail logs:
 22. **MCP setup.** admin.atlassian.com > Apps > Sites > one-atlas-jzzf > Connected apps > **Doc Drift Sentinel** (development) > Details > Tools > turn on "Expose tools to MCP-compatible apps". Then in a terminal: `claude mcp remove dds-spike` (the spike is uninstalled) and `claude mcp add --transport http doc-drift https://mcp.atlassian.com/forge/12e968a1-a45d-4524-ba28-d47e2315db1a`. In Claude Code run `/mcp` > doc-drift > Authenticate, pick one-atlas-jzzf and approve. Expect exactly 3 tools: `check-page-freshness`, `find-docs-for-path`, `list-stale-pages`.
 23. **MCP calls.** Ask Claude Code: "Use doc-drift check-page-freshness for https://one-atlas-jzzf.atlassian.net/wiki/spaces/PLAT/pages/2720129" (expect Possibly stale, PR #5); "Use doc-drift find-docs-for-path with repo payments-api and path scripts/rollback.sh" (2 pages); "Use doc-drift list-stale-pages for space PLAT". Logs show `"surface":"external"`. A first call may return `consent_required` ("Grant Doc Drift Sentinel access in Connected apps, then retry."): open the Doc Drift byline on any page once, allow access, and retry (spike C5/C6 behaviour).
 24. **Permission-aware.** Via MCP, check pageId 999999999: `status: unknown`, `title: null`. Check the restricted page 2883670 (you are its only viewer): `status: unanchored`, `restricted: true`, guidance "Doc Drift can't watch pages with view restrictions…".
+
+### M4 checks (settings)
+
+25. **Settings page.** Open the Configure page (check 3). Expect sections Detection, Spaces, Escalation and notifications, Jira, a primary **Save settings** button, then Bitbucket relay (a Connected lozenge, the workspace, "Last change: nano-soft-dev/payments-api PR #13 …", "Repositories seen: nano-soft-dev/payments-api") and Demo mode.
+26. **Inline validation.** Type 45 in "Days before Possibly stale becomes Stale", 90 in the wait field, add `src/[a` to the globs, and click Save. Expect an error under each field (the globs one from the server: "Fix this glob: src/[a has an unclosed bracket, brace or parenthesis.") and nothing saved. Fix them and save: "Saved" appears next to the button.
+27. **Spaces.** Pick Selected spaces with no space and save: "Pick at least 1 space, or watch all spaces." Pick PLAT, save, open a DDSTEST page's Doc Drift panel: `getPageDrift.space.watched` is false (the UI agent shows this). Set All spaces back.
+28. **Reset to defaults** fills the 9 default globs. **Non-admin**: as a non-admin user, the page reads "Settings are for Confluence administrators".
+29. **Settings link.** After opening settings once as an admin, `getPageDrift.space.settingsUrl` is that page's URL.
 
 Cleanup when M1 is accepted: delete the DDSTEST space, and `forge variables unset -e development DDS_DEV_TOKEN`.

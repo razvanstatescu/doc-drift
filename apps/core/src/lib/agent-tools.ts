@@ -205,6 +205,33 @@ export function diffForPaths(diff: string | null | undefined, paths: string[], m
   return keep.length > 0 ? clip(keep.join(''), max) : null;
 }
 
+// ---------------------------------------------------------------------------
+// Evidence level (D30): summaries for viewers, full diffs and Jira values for editors
+// ---------------------------------------------------------------------------
+export type EvidenceLevel = 'summary' | 'full';
+
+export const evidenceLevelFor = (canUpdate: boolean): EvidenceLevel => (canUpdate ? 'full' : 'summary');
+
+/** Jira fields whose values are free text (description bodies, titles): shown in full to editors only. */
+export const JIRA_TEXT_FIELDS: ReadonlySet<string> = new Set(['description', 'summary', 'environment']);
+export const JIRA_VALUE_MAX = 2_000;
+const JIRA_SHORT_VALUE_MAX = 200;
+
+export type JiraChangeView = { field: string; from: string | null; to: string | null } | { field: string; changed: true };
+
+/**
+ * A Jira changelog for a tool or the review panel. `full`: every value, clipped to 2,000 characters.
+ * `summary`: short values (status, resolution, versions) stay; free-text fields only say they changed.
+ */
+export function jiraChangelogView(changelog: { field: string; from?: string | null; to?: string | null }[] | undefined, level: EvidenceLevel, max = 20): JiraChangeView[] {
+  return (changelog ?? []).slice(0, max).map((c) => {
+    const text = JIRA_TEXT_FIELDS.has(c.field.toLowerCase());
+    if (level === 'summary' && text) return { field: c.field, changed: true as const };
+    const cap = level === 'full' ? JIRA_VALUE_MAX : JIRA_SHORT_VALUE_MAX;
+    return { field: c.field, from: c.from == null ? null : clip(c.from, cap), to: c.to == null ? null : clip(c.to, cap) };
+  });
+}
+
 export interface ContextBlock {
   blockId: string;
   kind: string;

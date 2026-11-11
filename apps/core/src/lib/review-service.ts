@@ -8,6 +8,7 @@ import { displayNames, getPageStorage, getSpaceIdByKey, listSpacePages } from '.
 import {
   backfillOwners,
   bindingsForPage,
+  changesByIds,
   dashboardRows,
   decideRenameProposal,
   dismissEventRow,
@@ -27,8 +28,11 @@ import {
   statusCounts,
   updateBindingPattern,
   verifyDurations,
+  type ChangeDetail,
 } from './db';
-import { fromSqlDate, toSqlDate } from './ingest-rules';
+import { diffForPaths, evidenceLevelFor, jiraChangelogView } from './agent-tools';
+import { fromSqlDate, spaceWatched, toSqlDate } from './ingest-rules';
+import { getSettings } from './settings-store';
 import { refreshPage } from './page-state';
 import {
   affectedSections,
@@ -50,13 +54,17 @@ type Requester = Parameters<typeof getPageStorage>[0];
 
 export type Failure = { ok: false; error: string; message: string; restricted?: boolean; state?: 'unknown' };
 
-/** Checks the caller may act on a page: `read` for verify, dismiss and snooze; `update` for anchor changes. */
-export type Gate = (pageId: string, need: 'read' | 'update') => Promise<Failure | null>;
+/**
+ * Checks the caller may act on a page: `read` for verify; `update` for dismiss, snooze (M3, D15),
+ * anchor changes and fixes. `message` replaces the default "needs edit rights" wording.
+ */
+export type Gate = (pageId: string, need: 'read' | 'update', message?: string) => Promise<Failure | null>;
 
 export const MESSAGES = {
   notVisible: 'Page not found or not visible to you.',
   restricted: "Restricted pages can't be watched yet.",
   needsEdit: 'You need edit rights on this page to change its anchors.',
+  needsEditToTriage: 'You need edit rights on this page to dismiss or snooze its changes.',
   eventGone: 'This change is no longer open. Reload to see the latest.',
   proposalGone: 'This rename was already handled. Reload to see the latest.',
   badReason: 'Pick a reason: Not relevant, Already updated or False positive.',
@@ -77,22 +85,45 @@ function stateWords(status: StoredPageState): { state: StoredPageState; status: 
 // ---------------------------------------------------------------------------
 // getPageDrift
 // ---------------------------------------------------------------------------
-export async function pageDrift(pageId: string, reader: Requester, access: { canEdit: boolean }): Promise<Record<string, unknown>> {
+/** What the resolver knows about the caller and the page's space (getPageDrift contract, M4). */
+export interface DriftAccess {
+  /** `update` on the page (asUser operations). Read access is already checked. */
+  canEdit: boolean;
+  /** The space key from the module context, when there is one. */
+  spaceKeyHint?: string | null;
+  /** The caller is a Confluence administrator, so the panel can link to the settings page. */
+  canConfigure?: boolean;
+  settingsUrl?: string | null;
+}
+
+export async function pageDrift(pageId: string, reader: Requester, access: DriftAccess): Promise<Record<string, unknown>> {
   await ensureSchema();
   const now = Date.now();
-  const [page, bindings, state, events, proposals] = await Promise.all([
+  const [page, bindings, state, events, proposals, settings] = await Promise.all([
     getPageStorage(reader, pageId),
     bindingsForPage(pageId),
     getPageState(pageId),
     eventDetailsForPage(pageId),
     openRenameProposals(pageId),
+    getSettings(),
   ]);
+  // D30: raw diffs and full Jira values only for callers who can edit the page.
+  const evidenceLevel = evidenceLevelFor(access.canEdit);
+  const changes = evidenceLevel === 'full' ? await changesByIds([...new Set(events.map((e) => e.changeRecordId))]) : new Map<string, ChangeDetail>();
   const status: StoredPageState = state?.status ?? (bindings.length > 0 ? 'verified' : 'unanchored');
   const names = await displayNames(reader, [state?.verifiedBy]);
   const views = events.map((e) => {
     const { snoozedUntil: rawSnooze, createdAt, ...rest } = e;
     const snoozedUntil = fromSqlDate(rawSnooze);
-    return eventView({ ...rest, createdAt: fromSqlDate(createdAt) ?? now, ...(snoozedUntil !== undefined && { snoozedUntil }) }, now);
+    const view = eventView({ ...rest, createdAt: fromSqlDate(createdAt) ?? now, ...(snoozedUntil !== undefined && { snoozedUntil }) }, now);
+    if (evidenceLevel !== 'full') return view;
+    const change = changes.get(e.changeRecordId);
+    const paths = view.files.flatMap((f) => (f.oldPath ? [f.path, f.oldPath] : [f.path]));
+    return {
+      ...view,
+      diff: e.source === 'bitbucket' ? diffForPaths(change?.hunks, paths) : null,
+      ...(e.source === 'jira' && change?.record?.source === 'jira' && { changelog: jiraChangelogView(change.record.changelog, 'full') }),
+    };
   });
   // Polish item 1: High before Medium, newest first within a severity (the query is newest first).
   views.sort((a, b) => (a.severity === b.severity ? b.at - a.at : a.severity === 'high' ? -1 : 1));
@@ -104,12 +135,29 @@ export async function pageDrift(pageId: string, reader: Requester, access: { can
     })),
   );
   const bindingById = new Map(bindings.map((b) => [b.id, b]));
+  // Snoozed: every open event is snoozed into the future. The events are still returned.
+  const snoozes = views.map((v) => v.snoozedUntil);
+  const snoozedUntil = snoozes.length > 0 && snoozes.every((t) => t !== null && t > now) ? Math.max(...(snoozes as number[])) : null;
+  const spaceKey = access.spaceKeyHint ?? state?.spaceKey ?? bindings.find((b) => b.spaceKey)?.spaceKey ?? null;
   return {
     ok: true,
     pageId,
     title: page.title ?? '',
     ...stateWords(status),
     canEdit: access.canEdit,
+    canVerify: true,
+    canDismiss: access.canEdit,
+    canSnooze: access.canEdit,
+    canEditAnchors: access.canEdit,
+    canAcceptFix: access.canEdit,
+    evidenceLevel,
+    snoozedUntil,
+    space: {
+      key: spaceKey,
+      watched: spaceWatched(settings, spaceKey),
+      canConfigure: access.canConfigure ?? false,
+      settingsUrl: access.canConfigure ? (access.settingsUrl ?? null) : null,
+    },
     restricted: false,
     verifiedAt: fromSqlDate(state?.verifiedAt) ?? null,
     verifiedBy: state?.verifiedBy ? { accountId: state.verifiedBy, displayName: names.get(state.verifiedBy) ?? null } : null,
@@ -167,7 +215,8 @@ export async function dismissEvent(eventId: unknown, reason: unknown, actor: str
   await ensureSchema();
   const event = await getEvent(eventId);
   if (!event) return fail('not_found', MESSAGES.eventGone);
-  const denied = await gate(event.pageId, 'read');
+  // Dismissing dampens the anchor for later changes, so it needs edit rights (M3).
+  const denied = await gate(event.pageId, 'update', MESSAGES.needsEditToTriage);
   if (denied) return denied;
   if (event.status !== 'open' || !(await dismissEventRow(eventId, reason satisfies DismissReason, actor))) {
     return fail('not_open', MESSAGES.eventGone);
@@ -187,7 +236,7 @@ export async function dismissEvent(eventId: unknown, reason: unknown, actor: str
 export async function snoozePage(pageId: string, rawDays: unknown, gate: Gate) {
   const days = parseSnoozeDays(rawDays);
   if (days === undefined) return fail('bad_request', MESSAGES.badDays);
-  const denied = await gate(pageId, 'read');
+  const denied = await gate(pageId, 'update', MESSAGES.needsEditToTriage);
   if (denied) return denied;
   await ensureSchema();
   const until = Date.now() + days * 24 * 60 * 60 * 1000;

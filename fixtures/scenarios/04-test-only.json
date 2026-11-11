@@ -1,0 +1,73 @@
+{
+  "id": "04-test-only",
+  "label": "no_drift",
+  "title": "Test-only change",
+  "notes": "Only *.test.* and __tests__/ files change. Both are default ignore globs, so the change is skipped before scoring, even though the pages anchor src/**.",
+  "pages": [
+    {
+      "pageId": "100104",
+      "title": "Refunds API",
+      "storage": "<p>Refunds are created with <code>POST /v1/refunds</code>, handled by <code>src/routes/refunds.ts</code>.</p>\n<ac:structured-macro ac:name=\"code\" ac:schema-version=\"1\"><ac:parameter ac:name=\"language\">bash</ac:parameter><ac:plain-text-body><![CDATA[curl -X POST https://api.acme.dev/v1/refunds -d '{\"chargeId\": \"ch_123\", \"amount\": 500}']]></ac:plain-text-body></ac:structured-macro>\n<p>Refunds are allowed for 90 days after capture (<code>MAX_REFUND_DAYS</code>). The response contains a <code>refundId</code>.</p>"
+    },
+    {
+      "pageId": "100105",
+      "title": "Payments API overview",
+      "storage": "<p>The service exposes three endpoints:</p>\n<ul><li><p><code>GET /healthz</code></p></li><li><p><code>POST /v1/charges</code></p></li><li><p><code>POST /v1/refunds</code></p></li></ul>\n<p>Routes are registered in <code>src/server.ts</code>. Handlers live under <code>src/handlers/</code>.</p>"
+    }
+  ],
+  "bindings": [
+    {
+      "id": "b-refunds-route",
+      "pageId": "100104",
+      "anchorType": "path",
+      "repo": "nano-soft-dev/payments-api",
+      "pattern": "src/routes/refunds.ts",
+      "weight": "critical"
+    },
+    {
+      "id": "b-overview-src",
+      "pageId": "100105",
+      "anchorType": "glob",
+      "repo": "nano-soft-dev/payments-api",
+      "pattern": "src/**",
+      "weight": "normal"
+    }
+  ],
+  "steps": [
+    {
+      "change": {
+        "source": "bitbucket",
+        "workspace": "nano-soft-dev",
+        "repoSlug": "payments-api",
+        "repoUuid": "{6f1d1c3e-0b8a-4e57-9f0a-2d5b1c7e4820}",
+        "prId": 488,
+        "title": "Add route tests",
+        "author": "Priya Nair",
+        "mergeCommit": "14fdc2cf5dffa7690b4dfc64ed536c5897e911bc",
+        "sourceBranch": "test/routes",
+        "destinationBranch": "main",
+        "defaultBranch": "main",
+        "files": [
+          {
+            "status": "modified",
+            "path": "src/__tests__/server.test.ts",
+            "linesAdded": 6,
+            "linesRemoved": 0
+          },
+          {
+            "status": "modified",
+            "path": "src/routes/refunds.test.ts",
+            "linesAdded": 1,
+            "linesRemoved": 1
+          }
+        ],
+        "hunks": "diff --git a/src/__tests__/server.test.ts b/src/__tests__/server.test.ts\nindex 15b97f8..9fe513f 100644\n--- a/src/__tests__/server.test.ts\n+++ b/src/__tests__/server.test.ts\n@@ -5,3 +5,9 @@ describe('server', () => {\n     expect(true).toBe(true);\n   });\n });\n+\n+describe('routes', () => {\n+  it('returns 404 for unknown paths', () => {\n+    expect(404).toBe(404);\n+  });\n+});\ndiff --git a/src/routes/refunds.test.ts b/src/routes/refunds.test.ts\nindex f62d829..6eb2e6c 100644\n--- a/src/routes/refunds.test.ts\n+++ b/src/routes/refunds.test.ts\n@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';\n import { refundsRoute } from './refunds.js';\n \n describe('refundsRoute', () => {\n-  it('rejects GET', () => {\n+  it('rejects GET with 405', () => {\n     expect(refundsRoute).toBeTypeOf('function');\n   });\n });\n"
+      },
+      "expect": {
+        "outcome": "skipped",
+        "skipReason": "no_relevant_files",
+        "flagged": []
+      }
+    }
+  ]
+}

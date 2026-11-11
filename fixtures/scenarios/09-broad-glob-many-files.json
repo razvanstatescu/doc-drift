@@ -1,0 +1,425 @@
+{
+  "id": "09-broad-glob-many-files",
+  "label": "drift",
+  "title": "Codemod across 60 handler files",
+  "notes": "Scores take the strongest file, never a sum, so 60 two-line edits under the broad src/** glob stay at 0.6 x 0.67 = 0.40 for the overview page (no alert). The logging page anchors src/handlers/** and quotes the removed import and log.info, so the identifier and snippet boosts flag it.",
+  "pages": [
+    {
+      "pageId": "100105",
+      "title": "Payments API overview",
+      "storage": "<p>The service exposes three endpoints:</p>\n<ul><li><p><code>GET /healthz</code></p></li><li><p><code>POST /v1/charges</code></p></li><li><p><code>POST /v1/refunds</code></p></li></ul>\n<p>Routes are registered in <code>src/server.ts</code>. Handlers live under <code>src/handlers/</code>.</p>"
+    },
+    {
+      "pageId": "100107",
+      "title": "Logging conventions",
+      "storage": "<p>Handlers log through the shared logger. Always log one event per request:</p>\n<ac:structured-macro ac:name=\"code\" ac:schema-version=\"1\"><ac:parameter ac:name=\"language\">typescript</ac:parameter><ac:plain-text-body><![CDATA[import { log } from '../lib/logger.js';\n\nlog.info('refund created', { refundId });]]></ac:plain-text-body></ac:structured-macro>\n<p>Use <code>log.info</code> for business events and keep field names in camelCase.</p>"
+    }
+  ],
+  "bindings": [
+    {
+      "id": "b-overview-src",
+      "pageId": "100105",
+      "anchorType": "glob",
+      "repo": "nano-soft-dev/payments-api",
+      "pattern": "src/**",
+      "weight": "normal"
+    },
+    {
+      "id": "b-logging-handlers",
+      "pageId": "100107",
+      "anchorType": "glob",
+      "repo": "nano-soft-dev/payments-api",
+      "pattern": "src/handlers/**",
+      "weight": "normal"
+    }
+  ],
+  "steps": [
+    {
+      "change": {
+        "source": "bitbucket",
+        "workspace": "nano-soft-dev",
+        "repoSlug": "payments-api",
+        "repoUuid": "{6f1d1c3e-0b8a-4e57-9f0a-2d5b1c7e4820}",
+        "prId": 494,
+        "title": "Rename log to logger in handlers",
+        "author": "Priya Nair",
+        "mergeCommit": "de7dc6a6e591932155d3ef4cf7fd3f2b541755b0",
+        "sourceBranch": "refactor/logger-name",
+        "destinationBranch": "main",
+        "defaultBranch": "main",
+        "files": [
+          {
+            "status": "modified",
+            "path": "src/handlers/h01.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h02.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h03.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h04.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h05.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h06.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h07.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h08.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h09.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h10.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h11.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h12.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h13.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h14.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h15.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h16.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h17.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h18.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h19.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h20.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h21.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h22.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h23.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h24.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h25.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h26.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h27.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h28.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h29.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h30.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h31.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h32.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h33.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h34.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h35.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h36.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h37.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h38.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h39.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h40.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h41.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h42.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h43.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h44.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h45.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h46.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h47.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h48.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h49.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h50.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h51.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h52.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h53.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h54.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h55.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h56.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h57.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h58.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h59.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "src/handlers/h60.ts",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          }
+        ],
+        "hunks": "diff --git a/src/handlers/h01.ts b/src/handlers/h01.ts\nindex 3122a52..2d7fb67 100644\n--- a/src/handlers/h01.ts\n+++ b/src/handlers/h01.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle01(id: string): void {\n-  log.info('handled', { id, handler: 'h01' });\n+  logger.info('handled', { id, handler: 'h01' });\n }\ndiff --git a/src/handlers/h02.ts b/src/handlers/h02.ts\nindex 2353e8f..ada4af3 100644\n--- a/src/handlers/h02.ts\n+++ b/src/handlers/h02.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle02(id: string): void {\n-  log.info('handled', { id, handler: 'h02' });\n+  logger.info('handled', { id, handler: 'h02' });\n }\ndiff --git a/src/handlers/h03.ts b/src/handlers/h03.ts\nindex 8979c65..b50998f 100644\n--- a/src/handlers/h03.ts\n+++ b/src/handlers/h03.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle03(id: string): void {\n-  log.info('handled', { id, handler: 'h03' });\n+  logger.info('handled', { id, handler: 'h03' });\n }\ndiff --git a/src/handlers/h04.ts b/src/handlers/h04.ts\nindex 20e8235..125d4e1 100644\n--- a/src/handlers/h04.ts\n+++ b/src/handlers/h04.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle04(id: string): void {\n-  log.info('handled', { id, handler: 'h04' });\n+  logger.info('handled', { id, handler: 'h04' });\n }\ndiff --git a/src/handlers/h05.ts b/src/handlers/h05.ts\nindex c305aee..cc2b7ca 100644\n--- a/src/handlers/h05.ts\n+++ b/src/handlers/h05.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle05(id: string): void {\n-  log.info('handled', { id, handler: 'h05' });\n+  logger.info('handled', { id, handler: 'h05' });\n }\ndiff --git a/src/handlers/h06.ts b/src/handlers/h06.ts\nindex 8143de8..527a433 100644\n--- a/src/handlers/h06.ts\n+++ b/src/handlers/h06.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle06(id: string): void {\n-  log.info('handled', { id, handler: 'h06' });\n+  logger.info('handled', { id, handler: 'h06' });\n }\ndiff --git a/src/handlers/h07.ts b/src/handlers/h07.ts\nindex c5227cc..64348f6 100644\n--- a/src/handlers/h07.ts\n+++ b/src/handlers/h07.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle07(id: string): void {\n-  log.info('handled', { id, handler: 'h07' });\n+  logger.info('handled', { id, handler: 'h07' });\n }\ndiff --git a/src/handlers/h08.ts b/src/handlers/h08.ts\nindex a308a30..1cd0916 100644\n--- a/src/handlers/h08.ts\n+++ b/src/handlers/h08.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle08(id: string): void {\n-  log.info('handled', { id, handler: 'h08' });\n+  logger.info('handled', { id, handler: 'h08' });\n }\ndiff --git a/src/handlers/h09.ts b/src/handlers/h09.ts\nindex ff28ca8..41bc396 100644\n--- a/src/handlers/h09.ts\n+++ b/src/handlers/h09.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle09(id: string): void {\n-  log.info('handled', { id, handler: 'h09' });\n+  logger.info('handled', { id, handler: 'h09' });\n }\ndiff --git a/src/handlers/h10.ts b/src/handlers/h10.ts\nindex 94f35bf..9d4a24e 100644\n--- a/src/handlers/h10.ts\n+++ b/src/handlers/h10.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle10(id: string): void {\n-  log.info('handled', { id, handler: 'h10' });\n+  logger.info('handled', { id, handler: 'h10' });\n }\ndiff --git a/src/handlers/h11.ts b/src/handlers/h11.ts\nindex 0a6d4cb..6b295b0 100644\n--- a/src/handlers/h11.ts\n+++ b/src/handlers/h11.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle11(id: string): void {\n-  log.info('handled', { id, handler: 'h11' });\n+  logger.info('handled', { id, handler: 'h11' });\n }\ndiff --git a/src/handlers/h12.ts b/src/handlers/h12.ts\nindex bcb8693..63f6d30 100644\n--- a/src/handlers/h12.ts\n+++ b/src/handlers/h12.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle12(id: string): void {\n-  log.info('handled', { id, handler: 'h12' });\n+  logger.info('handled', { id, handler: 'h12' });\n }\ndiff --git a/src/handlers/h13.ts b/src/handlers/h13.ts\nindex 3fefc6d..0895752 100644\n--- a/src/handlers/h13.ts\n+++ b/src/handlers/h13.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle13(id: string): void {\n-  log.info('handled', { id, handler: 'h13' });\n+  logger.info('handled', { id, handler: 'h13' });\n }\ndiff --git a/src/handlers/h14.ts b/src/handlers/h14.ts\nindex 8aca436..6b48c5a 100644\n--- a/src/handlers/h14.ts\n+++ b/src/handlers/h14.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle14(id: string): void {\n-  log.info('handled', { id, handler: 'h14' });\n+  logger.info('handled', { id, handler: 'h14' });\n }\ndiff --git a/src/handlers/h15.ts b/src/handlers/h15.ts\nindex be1f17a..c634d24 100644\n--- a/src/handlers/h15.ts\n+++ b/src/handlers/h15.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle15(id: string): void {\n-  log.info('handled', { id, handler: 'h15' });\n+  logger.info('handled', { id, handler: 'h15' });\n }\ndiff --git a/src/handlers/h16.ts b/src/handlers/h16.ts\nindex e803bba..7dfd1b9 100644\n--- a/src/handlers/h16.ts\n+++ b/src/handlers/h16.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle16(id: string): void {\n-  log.info('handled', { id, handler: 'h16' });\n+  logger.info('handled', { id, handler: 'h16' });\n }\ndiff --git a/src/handlers/h17.ts b/src/handlers/h17.ts\nindex aeea4ca..afdcab6 100644\n--- a/src/handlers/h17.ts\n+++ b/src/handlers/h17.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle17(id: string): void {\n-  log.info('handled', { id, handler: 'h17' });\n+  logger.info('handled', { id, handler: 'h17' });\n }\ndiff --git a/src/handlers/h18.ts b/src/handlers/h18.ts\nindex bc58485..45ca223 100644\n--- a/src/handlers/h18.ts\n+++ b/src/handlers/h18.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle18(id: string): void {\n-  log.info('handled', { id, handler: 'h18' });\n+  logger.info('handled', { id, handler: 'h18' });\n }\ndiff --git a/src/handlers/h19.ts b/src/handlers/h19.ts\nindex e41be41..4a6675a 100644\n--- a/src/handlers/h19.ts\n+++ b/src/handlers/h19.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle19(id: string): void {\n-  log.info('handled', { id, handler: 'h19' });\n+  logger.info('handled', { id, handler: 'h19' });\n }\ndiff --git a/src/handlers/h20.ts b/src/handlers/h20.ts\nindex 4259f49..d9cff04 100644\n--- a/src/handlers/h20.ts\n+++ b/src/handlers/h20.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle20(id: string): void {\n-  log.info('handled', { id, handler: 'h20' });\n+  logger.info('handled', { id, handler: 'h20' });\n }\ndiff --git a/src/handlers/h21.ts b/src/handlers/h21.ts\nindex 2998d36..63b3dc0 100644\n--- a/src/handlers/h21.ts\n+++ b/src/handlers/h21.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle21(id: string): void {\n-  log.info('handled', { id, handler: 'h21' });\n+  logger.info('handled', { id, handler: 'h21' });\n }\ndiff --git a/src/handlers/h22.ts b/src/handlers/h22.ts\nindex 17cb174..29b704b 100644\n--- a/src/handlers/h22.ts\n+++ b/src/handlers/h22.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle22(id: string): void {\n-  log.info('handled', { id, handler: 'h22' });\n+  logger.info('handled', { id, handler: 'h22' });\n }\ndiff --git a/src/handlers/h23.ts b/src/handlers/h23.ts\nindex 7b51a85..3b1f5a1 100644\n--- a/src/handlers/h23.ts\n+++ b/src/handlers/h23.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle23(id: string): void {\n-  log.info('handled', { id, handler: 'h23' });\n+  logger.info('handled', { id, handler: 'h23' });\n }\ndiff --git a/src/handlers/h24.ts b/src/handlers/h24.ts\nindex c1fdaff..247ae00 100644\n--- a/src/handlers/h24.ts\n+++ b/src/handlers/h24.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle24(id: string): void {\n-  log.info('handled', { id, handler: 'h24' });\n+  logger.info('handled', { id, handler: 'h24' });\n }\ndiff --git a/src/handlers/h25.ts b/src/handlers/h25.ts\nindex 3121756..e5b19e7 100644\n--- a/src/handlers/h25.ts\n+++ b/src/handlers/h25.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle25(id: string): void {\n-  log.info('handled', { id, handler: 'h25' });\n+  logger.info('handled', { id, handler: 'h25' });\n }\ndiff --git a/src/handlers/h26.ts b/src/handlers/h26.ts\nindex 5489820..b6e41e8 100644\n--- a/src/handlers/h26.ts\n+++ b/src/handlers/h26.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle26(id: string): void {\n-  log.info('handled', { id, handler: 'h26' });\n+  logger.info('handled', { id, handler: 'h26' });\n }\ndiff --git a/src/handlers/h27.ts b/src/handlers/h27.ts\nindex e64bf55..aeb7496 100644\n--- a/src/handlers/h27.ts\n+++ b/src/handlers/h27.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle27(id: string): void {\n-  log.info('handled', { id, handler: 'h27' });\n+  logger.info('handled', { id, handler: 'h27' });\n }\ndiff --git a/src/handlers/h28.ts b/src/handlers/h28.ts\nindex 193e07d..897c204 100644\n--- a/src/handlers/h28.ts\n+++ b/src/handlers/h28.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle28(id: string): void {\n-  log.info('handled', { id, handler: 'h28' });\n+  logger.info('handled', { id, handler: 'h28' });\n }\ndiff --git a/src/handlers/h29.ts b/src/handlers/h29.ts\nindex b1f5495..7689ed5 100644\n--- a/src/handlers/h29.ts\n+++ b/src/handlers/h29.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle29(id: string): void {\n-  log.info('handled', { id, handler: 'h29' });\n+  logger.info('handled', { id, handler: 'h29' });\n }\ndiff --git a/src/handlers/h30.ts b/src/handlers/h30.ts\nindex 74c54a9..99b64f1 100644\n--- a/src/handlers/h30.ts\n+++ b/src/handlers/h30.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle30(id: string): void {\n-  log.info('handled', { id, handler: 'h30' });\n+  logger.info('handled', { id, handler: 'h30' });\n }\ndiff --git a/src/handlers/h31.ts b/src/handlers/h31.ts\nindex 728fea4..7c91a5b 100644\n--- a/src/handlers/h31.ts\n+++ b/src/handlers/h31.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle31(id: string): void {\n-  log.info('handled', { id, handler: 'h31' });\n+  logger.info('handled', { id, handler: 'h31' });\n }\ndiff --git a/src/handlers/h32.ts b/src/handlers/h32.ts\nindex 23a0b72..f245a42 100644\n--- a/src/handlers/h32.ts\n+++ b/src/handlers/h32.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle32(id: string): void {\n-  log.info('handled', { id, handler: 'h32' });\n+  logger.info('handled', { id, handler: 'h32' });\n }\ndiff --git a/src/handlers/h33.ts b/src/handlers/h33.ts\nindex a46acce..fceb616 100644\n--- a/src/handlers/h33.ts\n+++ b/src/handlers/h33.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle33(id: string): void {\n-  log.info('handled', { id, handler: 'h33' });\n+  logger.info('handled', { id, handler: 'h33' });\n }\ndiff --git a/src/handlers/h34.ts b/src/handlers/h34.ts\nindex f4b561b..6c36104 100644\n--- a/src/handlers/h34.ts\n+++ b/src/handlers/h34.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle34(id: string): void {\n-  log.info('handled', { id, handler: 'h34' });\n+  logger.info('handled', { id, handler: 'h34' });\n }\ndiff --git a/src/handlers/h35.ts b/src/handlers/h35.ts\nindex c777939..d2b92ff 100644\n--- a/src/handlers/h35.ts\n+++ b/src/handlers/h35.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle35(id: string): void {\n-  log.info('handled', { id, handler: 'h35' });\n+  logger.info('handled', { id, handler: 'h35' });\n }\ndiff --git a/src/handlers/h36.ts b/src/handlers/h36.ts\nindex 30ec94f..183a188 100644\n--- a/src/handlers/h36.ts\n+++ b/src/handlers/h36.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle36(id: string): void {\n-  log.info('handled', { id, handler: 'h36' });\n+  logger.info('handled', { id, handler: 'h36' });\n }\ndiff --git a/src/handlers/h37.ts b/src/handlers/h37.ts\nindex 925317d..04e6eeb 100644\n--- a/src/handlers/h37.ts\n+++ b/src/handlers/h37.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle37(id: string): void {\n-  log.info('handled', { id, handler: 'h37' });\n+  logger.info('handled', { id, handler: 'h37' });\n }\ndiff --git a/src/handlers/h38.ts b/src/handlers/h38.ts\nindex 14d0a66..169d7f6 100644\n--- a/src/handlers/h38.ts\n+++ b/src/handlers/h38.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle38(id: string): void {\n-  log.info('handled', { id, handler: 'h38' });\n+  logger.info('handled', { id, handler: 'h38' });\n }\ndiff --git a/src/handlers/h39.ts b/src/handlers/h39.ts\nindex de191e3..7a5e656 100644\n--- a/src/handlers/h39.ts\n+++ b/src/handlers/h39.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle39(id: string): void {\n-  log.info('handled', { id, handler: 'h39' });\n+  logger.info('handled', { id, handler: 'h39' });\n }\ndiff --git a/src/handlers/h40.ts b/src/handlers/h40.ts\nindex 541daa5..d2a6587 100644\n--- a/src/handlers/h40.ts\n+++ b/src/handlers/h40.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle40(id: string): void {\n-  log.info('handled', { id, handler: 'h40' });\n+  logger.info('handled', { id, handler: 'h40' });\n }\ndiff --git a/src/handlers/h41.ts b/src/handlers/h41.ts\nindex 0c2f5d3..09b7977 100644\n--- a/src/handlers/h41.ts\n+++ b/src/handlers/h41.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle41(id: string): void {\n-  log.info('handled', { id, handler: 'h41' });\n+  logger.info('handled', { id, handler: 'h41' });\n }\ndiff --git a/src/handlers/h42.ts b/src/handlers/h42.ts\nindex 47ee201..3f71f50 100644\n--- a/src/handlers/h42.ts\n+++ b/src/handlers/h42.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle42(id: string): void {\n-  log.info('handled', { id, handler: 'h42' });\n+  logger.info('handled', { id, handler: 'h42' });\n }\ndiff --git a/src/handlers/h43.ts b/src/handlers/h43.ts\nindex f3eff56..e534c92 100644\n--- a/src/handlers/h43.ts\n+++ b/src/handlers/h43.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle43(id: string): void {\n-  log.info('handled', { id, handler: 'h43' });\n+  logger.info('handled', { id, handler: 'h43' });\n }\ndiff --git a/src/handlers/h44.ts b/src/handlers/h44.ts\nindex e93b7fd..c58c680 100644\n--- a/src/handlers/h44.ts\n+++ b/src/handlers/h44.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle44(id: string): void {\n-  log.info('handled', { id, handler: 'h44' });\n+  logger.info('handled', { id, handler: 'h44' });\n }\ndiff --git a/src/handlers/h45.ts b/src/handlers/h45.ts\nindex b50a36b..45a3ac0 100644\n--- a/src/handlers/h45.ts\n+++ b/src/handlers/h45.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle45(id: string): void {\n-  log.info('handled', { id, handler: 'h45' });\n+  logger.info('handled', { id, handler: 'h45' });\n }\ndiff --git a/src/handlers/h46.ts b/src/handlers/h46.ts\nindex 57cdad1..f5668de 100644\n--- a/src/handlers/h46.ts\n+++ b/src/handlers/h46.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle46(id: string): void {\n-  log.info('handled', { id, handler: 'h46' });\n+  logger.info('handled', { id, handler: 'h46' });\n }\ndiff --git a/src/handlers/h47.ts b/src/handlers/h47.ts\nindex 7969af8..b887ba3 100644\n--- a/src/handlers/h47.ts\n+++ b/src/handlers/h47.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle47(id: string): void {\n-  log.info('handled', { id, handler: 'h47' });\n+  logger.info('handled', { id, handler: 'h47' });\n }\ndiff --git a/src/handlers/h48.ts b/src/handlers/h48.ts\nindex 884a6ec..0c9100b 100644\n--- a/src/handlers/h48.ts\n+++ b/src/handlers/h48.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle48(id: string): void {\n-  log.info('handled', { id, handler: 'h48' });\n+  logger.info('handled', { id, handler: 'h48' });\n }\ndiff --git a/src/handlers/h49.ts b/src/handlers/h49.ts\nindex b7e2b7e..d87f3ef 100644\n--- a/src/handlers/h49.ts\n+++ b/src/handlers/h49.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle49(id: string): void {\n-  log.info('handled', { id, handler: 'h49' });\n+  logger.info('handled', { id, handler: 'h49' });\n }\ndiff --git a/src/handlers/h50.ts b/src/handlers/h50.ts\nindex d4cf306..e4e3891 100644\n--- a/src/handlers/h50.ts\n+++ b/src/handlers/h50.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle50(id: string): void {\n-  log.info('handled', { id, handler: 'h50' });\n+  logger.info('handled', { id, handler: 'h50' });\n }\ndiff --git a/src/handlers/h51.ts b/src/handlers/h51.ts\nindex bb9bc0d..f3b7b71 100644\n--- a/src/handlers/h51.ts\n+++ b/src/handlers/h51.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle51(id: string): void {\n-  log.info('handled', { id, handler: 'h51' });\n+  logger.info('handled', { id, handler: 'h51' });\n }\ndiff --git a/src/handlers/h52.ts b/src/handlers/h52.ts\nindex e697bbb..f5d88ac 100644\n--- a/src/handlers/h52.ts\n+++ b/src/handlers/h52.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle52(id: string): void {\n-  log.info('handled', { id, handler: 'h52' });\n+  logger.info('handled', { id, handler: 'h52' });\n }\ndiff --git a/src/handlers/h53.ts b/src/handlers/h53.ts\nindex 9339396..05c1ae2 100644\n--- a/src/handlers/h53.ts\n+++ b/src/handlers/h53.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle53(id: string): void {\n-  log.info('handled', { id, handler: 'h53' });\n+  logger.info('handled', { id, handler: 'h53' });\n }\ndiff --git a/src/handlers/h54.ts b/src/handlers/h54.ts\nindex 2cc69ae..40033f3 100644\n--- a/src/handlers/h54.ts\n+++ b/src/handlers/h54.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle54(id: string): void {\n-  log.info('handled', { id, handler: 'h54' });\n+  logger.info('handled', { id, handler: 'h54' });\n }\ndiff --git a/src/handlers/h55.ts b/src/handlers/h55.ts\nindex bc1e697..c1ad403 100644\n--- a/src/handlers/h55.ts\n+++ b/src/handlers/h55.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle55(id: string): void {\n-  log.info('handled', { id, handler: 'h55' });\n+  logger.info('handled', { id, handler: 'h55' });\n }\ndiff --git a/src/handlers/h56.ts b/src/handlers/h56.ts\nindex baf845d..f3e5820 100644\n--- a/src/handlers/h56.ts\n+++ b/src/handlers/h56.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle56(id: string): void {\n-  log.info('handled', { id, handler: 'h56' });\n+  logger.info('handled', { id, handler: 'h56' });\n }\ndiff --git a/src/handlers/h57.ts b/src/handlers/h57.ts\nindex 5f7479f..f3140fa 100644\n--- a/src/handlers/h57.ts\n+++ b/src/handlers/h57.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle57(id: string): void {\n-  log.info('handled', { id, handler: 'h57' });\n+  logger.info('handled', { id, handler: 'h57' });\n }\ndiff --git a/src/handlers/h58.ts b/src/handlers/h58.ts\nindex b67c6d0..2dbb991 100644\n--- a/src/handlers/h58.ts\n+++ b/src/handlers/h58.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle58(id: string): void {\n-  log.info('handled', { id, handler: 'h58' });\n+  logger.info('handled', { id, handler: 'h58' });\n }\ndiff --git a/src/handlers/h59.ts b/src/handlers/h59.ts\nindex 738b01f..1670581 100644\n--- a/src/handlers/h59.ts\n+++ b/src/handlers/h59.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle59(id: string): void {\n-  log.info('handled', { id, handler: 'h59' });\n+  logger.info('handled', { id, handler: 'h59' });\n }\ndiff --git a/src/handlers/h60.ts b/src/handlers/h60.ts\nindex 2295f0e..83cbf64 100644\n--- a/src/handlers/h60.ts\n+++ b/src/handlers/h60.ts\n@@ -1,5 +1,5 @@\n-import { log } from '../lib/logger.js';\n+import { logger } from '../lib/logger.js';\n \n export function handle60(id: string): void {\n-  log.info('handled', { id, handler: 'h60' });\n+  logger.info('handled', { id, handler: 'h60' });\n }\n"
+      },
+      "expect": {
+        "outcome": "scored",
+        "flagged": [
+          {
+            "pageId": "100107",
+            "minScore": 0.8
+          }
+        ]
+      }
+    }
+  ]
+}

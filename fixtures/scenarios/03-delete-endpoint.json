@@ -1,0 +1,101 @@
+{
+  "id": "03-delete-endpoint",
+  "label": "drift",
+  "title": "Remove the refunds endpoint",
+  "notes": "Deleting an anchored file is High severity. The overview page anchors src/** and flags High too, because a file under its glob was removed. The scaling guide is unrelated.",
+  "pages": [
+    {
+      "pageId": "100104",
+      "title": "Refunds API",
+      "storage": "<p>Refunds are created with <code>POST /v1/refunds</code>, handled by <code>src/routes/refunds.ts</code>.</p>\n<ac:structured-macro ac:name=\"code\" ac:schema-version=\"1\"><ac:parameter ac:name=\"language\">bash</ac:parameter><ac:plain-text-body><![CDATA[curl -X POST https://api.acme.dev/v1/refunds -d '{\"chargeId\": \"ch_123\", \"amount\": 500}']]></ac:plain-text-body></ac:structured-macro>\n<p>Refunds are allowed for 90 days after capture (<code>MAX_REFUND_DAYS</code>). The response contains a <code>refundId</code>.</p>"
+    },
+    {
+      "pageId": "100105",
+      "title": "Payments API overview",
+      "storage": "<p>The service exposes three endpoints:</p>\n<ul><li><p><code>GET /healthz</code></p></li><li><p><code>POST /v1/charges</code></p></li><li><p><code>POST /v1/refunds</code></p></li></ul>\n<p>Routes are registered in <code>src/server.ts</code>. Handlers live under <code>src/handlers/</code>.</p>"
+    },
+    {
+      "pageId": "100102",
+      "title": "Scaling payment workers",
+      "storage": "<p>Workers process the payout queue. Scale them with <code>scripts/scale-workers.sh</code>.</p>\n<ac:structured-macro ac:name=\"code\" ac:schema-version=\"1\"><ac:parameter ac:name=\"language\">bash</ac:parameter><ac:plain-text-body><![CDATA[./scripts/scale-workers.sh 6]]></ac:plain-text-body></ac:structured-macro>\n<p>The Helm defaults in <code>deploy/helm/values.yaml</code> are:</p>\n<ac:structured-macro ac:name=\"code\" ac:schema-version=\"1\"><ac:parameter ac:name=\"language\">yaml</ac:parameter><ac:plain-text-body><![CDATA[replicaCount: 3\nworkers:\n  min: 2\n  max: 8]]></ac:plain-text-body></ac:structured-macro>\n<p>Do not go above the <strong>max</strong> without a capacity review.</p>"
+    }
+  ],
+  "bindings": [
+    {
+      "id": "b-refunds-route",
+      "pageId": "100104",
+      "anchorType": "path",
+      "repo": "nano-soft-dev/payments-api",
+      "pattern": "src/routes/refunds.ts",
+      "weight": "critical"
+    },
+    {
+      "id": "b-overview-src",
+      "pageId": "100105",
+      "anchorType": "glob",
+      "repo": "nano-soft-dev/payments-api",
+      "pattern": "src/**",
+      "weight": "normal"
+    },
+    {
+      "id": "b-scaling-script",
+      "pageId": "100102",
+      "anchorType": "path",
+      "repo": "nano-soft-dev/payments-api",
+      "pattern": "scripts/scale-workers.sh",
+      "weight": "normal"
+    }
+  ],
+  "steps": [
+    {
+      "change": {
+        "source": "bitbucket",
+        "workspace": "nano-soft-dev",
+        "repoSlug": "payments-api",
+        "repoUuid": "{6f1d1c3e-0b8a-4e57-9f0a-2d5b1c7e4820}",
+        "prId": 487,
+        "title": "Remove refunds endpoint (moved to billing-api)",
+        "author": "Sam Rivera",
+        "mergeCommit": "b26e92305a9773f7d4bc4d1ab7caf1db76af06f4",
+        "sourceBranch": "chore/remove-refunds",
+        "destinationBranch": "main",
+        "defaultBranch": "main",
+        "files": [
+          {
+            "status": "removed",
+            "path": "src/routes/refunds.test.ts",
+            "linesAdded": 0,
+            "linesRemoved": 8
+          },
+          {
+            "status": "removed",
+            "path": "src/routes/refunds.ts",
+            "linesAdded": 0,
+            "linesRemoved": 24
+          },
+          {
+            "status": "modified",
+            "path": "src/server.ts",
+            "linesAdded": 0,
+            "linesRemoved": 2
+          }
+        ],
+        "hunks": "diff --git a/src/routes/refunds.test.ts b/src/routes/refunds.test.ts\ndeleted file mode 100644\nindex f62d829..0000000\n--- a/src/routes/refunds.test.ts\n+++ /dev/null\n@@ -1,8 +0,0 @@\n-import { describe, expect, it } from 'vitest';\n-import { refundsRoute } from './refunds.js';\n-\n-describe('refundsRoute', () => {\n-  it('rejects GET', () => {\n-    expect(refundsRoute).toBeTypeOf('function');\n-  });\n-});\ndiff --git a/src/routes/refunds.ts b/src/routes/refunds.ts\ndeleted file mode 100644\nindex 0f49de4..0000000\n--- a/src/routes/refunds.ts\n+++ /dev/null\n@@ -1,24 +0,0 @@\n-import type { IncomingMessage, ServerResponse } from 'node:http';\n-import { log } from '../lib/logger.js';\n-\n-const MAX_REFUND_DAYS = 90;\n-\n-/** POST /v1/refunds: refund a captured charge within MAX_REFUND_DAYS. */\n-export function refundsRoute(req: IncomingMessage, res: ServerResponse): void {\n-  if (req.method !== 'POST') {\n-    res.writeHead(405).end();\n-    return;\n-  }\n-  let body = '';\n-  req.on('data', (chunk) => (body += chunk));\n-  req.on('end', () => {\n-    const { chargeId, amount } = JSON.parse(body) as { chargeId: string; amount: number };\n-    if (!chargeId || amount <= 0) {\n-      res.writeHead(400).end('chargeId and a positive amount are required');\n-      return;\n-    }\n-    log.info('refund created', { chargeId, amount, maxDays: MAX_REFUND_DAYS });\n-    res.writeHead(201, { 'content-type': 'application/json' });\n-    res.end(JSON.stringify({ refundId: `rf_${chargeId}`, status: 'pending' }));\n-  });\n-}\ndiff --git a/src/server.ts b/src/server.ts\nindex 451f636..427e5cb 100644\n--- a/src/server.ts\n+++ b/src/server.ts\n@@ -1,6 +1,5 @@\n import { createServer } from 'node:http';\n import { chargesRoute } from './routes/charges.js';\n-import { refundsRoute } from './routes/refunds.js';\n \n const port = Number(process.env.PORT ?? 8080);\n \n@@ -10,6 +9,5 @@ createServer((req, res) => {\n     return;\n   }\n   if (req.url === '/v1/charges') return chargesRoute(req, res);\n-  if (req.url === '/v1/refunds') return refundsRoute(req, res);\n   res.writeHead(404).end();\n }).listen(port);\n"
+      },
+      "expect": {
+        "outcome": "scored",
+        "flagged": [
+          {
+            "pageId": "100104",
+            "severity": "high",
+            "minScore": 1
+          },
+          {
+            "pageId": "100105",
+            "severity": "high"
+          }
+        ]
+      }
+    }
+  ]
+}

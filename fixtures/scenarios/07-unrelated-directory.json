@@ -1,0 +1,78 @@
+{
+  "id": "07-unrelated-directory",
+  "label": "no_drift",
+  "title": "Change in an unrelated directory",
+  "notes": "Only tools/ci/ changes. No page anchors it. The repo-wide anchor matches at 0.2 and never alerts on its own.",
+  "pages": [
+    {
+      "pageId": "100101",
+      "title": "Payments rollback runbook",
+      "storage": "<p>Use this when a payments-api release misbehaves. Script: <a href=\"https://bitbucket.org/nano-soft-dev/payments-api/src/main/scripts/rollback.sh\">scripts/rollback.sh</a>.</p>\n<h2>Steps</h2>\n<ol><li><p>Check the release history with <code>helm history payments</code>.</p></li>\n<li><p>If the default of 300 seconds is too short, raise <code>ROLLBACK_TIMEOUT</code>. Its default lives in <code>deploy/helm/values.yaml</code>.</p></li>\n<li><p>Run the rollback:</p></li></ol>\n<ac:structured-macro ac:name=\"code\" ac:schema-version=\"1\"><ac:parameter ac:name=\"language\">bash</ac:parameter><ac:plain-text-body><![CDATA[export ROLLBACK_TIMEOUT=600\n./scripts/rollback.sh --timeout $ROLLBACK_TIMEOUT]]></ac:plain-text-body></ac:structured-macro>\n<p>Under the hood the script runs:</p>\n<ac:structured-macro ac:name=\"code\" ac:schema-version=\"1\"><ac:parameter ac:name=\"language\">bash</ac:parameter><ac:plain-text-body><![CDATA[helm rollback payments 0 --wait --timeout \"${TIMEOUT}s\"]]></ac:plain-text-body></ac:structured-macro>\n<p>Owner: Platform team. Escalate in #payments-oncall.</p>"
+    },
+    {
+      "pageId": "100102",
+      "title": "Scaling payment workers",
+      "storage": "<p>Workers process the payout queue. Scale them with <code>scripts/scale-workers.sh</code>.</p>\n<ac:structured-macro ac:name=\"code\" ac:schema-version=\"1\"><ac:parameter ac:name=\"language\">bash</ac:parameter><ac:plain-text-body><![CDATA[./scripts/scale-workers.sh 6]]></ac:plain-text-body></ac:structured-macro>\n<p>The Helm defaults in <code>deploy/helm/values.yaml</code> are:</p>\n<ac:structured-macro ac:name=\"code\" ac:schema-version=\"1\"><ac:parameter ac:name=\"language\">yaml</ac:parameter><ac:plain-text-body><![CDATA[replicaCount: 3\nworkers:\n  min: 2\n  max: 8]]></ac:plain-text-body></ac:structured-macro>\n<p>Do not go above the <strong>max</strong> without a capacity review.</p>"
+    },
+    {
+      "pageId": "100103",
+      "title": "Payments architecture",
+      "storage": "<p>payments-api is a Node service deployed with Helm on the shared cluster. Source: <a href=\"https://bitbucket.org/nano-soft-dev/payments-api\">payments-api</a>.</p>\n<table><tbody><tr><th>Part</th><th>Where</th></tr><tr><td>HTTP API</td><td>src/</td></tr><tr><td>Chart</td><td>deploy/helm/</td></tr></tbody></table>\n<p>Workers scale between 2 and 8 replicas. The database pool is sized at 20 connections.</p>"
+    }
+  ],
+  "bindings": [
+    {
+      "id": "b-runbook-scripts",
+      "pageId": "100101",
+      "anchorType": "glob",
+      "repo": "nano-soft-dev/payments-api",
+      "pattern": "scripts/**",
+      "weight": "normal"
+    },
+    {
+      "id": "b-scaling-values",
+      "pageId": "100102",
+      "anchorType": "path",
+      "repo": "nano-soft-dev/payments-api",
+      "pattern": "deploy/helm/values.yaml",
+      "weight": "normal"
+    },
+    {
+      "id": "b-arch-repo",
+      "pageId": "100103",
+      "anchorType": "repo",
+      "repo": "nano-soft-dev/payments-api",
+      "weight": "normal"
+    }
+  ],
+  "steps": [
+    {
+      "change": {
+        "source": "bitbucket",
+        "workspace": "nano-soft-dev",
+        "repoSlug": "payments-api",
+        "repoUuid": "{6f1d1c3e-0b8a-4e57-9f0a-2d5b1c7e4820}",
+        "prId": 493,
+        "title": "Add a typecheck step to CI",
+        "author": "Dana Okafor",
+        "mergeCommit": "b6c458029a85e10dc1526e011f6787a2cea20e15",
+        "sourceBranch": "ci/typecheck",
+        "destinationBranch": "main",
+        "defaultBranch": "main",
+        "files": [
+          {
+            "status": "modified",
+            "path": "tools/ci/lint.yml",
+            "linesAdded": 2,
+            "linesRemoved": 0
+          }
+        ],
+        "hunks": "diff --git a/tools/ci/lint.yml b/tools/ci/lint.yml\nindex 7e35f42..d67e556 100644\n--- a/tools/ci/lint.yml\n+++ b/tools/ci/lint.yml\n@@ -1,3 +1,5 @@\n steps:\n   - name: lint\n     run: npx prettier --check .\n+  - name: typecheck\n+    run: npx tsc --noEmit\n"
+      },
+      "expect": {
+        "outcome": "scored",
+        "flagged": []
+      }
+    }
+  ]
+}

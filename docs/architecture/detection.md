@@ -26,7 +26,7 @@ on ChangeRecord(cr):                       // from relay or Jira trigger
   enqueue(recompute pages touched, delayInSeconds=600)   // debounce bursts of PRs
 ```
 
-Note: the identifier and hash boosts apply only when `s > 0`, meaning a path match happened first.
+Note: the identifier and hash boosts apply only when `s > 0`, meaning a path match happened first. The implementation (`packages/matcher`) adds a 0.5 cosmetic factor for comment- or whitespace-only edits and stricter identifier rules: see D24.
 
 ## Jira rules
 

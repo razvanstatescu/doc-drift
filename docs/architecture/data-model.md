@@ -4,7 +4,7 @@
 
 | Table / entity | Key fields | Indexes |
 | --- | --- | --- |
-| `binding` | id, pageId, spaceKey, anchorType (path\|glob\|jira\|page\|repo), repo, pattern, jiraKey, weight (critical\|normal), dismissDampener, createdBy, createdAt | (repo), (jiraKey), (pageId) |
+| `binding` | id, pageId, spaceKey, anchorType (path\|glob\|jira\|page\|repo), repo, pattern, jiraKey, weight (critical\|normal), dismissCount, createdBy, createdAt | (repo), (jiraKey), (pageId) |
 | `page_state` | pageId, spaceKey, ownerId, status, verifiedAt, verifiedBy, openEventCount, maxSeverity, lastSummary, readershipWeight | (spaceKey, status), (ownerId, status) |
 | `drift_event` | id, pageId, bindingId, source (bitbucket\|jira), ref (repo#PR or issueKey), summary, files JSON, score, severity, status (open\|dismissed\|resolved\|reverted\|snoozed), dismissReason, snoozedUntil, dedupeKey, createdAt | (pageId, status), (dedupeKey) |
 | `change_record` | id, source, repo, prId, title, author, mergeCommit, files JSON, hunksRef, receivedAt | (repo, prId) |
@@ -30,8 +30,8 @@ Add a `confluence:contentProperty` index module (key `dds_state`, no hyphens) ov
 type ChangeRecord = {
   source: 'bitbucket' | 'jira';
   repo?: string; prId?: number; title?: string; author?: string; mergeCommit?: string;
-  files: { status: 'added'|'modified'|'removed'|'renamed'; path: string; oldPath?: string; added: number; removed: number }[];
-  hunks?: string;              // raw diff, <= 150 KB, absent for > 300 files
+  files: { status: 'added'|'modified'|'removed'|'renamed'; path: string; oldPath?: string; linesAdded: number; linesRemoved: number }[];  // canonical: packages/shared
+  hunks?: string;              // raw diff, <= 200,000 bytes, absent for > 300 files
   issueKey?: string; changelog?: { field: string; from?: string; to?: string }[];
 };
 ```

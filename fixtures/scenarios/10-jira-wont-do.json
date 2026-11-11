@@ -1,0 +1,103 @@
+{
+  "id": "10-jira-wont-do",
+  "label": "drift",
+  "title": "Epic resolved as Won't Do",
+  "notes": "Step 1: PAY-142 moves to Won't Do (0.7). The rollout plan (normal anchor) flags Medium; the roadmap anchors PAY-142 as critical, so it flags High. Step 2: a summary-only edit on PAY-150 scores 0.3, which needs another signal, so nothing flags.",
+  "pages": [
+    {
+      "pageId": "100201",
+      "title": "Card tokenization rollout plan",
+      "storage": "<p>Rollout plan for card tokenization, tracked in epic PAY-142.</p><p>Phase 1 covers EU merchants. Phase 2 follows in Q1.</p>"
+    },
+    {
+      "pageId": "100202",
+      "title": "Q4 payments roadmap",
+      "storage": "<p>Q4 commitments: card tokenization (PAY-142), payout batching (PAY-150).</p>"
+    },
+    {
+      "pageId": "100203",
+      "title": "Payout batching design",
+      "storage": "<p>Design for nightly payout batching. Epic: PAY-150.</p>"
+    }
+  ],
+  "bindings": [
+    {
+      "id": "b-tokenization-epic",
+      "pageId": "100201",
+      "anchorType": "jira",
+      "jiraKey": "PAY-142",
+      "weight": "normal"
+    },
+    {
+      "id": "b-roadmap-epic",
+      "pageId": "100202",
+      "anchorType": "jira",
+      "jiraKey": "PAY-142",
+      "weight": "critical"
+    },
+    {
+      "id": "b-payouts-epic",
+      "pageId": "100203",
+      "anchorType": "jira",
+      "jiraKey": "PAY-150",
+      "weight": "normal"
+    }
+  ],
+  "steps": [
+    {
+      "change": {
+        "source": "jira",
+        "issueKey": "PAY-142",
+        "changelogId": "10482",
+        "author": "Dana Okafor",
+        "statusCategory": "done",
+        "changelog": [
+          {
+            "field": "status",
+            "from": "In Progress",
+            "to": "Won't Do"
+          },
+          {
+            "field": "resolution",
+            "from": null,
+            "to": "Won't Do"
+          }
+        ]
+      },
+      "expect": {
+        "outcome": "scored",
+        "flagged": [
+          {
+            "pageId": "100201",
+            "severity": "medium",
+            "minScore": 0.7
+          },
+          {
+            "pageId": "100202",
+            "severity": "high"
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "source": "jira",
+        "issueKey": "PAY-150",
+        "changelogId": "10490",
+        "author": "Sam Rivera",
+        "statusCategory": "indeterminate",
+        "changelog": [
+          {
+            "field": "summary",
+            "from": "Payout batching",
+            "to": "Nightly payout batching"
+          }
+        ]
+      },
+      "expect": {
+        "outcome": "scored",
+        "flagged": []
+      }
+    }
+  ]
+}

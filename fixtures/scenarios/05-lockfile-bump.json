@@ -1,0 +1,79 @@
+{
+  "id": "05-lockfile-bump",
+  "label": "no_drift",
+  "title": "Lockfile bump",
+  "notes": "pnpm-lock.yaml at the root and package-lock.json in a subfolder. File-name ignore globs match at any depth, and ignore globs win over anchors (here a **/*.json glob and a repo-wide anchor).",
+  "pages": [
+    {
+      "pageId": "100109",
+      "title": "Dependency policy",
+      "storage": "<p>Pin direct dependencies in <code>package.json</code>. Lockfiles are committed and reviewed by Renovate.</p>"
+    },
+    {
+      "pageId": "100103",
+      "title": "Payments architecture",
+      "storage": "<p>payments-api is a Node service deployed with Helm on the shared cluster. Source: <a href=\"https://bitbucket.org/nano-soft-dev/payments-api\">payments-api</a>.</p>\n<table><tbody><tr><th>Part</th><th>Where</th></tr><tr><td>HTTP API</td><td>src/</td></tr><tr><td>Chart</td><td>deploy/helm/</td></tr></tbody></table>\n<p>Workers scale between 2 and 8 replicas. The database pool is sized at 20 connections.</p>"
+    }
+  ],
+  "bindings": [
+    {
+      "id": "b-deps-json",
+      "pageId": "100109",
+      "anchorType": "glob",
+      "repo": "nano-soft-dev/payments-api",
+      "pattern": "**/*.json",
+      "weight": "normal"
+    },
+    {
+      "id": "b-deps-repo",
+      "pageId": "100109",
+      "anchorType": "repo",
+      "repo": "nano-soft-dev/payments-api",
+      "weight": "normal"
+    },
+    {
+      "id": "b-arch-repo",
+      "pageId": "100103",
+      "anchorType": "repo",
+      "repo": "nano-soft-dev/payments-api",
+      "weight": "normal"
+    }
+  ],
+  "steps": [
+    {
+      "change": {
+        "source": "bitbucket",
+        "workspace": "nano-soft-dev",
+        "repoSlug": "payments-api",
+        "repoUuid": "{6f1d1c3e-0b8a-4e57-9f0a-2d5b1c7e4820}",
+        "prId": 489,
+        "title": "Bump typescript and prettier",
+        "author": "renovate-bot",
+        "mergeCommit": "b6880e1e18037675036a6de77e2bc8c45be98e34",
+        "sourceBranch": "renovate/all-minor",
+        "destinationBranch": "main",
+        "defaultBranch": "main",
+        "files": [
+          {
+            "status": "modified",
+            "path": "pnpm-lock.yaml",
+            "linesAdded": 2,
+            "linesRemoved": 2
+          },
+          {
+            "status": "modified",
+            "path": "tools/package-lock.json",
+            "linesAdded": 1,
+            "linesRemoved": 1
+          }
+        ],
+        "hunks": "diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml\nindex 7b537a5..f5b71eb 100644\n--- a/pnpm-lock.yaml\n+++ b/pnpm-lock.yaml\n@@ -4,5 +4,5 @@ importers:\n   .:\n     devDependencies:\n       typescript:\n-        specifier: ^5.6.0\n-        version: 5.6.3\n+        specifier: ^5.7.2\n+        version: 5.7.2\ndiff --git a/tools/package-lock.json b/tools/package-lock.json\nindex 4efc090..bf8291b 100644\n--- a/tools/package-lock.json\n+++ b/tools/package-lock.json\n@@ -2,6 +2,6 @@\n   \"name\": \"payments-tools\",\n   \"lockfileVersion\": 3,\n   \"packages\": {\n-    \"node_modules/prettier\": { \"version\": \"3.3.3\" }\n+    \"node_modules/prettier\": { \"version\": \"3.4.2\" }\n   }\n }\n"
+      },
+      "expect": {
+        "outcome": "skipped",
+        "skipReason": "no_relevant_files",
+        "flagged": []
+      }
+    }
+  ]
+}

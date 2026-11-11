@@ -1,0 +1,99 @@
+{
+  "id": "08-revert-pair",
+  "label": "drift",
+  "title": "A change and its revert",
+  "notes": "Step 1 flags the scaling guide. Step 2 is the revert PR: the matcher reports a revert (so the caller closes the events of the reverted PR with reason reverted) and creates no new events.",
+  "pages": [
+    {
+      "pageId": "100102",
+      "title": "Scaling payment workers",
+      "storage": "<p>Workers process the payout queue. Scale them with <code>scripts/scale-workers.sh</code>.</p>\n<ac:structured-macro ac:name=\"code\" ac:schema-version=\"1\"><ac:parameter ac:name=\"language\">bash</ac:parameter><ac:plain-text-body><![CDATA[./scripts/scale-workers.sh 6]]></ac:plain-text-body></ac:structured-macro>\n<p>The Helm defaults in <code>deploy/helm/values.yaml</code> are:</p>\n<ac:structured-macro ac:name=\"code\" ac:schema-version=\"1\"><ac:parameter ac:name=\"language\">yaml</ac:parameter><ac:plain-text-body><![CDATA[replicaCount: 3\nworkers:\n  min: 2\n  max: 8]]></ac:plain-text-body></ac:structured-macro>\n<p>Do not go above the <strong>max</strong> without a capacity review.</p>"
+    },
+    {
+      "pageId": "100103",
+      "title": "Payments architecture",
+      "storage": "<p>payments-api is a Node service deployed with Helm on the shared cluster. Source: <a href=\"https://bitbucket.org/nano-soft-dev/payments-api\">payments-api</a>.</p>\n<table><tbody><tr><th>Part</th><th>Where</th></tr><tr><td>HTTP API</td><td>src/</td></tr><tr><td>Chart</td><td>deploy/helm/</td></tr></tbody></table>\n<p>Workers scale between 2 and 8 replicas. The database pool is sized at 20 connections.</p>"
+    }
+  ],
+  "bindings": [
+    {
+      "id": "b-scaling-values",
+      "pageId": "100102",
+      "anchorType": "path",
+      "repo": "nano-soft-dev/payments-api",
+      "pattern": "deploy/helm/values.yaml",
+      "weight": "normal"
+    },
+    {
+      "id": "b-arch-repo",
+      "pageId": "100103",
+      "anchorType": "repo",
+      "repo": "nano-soft-dev/payments-api",
+      "weight": "normal"
+    }
+  ],
+  "steps": [
+    {
+      "change": {
+        "source": "bitbucket",
+        "workspace": "nano-soft-dev",
+        "repoSlug": "payments-api",
+        "repoUuid": "{6f1d1c3e-0b8a-4e57-9f0a-2d5b1c7e4820}",
+        "prId": 490,
+        "title": "Raise worker max to 12",
+        "author": "Sam Rivera",
+        "mergeCommit": "ab1d8999d8b7f5020383d56baf6078c7449102d4",
+        "sourceBranch": "feature/worker-max",
+        "destinationBranch": "main",
+        "defaultBranch": "main",
+        "files": [
+          {
+            "status": "modified",
+            "path": "deploy/helm/values.yaml",
+            "linesAdded": 1,
+            "linesRemoved": 1
+          }
+        ],
+        "hunks": "diff --git a/deploy/helm/values.yaml b/deploy/helm/values.yaml\nindex 476d054..0570d10 100644\n--- a/deploy/helm/values.yaml\n+++ b/deploy/helm/values.yaml\n@@ -6,7 +6,7 @@ image:\n \n workers:\n   min: 2\n-  max: 8\n+  max: 12\n \n env:\n   ROLLBACK_TIMEOUT: \"300\"\n"
+      },
+      "expect": {
+        "outcome": "scored",
+        "flagged": [
+          {
+            "pageId": "100102",
+            "minScore": 0.5
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "source": "bitbucket",
+        "workspace": "nano-soft-dev",
+        "repoSlug": "payments-api",
+        "repoUuid": "{6f1d1c3e-0b8a-4e57-9f0a-2d5b1c7e4820}",
+        "prId": 491,
+        "title": "Revert \"Raise worker max to 12\"",
+        "author": "Sam Rivera",
+        "mergeCommit": "49bdbc7e4bfdff21871f9c842e31aa85136ce83a",
+        "sourceBranch": "revert-pr-490",
+        "destinationBranch": "main",
+        "defaultBranch": "main",
+        "files": [
+          {
+            "status": "modified",
+            "path": "deploy/helm/values.yaml",
+            "linesAdded": 1,
+            "linesRemoved": 1
+          }
+        ],
+        "hunks": "diff --git a/deploy/helm/values.yaml b/deploy/helm/values.yaml\nindex 0570d10..476d054 100644\n--- a/deploy/helm/values.yaml\n+++ b/deploy/helm/values.yaml\n@@ -6,7 +6,7 @@ image:\n \n workers:\n   min: 2\n-  max: 12\n+  max: 8\n \n env:\n   ROLLBACK_TIMEOUT: \"300\"\n"
+      },
+      "expect": {
+        "outcome": "revert",
+        "revertedTitle": "Raise worker max to 12",
+        "flagged": []
+      }
+    }
+  ]
+}

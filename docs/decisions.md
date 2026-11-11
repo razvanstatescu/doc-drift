@@ -98,3 +98,14 @@ Remote: `git@github.com:razvanstatescu/doc-drift.git`. Private now, made public 
 
 ### Note on D20 (S2 finding, 2026-11-11, open)
 The app could still read and write a page it had created after the page was restricted to Razvan only. Either app creators are exempt, or the app user ignores page restrictions altogether. A test on a page a person creates and restricts (S2 check 5) decides whether D20 can be relaxed.
+
+### D24. Matcher v0 design choices (M0)
+2026-11-11 · Accepted (made by the matcher track, recorded by the orchestrator)
+1. **Cosmetic edits count half.** A modified file whose changed lines are all comments or whitespace gets `COSMETIC_FACTOR` 0.5. The comment-typo fixture scores 0.31: no alert.
+2. **Weights.** Anchors score at 1.0. `critical` raises severity only, not score. The dismiss dampener is −0.1 per dismissal (`dismissCount`), floor 0.3.
+3. **Removed identifiers** are tokens on `-` lines that no `+` line still uses. Code-shaped tokens (`SNAKE_CASE`, dotted, paths, flags) match anywhere in the page text; plain lowercase words match only inside page code blocks.
+4. **Field names.** `ChangedFile.linesAdded` / `linesRemoved`; `binding.dismissCount`. The Jira change record carries the issue's current `statusCategory`.
+5. **Hunk cap** is 200,000 bytes (the relay must trim by bytes, not characters).
+6. **Not yet:** a revert of a revert scores as a normal change; `page`-type anchors are not scored.
+
+Precision and recall of 1.00 on the first 10 fixtures are not evidence of quality: they were written with the code. The real check is the 30 demo-derived scenarios in M2.

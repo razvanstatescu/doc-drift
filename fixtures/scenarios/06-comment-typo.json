@@ -1,0 +1,53 @@
+{
+  "id": "06-comment-typo",
+  "label": "no_drift",
+  "title": "Fix a comment typo in an anchored script",
+  "notes": "Choice: no alert. The only changed lines are comments, so the file counts at half strength (COSMETIC_FACTOR 0.5): 1.0 x (0.5 + 0.5 x 0.24) x 0.5 = 0.31, below Balanced (0.5) and Strict (0.4). If the edited comment had removed an identifier the page quotes, the 0.3 identifier boost would lift it over the threshold.",
+  "pages": [
+    {
+      "pageId": "100101",
+      "title": "Payments rollback runbook",
+      "storage": "<p>Use this when a payments-api release misbehaves. Script: <a href=\"https://bitbucket.org/nano-soft-dev/payments-api/src/main/scripts/rollback.sh\">scripts/rollback.sh</a>.</p>\n<h2>Steps</h2>\n<ol><li><p>Check the release history with <code>helm history payments</code>.</p></li>\n<li><p>If the default of 300 seconds is too short, raise <code>ROLLBACK_TIMEOUT</code>. Its default lives in <code>deploy/helm/values.yaml</code>.</p></li>\n<li><p>Run the rollback:</p></li></ol>\n<ac:structured-macro ac:name=\"code\" ac:schema-version=\"1\"><ac:parameter ac:name=\"language\">bash</ac:parameter><ac:plain-text-body><![CDATA[export ROLLBACK_TIMEOUT=600\n./scripts/rollback.sh --timeout $ROLLBACK_TIMEOUT]]></ac:plain-text-body></ac:structured-macro>\n<p>Under the hood the script runs:</p>\n<ac:structured-macro ac:name=\"code\" ac:schema-version=\"1\"><ac:parameter ac:name=\"language\">bash</ac:parameter><ac:plain-text-body><![CDATA[helm rollback payments 0 --wait --timeout \"${TIMEOUT}s\"]]></ac:plain-text-body></ac:structured-macro>\n<p>Owner: Platform team. Escalate in #payments-oncall.</p>"
+    }
+  ],
+  "bindings": [
+    {
+      "id": "b-runbook-script",
+      "pageId": "100101",
+      "anchorType": "path",
+      "repo": "nano-soft-dev/payments-api",
+      "pattern": "scripts/rollback.sh",
+      "weight": "normal"
+    }
+  ],
+  "steps": [
+    {
+      "change": {
+        "source": "bitbucket",
+        "workspace": "nano-soft-dev",
+        "repoSlug": "payments-api",
+        "repoUuid": "{6f1d1c3e-0b8a-4e57-9f0a-2d5b1c7e4820}",
+        "prId": 492,
+        "title": "Fix typo in rollback.sh comment",
+        "author": "Priya Nair",
+        "mergeCommit": "38a9365c692ff995cc24fb4bd5d47ae5becf4912",
+        "sourceBranch": "fix/typo",
+        "destinationBranch": "main",
+        "defaultBranch": "main",
+        "files": [
+          {
+            "status": "modified",
+            "path": "scripts/rollback.sh",
+            "linesAdded": 1,
+            "linesRemoved": 1
+          }
+        ],
+        "hunks": "diff --git a/scripts/rollback.sh b/scripts/rollback.sh\nindex f3b9b3f..a41f113 100644\n--- a/scripts/rollback.sh\n+++ b/scripts/rollback.sh\n@@ -1,5 +1,5 @@\n #!/usr/bin/env bash\n-# Roll back payments-api to the previus Helm release.\n+# Roll back payments-api to the previous Helm release.\n # Usage: ./scripts/rollback.sh --timeout $ROLLBACK_TIMEOUT\n set -euo pipefail\n \n"
+      },
+      "expect": {
+        "outcome": "scored",
+        "flagged": []
+      }
+    }
+  ]
+}

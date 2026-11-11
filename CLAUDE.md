@@ -4,7 +4,7 @@ A Forge app for Atlassian **Codegeist 2026**. It anchors Confluence pages to the
 
 ## Status
 
-**Building: milestone M2** (M0 and M1 done 2026-11-11; M1 live E2E: merge to flagged page in 11 s). `apps/core` (app `12e968a1-a45d-4524-ba28-d47e2315db1a`) and `apps/bitbucket-relay` (app `409a6e1e-dd37-482c-b30f-e56d322b4035`) are deployed to development; each has a README with deploy steps and browser checks. The plan, milestones and agent tracks are in [docs/implementation-plan.md](docs/implementation-plan.md). We are in week 1 of 6. Spikes come first ([docs/hackathon/risks-and-spikes.md](docs/hackathon/risks-and-spikes.md)); build with `pnpm` from the root; the core app needs the packages' `dist` built before `forge deploy` (`pnpm deploy:dev` in apps/core).
+**Building: milestone M3** (agent, skill, MCP, Propose fix). M0, M1 and M2 done 2026-11-11 (M1 live E2E: merge to flagged page in 11 s; M2 browser-checked). `apps/core` (app `12e968a1-a45d-4524-ba28-d47e2315db1a`) and `apps/bitbucket-relay` (app `409a6e1e-dd37-482c-b30f-e56d322b4035`) are deployed to development; each has a README with deploy steps and browser checks. The plan, milestones and agent tracks are in [docs/implementation-plan.md](docs/implementation-plan.md). We are in week 1 of 6. Spikes come first ([docs/hackathon/risks-and-spikes.md](docs/hackathon/risks-and-spikes.md)); build with `pnpm` from the root; the core app needs the packages' `dist` built before `forge deploy` (`pnpm deploy:dev` in apps/core).
 
 ## Where knowledge lives
 

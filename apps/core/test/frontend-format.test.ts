@@ -3,6 +3,7 @@ import {
   absoluteDate,
   anchoredPctText,
   anchoredText,
+  driftedPages,
   emptyDashboardText,
   eventLead,
   fileChangeParts,
@@ -14,6 +15,7 @@ import {
   refLabel,
   relativeTime,
   sortOwners,
+  sortEvents,
   sortPages,
   splitExcerpt,
   stateMeta,
@@ -212,5 +214,33 @@ describe('sortOwners', () => {
       { ownerId: '4', ownerName: 'Lee', open: 0 },
     ];
     expect(sortOwners(owners).map((o) => o.ownerName)).toEqual(['Dana', 'Ari', 'Sam']);
+  });
+});
+
+describe('sortEvents (polish item 1)', () => {
+  it('puts High before Medium, then the newest first', () => {
+    const events = [
+      { id: 'm-old', severity: 'medium', at: NOW - 2 * DAY },
+      { id: 'h-old', severity: 'high', at: NOW - 3 * DAY },
+      { id: 'm-new', severity: 'medium', at: NOW - HOUR },
+      { id: 'h-new', severity: 'high', at: NOW - 2 * HOUR },
+      { id: 'none', at: NOW },
+    ];
+    expect(sortEvents(events).map((e) => e.id)).toEqual(['h-new', 'h-old', 'm-new', 'm-old', 'none']);
+    expect(events[0]!.id).toBe('m-old');
+    expect(sortEvents(null)).toEqual([]);
+  });
+});
+
+describe('driftedPages (polish item 4)', () => {
+  it('keeps Possibly stale and Stale pages only', () => {
+    const pages = [
+      { pageId: '1', status: 'verified' },
+      { pageId: '2', status: 'possibly_stale' },
+      { pageId: '3', status: 'stale' },
+      { pageId: '4', status: 'unanchored' },
+    ];
+    expect(driftedPages(pages).map((p) => p.pageId)).toEqual(['2', '3']);
+    expect(driftedPages(undefined)).toEqual([]);
   });
 });

@@ -18,11 +18,12 @@ import ForgeReconciler, {
   Text,
   useProductContext,
 } from '@forge/react';
-import { invoke, view } from '@forge/bridge';
+import { invoke, rovo, view } from '@forge/bridge';
 import { StateBadge } from '../shared/components';
-import { headerLine, openEvents, plural } from '../shared/format';
+import { FIX_NOT_FOUND_BODY, FIX_NOT_FOUND_TITLE, acceptedTitle, fixPrompt, openProposals, proposalSource, rovoOpenPayload } from '../shared/fix';
+import { headerLine, openEvents, plural, sortEvents } from '../shared/format';
 import { AnchorEditor } from './anchors';
-import { ReviewPanel } from './review';
+import { ProposedFixSection, ReviewPanel } from './review';
 
 const EDIT_RIGHTS = 'You need edit rights on this page to change its anchors.';
 const RELOAD = 'Reload the page to update the badge.';
@@ -46,6 +47,7 @@ const App = () => {
   const context = useProductContext();
   const pageId = context?.extension?.content?.id ? String(context.extension.content.id) : null;
   const [data, setData] = useState(null);
+  const [proposals, setProposals] = useState(EMPTY);
   const [loadError, setLoadError] = useState('');
   const [notice, setNotice] = useState(null);
   const [busy, setBusy] = useState('');
@@ -53,8 +55,12 @@ const App = () => {
   const load = useCallback(async () => {
     if (!pageId) return;
     setLoadError('');
+    // Drafts are optional: if they fail to load, the rest of the panel still works.
+    const drafts = invoke('getProposals', { pageId }).catch(() => EMPTY);
     try {
       const res = await invoke('getPageDrift', { pageId });
+      const list = await drafts;
+      setProposals(openProposals(Array.isArray(list) ? list : Array.isArray(list?.proposals) ? list.proposals : EMPTY));
       setData(res || {});
     } catch (e) {
       setLoadError(errorText(e));
@@ -66,13 +72,16 @@ const App = () => {
   }, [load]);
 
   // Runs one write action, then reloads the drift so the panel shows the new state.
-  const run = async (key, call, success) => {
+  // `onFail(res)` may return a notice for a known error code; it reloads too, since the data moved.
+  const run = async (key, call, success, onFail) => {
     setBusy(key);
     setNotice(null);
     try {
       const res = await call();
       if (failed(res)) {
-        setNotice({ appearance: 'error', title: "That didn't go through.", body: failMessage(res) });
+        const known = onFail?.(res);
+        setNotice(known || { appearance: 'error', title: "That didn't go through.", body: failMessage(res) });
+        if (known) await load();
         return;
       }
       setNotice({ appearance: 'success', ...success });
@@ -139,8 +148,51 @@ const App = () => {
   const state = data.state || data.status || 'unanchored';
   const canEdit = Boolean(data.canEdit);
   const bindings = data.bindings || data.anchors || EMPTY;
-  const events = openEvents(data.events);
+  const allEvents = data.events || EMPTY;
+  const events = sortEvents(openEvents(allEvents));
   const reviewing = events.length > 0;
+
+  // F11: open Drift Reviewer in Rovo with a prefilled prompt. The agent drafts; it never writes (D6).
+  const proposeFix = async () => {
+    setBusy('propose');
+    setNotice(null);
+    try {
+      const [info, enabled] = await Promise.all([invoke('getRovoAgentInfo'), rovo.isEnabled().catch(() => true)]);
+      if (enabled === false || info?.enabled === false || info?.rovoEnabled === false) {
+        setNotice({ appearance: 'warning', title: "Rovo isn't turned on for this site.", body: 'An admin can turn it on in Atlassian Administration.' });
+        return;
+      }
+      const payload = rovoOpenPayload(info, fixPrompt(data.title, pageId));
+      if (!payload) {
+        setNotice({ appearance: 'error', title: "Couldn't open Drift Reviewer.", body: failMessage(info) });
+        return;
+      }
+      await rovo.open(payload);
+      // The chat opens beside the page; close the modal so it is not covered.
+      view.close();
+    } catch (e) {
+      setNotice({ appearance: 'error', title: "Couldn't open Drift Reviewer.", body: errorText(e) });
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const acceptFix = (p) => {
+    const source = proposalSource(p, allEvents);
+    return run(
+      `fix:${p.id}`,
+      () => invoke('applyProposal', { proposalId: p.id }),
+      { title: acceptedTitle(source), body: 'Reload the page to see the change.' },
+      (res) => (res?.error === 'not_found' ? { appearance: 'warning', title: FIX_NOT_FOUND_TITLE, body: FIX_NOT_FOUND_BODY } : null),
+    );
+  };
+
+  const rejectFix = (p) =>
+    run(`reject:${p.id}`, () => invoke('rejectProposal', { proposalId: p.id }), { title: 'Rejected the draft. The page is unchanged.', body: '' });
+
+  const drafts = (
+    <ProposedFixSection proposals={proposals} events={allEvents} canEdit={canEdit} busy={busy} onAccept={acceptFix} onReject={rejectFix} />
+  );
 
   const header = (
     <Stack space="space.100">
@@ -178,6 +230,7 @@ const App = () => {
         {header}
         <Notice notice={notice} />
         {viewOnly}
+        {drafts}
         {editor}
       </Stack>
     );
@@ -187,10 +240,15 @@ const App = () => {
   const review = (
     <ReviewPanel
       events={events}
+      allEvents={allEvents}
       affectedSections={data.affectedSections || EMPTY}
       renameProposals={data.renameProposals || EMPTY}
+      proposals={proposals}
       canEdit={canEdit}
       busy={busy}
+      onProposeFix={proposeFix}
+      onAcceptFix={acceptFix}
+      onRejectFix={rejectFix}
       onVerify={() =>
         run('verify', () => invoke('markVerified', { pageId }), {
           title: 'Marked Verified. Agents can cite this page again.',

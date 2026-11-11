@@ -182,6 +182,18 @@ export function openEvents<T extends { status?: string }>(events: T[] | null | u
   return (events ?? []).filter((e) => !e.status || e.status === 'open');
 }
 
+/**
+ * Polish item 1: High before Medium, then newest first. The resolver sorts too; this keeps the
+ * panel right if it doesn't. Returns a new array.
+ */
+export function sortEvents<T extends { severity?: unknown; at?: TimeLike }>(events: T[] | null | undefined): T[] {
+  const sev = (e: T) => {
+    const s = normalizeSeverity(e.severity);
+    return s === 'high' ? 2 : s === 'medium' ? 1 : 0;
+  };
+  return [...(events ?? [])].sort((a, b) => sev(b) - sev(a) || (toMs(b.at) ?? 0) - (toMs(a.at) ?? 0));
+}
+
 /** "PR #482 merged by Sam" or "`PAY-142`" (Jira rows put the key in code style themselves). */
 export function eventLead(e: Pick<DriftEventView, 'source' | 'ref' | 'author'>): string {
   const ref = refLabel(e.ref, e.source);
@@ -279,6 +291,11 @@ export interface DashboardPage {
   since?: TimeLike;
   ownerId?: string | null;
   ownerName?: string | null;
+}
+
+/** Polish item 4: the dashboard table lists drifted pages only (Possibly stale and Stale). */
+export function driftedPages<T extends Pick<DashboardPage, 'status'>>(pages: T[] | null | undefined): T[] {
+  return (pages ?? []).filter((p) => p.status === 'possibly_stale' || p.status === 'stale');
 }
 
 const STATUS_RANK: Record<string, number> = { stale: 3, possibly_stale: 2, verified: 1, unanchored: 0 };

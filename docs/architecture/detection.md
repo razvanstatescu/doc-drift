@@ -49,7 +49,7 @@ So the handler filters on changelog `fieldId` and then fetches the issue (`reque
 
 - **High** if s ≥ 0.8, or an anchored file was removed or renamed, or the anchor weight is critical. Otherwise **Medium**.
 - Verified → Possibly stale on the first event ≥ threshold.
-- Possibly stale → Stale after 7 days unresolved, or 3+ events, or High severity on a critical anchor.
+- Possibly stale → Stale after 7 days unresolved, or 3+ events, or a further High event on a critical anchor while already Possibly stale (D27). The first event never jumps straight to Stale.
 
 ## Signals, ranked
 

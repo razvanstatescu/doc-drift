@@ -131,3 +131,11 @@ The matcher (D24) scores every anchor at 1.0; the demo scenarios were authored a
   - The cosmetic factor is 0.4 (it was 0.5 in D24).
 - Known misses: values stated only in prose.
 - For apps/core: revert detection must match by title when a revert PR has no number (scenario 08).
+
+### D27. The first drift always reads Possibly stale; Stale needs time or repetition
+2026-11-11 · Accepted (from the M1 live test)
+The plan's rule "High severity on a critical anchor goes straight to Stale" made the live runbook jump to Stale on the first merge. That hides the "Possibly stale, review it" beat and over-alarms. New rule:
+- Verified goes to Possibly stale on any event at or above the threshold, whatever the severity.
+- Possibly stale goes to Stale after `escalationDays` (default 7) unresolved, or 3+ open events, or a **further** High event on a critical anchor while already Possibly stale.
+
+Severity still shows on the event (High/Medium).

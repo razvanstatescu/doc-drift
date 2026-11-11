@@ -52,7 +52,7 @@ When behind schedule, cut from the top: page banner, Forge LLM triage, readershi
 | Unanchored | Page has no bindings | First binding saved (goes to Verified) |
 | Verified | Bindings saved, or a human verifies | First drift event at or above the threshold |
 | Possibly stale | An anchor changed after the last verification | Verified, all events dismissed, or escalated |
-| Stale | Possibly stale for 7 days unresolved (setting), or 3+ open events, or a High severity event on a critical anchor | Verified or all events dismissed |
+| Stale | Possibly stale for 7 days unresolved (setting), or 3+ open events, or a further High severity event on a critical anchor while already Possibly stale (D27) | Verified or all events dismissed |
 
 ## UX flows
 

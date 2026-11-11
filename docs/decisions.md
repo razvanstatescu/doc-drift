@@ -139,3 +139,7 @@ The plan's rule "High severity on a critical anchor goes straight to Stale" made
 - Possibly stale goes to Stale after `escalationDays` (default 7) unresolved, or 3+ open events, or a **further** High event on a critical anchor while already Possibly stale.
 
 Severity still shows on the event (High/Medium).
+
+### D28. Propose fix runs through Rovo and a stored proposal; no Forge LLM module
+2026-11-11 · Accepted
+"Propose fix" opens Drift Reviewer in Rovo with a prefilled prompt. The agent calls `get-drift-context`, then `submit-fix-proposal`, which stores a `fix_proposal` row and never touches the page. The review panel shows the proposal as a diff. **Accept** applies it asUser, inside the named section only (exact match after whitespace normalisation), as a new page version "Doc Drift: accepted proposal for PR #N". It then closes only the events tied to that section and records a verification. Errors: `not_found`, `ambiguous`, `unsupported_span`, `not_open`, `forbidden`, `update_failed`. No `llm` module ships (F16 stays out): AI cost runs on the customer's Rovo credits, only on click, which keeps D2. That also avoids the major-version trap.

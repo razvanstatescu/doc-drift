@@ -2,6 +2,25 @@
 
 QA run against core 4.16.0 and relay version 2 in development (one-atlas-jzzf, DDSTEST space, sandbox repo `nano-soft-dev/qa-sandbox` for crafted records, `qa/` files in `nano-soft-dev/payments-api` for real merges). Plan: [test-plan.md](test-plan.md). No app source was changed and nothing was deployed.
 
+## Phase 3 (2026-11-12, core 5.0.0 to 5.4.0, relay 2.2.0)
+
+D35 shipped (Create Jira task, `write:jira-work`, major version 5) and the open phase 2 items were closed.
+
+| Check | Result |
+| --- | --- |
+| Vitest | core 352, matcher 204, shared 14 (relay unchanged, 53) |
+| `scripts/qa/phase2.py all` on 5.2.0 | 40 of 40. The rename case that was flaky once on 4.22.0 (counted as quiet) passed here and in 3 earlier reruns; not reproduced, cause still unknown |
+| Create Jira task, browser | Review panel on DDSTEST 3047452: projects load, default PAY from the page's PAY-21 anchor, prefilled summary, task CX-11 created asUser, the change card and the section show "Tracked in CX-11". The description (read back over REST) names the page with a link, the change and its why sentence, and says closing it does not verify the page. CX is a Product Discovery project, so the type fell back to Idea: those projects are now left out |
+| Consent after a major version | Right after `forge install --upgrade`, the MCP tools returned `consent_required`; opening the app's UI once renewed the consent and the MCP tools worked again. Judges install once (D19), so this only matters for later scope changes |
+| R-6 on a real merge | payments-api PR #19 (`qa/relay/r6.sh`, merged by Razvan) flagged "QA R-6 real merge page" (score 0.59) and the drift comment mentioned the author. PR #18 (file added) scored below threshold, by design. Fixed: an author who owns the page was mentioned twice; now named instead (5.3.0, P2-NTF-01 updated) |
+| UX-2 on a real draft | Confluence does not render Forge byline items on drafts (draft preview shows only By and Listen), so the "Publish this page first" message is unreachable from the badge; it stays as a fallback for direct resolver calls |
+| UX observation 3 | Fix-version moves now read "fix versions changed (2026.12 to 2027.01)" (matcher test) |
+| UX observation 10 | `ARM-64` and `COVID-19` are no longer suggested when no such Jira project exists (asUser project list, read only when a key was suggested) |
+| R-8 tooltip | "Verified on Nov 11. 1 anchor change since, none flagged. Watching 1 anchor." live on "QA jira page" after `refresh-all`; quiet changes now rewrite Verified bylines (`DDS_MATCH_QUIET_REFRESH`) |
+| Button layout | In the review panel, Cancel sat at the far right of the Dismiss and Jira forms (ButtonGroup stretched inside a Stack). Wrapped in Inline; browser-checked |
+
+Test data: Jira CX-11 (Core Experience, Parking lot); DDSTEST "QA R-6 real merge page" (Verified); payments-api PRs #18 and #19 merged, their `qa/` file removed by the cleanup commit; the REST draft "QA UX-2 draft page" was deleted.
+
 ## Phase 2 retest (2026-11-12, core 4.21.0 to 4.23.0, relay 2.2.0)
 
 After merging Track A (backend) and Track B (UI) of [backlog-phase2.md](backlog-phase2.md):

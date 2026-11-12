@@ -268,9 +268,15 @@ export interface NotifyGroup {
   authorAccountId?: string | null;
 }
 
-/** A mention placeholder inside a stored line; `notificationBody` turns it into an ac:link. */
-export const mentionToken = (accountId: string) => `{{@${accountId}}}`;
-const MENTION_TOKEN = /\{\{@([A-Za-z0-9:_-]{1,128})\}\}/g;
+/**
+ * A mention placeholder inside a stored line; `notificationBody` turns it into an ac:link. The name
+ * is kept so the owner, already mentioned at the start, is named rather than mentioned twice.
+ */
+export const mentionToken = (accountId: string, name?: string | null) => {
+  const clean = (name ?? '').replace(/[{}|]/g, '').trim().slice(0, 100);
+  return `{{@${accountId}${clean ? `|${clean}` : ''}}}`;
+};
+const MENTION_TOKEN = /\{\{@([A-Za-z0-9:_-]{1,128})(?:\|([^{}|]{1,100}))?\}\}/g;
 
 /** One sentence per change: "PR #482 (merged by Sam) changed 2 files this page documents." */
 export function notificationLine(g: NotifyGroup): string {
@@ -279,7 +285,7 @@ export function notificationLine(g: NotifyGroup): string {
     const what = g.reason ?? `${label} changed`;
     return `${what}. This page is anchored to it.`;
   }
-  const by = g.authorAccountId ? ` (merged by ${mentionToken(g.authorAccountId)})` : g.author ? ` (merged by ${g.author})` : '';
+  const by = g.authorAccountId ? ` (merged by ${mentionToken(g.authorAccountId, g.author)})` : g.author ? ` (merged by ${g.author})` : '';
   const files = g.fileCount > 0 ? plural(g.fileCount, 'file') : 'an anchor';
   return `${label}${by} changed ${files} this page documents.`;
 }
@@ -319,7 +325,10 @@ export const REVIEW_HINT = 'Review in the Doc Drift badge.';
 export function notificationBody(ownerId: string | null, lines: string[]): string {
   const [first, ...rest] = lines;
   const mention = ownerId ? `<ac:link><ri:user ri:account-id="${xml(ownerId)}" /></ac:link> ` : '';
-  const line = (l: string) => xml(l).replace(MENTION_TOKEN, (_m, id: string) => `<ac:link><ri:user ri:account-id="${xml(id)}" /></ac:link>`);
+  const line = (l: string) =>
+    xml(l).replace(MENTION_TOKEN, (_m, id: string, name?: string) =>
+      id === ownerId && name ? name : `<ac:link><ri:user ri:account-id="${xml(id)}" /></ac:link>`,
+    );
   const head = `<p>${mention}${line(first ?? '')} ${REVIEW_HINT}</p>`;
   return head + rest.map((l) => `<p>Since then: ${line(l)}</p>`).join('');
 }

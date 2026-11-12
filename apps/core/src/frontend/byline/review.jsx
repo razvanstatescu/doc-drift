@@ -210,14 +210,16 @@ function ProposalRow({ proposal, events, canAccept, busy, onAccept, onReject, gr
         {proposal.rationale ? <Text>{proposal.rationale}</Text> : null}
         <Muted>{fixAttribution(source)}</Muted>
         {requested ? <Muted tone="subtlest">{requested}</Muted> : null}
-        <ButtonGroup label={groupLabel}>
-          <LoadingButton isLoading={busy === `fix:${proposal.id}`} isDisabled={off} onClick={onAccept}>
-            {COPY.acceptDraft}
-          </LoadingButton>
-          <LoadingButton appearance="subtle" isLoading={busy === `reject:${proposal.id}`} isDisabled={off} onClick={onReject}>
-            {COPY.rejectDraft}
-          </LoadingButton>
-        </ButtonGroup>
+        <Inline>
+          <ButtonGroup label={groupLabel}>
+            <LoadingButton isLoading={busy === `fix:${proposal.id}`} isDisabled={off} onClick={onAccept}>
+              {COPY.acceptDraft}
+            </LoadingButton>
+            <LoadingButton appearance="subtle" isLoading={busy === `reject:${proposal.id}`} isDisabled={off} onClick={onReject}>
+              {COPY.rejectDraft}
+            </LoadingButton>
+          </ButtonGroup>
+        </Inline>
       </Stack>
     </Box>
   );
@@ -323,14 +325,16 @@ function RenameRow({ proposal, canEdit, busy, onAccept, onKeep }) {
         <Text>
           <Code>{proposal.from}</Code> was renamed to <Code>{proposal.to}</Code>. Move the anchor?
         </Text>
-        <ButtonGroup label={`Rename of ${proposal.from}`}>
-          <LoadingButton isLoading={busy === `accept:${proposal.id}`} isDisabled={off} onClick={onAccept}>
-            {COPY.acceptRename}
-          </LoadingButton>
-          <LoadingButton appearance="subtle" isLoading={busy === `keep:${proposal.id}`} isDisabled={off} onClick={onKeep}>
-            {COPY.keepRename}
-          </LoadingButton>
-        </ButtonGroup>
+        <Inline>
+          <ButtonGroup label={`Rename of ${proposal.from}`}>
+            <LoadingButton isLoading={busy === `accept:${proposal.id}`} isDisabled={off} onClick={onAccept}>
+              {COPY.acceptRename}
+            </LoadingButton>
+            <LoadingButton appearance="subtle" isLoading={busy === `keep:${proposal.id}`} isDisabled={off} onClick={onKeep}>
+              {COPY.keepRename}
+            </LoadingButton>
+          </ButtonGroup>
+        </Inline>
       </Stack>
     </Box>
   );
@@ -382,14 +386,16 @@ function DismissForm({ count, busy, targets, canNarrow, onConfirm, onCancel }) {
             <HelperMessage>Changes to a path you check stop flagging this page. Other anchors keep watching.</HelperMessage>
           </Stack>
         ) : null}
-        <ButtonGroup label="Dismiss">
-          <LoadingButton isLoading={busy === 'dismiss'} isDisabled={!chosen || Boolean(busy)} onClick={() => onConfirm(chosen.value, chosen.label, picked)}>
-            {dismissConfirm(count)}
-          </LoadingButton>
-          <Button appearance="subtle" isDisabled={busy === 'dismiss'} onClick={onCancel}>
-            {COPY.cancel}
-          </Button>
-        </ButtonGroup>
+        <Inline>
+          <ButtonGroup label="Dismiss">
+            <LoadingButton isLoading={busy === 'dismiss'} isDisabled={!chosen || Boolean(busy)} onClick={() => onConfirm(chosen.value, chosen.label, picked)}>
+              {dismissConfirm(count)}
+            </LoadingButton>
+            <Button appearance="subtle" isDisabled={busy === 'dismiss'} onClick={onCancel}>
+              {COPY.cancel}
+            </Button>
+          </ButtonGroup>
+        </Inline>
       </Stack>
     </Box>
   );

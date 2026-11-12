@@ -257,7 +257,10 @@ def g_notify():
     st, d = q.http("GET", f"/wiki/api/v2/pages/{pid}/footer-comments?body-format=storage&limit=5")
     bodies = [c["body"]["storage"]["value"] for c in (d or {}).get("results", [])]
     last = bodies[-1] if bodies else ""
-    check("P2-NTF-01 (R-6) the drift comment mentions the PR author when the account resolves", n.get("outcome") in ("created", "appended") and "merged by <ac:link><ri:user" in "".join(bodies),
+    # The author here is also the page owner, who is mentioned at the start: since 5.2 they are named,
+    # not mentioned twice (live PR #19). Another author's account still gets the mention (unit tests).
+    newest = last.split("<p>")[-1]
+    check("P2-NTF-01 (R-6) the drift comment names the PR author; an author who owns the page is not mentioned twice", n.get("outcome") in ("created", "appended") and "merged by Razvan Statescu)" in newest and newest.count("ri:account-id") == 0,
           {"notify": n, "comment": last[-400:]})
     q.driver("verify", pageId=pid)
 

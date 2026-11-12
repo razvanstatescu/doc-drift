@@ -136,12 +136,21 @@ describe('PR author mention in the drift comment (R-6)', () => {
   it('mentions the author when the account resolved, else names them', () => {
     const [g] = groupForNotification([{ source: 'bitbucket', ref: 'ws/r#482', files: ['a', 'b'], reasons: [], changeAuthor: 'Sam Rivera', changeAuthorAccountId: '712020:abc' }]);
     const line = notificationLine(g!);
-    expect(line).toBe('PR #482 (merged by {{@712020:abc}}) changed 2 files this page documents.');
+    expect(line).toBe('PR #482 (merged by {{@712020:abc|Sam Rivera}}) changed 2 files this page documents.');
     expect(notificationBody('owner-1', [line])).toBe(
       '<p><ac:link><ri:user ri:account-id="owner-1" /></ac:link> PR #482 (merged by <ac:link><ri:user ri:account-id="712020:abc" /></ac:link>) changed 2 files this page documents. Review in the Doc Drift badge.</p>',
     );
     const [plain] = groupForNotification([{ source: 'bitbucket', ref: 'ws/r#9', files: ['a'], reasons: [], changeAuthor: 'Sam <b>', changeAuthorAccountId: null }]);
     expect(notificationBody(null, [notificationLine(plain!)])).toBe('<p>PR #9 (merged by Sam &lt;b&gt;) changed 1 file this page documents. Review in the Doc Drift badge.</p>');
+  });
+
+  it('names the author instead of mentioning them twice when they own the page (live: PR #19)', () => {
+    const [g] = groupForNotification([{ source: 'bitbucket', ref: 'ws/r#19', files: ['a'], reasons: [], changeAuthor: 'Razvan Statescu', changeAuthorAccountId: 'owner-1' }]);
+    expect(notificationBody('owner-1', [notificationLine(g!)])).toBe(
+      '<p><ac:link><ri:user ri:account-id="owner-1" /></ac:link> PR #19 (merged by Razvan Statescu) changed 1 file this page documents. Review in the Doc Drift badge.</p>',
+    );
+    // A line stored before names were kept still renders as a mention.
+    expect(notificationBody('owner-1', ['PR #1 (merged by {{@owner-1}}) changed 1 file this page documents.'])).toContain('(merged by <ac:link><ri:user ri:account-id="owner-1" /></ac:link>)');
   });
 });
 

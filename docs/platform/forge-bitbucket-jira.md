@@ -282,6 +282,7 @@ Added 2026-11-12 for D35 (scopes from the Forge MCP `get-api-required-scopes`, A
 - Create issue: `POST /rest/api/3/issue` needs **`write:jira-work`** (classic). Body `{fields:{project:{key}, issuetype:{id}, summary, description: <ADF doc>}}`; returns `{id, key, self}`. Verified live: CX-11 created asUser from the review panel.
 - Issue types for a project: `GET /rest/api/3/issue/createmeta/{projectIdOrKey}/issuetypes` (`read:jira-work`). The response lists types under `issueTypes` (older) or `values`; read both. A Jira Product Discovery project's only standard type is **Idea** (live), so leave `projectTypeKey: 'product_discovery'` projects out of a "create task" list.
 - Projects the user can create in: `GET /rest/api/3/project/search?action=create&orderBy=name&maxResults=50` (`read:jira-work`); each value has `key`, `name`, `projectTypeKey`; paginate with `startAt` and `isLast`.
+- After a scope change (major version) and `forge install --upgrade`, asUser calls from Rovo/MCP return a consent error until the user opens any of the app's UI once (observed live 2026-11-12, core 5.0.0); the UI renewed the consent without a prompt.
 - Native Confluence "Verified" status: **no public write API** (Unverified that one will appear). Teamwork Graph's `ConfluencePage` has a read-only `isVerified`. Content states (`GET/PUT/DELETE /wiki/rest/api/content/{id}/state`, `write:confluence-content`) are a different feature, and **PUT publishes a new page version** (spec text: "creates a new version ... of the content with the new state").
 
 ---

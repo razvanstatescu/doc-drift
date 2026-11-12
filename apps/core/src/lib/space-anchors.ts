@@ -10,7 +10,8 @@ import { getPageStorage, getSpaceIdByKey, listSpacePages, pageOperations } from 
 import { stateTitle } from './copy';
 import { bindingCountsFor, bindingsForPage, ensureSchema } from './db';
 import { MESSAGES } from './review-service';
-import { suggestionsFor, type SuggestionView } from './suggestions';
+import { checkedSuggestions, type SuggestionView } from './suggestions';
+import { jiraProjectKeys, type JiraRequester } from './jira-task';
 
 type Requester = Parameters<typeof getPageStorage>[0];
 
@@ -55,6 +56,9 @@ export async function suggestSpaceAnchors(rawKey: unknown, rawLimit: unknown, re
 
   const out: SpaceSuggestion[] = [];
   let reads = 0;
+  // One project list for the whole space, read on the first page that suggests a Jira key.
+  let projects: Promise<Set<string> | null> | undefined;
+  const projectKeys = () => (projects ??= jiraProjectKeys(reader as unknown as JiraRequester));
   for (let i = 0; i < unanchored.length && out.filter((x) => !x.skipped).length < limit && reads < SPACE_SUGGEST_LIMITS.maxReads; i += SPACE_SUGGEST_LIMITS.batch) {
     const batch = unanchored.slice(i, i + SPACE_SUGGEST_LIMITS.batch);
     reads += batch.length;
@@ -64,7 +68,7 @@ export async function suggestSpaceAnchors(rawKey: unknown, rawLimit: unknown, re
         if (body.status >= 300 || body.storage === undefined) return undefined;
         const base = { pageId: p.id, title: body.title ?? p.title, url: p.url ?? null };
         if (restricted) return { ...base, suggestions: [], skipped: 'restricted' };
-        const suggestions = suggestionsFor(body.storage, []);
+        const suggestions = await checkedSuggestions(body.storage, [], projectKeys);
         return suggestions.length > 0 ? { ...base, suggestions } : undefined;
       }),
     );

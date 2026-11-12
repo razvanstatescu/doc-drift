@@ -410,6 +410,8 @@ permissions:
     - write:confluence-content
     # M2. Jira trigger and GET /rest/api/3/issue/{key}.
     - read:jira-work
+    # D35. "Create Jira task" from the review panel (POST /rest/api/3/issue, asUser only).
+    - write:jira-work
 app:
   runtime:
     name: nodejs24.x

@@ -48,9 +48,9 @@ Production, share links, the judge guide and video stay out of scope. No new sco
 | P1 | R-3 | Settings "For coding agents" card: the copy-paste CLAUDE.md / AGENTS.md block plus the MCP URL and `claude mcp add` line |
 | P1 | R-2, R-4, R-7, R-8 (UI) | Show the why sentence; the rename quick-fix button; the "stop watching this path" option on Dismiss "Not relevant"; the verified-context line |
 
-## Decide by Dec 1 (adds scopes, so a major version)
-- Sync with native Confluence "Verified" status.
-- Create a Jira task from a drift event.
+## Decided early (D35, 2026-11-12; was "Decide by Dec 1")
+- Sync with native Confluence "Verified" status: **dropped** (no public write API; content states publish a page version).
+- Create a Jira task from a drift event: **shipped** in core 5.x (`write:jira-work`, major version 5).
 
 ## Not doing now
 - Viewer-persona browser test (needs a second account).

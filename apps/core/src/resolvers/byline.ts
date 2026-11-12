@@ -6,7 +6,8 @@ import api from '@forge/api';
 import Resolver from '@forge/resolver';
 import { PAGE_STATE_LABELS } from '@dds/shared';
 import { anchorLabel, normalizeAnchor, type AnchorInput } from '../lib/anchors';
-import { saveBindings, suggestionsFor } from '../lib/bindings-service';
+import { saveBindings } from '../lib/bindings-service';
+import { checkedSuggestions } from '../lib/suggestions';
 import { refLabel, stateTitle } from '../lib/copy';
 import { normalizeSpaceKey, saveSpaceAnchors, suggestSpaceAnchors } from '../lib/space-anchors';
 import { appCannotRead as appCannotReadAs, makeGate, notVisible } from '../lib/access';
@@ -14,6 +15,8 @@ import { AGENT } from '../lib/agent-meta';
 import { currentUserIsAdmin, getPageStatus, getPageStorage, pageOperations } from '../lib/confluence';
 import { getSettingsLocation } from '../lib/settings-store';
 import { applyProposal, applyRenameQuickFix, listProposals, rejectProposal } from '../lib/fix-service';
+import { createJiraTask, jiraTaskOptions } from '../lib/jira-task-service';
+import { jiraProjectKeys, siteBase } from '../lib/jira-task';
 import { bindingsForPage, ensureSchema, getPageState, openEventsForPage } from '../lib/db';
 import { fromSqlDate } from '../lib/ingest-rules';
 import {
@@ -74,6 +77,7 @@ resolver.define('getPageDrift', async ({ payload, context }) => {
     canConfigure,
     settingsUrl: canConfigure ? await settingsUrlFor(ctx) : null,
     appReader: api.asApp(),
+    siteBase: siteBase(ctx.siteUrl),
   });
 });
 
@@ -161,6 +165,26 @@ resolver.define('saveSpaceAnchors', async ({ payload, context }) => {
   return saveSpaceAnchors(p.items, { user: api.asUser(), app: api.asApp(), accountId: ctx.accountId ?? null, spaceKey: key ? normalizeSpaceKey(key) : null });
 });
 
+// ---------------------------------------------------------------------------
+// D35: Create Jira task. asUser only; view rights on the page; never verifies the page.
+// ---------------------------------------------------------------------------
+const jiraDeps = (ctx: ResolverContext) => ({ user: api.asUser(), app: api.asApp(), gate: userGate, siteBase: siteBase(ctx.siteUrl) });
+
+resolver.define('getJiraTaskOptions', async ({ payload, context }) => {
+  const ctx = context as ResolverContext;
+  const pageId = pageIdOf(ctx, payload);
+  if (!pageId) return notVisible();
+  return jiraTaskOptions(pageId, jiraDeps(ctx));
+});
+
+resolver.define('createJiraTask', async ({ payload, context }) => {
+  const ctx = context as ResolverContext;
+  const pageId = pageIdOf(ctx, payload);
+  if (!pageId) return notVisible();
+  const p = (payload ?? {}) as { projectKey?: unknown; summary?: unknown };
+  return createJiraTask(pageId, p.projectKey, p.summary, jiraDeps(ctx));
+});
+
 /** What `rovo.open({type: 'forge', agentName, agentKey})` needs: the manifest's rovo:agent name and key. */
 resolver.define('getRovoAgentInfo', async () => ({ ok: true, agentName: AGENT.name, agentKey: AGENT.key }));
 
@@ -218,7 +242,7 @@ resolver.define('load', async ({ context }) => {
       weight: b.weight,
       label: anchorLabel(b),
     })),
-    suggestions: page.storage ? suggestionsFor(page.storage, bindings) : [],
+    suggestions: page.storage ? await checkedSuggestions(page.storage, bindings, () => jiraProjectKeys(api.asUser())) : [],
     events: events.slice(0, 5).map((e) => ({
       id: e.id,
       ref: refLabel(e.ref, e.source),

@@ -137,7 +137,20 @@ export const COPY = {
   getStarted: 'Get started',
   stepDone: 'Done',
   forCodingAgents: 'For coding agents',
+
+  // D35: Create Jira task
+  jiraTask: 'Track in Jira',
+  jiraTaskHelp: 'Creates a Jira task as you, with the changes and sections to re-read. Closing it does not mark the page Verified.',
+  createJiraTask: 'Create Jira task',
+  jiraProject: 'Project',
+  jiraSummary: 'Summary',
+  jiraCreate: 'Create task',
+  jiraLoading: 'Loading Jira projects',
+  jiraCreated: 'Jira task created',
+  jiraCreatedBody: 'When the page is up to date, open it and click Mark verified.',
+  jiraFailed: "Couldn't create the Jira task.",
 } as const;
+
 
 /** R-3: the MCP endpoint for the core app (one app ID, D19). */
 export const MCP_URL = 'https://mcp.atlassian.com/forge/12e968a1-a45d-4524-ba28-d47e2315db1a';

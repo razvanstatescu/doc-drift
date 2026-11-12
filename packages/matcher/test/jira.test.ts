@@ -61,3 +61,19 @@ describe('scoreChange for Jira', () => {
     });
   });
 });
+
+describe('fix-version wording (UX observation 3)', () => {
+  it('prefers the item with both values when Jira sends a move as two items', () => {
+    const signals = jiraSignals(
+      jira([
+        { field: 'Fix Version', from: null, to: '2027.01' },
+        { field: 'Fix Version', from: '2026.12', to: '2027.01' },
+      ]),
+    );
+    expect(signals[0]!.reason).toBe('PAY-142 fix versions changed (2026.12 to 2027.01)');
+  });
+  it('still ranks by score first', () => {
+    const signals = jiraSignals(jira([{ field: 'summary', from: 'a', to: 'b' }, { field: 'Fix Version', from: null, to: '2027.01' }]));
+    expect(signals[0]!.reason).toBe('PAY-142 fix versions changed (now 2027.01)');
+  });
+});

@@ -158,6 +158,9 @@ export async function checkPageFreshness(input: Record<string, unknown>, deps: T
   const title = info.title ?? null;
   const lead = pageLead(title, PAGE_STATE_LABELS[status]);
   const where = sections.length > 0 ? ` Affected: ${sections.map((x) => `"${x.heading}"`).join(', ')}.` : '';
+  // D35: Jira work items people created to fix the open drift.
+  const trackedIn = restricted ? [] : [...new Set(events.map((e) => e.followUpKey).filter((k): k is string => Boolean(k)))];
+  const tracked = trackedIn.length > 0 ? ` An update is tracked in ${trackedIn.join(', ')}.` : '';
   return {
     ok: true,
     pageId,
@@ -172,11 +175,12 @@ export async function checkPageFreshness(input: Record<string, unknown>, deps: T
     verifiedBy: state?.verifiedBy ? (names.get(state.verifiedBy) ?? null) : null,
     openDrift: drift.map(({ _at, _ref, ...d }) => d),
     affectedSections: sections,
+    ...(trackedIn.length > 0 && { trackedIn }),
     guidance: `${lead} ${freshnessGuidance(
       status,
       drift.map((d) => ({ source: d.source, ref: d._ref, at: d._at })),
       { now, restricted },
-    )}${status === 'possibly_stale' || status === 'stale' ? where : ''}`,
+    )}${status === 'possibly_stale' || status === 'stale' ? `${where}${tracked}` : ''}`,
   };
 }
 

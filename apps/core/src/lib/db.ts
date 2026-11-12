@@ -183,6 +183,8 @@ const MIGRATIONS: [string, string][] = [
   ['v013_fix_proposal_block_kind', 'ALTER TABLE fix_proposal ADD COLUMN block_kind VARCHAR(16) NULL'],
   // Phase 2 (R-7). Paths or globs a binding no longer watches ("stop watching this path for this page").
   ['v014_binding_exclude_paths', 'ALTER TABLE binding ADD COLUMN exclude_paths JSON NULL'],
+  // D35. The Jira work item a person created to track this change ("Create Jira task").
+  ['v015_drift_event_follow_up', 'ALTER TABLE drift_event ADD COLUMN follow_up_key VARCHAR(64) NULL'],
 ];
 
 /** Applies pending migrations. Idempotent: the runner skips entries recorded in `__migrations`. */
@@ -503,6 +505,8 @@ export interface OpenEventRow {
   createdAt: string;
   snoozedUntil: string | null;
   matchedTokens: string[];
+  /** D35: the Jira work item tracking this change, when someone created one. */
+  followUpKey: string | null;
 }
 
 export async function openEventsForPage(pageId: string): Promise<OpenEventRow[]> {
@@ -510,9 +514,10 @@ export async function openEventsForPage(pageId: string): Promise<OpenEventRow[]>
     id: string; page_id: string; binding_id: string; change_record_id: string; ref: string; source: 'bitbucket' | 'jira';
     summary: string; matched_anchor: string | null; files: unknown; reasons: unknown; matched_tokens: unknown;
     score: string | number; severity: 'high' | 'medium'; weight: string | null; created_at: string; snoozed_until: string | null;
+    follow_up_key: string | null;
   }>(
     `SELECT e.id, e.page_id, e.binding_id, e.change_record_id, e.ref, e.source, e.summary, e.matched_anchor, e.files, e.reasons,
-       e.matched_tokens, e.score, e.severity, b.weight, e.created_at, e.snoozed_until
+       e.matched_tokens, e.score, e.severity, b.weight, e.created_at, e.snoozed_until, e.follow_up_key
      FROM drift_event e LEFT JOIN binding b ON b.id = e.binding_id
      WHERE e.page_id = ? AND e.status = 'open' ORDER BY e.created_at DESC`,
     pageId,
@@ -534,7 +539,18 @@ export async function openEventsForPage(pageId: string): Promise<OpenEventRow[]>
     createdAt: r.created_at,
     snoozedUntil: r.snoozed_until,
     matchedTokens: parseJson<string[]>(r.matched_tokens, []),
+    followUpKey: r.follow_up_key ?? null,
   }));
+}
+
+/** D35: links the page's open events to the Jira work item created for them. Returns how many. */
+export async function setFollowUp(pageId: string, eventIds: string[], key: string): Promise<number> {
+  if (eventIds.length === 0) return 0;
+  await exec(
+    `UPDATE drift_event SET follow_up_key = ?, updated_at = ? WHERE page_id = ? AND status = 'open' AND id IN (${placeholders(eventIds.length)})`,
+    key, toSqlDate(Date.now()), pageId, ...eventIds,
+  );
+  return eventIds.length;
 }
 
 /** Closes every open event on a page (a person verified it). Returns the closed IDs and the oldest one's creation time. */

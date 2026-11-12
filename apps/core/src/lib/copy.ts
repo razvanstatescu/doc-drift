@@ -36,6 +36,9 @@ export interface BylineFacts {
   now?: number;
   /** Set when every open event is snoozed (epoch ms): the tooltip says until when instead of "Review." */
   snoozedUntil?: number;
+  /** R-8: changes to the anchors since verification, and how many of them flagged the page. */
+  changesSince?: number;
+  flaggedSince?: number;
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -115,7 +118,11 @@ function staleTooltip(f: BylineFacts): string {
 function verifiedTooltip(f: BylineFacts): string {
   const watching = f.anchorCount !== undefined ? ` Watching ${plural(f.anchorCount, 'anchor')}.` : '';
   const when = f.verifiedAt !== undefined ? `Verified on ${shortDate(f.verifiedAt)}.` : 'Verified.';
-  return clampTooltip(`${when}${watching}`);
+  // R-8: "12 anchor changes since, none flagged." shows the watch is working.
+  const n = f.changesSince ?? 0;
+  const since = n > 0 ? ` ${plural(n, 'anchor change')} since, ${f.flaggedSince ? `${f.flaggedSince} flagged` : 'none flagged'}.` : '';
+  const full = `${when}${since}${watching}`;
+  return full.length <= TOOLTIP_MAX ? full : clampTooltip(`${when}${since}`);
 }
 
 /**

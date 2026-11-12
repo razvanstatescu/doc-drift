@@ -60,8 +60,12 @@ function signalFor(item: JiraFieldChange, change: JiraChangeRecord): JiraSignal 
  * the change scores as its strongest signal.
  */
 export function jiraSignals(change: JiraChangeRecord): JiraSignal[] {
+  // Jira sends a fix-version move as two items (`null → 2027.01`, `2026.12 → 2027.01`). Among equal
+  // scores, an item with both values reads better ("2026.12 to 2027.01"), so it comes first.
+  const both = (item: JiraFieldChange) => (item.from && item.to ? 1 : 0);
   return change.changelog
-    .map((item) => signalFor(item, change))
-    .filter((s): s is JiraSignal => s !== undefined)
-    .sort((a, b) => b.score - a.score);
+    .map((item) => ({ item, signal: signalFor(item, change) }))
+    .filter((x): x is { item: JiraFieldChange; signal: JiraSignal } => x.signal !== undefined)
+    .sort((a, b) => b.signal.score - a.signal.score || both(b.item) - both(a.item))
+    .map((x) => x.signal);
 }

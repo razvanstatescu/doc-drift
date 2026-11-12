@@ -10,7 +10,7 @@ Hackathon scope in MoSCoW order. The numbers are stable IDs. Refer to them in is
 | F2 | Bitbucket relay + ingest web trigger, Jira update trigger | See [architecture/overview.md](../architecture/overview.md) |
 | F3 | Deterministic matcher | Scoring, debounce, rename handling, revert handling, ignore patterns. See [architecture/detection.md](../architecture/detection.md) |
 | F4 | Byline badge with 4 states | Written through `contentPropertyKey`, so a page view runs no function |
-| F5 | Review panel | Trigger details (PR title, author, merged time, changed files, hunk excerpt or Jira changelog), affected page sections, severity. Actions: Mark verified / Dismiss (with reason) / Snooze 7 days / Propose fix |
+| F5 | Review panel | Trigger details (PR title, author, merged time, changed files, hunk excerpt or Jira changelog), affected page sections, severity. Actions: Mark verified / Dismiss (with reason) / Snooze 7 days / Propose fix / Create Jira task (asUser, D35; the open changes show "Tracked in KEY") |
 | F6 | Drift Reviewer Rovo agent | Actions `get-drift-context`, `check-page-freshness`, `record-verification` |
 | F7 | `rovo:mcp` server | Tools `check-page-freshness`, `find-docs-for-path`, `list-stale-pages` |
 | F8 | Space dashboard | Drift debt, top stale pages, owner backlog |

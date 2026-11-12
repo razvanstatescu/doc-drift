@@ -1,4 +1,4 @@
-// Anchor suggestions for the binding modal. Pure: no Forge imports, unit-tested.
+// Anchor suggestions for the binding modal. Pure apart from `checkedSuggestions` (one Jira read).
 import { extractPageText, suggestAnchors, type SuggestedAnchor } from '@dds/matcher';
 import { anchorKey } from './anchors';
 
@@ -45,3 +45,22 @@ export function suggestionsFor(storage: string, existing: { anchorType: string; 
     .slice(0, 30);
 }
 
+
+/**
+ * UX observation 10: drops suggested Jira keys whose project is not on this site (`ARM-64`,
+ * `COVID-19`). `projects` null means the list could not be read: keep every suggestion.
+ */
+export function withKnownProjects<T extends { anchorType: string; jiraKey?: string }>(list: T[], projects: Set<string> | null): T[] {
+  if (!projects) return list;
+  return list.filter((s) => s.anchorType !== 'jira' || projects.has((s.jiraKey ?? '').split('-')[0] ?? ''));
+}
+
+/** `suggestionsFor`, then drops look-alike Jira keys. Reads the project list only when a key was suggested. */
+export async function checkedSuggestions(
+  storage: string,
+  existing: Parameters<typeof suggestionsFor>[1],
+  projectKeys: () => Promise<Set<string> | null>,
+): Promise<SuggestionView[]> {
+  const list = suggestionsFor(storage, existing);
+  return list.some((s) => s.anchorType === 'jira') ? withKnownProjects(list, await projectKeys()) : list;
+}

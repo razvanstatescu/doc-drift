@@ -53,6 +53,14 @@ describe('bylineValue', () => {
 
   it('describes Verified with date and anchor count', () => {
     expect(bylineValue({ state: 'verified', verifiedAt: NOV_11, anchorCount: 1 }).tooltip).toBe('Verified on Nov 11. Watching 1 anchor.');
+    // R-8: the count of changes since verification.
+    expect(bylineValue({ state: 'verified', verifiedAt: NOV_11, anchorCount: 3, changesSince: 12, flaggedSince: 0 }).tooltip).toBe(
+      'Verified on Nov 11. 12 anchor changes since, none flagged. Watching 3 anchors.',
+    );
+    expect(bylineValue({ state: 'verified', verifiedAt: NOV_11, anchorCount: 1, changesSince: 1, flaggedSince: 1 }).tooltip).toBe(
+      'Verified on Nov 11. 1 anchor change since, 1 flagged. Watching 1 anchor.',
+    );
+    expect(bylineValue({ state: 'verified', verifiedAt: NOV_11, anchorCount: 1, changesSince: 0 }).tooltip).toBe('Verified on Nov 11. Watching 1 anchor.');
     expect(bylineValue({ state: 'verified', anchorCount: 3 }).tooltip).toBe('Verified. Watching 3 anchors.');
   });
 

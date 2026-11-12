@@ -278,6 +278,12 @@ Verified [JIRA-API]:
 - **`GET/POST /rest/api/3/search` is deprecated** ("Currently being removed", CHANGE-2046: https://developer.atlassian.com/changelog/#CHANGE-2046). Use **`GET/POST /rest/api/3/search/jql`**. It paginates with `nextPageToken` (no `startAt`; the token "will expire in 7 days"; the response has `isLast`). The default `maxResults` is 50. `fields` defaults to **`id` only**, so always pass `fields=`. `reconcileIssues` gives read-after-write consistency. A count is available at `POST /rest/api/3/search/approximate-count`.
 - Example: `route\`/rest/api/3/search/jql?jql=${'key in (ABC-1,ABC-2)'}&fields=status,fixVersions,components,parent\``.
 
+Added 2026-11-12 for D35 (scopes from the Forge MCP `get-api-required-scopes`, Atlassian OpenAPI spec; behaviour verified live on one-atlas-jzzf):
+- Create issue: `POST /rest/api/3/issue` needs **`write:jira-work`** (classic). Body `{fields:{project:{key}, issuetype:{id}, summary, description: <ADF doc>}}`; returns `{id, key, self}`. Verified live: CX-11 created asUser from the review panel.
+- Issue types for a project: `GET /rest/api/3/issue/createmeta/{projectIdOrKey}/issuetypes` (`read:jira-work`). The response lists types under `issueTypes` (older) or `values`; read both. A Jira Product Discovery project's only standard type is **Idea** (live), so leave `projectTypeKey: 'product_discovery'` projects out of a "create task" list.
+- Projects the user can create in: `GET /rest/api/3/project/search?action=create&orderBy=name&maxResults=50` (`read:jira-work`); each value has `key`, `name`, `projectTypeKey`; paginate with `startAt` and `isLast`.
+- Native Confluence "Verified" status: **no public write API** (Unverified that one will appear). Teamwork Graph's `ConfluencePage` has a read-only `isVerified`. Content states (`GET/PUT/DELETE /wiki/rest/api/content/{id}/state`, `write:confluence-content`) are a different feature, and **PUT publishes a new page version** (spec text: "creates a new version ... of the content with the new state").
+
 ---
 
 ## Differences from plan.md

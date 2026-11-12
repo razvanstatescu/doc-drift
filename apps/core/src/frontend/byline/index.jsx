@@ -307,6 +307,8 @@ const App = () => {
       onRejectFix={rejectFix}
       quickFixes={quickFixes}
       onQuickFix={applyQuickFix}
+      pageId={pageId}
+      followUps={data.followUps || EMPTY}
       onVerify={() => run('verify', () => invoke('markVerified', { pageId }), { title: COPY.verified, body: COPY.reloadBadge, reload: true })}
       onSnooze={() =>
         run('snooze', () => invoke('snoozePage', { pageId, days: 7 }), { title: COPY.snoozed, body: `${snoozedBody(n)} ${COPY.reloadBadge}`, reload: true })

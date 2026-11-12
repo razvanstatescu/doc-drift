@@ -21,6 +21,7 @@ import {
   revertEventsForRef,
   upsertEvent,
   type StoredBinding,
+  pageStatesFor,
 } from './db';
 import { pushNotify } from './ingest';
 import { matcherConfigFor, spaceWatched } from './ingest-rules';
@@ -177,6 +178,7 @@ async function scoreAndStore(
   const pages = await loadPages(candidatePages);
   const result = scoreChange(record, bindings, indexPages(pages), config);
   if (result.kind !== 'scored') {
+    await refreshQuiet(candidatePages, spaceByPage);
     log('DDS_MATCH_DONE', { changeRecordId, candidates: candidatePages.length, fetched: pages.length, events: 0, outcome: result.kind });
     return { outcome: result.kind, events: 0, refreshed: [] };
   }
@@ -234,6 +236,8 @@ async function scoreAndStore(
 
   const touched = [...new Set(result.events.map((e) => e.pageId))];
   const refreshed = await refreshAll(touched, spaceByPage);
+  // R-8: a change that touched an anchor but did not flag the page still moves the Verified tooltip count.
+  await refreshQuiet(candidatePages.filter((p) => !touched.includes(p)), spaceByPage);
   try {
     await pushNotify([...notify], notifyDelaySeconds);
   } catch (e) {
@@ -265,6 +269,17 @@ async function storedRevertOf(changeRecordId: string, record: BitbucketChangeRec
 /** Readable reason for the closing log line when the probe skips a change. */
 function skipLabel(reason: string): string {
   return reason === 'no_relevant_files' ? 'all files ignored' : reason === 'non_default_branch' ? 'not the main branch' : reason;
+}
+
+/** Rewrites the byline of Verified pages a change touched without flagging (R-8 tooltip count). */
+async function refreshQuiet(pageIds: string[], spaceByPage: Map<string, string | null>): Promise<void> {
+  if (pageIds.length === 0) return;
+  const states = await pageStatesFor(pageIds);
+  const verified = pageIds.filter((id) => states.get(id) === 'verified').slice(0, 25);
+  if (verified.length > 0) {
+    await refreshAll(verified, spaceByPage);
+    log('DDS_MATCH_QUIET_REFRESH', { pages: verified });
+  }
 }
 
 async function refreshAll(pageIds: string[], spaceByPage: Map<string, string | null>): Promise<RefreshResult[]> {

@@ -8,6 +8,7 @@ import { getPageMeta, upsertPageProperty } from './confluence';
 import { bindingsForPage, getPageState, openEventsForPage, upsertPageState } from './db';
 import { fromSqlDate, severityRank } from './ingest-rules';
 import { getSettings } from './settings-store';
+import { verifiedContextFor } from './verified-context';
 
 export interface RefreshResult {
   pageId: string;
@@ -71,6 +72,15 @@ export async function refreshPage(pageId: string, opts: RefreshOptions | string 
 
   await upsertPageState({ pageId, spaceKey, ownerId, status, openEventCount: openEvents.length, maxSeverity, lastSummary });
 
+  // R-8: a Verified tooltip counts the changes since verification. A failed count keeps the old wording.
+  let context: { changesSince: number; relevant: number } | null = null;
+  if (status === 'verified' && current?.verifiedAt) {
+    try {
+      context = await verifiedContextFor(pageId, bindings, current.verifiedAt);
+    } catch (e) {
+      console.warn(`DDS_VERIFIED_CONTEXT_FAILED pageId=${pageId} ${String((e as Error)?.message ?? e).slice(0, 200)}`);
+    }
+  }
   const createdTimes = summaries.map((e) => e.createdAt);
   const allSnoozed = summaries.length > 0 && summaries.every((e) => e.snoozedUntil !== undefined && e.snoozedUntil > now);
   const value = bylineValue({
@@ -89,6 +99,7 @@ export async function refreshPage(pageId: string, opts: RefreshOptions | string 
     }),
     ...(createdTimes.length > 0 && { oldestOpenAt: Math.min(...createdTimes) }),
     ...(allSnoozed && { snoozedUntil: Math.max(...summaries.map((e) => e.snoozedUntil ?? 0)) }),
+    ...(context && { changesSince: context.changesSince, flaggedSince: context.relevant }),
     now,
   });
   const byline = await upsertPageProperty(api.asApp(), pageId, BYLINE_PROPERTY_KEY, value);

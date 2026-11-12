@@ -24,3 +24,22 @@ describe('suggestionsFor', () => {
     expect(s).toEqual([expect.objectContaining({ anchorType: 'path', pattern: 'scripts/rollback.sh', needsRepo: true })]);
   });
 });
+
+describe('look-alike Jira keys (UX observation 10)', () => {
+  const page = '<p>Runs on ARM-64, see COVID-19 notes. Tracked in PAY-142.</p>';
+  it('drops keys whose project is not on the site', async () => {
+    const { checkedSuggestions, withKnownProjects } = await import('../src/lib/suggestions');
+    const list = await checkedSuggestions(page, [], async () => new Set(['PAY']));
+    expect(list.filter((s) => s.anchorType === 'jira').map((s) => s.jiraKey)).toEqual(['PAY-142']);
+    expect(withKnownProjects([{ anchorType: 'jira', jiraKey: 'ARM-64' }], null)).toHaveLength(1);
+  });
+  it('reads the project list only when a key was suggested', async () => {
+    const { checkedSuggestions } = await import('../src/lib/suggestions');
+    let calls = 0;
+    await checkedSuggestions('<p>No keys here.</p>', [], async () => {
+      calls += 1;
+      return new Set();
+    });
+    expect(calls).toBe(0);
+  });
+});

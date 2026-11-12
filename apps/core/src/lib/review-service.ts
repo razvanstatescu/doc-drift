@@ -58,7 +58,10 @@ import {
   whySentence,
   type DismissReason,
 } from './review';
-import { suggestionsFor } from './suggestions';
+import { checkedSuggestions } from './suggestions';
+import { verifiedContextFor } from './verified-context';
+export { verifiedContextFor } from './verified-context';
+import { jiraProjectKeys, type JiraRequester } from './jira-task';
 
 /** api.asApp() or api.asUser(). */
 type Requester = Parameters<typeof getPageStorage>[0];
@@ -110,6 +113,14 @@ export interface DriftAccess {
   settingsUrl?: string | null;
   /** asApp, for display names the caller's own lookup could not resolve. */
   appReader?: Requester;
+  /** `https://site.atlassian.net`, for links to Jira follow-ups (D35). */
+  siteBase?: string;
+}
+
+/** D35: a Jira follow-up as the panel shows it. */
+export function followUpView(key: string | null, siteBase = ''): { key: string; url: string | null } | null {
+  if (!key) return null;
+  return { key, url: siteBase ? `${siteBase}/browse/${encodeURIComponent(key)}` : null };
 }
 
 export async function pageDrift(pageId: string, reader: Requester, access: DriftAccess): Promise<Record<string, unknown>> {
@@ -158,8 +169,14 @@ export async function pageDrift(pageId: string, reader: Requester, access: Drift
     const e = eventById.get(v.id)!;
     const own = tokensForEvents([{ files: v.files, matchedTokens: e.matchedTokens, issueKey: e.source === 'jira' ? e.ref : null }]);
     const section = sections.find((sec) => sec.matchedTokens.some((t) => own.includes(t)))?.heading ?? null;
-    return { ...v, whySentence: whySentence({ ...v, matchedTokens: e.matchedTokens }, { threshold, section }) };
+    return {
+      ...v,
+      whySentence: whySentence({ ...v, matchedTokens: e.matchedTokens }, { threshold, section }),
+      followUp: followUpView(e.followUpKey, access.siteBase),
+    };
   });
+  // D35: the follow-ups tracking open changes, newest change first, each once.
+  const followUps = [...new Set(events.map((e) => e.followUpKey).filter((k): k is string => Boolean(k)))].map((k) => followUpView(k, access.siteBase)!);
   const bindingById = new Map(bindings.map((b) => [b.id, b]));
   // Snoozed: every open event is snoozed into the future. The events are still returned.
   const snoozes = views.map((v) => v.snoozedUntil);
@@ -196,6 +213,7 @@ export async function pageDrift(pageId: string, reader: Requester, access: Drift
     verifiedBy: state?.verifiedBy ? { accountId: state.verifiedBy, displayName: names.get(state.verifiedBy) ?? null } : null,
     verifiedContext,
     events: withWhy,
+    followUps,
     affectedSections: sections,
     renameQuickFix,
     renameProposals: proposals
@@ -212,7 +230,7 @@ export async function pageDrift(pageId: string, reader: Requester, access: Drift
       exclude: b.exclude ?? [],
       label: anchorLabel(b),
     })),
-    suggestions: page.storage ? suggestionsFor(page.storage, bindings) : [],
+    suggestions: page.storage ? await checkedSuggestions(page.storage, bindings, () => jiraProjectKeys(reader as unknown as JiraRequester)) : [],
   };
 }
 
@@ -405,29 +423,6 @@ async function namesWithFallback(reader: Requester, app: Requester | undefined, 
   return names;
 }
 
-const shortRepo = (r: string | null | undefined) => (r ?? '').toLowerCase().split('/').at(-1) ?? '';
-
-/**
- * R-8: changes to the page's anchored code or Jira work since it was verified (`changesSince`), and how
- * many of them flagged it (`relevant`). "12 changes since, none relevant" shows the watch is working.
- */
-export async function verifiedContextFor(pageId: string, bindings: Binding[], verifiedAtSql: string): Promise<{ changesSince: number; relevant: number; since: number | null }> {
-  const code = bindings.filter((b) => b.anchorType === 'path' || b.anchorType === 'glob' || b.anchorType === 'repo');
-  const jiraKeys = [...new Set(bindings.filter((b) => b.anchorType === 'jira' && b.jiraKey).map((b) => b.jiraKey!))];
-  const repos = [...new Map(code.filter((b) => b.repo).map((b) => {
-    const r = b.repo!.toLowerCase();
-    return [r, r.includes('/') ? { full: r, slug: shortRepo(r) } : { full: null, slug: r }] as const;
-  })).values()];
-  const since = fromSqlDate(verifiedAtSql) ?? null;
-  if (repos.length === 0 && jiraKeys.length === 0) return { changesSince: 0, relevant: 0, since };
-  const [changes, flagged] = await Promise.all([changesSince(repos, jiraKeys, verifiedAtSql), eventChangesSince(pageId, verifiedAtSql)]);
-  const globs = new GlobCache();
-  const touching = changes.filter((c) => {
-    if (c.source === 'jira') return c.issueKey !== null && jiraKeys.includes(c.issueKey);
-    return code.some((b) => shortRepo(b.repo) === shortRepo(c.repo) && c.files.some((f) => pathMatchStrength(b, f, globs) > 0));
-  });
-  return { changesSince: touching.length, relevant: touching.filter((c) => flagged.has(c.id)).length, since };
-}
 
 // ---------------------------------------------------------------------------
 // stopWatchingPath (R-7): "Not relevant" narrows the anchor

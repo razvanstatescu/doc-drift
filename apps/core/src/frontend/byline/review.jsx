@@ -2,6 +2,7 @@
 // (brand/design-reference.md): What changed, Affected section, Proposed fix, then the footer actions
 // (Dismiss · Snooze 7 days · Mark verified · Accept fix). The state summary sits above, in index.jsx.
 import React, { useState } from 'react';
+import { invoke } from '@forge/bridge';
 import {
   Box,
   Button,
@@ -17,12 +18,15 @@ import {
   LoadingButton,
   Lozenge,
   RadioGroup,
+  SectionMessage,
+  Select,
   Stack,
   Strong,
   Text,
+  Textfield,
 } from '@forge/react';
 import { COPY, acceptAllHelp, dismissConfirm, dismissHelp, quickFixSource, showAll } from '../shared/copy';
-import { CodeText, Muted, Notice, SPACE, Section, SeverityLozenge, cardStyle } from '../shared/components';
+import { CodeText, ErrorState, Loading, Muted, Notice, SPACE, Section, SeverityLozenge, cardStyle } from '../shared/components';
 import { excerptBlocks } from '../shared/excerpt';
 import { PROPOSE_FIX_HELP, diffText, fixAttribution, groupBySection, proposalSource } from '../shared/fix';
 import {
@@ -121,6 +125,12 @@ function EventRow({ event, now, evidence, hideWhy }) {
         {event.anchor ? (
           <Text size="small">
             Anchor <Code>{event.anchor}</Code>
+          </Text>
+        ) : null}
+        {event.followUp ? (
+          <Text size="small">
+            {'Tracked in '}
+            {event.followUp.url ? <Link href={event.followUp.url} openNewTab>{event.followUp.key}</Link> : <Code>{event.followUp.key}</Code>}
           </Text>
         ) : null}
         {event.reasons?.length && !event.whySentence ? (
@@ -385,6 +395,139 @@ function DismissForm({ count, busy, targets, canNarrow, onConfirm, onCancel }) {
   );
 }
 
+const errorText = (res) => String(res?.message || res?.error || res || 'Unknown error');
+
+/**
+ * D35 "Track in Jira": a person creates a Jira task for the page's open changes, asUser. The form
+ * loads the projects they can create work items in, prefills a summary, and links the open changes
+ * to the new key. It never verifies the page.
+ */
+export function JiraTaskSection({ pageId, followUps, disabled }) {
+  const [phase, setPhase] = useState('idle');
+  const [options, setOptions] = useState(null);
+  const [project, setProject] = useState(null);
+  const [summary, setSummary] = useState('');
+  const [error, setError] = useState(null);
+  const [created, setCreated] = useState(null);
+
+  const open = async () => {
+    setPhase('loading');
+    setError(null);
+    try {
+      const res = await invoke('getJiraTaskOptions', { pageId });
+      if (!res?.ok) {
+        setError(res);
+        setPhase('unavailable');
+        return;
+      }
+      setOptions(res);
+      setProject(res.defaultProject);
+      setSummary(res.summary || '');
+      setPhase('form');
+    } catch (e) {
+      setError(e);
+      setPhase('unavailable');
+    }
+  };
+
+  const create = async () => {
+    setPhase('creating');
+    setError(null);
+    try {
+      const res = await invoke('createJiraTask', { pageId, projectKey: project, summary });
+      if (!res?.ok) {
+        setError(res);
+        setPhase('form');
+        return;
+      }
+      setCreated(res);
+      setPhase('done');
+    } catch (e) {
+      setError(e);
+      setPhase('form');
+    }
+  };
+
+  const keys = (followUps || []).map((f) => f.key);
+  const existing = keys.length ? (
+    <Text>
+      {'Tracked in '}
+      {(followUps || []).map((f, i) => (
+        <React.Fragment key={f.key}>
+          {i > 0 ? (i === keys.length - 1 ? ' and ' : ', ') : null}
+          {f.url ? <Link href={f.url} openNewTab>{f.key}</Link> : <Code>{f.key}</Code>}
+        </React.Fragment>
+      ))}
+      .
+    </Text>
+  ) : null;
+
+  let body;
+  if (phase === 'done' && created) {
+    body = (
+      <SectionMessage appearance="success" title={COPY.jiraCreated}>
+        <Text>
+          {created.url ? <Link href={created.url} openNewTab>{created.key}</Link> : <Code>{created.key}</Code>}
+          {` tracks ${created.linked === 1 ? 'this change' : `these ${created.linked} changes`}. ${COPY.jiraCreatedBody}`}
+        </Text>
+      </SectionMessage>
+    );
+  } else if (phase === 'loading') {
+    body = <Loading text={COPY.jiraLoading} />;
+  } else if (phase === 'form' || phase === 'creating') {
+    const projectOptions = (options?.projects || []).map((p) => ({ label: `${p.name} (${p.key})`, value: p.key }));
+    const summaryBad = !summary.trim() || summary.trim().length > 255;
+    body = (
+      <Box xcss={cardStyle}>
+        <Stack space={SPACE.group}>
+          <Stack space={SPACE.tight}>
+            <Label labelFor="dds-jira-project">{COPY.jiraProject}</Label>
+            <Select
+              inputId="dds-jira-project"
+              options={projectOptions}
+              value={projectOptions.find((o) => o.value === project) || null}
+              onChange={(o) => setProject(o?.value ?? null)}
+              isDisabled={phase === 'creating'}
+            />
+          </Stack>
+          <Stack space={SPACE.tight}>
+            <Label labelFor="dds-jira-summary">{COPY.jiraSummary}</Label>
+            <Textfield id="dds-jira-summary" value={summary} isInvalid={summaryBad} maxLength={255} onChange={(e) => setSummary(e.target.value)} isDisabled={phase === 'creating'} />
+          </Stack>
+          {error ? <ErrorState title={COPY.jiraFailed} body={errorText(error)} /> : null}
+          <Inline space={SPACE.row}>
+            <LoadingButton isLoading={phase === 'creating'} isDisabled={!project || summaryBad} onClick={create}>
+              {COPY.jiraCreate}
+            </LoadingButton>
+            <Button appearance="subtle" isDisabled={phase === 'creating'} onClick={() => setPhase('idle')}>
+              {COPY.cancel}
+            </Button>
+          </Inline>
+        </Stack>
+      </Box>
+    );
+  } else {
+    body = (
+      <Stack space={SPACE.tight}>
+        {phase === 'unavailable' && error ? <Muted>{errorText(error)}</Muted> : null}
+        <Inline>
+          <Button isDisabled={disabled} onClick={open}>
+            {COPY.createJiraTask}
+          </Button>
+        </Inline>
+      </Stack>
+    );
+  }
+
+  return (
+    <Section title={COPY.jiraTask}>
+      {existing}
+      <Muted>{COPY.jiraTaskHelp}</Muted>
+      {body}
+    </Section>
+  );
+}
+
 /**
  * Props: `events` (the review list: open and snoozed, High first), `allEvents` (for draft attribution),
  * `affectedSections`, `renameProposals`, `proposals` (open drafts), `caps` (from `capabilities()`),
@@ -413,6 +556,8 @@ export function ReviewPanel({
   onAcceptAllFix,
   onAcceptSectionFix,
   onRejectFix,
+  pageId,
+  followUps,
 }) {
   const [dismissing, setDismissing] = useState(false);
   const [showAllEvents, setShowAllEvents] = useState(false);
@@ -470,6 +615,8 @@ export function ReviewPanel({
           ))}
         </Section>
       ) : null}
+
+      <JiraTaskSection pageId={pageId} followUps={followUps} disabled={Boolean(busy)} />
 
       <Stack space={SPACE.group}>
         <Notice notice={notice} />

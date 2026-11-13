@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy and data handling · Doc Drift Sentinel</title>
+  <meta name="description" content="What Doc Drift Sentinel reads, what it stores and for how long, when AI is used, and the permissions it asks for.">
+  <meta name="theme-color" content="#072630">
+  <link rel="icon" href="assets/doc-drift-icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/site.css">
+  <script>
+    try { var t = localStorage.getItem('dds-theme'); if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="lockup" href="./" aria-label="Doc Drift Sentinel home">
+        <img src="assets/doc-drift-icon.svg" alt="" width="40" height="40">
+        <span>Doc Drift Sentinel</span>
+      </a>
+      <nav class="nav" id="site-nav" aria-label="Main">
+        <a href="./#how">How it works</a>
+        <a href="./#confluence">In Confluence</a>
+        <a href="./#agents">For agents</a>
+        <a href="docs.html">Docs</a>
+        <a href="privacy.html" aria-current="page">Privacy</a>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn theme-toggle" type="button" data-theme-toggle>
+          <svg class="icon moon" aria-hidden="true"><use href="assets/icons.svg#i-moon"/></svg>
+          <svg class="icon sun" aria-hidden="true"><use href="assets/icons.svg#i-sun"/></svg>
+        </button>
+        <button class="icon-btn menu-toggle" type="button" data-menu-toggle aria-controls="site-nav" aria-expanded="false" aria-label="Menu">
+          <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-menu"/></svg>
+        </button>
+        <a class="btn btn-primary btn-sm" href="docs.html#install" data-install>Install for Confluence</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="doc-hero">
+      <div class="wrap">
+        <p class="eyebrow">Trust</p>
+        <h1 class="heading-lg" style="margin-top:10px">Privacy and data handling</h1>
+        <p class="body-lg">What Doc Drift Sentinel reads, what it keeps and for how long, when AI is involved, and the permissions it asks for. In short: it runs on Atlassian Forge, keeps metadata rather than your pages, and acts as the person who clicks.</p>
+        <span class="caption">Last updated November 13, 2026</span>
+      </div>
+    </div>
+
+    <div class="wrap doc-layout">
+      <nav class="toc" aria-label="On this page">
+        <h2>On this page</h2>
+        <ol>
+          <li><a href="#summary">Summary</a></li>
+          <li><a href="#where">Where data lives</a></li>
+          <li><a href="#reads">What the apps read</a></li>
+          <li><a href="#stores">What the apps store</a></li>
+          <li><a href="#ai">When AI is used</a></li>
+          <li><a href="#access">Who sees what</a></li>
+          <li><a href="#writes">What the apps change</a></li>
+          <li><a href="#scopes">Permissions</a></li>
+          <li><a href="#deletion">Retention and deletion</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ol>
+      </nav>
+
+      <article class="prose">
+        <section id="summary">
+          <h2>Summary</h2>
+          <ul>
+            <li><strong>No servers of ours.</strong> Both apps run on Atlassian Forge. Data stays in Forge storage for your site, and the Bitbucket relay talks only to the Confluence app.</li>
+            <li><strong>No page bodies stored.</strong> Pages are read to match changes and find affected sections, then discarded. The app keeps anchors, page states, change details and file paths.</li>
+            <li><strong>Diff text is deleted after 30 days.</strong> The list of changed files and the pull request title stay, so the history still makes sense.</li>
+            <li><strong>No AI in detection.</strong> AI runs only when someone clicks Propose fix, inside Rovo on your own site.</li>
+            <li><strong>Permission-aware.</strong> People and agents only see the state of pages they can view.</li>
+            <li><strong>No tracking.</strong> The apps have no analytics. This website sets no cookies, loads its fonts from Google Fonts, and remembers only your theme choice, in your browser.</li>
+          </ul>
+        </section>
+
+        <section id="where">
+          <h2>Where data lives</h2>
+          <p>Doc Drift Sentinel is two Forge apps: the main app in Confluence, and a relay in Bitbucket. Forge runs them on Atlassian's cloud. The apps don't send data to any other service.</p>
+          <ul>
+            <li>App data is kept in Forge hosted storage (Forge SQL and the Key-Value Store). Atlassian encrypts it at rest, keeps each installation's data separate, and stores it in the same location as your Atlassian site, so it follows your data residency settings. Source: <a href="https://developer.atlassian.com/platform/forge/storage-reference/">Forge storage overview</a>.</li>
+            <li>The relay's only outbound address is the Confluence app's Forge web trigger (<code>*.webtrigger.atlassian.app</code>). Every request is signed with a secret generated on your site. The Confluence app keeps the secret in Forge's secret store and shows only a short fingerprint.</li>
+            <li>The developer can't browse your data. App logs record IDs, counts and outcomes, and never page text.</li>
+          </ul>
+        </section>
+
+        <section id="reads">
+          <h2>What the apps read</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>What</th><th>Why</th></tr></thead>
+              <tbody>
+                <tr><td>Confluence pages you anchor</td><td>To suggest anchors, match changes to the sections that mention them, and show those sections in the review panel</td></tr>
+                <tr><td>Page owner and your account</td><td>To mention the owner in a comment, and to check you can view or edit a page before acting</td></tr>
+                <tr><td>Merged pull requests (relay)</td><td>The title, author name, merge commit, list of changed files, and the diff for up to 300 files</td></tr>
+                <tr><td>Anchored Jira issues</td><td>When an anchored issue changes: which fields changed, with their old and new values</td></tr>
+                <tr><td>Jira projects you can create in</td><td>Only when you open Create Jira task, to list the projects</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="stores">
+          <h2>What the apps store</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Data</th><th>Contents</th><th>Kept</th></tr></thead>
+              <tbody>
+                <tr><td>Anchors</td><td>Page ID, space key, repository, path or glob, Jira key, weight, who created it</td><td>Until removed</td></tr>
+                <tr><td>Page state</td><td>State, owner account ID, who verified and when, a one-line change summary</td><td>While the page exists</td></tr>
+                <tr><td>Changes</td><td>Pull request number, title, author name, merge commit, changed file paths; or a Jira key with the changed fields and values</td><td>Kept, for the history</td></tr>
+                <tr><td>Diff text</td><td>The raw diff of a merged pull request</td><td>30 days, then deleted</td></tr>
+                <tr><td>Drift events</td><td>Which anchor matched, score, severity, reasons, identifiers the change removed, status and who closed it</td><td>Kept, for the audit trail</td></tr>
+                <tr><td>Verifications</td><td>Who verified a page, when, and an optional note</td><td>Kept, for the audit trail</td></tr>
+                <tr><td>Fix drafts</td><td>The text of the one block a draft replaces, the proposed text, and who accepted or rejected it</td><td>Kept with the decision</td></tr>
+                <tr><td>Settings</td><td>Sensitivity, ignored paths, watched spaces, timings, the relay secret</td><td>Until changed</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>The badge state is also written to a content property on each anchored page, so the badge loads with the page. It holds the state, a title and a tooltip.</p>
+        </section>
+
+        <section id="ai">
+          <h2>When AI is used</h2>
+          <p>Detection never uses AI. A deterministic matcher compares the files and identifiers a change touched with each page's anchors.</p>
+          <p>AI is used only when a person clicks <strong>Propose fix</strong> or asks the Drift Reviewer agent in Rovo. Drift Reviewer runs in Rovo on your site, under Atlassian's terms for Rovo, and uses your Rovo credits. It receives the affected sections of the page and a summary of each change with up to 4,000 characters of its diff. It never receives a whole repository. It can save drafts, but only a person can apply one to the page.</p>
+          <p>The apps call no other AI service.</p>
+        </section>
+
+        <section id="access">
+          <h2>Who sees what</h2>
+          <ul>
+            <li>The review panel, the agent and the MCP tools read pages as the signed-in person. A page that person can't view comes back as <code>unknown</code>, with no title.</li>
+            <li>Anyone who can view a page sees that it drifted and a summary: the change, its author, the file paths and why it matched. Raw diffs and full Jira field values are shown only to people who can edit the page, and never to MCP tools.</li>
+            <li>Pages with view restrictions aren't supported yet: the app doesn't watch them.</li>
+            <li>Settings are for Confluence administrators. The relay's settings are for Bitbucket workspace admins.</li>
+            <li>Coding agents connect through Atlassian's MCP gateway with OAuth, only after an admin turns the tools on for the site, and only as the person who signs in.</li>
+          </ul>
+        </section>
+
+        <section id="writes">
+          <h2>What the apps change</h2>
+          <ul>
+            <li><strong>Page text</strong> changes only when a person accepts a fix, as that person, with a version message naming the pull request. Page history can undo it.</li>
+            <li><strong>Page metadata:</strong> the badge content property, written by the app after it checks the clicking person's permission.</li>
+            <li><strong>Comments:</strong> one footer comment per page that mentions the owner when anchors change. Admins can turn these off.</li>
+            <li><strong>Jira tasks</strong> are created only when a person clicks Create Jira task, as that person.</li>
+          </ul>
+        </section>
+
+        <section id="scopes">
+          <h2>Permissions</h2>
+          <h3>Doc Drift Sentinel (Confluence, Jira optional)</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Scope</th><th>Used for</th></tr></thead>
+              <tbody>
+                <tr><td><code>read:page:confluence</code></td><td>Reading anchored pages and their owners</td></tr>
+                <tr><td><code>write:page:confluence</code></td><td>The badge content property, and saving fixes a person accepts</td></tr>
+                <tr><td><code>write:comment:confluence</code></td><td>The owner comment</td></tr>
+                <tr><td><code>read:space:confluence</code></td><td>The space dashboard</td></tr>
+                <tr><td><code>read:confluence-user</code></td><td>Checking who is an administrator</td></tr>
+                <tr><td><code>read:confluence-content.summary</code>, <code>write:confluence-content</code></td><td>Receiving page trashed and deleted events, so their drift closes. Atlassian requires these scopes for those events</td></tr>
+                <tr><td><code>read:jira-work</code></td><td>Changes to anchored Jira issues</td></tr>
+                <tr><td><code>write:jira-work</code></td><td>Create Jira task, only as the person who clicks</td></tr>
+                <tr><td><code>storage:app</code></td><td>Settings and the relay secret</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Doc Drift Sentinel Relay (Bitbucket)</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Scope</th><th>Used for</th></tr></thead>
+              <tbody>
+                <tr><td><code>read:pullrequest:bitbucket</code></td><td>Merged pull requests and their changed files</td></tr>
+                <tr><td><code>read:repository:bitbucket</code></td><td>The main branch and the diff</td></tr>
+                <tr><td><code>read:workspace:bitbucket</code></td><td>Checking that only workspace admins change the relay settings</td></tr>
+                <tr><td><code>storage:app</code></td><td>The ingest URL, the secret and delivery records</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="deletion">
+          <h2>Retention and deletion</h2>
+          <ul>
+            <li>Diff text is deleted 30 days after a change arrives, by a daily job.</li>
+            <li>Removing an anchor deletes it. When a page is trashed or deleted, its anchors and state are deleted and its open drift closes.</li>
+            <li>When the app is uninstalled, Atlassian keeps its Forge storage for 28 days so a reinstall can be linked back to it, then deletes it under Atlassian's data retention policy. Source: <a href="https://developer.atlassian.com/platform/forge/storage-reference/hosted-storage-data-lifecycle/">data lifecycle for Forge-hosted storage</a>.</li>
+            <li>Content properties, comments, page versions and Jira tasks the apps created belong to Confluence and Jira, and stay until you delete them there.</li>
+          </ul>
+          <p>To have data for a person or a page removed before then, contact us below.</p>
+        </section>
+
+        <section id="contact">
+          <h2>Contact</h2>
+          <p>Doc Drift Sentinel is an independent app built by Razvan Statescu for Codegeist 2026. It isn't made or endorsed by Atlassian.</p>
+          <p>For privacy questions or deletion requests, open an issue on <a href="https://github.com/razvanstatescu/doc-drift/issues">GitHub</a>. Don't include page content or secrets in the issue.</p>
+        </section>
+      </article>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="lockup" href="./"><img src="assets/doc-drift-icon.svg" alt="" width="40" height="40"><span>Doc Drift Sentinel</span></a>
+          <p>Docs that know when the code moved. A Forge app for Confluence, built for Codegeist 2026.</p>
+        </div>
+        <div>
+          <h2>Product</h2>
+          <ul>
+            <li><a href="./#how">How it works</a></li>
+            <li><a href="./#confluence">In Confluence</a></li>
+            <li><a href="./#agents">For agents</a></li>
+            <li><a href="./#faq">Questions</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Docs</h2>
+          <ul>
+            <li><a href="docs.html">Setup guide</a></li>
+            <li><a href="docs.html#mcp">Connect coding agents</a></li>
+            <li><a href="docs.html#troubleshooting">Troubleshooting</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Trust</h2>
+          <ul>
+            <li><a href="privacy.html">Privacy and data</a></li>
+            <li><a href="docs.html#support">Support</a></li>
+            <li><a href="https://github.com/razvanstatescu/doc-drift">Source on GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <p class="legal">© <span data-year>2026</span> Doc Drift Sentinel. An independent app built on Atlassian Forge, not made or endorsed by Atlassian. Atlassian, Confluence, Jira, Bitbucket and Rovo are trademarks of Atlassian.</p>
+    </div>
+  </footer>
+
+  <script src="assets/site.js" defer></script>
+</body>
+</html>

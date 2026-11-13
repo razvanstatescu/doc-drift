@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Setup guide · Doc Drift Sentinel</title>
+  <meta name="description" content="Install Doc Drift Sentinel, connect Jira and Bitbucket, anchor your first pages, and connect Rovo and coding agents.">
+  <meta name="theme-color" content="#072630">
+  <link rel="icon" href="assets/doc-drift-icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/site.css">
+  <script>
+    try { var t = localStorage.getItem('dds-theme'); if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="lockup" href="./" aria-label="Doc Drift Sentinel home">
+        <img src="assets/doc-drift-icon.svg" alt="" width="40" height="40">
+        <span>Doc Drift Sentinel</span>
+      </a>
+      <nav class="nav" id="site-nav" aria-label="Main">
+        <a href="./#how">How it works</a>
+        <a href="./#confluence">In Confluence</a>
+        <a href="./#agents">For agents</a>
+        <a href="docs.html" aria-current="page">Docs</a>
+        <a href="privacy.html">Privacy</a>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn theme-toggle" type="button" data-theme-toggle>
+          <svg class="icon moon" aria-hidden="true"><use href="assets/icons.svg#i-moon"/></svg>
+          <svg class="icon sun" aria-hidden="true"><use href="assets/icons.svg#i-sun"/></svg>
+        </button>
+        <button class="icon-btn menu-toggle" type="button" data-menu-toggle aria-controls="site-nav" aria-expanded="false" aria-label="Menu">
+          <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-menu"/></svg>
+        </button>
+        <a class="btn btn-primary btn-sm" href="#install" data-install>Install for Confluence</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="doc-hero">
+      <div class="wrap">
+        <p class="eyebrow">Docs</p>
+        <h1 class="heading-lg" style="margin-top:10px">Setup guide</h1>
+        <p class="body-lg">Install the app, connect Jira and Bitbucket, anchor your first pages, and let your agents check pages before they cite them. You can see the whole flow without Bitbucket by replaying the demo pull request.</p>
+      </div>
+    </div>
+
+    <div class="wrap doc-layout">
+      <nav class="toc" aria-label="On this page">
+        <h2>On this page</h2>
+        <ol>
+          <li><a href="#before">Before you start</a></li>
+          <li><a href="#install">Install the app</a></li>
+          <li><a href="#jira">Connect Jira</a></li>
+          <li><a href="#bitbucket">Connect Bitbucket</a></li>
+          <li><a href="#demo">Try the demo replay</a></li>
+          <li><a href="#anchor">Anchor pages</a></li>
+          <li><a href="#review">Review a flagged page</a></li>
+          <li><a href="#dashboard">Space dashboard</a></li>
+          <li><a href="#settings">Settings</a></li>
+          <li><a href="#mcp">Connect coding agents</a></li>
+          <li><a href="#rovo">Drift Reviewer in Rovo</a></li>
+          <li><a href="#states">Page states</a></li>
+          <li><a href="#troubleshooting">Troubleshooting</a></li>
+          <li><a href="#support">Support</a></li>
+        </ol>
+      </nav>
+
+      <article class="prose">
+        <section id="before">
+          <h2>Before you start</h2>
+          <ul>
+            <li><strong>Confluence Cloud</strong>, and a site admin to install the app. Confluence administrators change its settings.</li>
+            <li><strong>Jira Cloud</strong> on the same site, if you want Jira issues as anchors or want to create Jira tasks. Optional.</li>
+            <li><strong>A Bitbucket Cloud team workspace</strong>, if you want merged pull requests to flag pages. Forge apps can't be installed in personal workspaces. Optional: the demo replay works without it.</li>
+            <li><strong>Rovo</strong> on the site, for the Drift Reviewer agent and Propose fix. Everything else works without it.</li>
+          </ul>
+          <div class="note">
+            <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-info"/></svg>
+            <p>Doc Drift Sentinel is two Forge apps: the main app in Confluence, and a small relay in Bitbucket that sends merged pull requests to it. Forge doesn't let one app span Bitbucket and Confluence, so the relay is separate.</p>
+          </div>
+        </section>
+
+        <section id="install">
+          <h2>Install the app</h2>
+          <p data-install-pending>The install link is shared with Codegeist 2026 judges first and will be posted here. If you're a judge, use the link on the Devpost entry.</p>
+          <p data-install-ready hidden><a class="btn btn-primary" href="#" data-install>Install for Confluence</a></p>
+          <ol class="steps-list">
+            <li>Open the install link and pick your site. Only a site admin can install.</li>
+            <li>Review the permissions and select <strong>Install</strong>. Confluence is required; you can also connect Jira here.</li>
+            <li>Open any published page. A <strong>Doc Drift</strong> item appears in the byline, under the title.</li>
+            <li>Click it once and allow access when asked. The app and your agents act as you, so each person grants this once.</li>
+          </ol>
+        </section>
+
+        <section id="jira">
+          <h2>Connect Jira</h2>
+          <p>Jira is optional. With it, a page can be anchored to an issue or epic, and changes to its status, resolution, fix versions, components, summary, description or parent flag the page. You can also create a Jira task from a flagged page.</p>
+          <p>If you skipped Jira at install, connect it later in Atlassian Administration:</p>
+          <pre>Apps › Sites › your site › Connected apps › Doc Drift Sentinel › View app details › Connections › Jira › Connect</pre>
+          <p>To turn Jira changes off without disconnecting, use <strong>Jira</strong> in the app settings.</p>
+        </section>
+
+        <section id="bitbucket">
+          <h2>Connect Bitbucket</h2>
+          <p>The relay reads each pull request merged into a repository's main branch, and sends Doc Drift the list of changed files and a short diff. It signs every request with a secret that only your site and the relay know.</p>
+          <ol class="steps-list">
+            <li>In Confluence, open <strong>Settings</strong> (the gear), then <strong>Doc Drift Sentinel</strong> in the sidebar. Under <strong>Bitbucket relay</strong>, copy the ingest URL and select <strong>Generate secret</strong>. Copy the secret now: it's shown only once.</li>
+            <li>Install the Doc Drift Sentinel Relay in your Bitbucket team workspace with its install link.</li>
+            <li>In Bitbucket, open <strong>Workspace settings</strong>, then <strong>Doc Drift Sentinel Relay</strong> under Forge apps. Paste the URL and the secret and select <strong>Save</strong>.</li>
+            <li>Select <strong>Send test ping</strong>. It should say Connected, and the Confluence settings page shows the time of the last ping.</li>
+          </ol>
+          <p>Merge a pull request and the settings page lists the repository under <strong>Repositories seen</strong>. Rotating the secret stops the old one at once, so update the relay right after.</p>
+        </section>
+
+        <section id="demo">
+          <h2>Try the demo replay</h2>
+          <p>The demo replays a seeded pull request through the same path the relay uses, with no Bitbucket needed. PR #482 in <code>payments-api</code> renames <code>scripts/rollback.sh</code> to <code>scripts/rollback-v2.sh</code>, and <code>ROLLBACK_TIMEOUT</code> to <code>ROLLBACK_TIMEOUT_SECS</code>.</p>
+          <ol class="steps-list">
+            <li>Make a page that mentions <code>scripts/rollback.sh</code>, publish it, and anchor it to repository <code>payments-api</code>, path <code>scripts/rollback.sh</code>.</li>
+            <li>In the app settings, under <strong>Get started</strong>, select <strong>Replay seeded PR #482</strong>.</li>
+            <li>After a few seconds, reload the page. The badge reads Possibly stale. Open it to see the change, the affected step and the rename quick fix.</li>
+          </ol>
+          <p>Set the comment delay to 0 minutes in settings if you want the owner comment to appear straight away.</p>
+        </section>
+
+        <section id="anchor">
+          <h2>Anchor pages</h2>
+          <p>An anchor links a page to something it describes. When that thing changes, the page is flagged. Click the Doc Drift badge on a page and open <strong>Anchors</strong>.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Anchor</th><th>Example</th><th>Flags the page when</th></tr></thead>
+              <tbody>
+                <tr><td>File</td><td><code>payments-api: scripts/rollback.sh</code></td><td>The file is changed, renamed or removed</td></tr>
+                <tr><td>Folder or glob</td><td><code>payments-api: deploy/helm/**</code></td><td>Any matching file changes</td></tr>
+                <tr><td>Jira issue or epic</td><td><code>PAY-142</code></td><td>Its status, scope, fix versions or parent change</td></tr>
+                <tr><td>Whole repository</td><td><code>payments-api</code></td><td>Large changes only. A weak anchor: prefer paths</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <ul>
+            <li><strong>Suggestions.</strong> Doc Drift reads the paths in code blocks, Bitbucket links and Jira keys on the page and suggests them. Tick the ones that fit and save.</li>
+            <li><strong>Critical anchors.</strong> Mark an anchor Critical when a change to it should always get attention, such as the script a runbook runs.</li>
+            <li><strong>A whole space.</strong> On a space's <strong>Drift dashboard</strong>, select <strong>Anchor this space</strong> to review suggestions for every unanchored page in one table.</li>
+            <li><strong>Save anchors and mark verified</strong> saves them and marks the page Verified. Changing anchors needs edit rights on the page.</li>
+          </ul>
+        </section>
+
+        <section id="review">
+          <h2>Review a flagged page</h2>
+          <p>Click the badge on a Possibly stale or Stale page. The <strong>Review</strong> tab lists each change: the pull request or Jira change, who made it, when, the files, and a sentence on why it flagged this page. Below that are the page sections that mention what changed.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Action</th><th>What it does</th></tr></thead>
+              <tbody>
+                <tr><td>Mark verified</td><td>You checked the page against the change. Closes the open changes and records who verified.</td></tr>
+                <tr><td>Propose fix</td><td>Opens Drift Reviewer in Rovo, which drafts new text per affected block. Drafts appear in the panel; nothing changes until you accept.</td></tr>
+                <tr><td>Accept fix</td><td>Saves the draft as a new page version, as you, with a message naming the pull request. Needs edit rights.</td></tr>
+                <tr><td>Rename quick fix</td><td>For a renamed file, replaces the old path with the new one in the affected blocks. No AI.</td></tr>
+                <tr><td>Snooze 7 days</td><td>Hides the change for a week. The page stays flagged for agents.</td></tr>
+                <tr><td>Dismiss</td><td>Closes the change with a reason: not relevant, already updated, or false positive. Not relevant can also stop watching that path for this page.</td></tr>
+                <tr><td>Create Jira task</td><td>Creates a task as you, listing the changes and sections to re-read. Closing the task doesn't verify the page.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="dashboard">
+          <h2>Space dashboard</h2>
+          <p>Each space has a <strong>Drift dashboard</strong> in its sidebar: how many pages are anchored, how many are Possibly stale or Stale, the median time to verify, the pages that need a review most, and a backlog by owner. Select a row to open the page.</p>
+        </section>
+
+        <section id="settings">
+          <h2>Settings</h2>
+          <p>Confluence administrators find the settings under <strong>Settings</strong>, then <strong>Doc Drift Sentinel</strong>. Changes apply to the next change the app receives.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Setting</th><th>Default</th><th>What it changes</th></tr></thead>
+              <tbody>
+                <tr><td>Sensitivity</td><td>Balanced</td><td>How strong a match must be to flag a page: Strict, Balanced or Quiet</td></tr>
+                <tr><td>Ignored paths</td><td>Tests, lock files, snapshots, build output, Markdown</td><td>Files that never flag a page, as globs</td></tr>
+                <tr><td>Only count merges into the main branch</td><td>On</td><td>Merges into release or feature branches never flag a page</td></tr>
+                <tr><td>Watched spaces</td><td>All spaces</td><td>Pages outside the chosen spaces keep their anchors but aren't flagged</td></tr>
+                <tr><td>Escalation</td><td>7 days</td><td>How long a page stays Possibly stale before it turns Stale</td></tr>
+                <tr><td>Comments</td><td>On, 10 minute delay</td><td>The owner comment, and how long to wait so changes that land together become one comment</td></tr>
+                <tr><td>Jira</td><td>On</td><td>Whether Jira issue changes flag pages</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="mcp">
+          <h2>Connect coding agents</h2>
+          <p>Doc Drift has an MCP server with three read-only tools: <code>check-page-freshness</code>, <code>find-docs-for-path</code> and <code>list-stale-pages</code>. Agents sign in as a person and only see pages that person can view.</p>
+          <ol class="steps-list">
+            <li><strong>An admin turns on the tools.</strong> In Atlassian Administration: Apps, Sites, your site, Connected apps, Doc Drift Sentinel, View app details. Under Tools, turn on the tools to share with MCP clients.</li>
+            <li><strong>Open the app once in Confluence</strong> and allow access, if you haven't yet. Signing in to the MCP server doesn't grant this.</li>
+            <li><strong>Add the server.</strong> In Claude Code, run the command below, then <code>/mcp</code> in a session to sign in and pick your site.</li>
+          </ol>
+          <div class="copy-field">
+            <code id="cmd-add">claude mcp add --transport http doc-drift https://mcp.atlassian.com/forge/12e968a1-a45d-4524-ba28-d47e2315db1a</code>
+            <button class="copy-btn" type="button" data-copy="cmd-add" aria-label="Copy the claude mcp add command"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-copy"/></svg><span data-copy-label>Copy</span></button>
+          </div>
+          <h3>Cursor and other clients</h3>
+          <p>Add a remote server with this URL. In Cursor, put it in <code>.cursor/mcp.json</code> or <code>~/.cursor/mcp.json</code>:</p>
+          <div class="copy-field">
+            <code id="cursor-json">{ "mcpServers": { "doc-drift": { "url": "https://mcp.atlassian.com/forge/12e968a1-a45d-4524-ba28-d47e2315db1a" } } }</code>
+            <button class="copy-btn" type="button" data-copy="cursor-json" aria-label="Copy the Cursor configuration"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-copy"/></svg><span data-copy-label>Copy</span></button>
+          </div>
+          <h3>Tell the agent when to use it</h3>
+          <p>Paste this into <code>CLAUDE.md</code> or <code>AGENTS.md</code>. The same text is in the app settings under <strong>For coding agents</strong>.</p>
+          <div class="copy-field">
+            <code id="agent-rule">Before you rely on a Confluence page, call the `check-page-freshness` tool from the doc-drift MCP server with its page ID or URL. If the state is not `verified`, do not present its steps as current, and tell the user which page needs a review. When a page and the code disagree, trust the code.</code>
+            <button class="copy-btn" type="button" data-copy="agent-rule" aria-label="Copy the agent instruction"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-copy"/></svg><span data-copy-label>Copy</span></button>
+          </div>
+          <h3>The tools</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Tool</th><th>Input</th><th>Returns</th></tr></thead>
+              <tbody>
+                <tr><td><code>check-page-freshness</code></td><td>Page ID, URL or exact title</td><td>The state, open changes, affected sections, a cite policy and guidance on how to cite the page</td></tr>
+                <tr><td><code>find-docs-for-path</code></td><td>Repository and a file, folder or glob</td><td>Up to 25 pages anchored to that path, each with its state</td></tr>
+                <tr><td><code>list-stale-pages</code></td><td>Optional space key and limit</td><td>Possibly stale and Stale pages, most urgent first</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="rovo">
+          <h2>Drift Reviewer in Rovo</h2>
+          <p>Drift Reviewer is a Rovo agent that answers freshness questions and drafts fixes. Find it in Rovo Chat, or select <strong>Propose fix</strong> in the review panel to open it with the page.</p>
+          <ul>
+            <li>Ask “Is this page still current?” or “What changed since this page was verified?”</li>
+            <li>Ask it to draft a fix. Each draft replaces one block, Rovo asks you to confirm before it's saved, and you accept it in the review panel.</li>
+            <li>Tell it you checked the page, and it can record a verification for you after you confirm.</li>
+          </ul>
+          <p>Drift Reviewer never edits a page, and treats page and diff text as evidence, not instructions. Drafting uses Rovo credits on your site.</p>
+        </section>
+
+        <section id="states">
+          <h2>Page states</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>State</th><th>Means</th><th>Agents are told</th></tr></thead>
+              <tbody>
+                <tr><td><span class="badge badge-verified"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-check"/></svg>Verified</span></td><td>Checked since its anchors last changed</td><td>Safe to cite</td></tr>
+                <tr><td><span class="badge badge-possibly"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-slip"/></svg>Possibly stale</span></td><td>An anchor changed after the last verification</td><td>Cite with a caveat that names the change</td></tr>
+                <tr><td><span class="badge badge-stale"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-clock"/></svg>Stale</span></td><td>Unreviewed for 7 days, 3 or more open changes, or a further high change to a critical anchor</td><td>Don't present its steps as current</td></tr>
+                <tr><td><span class="badge badge-unanchored"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-trace"/></svg>Unanchored</span></td><td>Not linked to code or Jira yet</td><td>Can't tell if it's current: cite with care</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="troubleshooting">
+          <h2>Troubleshooting</h2>
+          <h3>An agent tool says to grant access in Connected apps</h3>
+          <p>The person signed in to the MCP server hasn't opened the app in Confluence yet. Open any page, click the Doc Drift badge and allow access, then retry. After an app upgrade that adds permissions, do this once more.</p>
+          <h3>There's no badge on a page</h3>
+          <p>Confluence shows app byline items only on published pages. Publish the page and reload it.</p>
+          <h3>A page with view restrictions can't be anchored</h3>
+          <p>Restricted pages can't be watched yet: the app can't read them, and their changes don't reach it. Agents are told to check those pages against the code before citing them.</p>
+          <h3>A merge didn't flag the page</h3>
+          <ul>
+            <li>The merge went into a branch other than main. Only main-branch merges count.</li>
+            <li>The changed file matches an ignored path, such as a test or a Markdown file.</li>
+            <li>The page is in a space that isn't watched.</li>
+            <li>The match was weak, for example a whole-repo anchor on a small change. Anchor the exact path, or try the Strict preset.</li>
+          </ul>
+          <h3>The relay test ping fails</h3>
+          <p>Check that the URL and secret match the ones in Confluence settings. If you rotated the secret, paste the new one. In a personal Bitbucket workspace the relay can't be installed: use a team workspace.</p>
+          <h3>The badge didn't update after an action</h3>
+          <p>Reload the page. The badge state is stored with the page and refreshes on the next load.</p>
+        </section>
+
+        <section id="support">
+          <h2>Support</h2>
+          <p>Open an issue on <a href="https://github.com/razvanstatescu/doc-drift/issues">GitHub</a> with what you did, what you expected, and what happened. Leave out page content and secrets.</p>
+          <p>For how the apps handle data, see <a href="privacy.html">Privacy and data handling</a>.</p>
+        </section>
+      </article>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="lockup" href="./"><img src="assets/doc-drift-icon.svg" alt="" width="40" height="40"><span>Doc Drift Sentinel</span></a>
+          <p>Docs that know when the code moved. A Forge app for Confluence, built for Codegeist 2026.</p>
+        </div>
+        <div>
+          <h2>Product</h2>
+          <ul>
+            <li><a href="./#how">How it works</a></li>
+            <li><a href="./#confluence">In Confluence</a></li>
+            <li><a href="./#agents">For agents</a></li>
+            <li><a href="./#faq">Questions</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Docs</h2>
+          <ul>
+            <li><a href="docs.html">Setup guide</a></li>
+            <li><a href="docs.html#mcp">Connect coding agents</a></li>
+            <li><a href="docs.html#troubleshooting">Troubleshooting</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Trust</h2>
+          <ul>
+            <li><a href="privacy.html">Privacy and data</a></li>
+            <li><a href="docs.html#support">Support</a></li>
+            <li><a href="https://github.com/razvanstatescu/doc-drift">Source on GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <p class="legal">© <span data-year>2026</span> Doc Drift Sentinel. An independent app built on Atlassian Forge, not made or endorsed by Atlassian. Atlassian, Confluence, Jira, Bitbucket and Rovo are trademarks of Atlassian.</p>
+    </div>
+  </footer>
+
+  <script src="assets/site.js" defer></script>
+</body>
+</html>

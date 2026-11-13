@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Doc Drift Sentinel: docs that know when the code moved</title>
+  <meta name="description" content="Doc Drift Sentinel anchors Confluence pages to code and Jira work, flags them when those change, and tells Rovo and coding agents which pages to trust.">
+  <meta name="theme-color" content="#072630">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Doc Drift Sentinel">
+  <meta property="og:description" content="Docs that know when the code moved. Flags Confluence pages when the code or Jira work they describe changes, and tells agents which pages to trust.">
+  <meta property="og:image" content="https://razvanstatescu.github.io/doc-drift/assets/social-card.png">
+  <meta property="og:url" content="https://razvanstatescu.github.io/doc-drift/">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/doc-drift-icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/site.css">
+  <script>
+    try { var t = localStorage.getItem('dds-theme'); if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+  </script>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="i-check" viewBox="0 0 20 20"><path d="M4.5 10.5l3.75 3.75L15.5 6.5"/></symbol>
+    <symbol id="i-slip" viewBox="0 0 20 20"><path d="M3 7h9.5M7.5 13H17"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><path d="M10 6.5V10l2.5 1.75"/></symbol>
+    <symbol id="i-trace" viewBox="0 0 20 20"><rect x="3.5" y="3.5" width="13" height="13" rx="2" stroke-dasharray="2.6 2.4"/></symbol>
+    <symbol id="i-anchor" viewBox="0 0 20 20"><path d="M8.6 11.4a3 3 0 0 0 4.24 0l2.5-2.5a3 3 0 0 0-4.24-4.24l-.9.9"/><path d="M11.4 8.6a3 3 0 0 0-4.24 0l-2.5 2.5a3 3 0 0 0 4.24 4.24l.9-.9"/></symbol>
+    <symbol id="i-merge" viewBox="0 0 20 20"><circle cx="6" cy="4.75" r="1.75"/><circle cx="6" cy="15.25" r="1.75"/><circle cx="14" cy="15.25" r="1.75"/><path d="M6 6.5v7M14 13.5V9a2.5 2.5 0 0 0-2.5-2.5H9"/><path d="M10.75 4.75 9 6.5l1.75 1.75"/></symbol>
+    <symbol id="i-page" viewBox="0 0 20 20"><path d="M5 2.75h6.25L15 6.5v10.75H5z"/><path d="M11 2.75V6.5h4M7.75 10.5h4.5M7.75 13.5h4.5"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 20 20"><rect x="7" y="7" width="9.5" height="9.5" rx="2"/><path d="M13 7V5.25A1.5 1.5 0 0 0 11.5 3.75h-6A1.5 1.5 0 0 0 4 5.25v6a1.5 1.5 0 0 0 1.5 1.5H7"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="3.25"/><path d="M10 2.75v1.5M10 15.75v1.5M2.75 10h1.5M15.75 10h1.5M4.87 4.87l1.06 1.06M14.07 14.07l1.06 1.06M4.87 15.13l1.06-1.06M14.07 5.93l1.06-1.06"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 20 20"><path d="M16 12.4A6.5 6.5 0 0 1 7.6 4a6.5 6.5 0 1 0 8.4 8.4z"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 20 20"><path d="M3.5 6h13M3.5 10h13M3.5 14h13"/></symbol>
+    <symbol id="i-x" viewBox="0 0 20 20"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 20 20"><path d="M10 4.5v11M4.5 10h11"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 20 20"><path d="M4 10h11.5M11 5.5l4.5 4.5-4.5 4.5"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 20 20"><path d="M2.5 10s2.75-5 7.5-5 7.5 5 7.5 5-2.75 5-7.5 5-7.5-5-7.5-5z"/><circle cx="10" cy="10" r="2.25"/></symbol>
+    <symbol id="i-hand" viewBox="0 0 20 20"><path d="M7 10.5V4.75a1.25 1.25 0 0 1 2.5 0V9.5M9.5 9V3.75a1.25 1.25 0 0 1 2.5 0V9.5M12 9.25V5a1.25 1.25 0 0 1 2.5 0v6.5a5.75 5.75 0 0 1-5.75 5.75c-2 0-3.2-.9-4.3-2.5L2.9 12.4a1.3 1.3 0 0 1 2.1-1.5L7 13"/></symbol>
+    <symbol id="i-rule" viewBox="0 0 20 20"><path d="M3.5 5.5h13M3.5 10h13M3.5 14.5h7"/><path d="M13.5 13.75l1.5 1.5 2.5-2.75"/></symbol>
+    <symbol id="i-store" viewBox="0 0 20 20"><ellipse cx="10" cy="5" rx="6" ry="2.25"/><path d="M4 5v10c0 1.24 2.69 2.25 6 2.25s6-1.01 6-2.25V5M4 10c0 1.24 2.69 2.25 6 2.25s6-1.01 6-2.25"/></symbol>
+    <symbol id="i-key" viewBox="0 0 20 20"><circle cx="7" cy="12.5" r="3.5"/><path d="M9.5 10 16 3.5M13.5 6l2 2M11.75 7.75l1.5 1.5"/></symbol>
+    <symbol id="i-words" viewBox="0 0 20 20"><path d="M3.5 4.5h13v8.5H9l-3.5 3v-3h-2z"/><path d="M6.5 8h7M6.5 10.5h4"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 20 20"><path d="M5.5 8.5a4.5 4.5 0 0 1 9 0c0 4 1.75 5.5 1.75 5.5H3.75S5.5 12.5 5.5 8.5z"/><path d="M8.25 16.5a1.85 1.85 0 0 0 3.5 0"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 20 20"><path d="M3.5 6h6M13.5 6h3M3.5 14h3M10.5 14h6"/><circle cx="11.5" cy="6" r="2"/><circle cx="8.5" cy="14" r="2"/></symbol>
+    <symbol id="i-play" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><path d="M8.5 7.25v5.5l4.25-2.75z"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 20 20"><path d="M6.5 5 3.5 8l3 3"/><path d="M3.5 8h8a5 5 0 0 1 0 10H8"/></symbol>
+    <symbol id="i-rename" viewBox="0 0 20 20"><path d="M3.5 6.5h9M3.5 13.5h9"/><path d="M14 4l2.5 2.5L14 9M14 11l2.5 2.5L14 16"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 20 20"><path d="M3.5 4.5h13l-5 6v5l-3 1.5v-6.5z"/></symbol>
+    <symbol id="i-ticket" viewBox="0 0 20 20"><path d="M3 6.5a1.5 1.5 0 0 1 1.5-1.5h11A1.5 1.5 0 0 1 17 6.5V8a2 2 0 0 0 0 4v1.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 13.5V12a2 2 0 0 0 0-4z"/><path d="M12 5v10" stroke-dasharray="1.5 2"/></symbol>
+  </svg>
+
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="lockup" href="./" aria-label="Doc Drift Sentinel home">
+        <img src="assets/doc-drift-icon.svg" alt="" width="40" height="40">
+        <span>Doc Drift Sentinel</span>
+      </a>
+      <nav class="nav" id="site-nav" aria-label="Main">
+        <a href="#how">How it works</a>
+        <a href="#confluence">In Confluence</a>
+        <a href="#agents">For agents</a>
+        <a href="docs.html">Docs</a>
+        <a href="privacy.html">Privacy</a>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn theme-toggle" type="button" data-theme-toggle>
+          <svg class="icon moon" aria-hidden="true"><use href="#i-moon"/></svg>
+          <svg class="icon sun" aria-hidden="true"><use href="#i-sun"/></svg>
+        </button>
+        <button class="icon-btn menu-toggle" type="button" data-menu-toggle aria-controls="site-nav" aria-expanded="false" aria-label="Menu">
+          <svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg>
+        </button>
+        <a class="btn btn-primary btn-sm" href="docs.html#install" data-install>Install for Confluence</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Hero -->
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="wrap">
+        <div class="hero-copy">
+          <p class="eyebrow">A Forge app for Confluence, built for Codegeist 2026</p>
+          <h1 class="display" id="hero-title">Docs that know when the code moved.</h1>
+          <p class="body-lg">Doc Drift Sentinel anchors Confluence pages to code and Jira work, flags them when those change, and tells Rovo and coding agents which pages to trust.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="docs.html#install" data-install>Install for Confluence</a>
+            <a class="btn btn-secondary" href="#agents">Connect a coding agent</a>
+            <a class="btn btn-secondary" href="#" data-video hidden>
+              <svg class="icon" aria-hidden="true"><use href="#i-play"/></svg>Watch the demo
+            </a>
+          </div>
+          <ul class="hero-proof">
+            <li><svg class="icon" aria-hidden="true"><use href="#i-rule"/></svg>No AI in detection</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-hand"/></svg>Agents never edit pages</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg>Respects page permissions</li>
+          </ul>
+        </div>
+
+        <div class="hero-art">
+          <svg class="tide" viewBox="0 0 800 640" preserveAspectRatio="none" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.25">
+            <path d="M0 90c90-26 170 22 260 0s170-48 270-16 180 40 270 6"/>
+            <path d="M0 150c90-26 170 22 260 0s170-48 270-16 180 40 270 6"/>
+            <path d="M0 210c90-26 170 22 260 0s170-48 270-16 180 40 270 6"/>
+            <path d="M0 270c90-26 170 22 260 0s170-48 270-16 180 40 270 6"/>
+            <path d="M0 330c90-26 170 22 260 0s170-48 270-16 180 40 270 6"/>
+            <path d="M0 390c90-26 170 22 260 0s170-48 270-16 180 40 270 6"/>
+            <path d="M0 450c90-26 170 22 260 0s170-48 270-16 180 40 270 6"/>
+            <path d="M0 510c90-26 170 22 260 0s170-48 270-16 180 40 270 6"/>
+            <path d="M0 570c90-26 170 22 260 0s170-48 270-16 180 40 270 6"/>
+          </svg>
+
+          <div class="mock-controls">
+            <span data-hero-status>Verified by Dana, 3 days ago</span>
+            <button class="btn btn-secondary btn-sm" type="button" data-hero-toggle>Merge PR #482</button>
+          </div>
+                    <figure class="page-mock" data-hero-mock aria-label="Example Confluence page with a Doc Drift badge">
+            <div class="crumbs"><span>Platform</span><span aria-hidden="true">/</span><span>Runbooks</span></div>
+            <p class="mock-title">Payments rollback runbook</p>
+            <div class="byline">
+              <span class="avatar" aria-hidden="true">D</span>
+              <span>Owned by Dana</span>
+              <span aria-hidden="true">·</span>
+              <span class="state-slot">
+                <span class="badge badge-verified"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Verified</span>
+                <span class="badge badge-possibly"><svg class="icon" aria-hidden="true"><use href="#i-slip"/></svg>Possibly stale</span>
+                <span class="tooltip" role="presentation">PR #482 changed scripts/rollback.sh 2 minutes ago. Review.</span>
+              </span>
+            </div>
+            <div class="page-body">
+              <p class="mock-h">Roll back a release</p>
+              <ol>
+                <li>Page the payments on-call engineer and post in the incident channel.</li>
+                <li>From the repo root, run <code class="token">scripts/rollback.sh</code> with the release tag.</li>
+                <li>Wait for <code class="token">ROLLBACK_TIMEOUT</code> to pass, then check the error rate.</li>
+              </ol>
+              <div class="trace-lines" aria-hidden="true"><span></span><span></span><span></span></div>
+            </div>
+          </figure>
+<p class="sr-only" aria-live="polite" data-hero-live></p>
+
+          <div class="agent-card" data-agent-card aria-label="What an agent sees">
+            <header><svg class="icon icon-16" aria-hidden="true"><use href="#i-anchor"/></svg>check-page-freshness</header>
+<pre>{
+  <span class="j-key">"title"</span>: <span class="j-str">"Payments rollback runbook"</span>,
+  <span class="j-key">"status"</span>: <span class="j-state" data-agent-state>"verified"</span>,
+  <span class="j-key">"guidance"</span>: <span class="j-str" data-agent-guidance>"Safe to cite."</span>
+}</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Problem -->
+    <section class="section" aria-labelledby="problem-title">
+      <div class="wrap problem">
+        <div>
+          <p class="eyebrow">The problem</p>
+          <h2 class="title" id="problem-title" style="margin-top:12px">Docs rot when systems change, not when calendars turn.</h2>
+          <blockquote>
+            <p>“What actually invalidates technical docs isn't time passing, it's the system changing underneath them. How-tos, process docs, configuration guides: these are the dangerous ones.”</p>
+            <footer>A member of the Atlassian Community</footer>
+          </blockquote>
+        </div>
+        <div class="problem-points">
+          <div>
+            <h3>Review dates miss it</h3>
+            <p>A page untouched for 2 years can be correct. A page reviewed last month can be out of date after one merge. Page age and review reminders can't tell the two apart.</p>
+          </div>
+          <div>
+            <h3>Agents can't tell either</h3>
+            <p>Rovo and coding agents read the same pages and cite them with confidence. Nothing tells them that the script in step 2 was renamed last week.</p>
+          </div>
+          <div>
+            <h3>The cost lands at 3am</h3>
+            <p>The on-call engineer follows the runbook, and the command it names no longer exists. A runbook that's out of date can be worse than none.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="section" id="how" aria-labelledby="how-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">How it works</p>
+          <h2 class="title" id="how-title">Catch the slip.</h2>
+          <p class="body-lg">Anchor a page to what it describes. When that moves, the page says so, and agents hold off until someone has looked.</p>
+        </div>
+        <div class="steps">
+          <article class="step">
+            <div class="step-art" aria-hidden="true">
+              <div class="bands"><span></span><span class="band-mid"></span><span></span></div>
+            </div>
+            <div class="step-body">
+              <span class="step-num">01</span>
+              <h3 class="heading-md">In sync</h3>
+              <p>The rollback runbook is anchored to <code>scripts/rollback.sh</code> in <code>payments-api</code>, and to the <code>PAY-142</code> epic. Someone checked it against both.</p>
+              <span class="badge badge-verified"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Verified</span>
+            </div>
+          </article>
+          <article class="step">
+            <div class="step-art" aria-hidden="true">
+              <div class="bands bands-moved" style="--slip-px:20px"><span></span><span class="band-mid"></span><span></span></div>
+            </div>
+            <div class="step-body">
+              <span class="step-num">02</span>
+              <h3 class="heading-md">Code moved</h3>
+              <p>PR #482 merges and renames the script. A deterministic matcher scores the change against every anchor. The page badge turns Possibly stale, the owner gets a comment, and agents are told to caveat.</p>
+              <span class="badge badge-possibly"><svg class="icon" aria-hidden="true"><use href="#i-slip"/></svg>Possibly stale</span>
+            </div>
+          </article>
+          <article class="step">
+            <div class="step-art" aria-hidden="true">
+              <div class="bands bands-ok"><span></span><span class="band-mid"></span><span></span></div>
+            </div>
+            <div class="step-body">
+              <span class="step-num">03</span>
+              <h3 class="heading-md">Reviewed</h3>
+              <p>Dana opens the review panel, sees the rename and the step it affects, and accepts the fix. The page is Verified again, and agents trust it again.</p>
+              <span class="badge badge-verified"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Verified</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Inside Confluence -->
+    <section class="section" id="confluence" aria-labelledby="confluence-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Inside Confluence</p>
+          <h2 class="title" id="confluence-title">Everything happens on the page.</h2>
+          <p class="body-lg">No new tool to check. The badge sits in the page byline, and one click opens what changed and what to do about it.</p>
+        </div>
+
+        <div class="bento">
+          <article class="tile tile-wide">
+            <div>
+              <h3>See exactly what changed</h3>
+              <p>The review panel names the pull request or Jira change, who made it, the files, and why it flagged this page. Then you decide: mark it verified, snooze it, dismiss it with a reason, or fix it.</p>
+            </div>
+            <div class="tile-visual" aria-label="Review panel example">
+              <div class="event">
+                <div class="event-top">
+                  <svg class="icon icon-16 muted" aria-hidden="true"><use href="#i-merge"/></svg>
+                  <strong>PR #482</strong><span class="muted">merged by Sam · 2 hours ago</span>
+                  <span class="chip chip-sev">High</span>
+                </div>
+                <div class="event-why">PR #482 renamed a script that step 2 runs.</div>
+                <div class="event-files">scripts/rollback.sh <span class="arrow">→</span> scripts/rollback-v2.sh</div>
+              </div>
+              <div class="event">
+                <div class="event-top">
+                  <svg class="icon icon-16 muted" aria-hidden="true"><use href="#i-ticket"/></svg>
+                  <strong class="mono" style="font-size:13px">PAY-142</strong><span class="muted">moved to Done · Yesterday</span>
+                  <span class="chip chip-sev">Medium</span>
+                </div>
+                <div class="event-why">The epic this page is anchored to was closed.</div>
+              </div>
+              <div class="actions-row" aria-hidden="true">
+                <span class="fake-btn primary">Mark verified</span>
+                <span class="fake-btn">Propose fix</span>
+                <span class="fake-btn">Snooze 7 days</span>
+                <span class="fake-btn">Dismiss</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="tile">
+            <div>
+              <h3>A badge in the byline</h3>
+              <p>Four states, always a word and an icon. The state is stored with the page, so the badge loads with it and page views run no app code.</p>
+            </div>
+            <div class="tile-visual state-grid">
+              <div class="row"><span class="badge badge-verified"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Verified</span><span>Checked since its anchors changed</span></div>
+              <div class="row"><span class="badge badge-possibly"><svg class="icon" aria-hidden="true"><use href="#i-slip"/></svg>Possibly stale</span><span>An anchor changed</span></div>
+              <div class="row"><span class="badge badge-stale"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>Stale</span><span>Unreviewed for 7 days, or 3 changes</span></div>
+              <div class="row"><span class="badge badge-unanchored"><svg class="icon" aria-hidden="true"><use href="#i-trace"/></svg>Unanchored</span><span>Not linked yet</span></div>
+            </div>
+          </article>
+
+          <article class="tile">
+            <div>
+              <h3>Anchors from the page itself</h3>
+              <p>Doc Drift reads the paths, repo links and Jira keys already on the page and suggests them. Tick, save, done. Or anchor a whole space at once.</p>
+            </div>
+            <div class="tile-visual">
+              <ul class="checklist">
+                <li><span class="box on" aria-hidden="true"><svg class="icon"><use href="#i-check"/></svg></span><span>payments-api: scripts/rollback.sh</span></li>
+                <li><span class="box on" aria-hidden="true"><svg class="icon"><use href="#i-check"/></svg></span><span>payments-api: deploy/helm/**</span></li>
+                <li><span class="box on" aria-hidden="true"><svg class="icon"><use href="#i-check"/></svg></span><span>PAY-142</span></li>
+                <li><span class="box" aria-hidden="true"></span><span>payments-api (whole repo)</span></li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="tile">
+            <div>
+              <h3>Fixes you approve</h3>
+              <p>Drift Reviewer drafts new text for the affected step. For a plain rename, Doc Drift proposes the swap itself, with no AI. Nothing changes until you accept.</p>
+            </div>
+            <div class="tile-visual">
+              <div class="diff" aria-label="Proposed change">
+                <div class="del">- run scripts/rollback.sh &lt;tag&gt;</div>
+                <div class="add">+ run scripts/rollback-v2.sh &lt;tag&gt;</div>
+              </div>
+              <p class="attrib">Suggested from PR #482. Saved as a new page version, by you.</p>
+            </div>
+          </article>
+
+          <article class="tile">
+            <div>
+              <h3>Drift debt per space</h3>
+              <p>A dashboard in each space ranks the pages that need a look and groups them by owner, so a team can clear them in one sitting.</p>
+            </div>
+            <div class="tile-visual">
+              <div class="kpis">
+                <div class="kpi"><b>18 of 24</b><span>Pages anchored</span></div>
+                <div class="kpi"><b>5</b><span>Possibly stale</span></div>
+              </div>
+              <p class="sample-note">Sample data from the demo space.</p>
+            </div>
+          </article>
+
+          <article class="tile tile-half">
+            <div>
+              <h3>Track the update in Jira</h3>
+              <p>Not fixing it today? Create a Jira task from the panel. It lists the changes and the sections to re-read, and agents see that an update is tracked.</p>
+            </div>
+            <div class="tile-visual">
+              <div class="jira-row"><span>Update “Payments rollback runbook”: anchors changed in PR #482</span><span class="chip">PAY-201</span></div>
+              <p class="attrib">Closing the task doesn't mark the page Verified. A person still checks the page.</p>
+            </div>
+          </article>
+
+          <article class="tile tile-half">
+            <div>
+              <h3>The owner hears about it</h3>
+              <p>A short comment on the page mentions the owner, names the change and links to the review. Changes that land together become one comment.</p>
+            </div>
+            <div class="tile-visual">
+              <div class="event">
+                <div class="event-top"><img src="assets/doc-drift-icon.svg" alt="" width="24" height="24" style="border-radius:6px"><strong>Doc Drift Sentinel</strong><span class="muted">commented</span></div>
+                <div class="event-why" style="color:var(--text)"><span class="mention">@Dana</span> PR #482 (merged by Sam) changed 2 files this page documents. Review in the Doc Drift badge.</div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <ul class="more-features">
+          <li><svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg><span><b>Tuned by your admin</b>Sensitivity presets, ignored paths, watched spaces, escalation days and comment timing.</span></li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-undo"/></svg><span><b>Reverts close drift</b>When a pull request is reverted, the drift it caused closes on its own.</span></li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-rename"/></svg><span><b>Follows renames</b>A moved file is matched to its old path, so the anchor still fires.</span></li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-filter"/></svg><span><b>Learns from dismissals</b>Dismiss a change as not relevant, and you can stop watching that path for the page.</span></li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg><span><b>Demo mode</b>Replay a seeded pull request from settings to see the whole flow without Bitbucket.</span></li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-ticket"/></svg><span><b>Jira anchors too</b>Status, fix version, scope and parent changes on anchored issues flag the page.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Agents -->
+    <section class="section" id="agents" aria-labelledby="agents-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">For agents</p>
+          <h2 class="title" id="agents-title">Agents check before they cite.</h2>
+          <p class="body-lg">The same freshness signal people see in the byline is a tool any agent can call: the Drift Reviewer agent in Rovo, and coding agents like Claude Code and Cursor over MCP.</p>
+        </div>
+
+        <div class="agents">
+          <div class="tablist" role="tablist" aria-label="Agent tools">
+            <button class="tab" role="tab" id="tab-find" aria-controls="panel-find" aria-selected="true" data-title="Claude Code · find-docs-for-path">
+              <span class="tab-name">find-docs-for-path <small>MCP</small></span>
+              <span class="tab-desc">Before an edit: which pages describe this file?</span>
+            </button>
+            <button class="tab" role="tab" id="tab-check" aria-controls="panel-check" aria-selected="false" tabindex="-1" data-title="Claude Code · check-page-freshness">
+              <span class="tab-name">check-page-freshness <small>MCP and Rovo</small></span>
+              <span class="tab-desc">Before citing: can I trust this page?</span>
+            </button>
+            <button class="tab" role="tab" id="tab-list" aria-controls="panel-list" aria-selected="false" tabindex="-1" data-title="Claude Code · list-stale-pages">
+              <span class="tab-name">list-stale-pages <small>MCP</small></span>
+              <span class="tab-desc">Which pages in a space need a review?</span>
+            </button>
+            <button class="tab" role="tab" id="tab-rovo" aria-controls="panel-rovo" aria-selected="false" tabindex="-1" data-title="Rovo · Drift Reviewer">
+              <span class="tab-name" style="font-family:var(--sans);font-weight:600">Drift Reviewer <small>Rovo agent</small></span>
+              <span class="tab-desc">Answers with the state, explains the change, drafts the fix.</span>
+            </button>
+          </div>
+
+          <div class="terminal">
+            <div class="terminal-bar"><span data-terminal-title>Claude Code · find-docs-for-path</span></div>
+
+            <div role="tabpanel" id="panel-find" aria-labelledby="tab-find" tabindex="0">
+<pre><span class="t-prompt">&gt;</span> <span class="t-user">Before I edit deploy/helm/values.yaml, which docs describe it?</span>
+
+<span class="t-tool">doc-drift · find-docs-for-path</span> <span class="t-dim">(repo: "payments-api", path: "deploy/helm/values.yaml")</span>
+  <span class="t-dim">5 pages</span>
+  Payments API service overview        <span class="t-warn">possibly_stale</span>  <span class="t-dim">exact</span>
+  Scale payment workers                <span class="t-warn">possibly_stale</span>  <span class="t-dim">exact</span>
+  Fail over the payments database      <span class="t-ok">verified</span>        <span class="t-dim">exact</span>
+  Payments rollback runbook            <span class="t-ok">verified</span>        <span class="t-dim">exact</span>
+  Payments deployment and Helm chart   <span class="t-ok">verified</span>        <span class="t-dim">glob deploy/helm/**</span>
+
+<span class="t-agent">5 pages document this file, and 2 are already Possibly stale. I'll make the change, then list all 5 in the pull request so their owners can re-check them.</span>
+<span class="t-dim">Output from the demo space.</span></pre>
+            </div>
+
+            <div role="tabpanel" id="panel-check" aria-labelledby="tab-check" tabindex="0" hidden>
+<pre><span class="t-prompt">&gt;</span> <span class="t-user">How do I roll back payments-api? Check the runbook first.</span>
+
+<span class="t-tool">doc-drift · check-page-freshness</span> <span class="t-dim">(pageUrl: ".../Payments+rollback+runbook")</span>
+{
+  "title": "Payments rollback runbook",
+  "status": <span class="t-warn">"possibly_stale"</span>,
+  "citePolicy": "cite_with_caveat",
+  "openDrift": [{
+    "ref": "PR #482",
+    "summary": "renamed scripts/rollback.sh to scripts/rollback-v2.sh",
+    "severity": "high"
+  }],
+  "guidance": "Do not present steps from this page as current. Cite with caveat: changed by PR #482 on 2026-11-10."
+}
+
+<span class="t-agent">The runbook may be out of date: PR #482 renamed the rollback script after the page was last verified. In the code, the script is now scripts/rollback-v2.sh.</span>
+<span class="t-dim">Example after the demo replay of PR #482.</span></pre>
+            </div>
+
+            <div role="tabpanel" id="panel-list" aria-labelledby="tab-list" tabindex="0" hidden>
+<pre><span class="t-prompt">&gt;</span> <span class="t-user">Which PLAT pages should I review this week?</span>
+
+<span class="t-tool">doc-drift · list-stale-pages</span> <span class="t-dim">(spaceKey: "PLAT", limit: 5)</span>
+  Scale payment workers              <span class="t-warn">possibly_stale</span>  high    <span class="t-dim">PR #5</span>
+  Refunds API guide                  <span class="t-warn">possibly_stale</span>  high    <span class="t-dim">PR #12</span>
+  Payments codebase tour             <span class="t-warn">possibly_stale</span>  high    <span class="t-dim">PR #13</span>
+  Payments local development setup   <span class="t-warn">possibly_stale</span>  high    <span class="t-dim">PR #13</span>
+  Payments API service overview      <span class="t-warn">possibly_stale</span>  medium  <span class="t-dim">2 changes</span>
+
+<span class="t-agent">5 PLAT pages have open changes, 4 of them high. Start with the Refunds API guide: PR #12 removed src/routes/refunds-v1.ts, which the guide documents.</span>
+<span class="t-dim">Output from the demo space.</span></pre>
+            </div>
+
+            <div role="tabpanel" id="panel-rovo" aria-labelledby="tab-rovo" tabindex="0" hidden>
+              <div class="chat">
+                <div class="bubble me"><span class="who">You</span>How do I roll back payments-api?</div>
+                <div class="bubble">
+                  <span class="who">Drift Reviewer</span>
+                  The rollback runbook is Possibly stale. PR #482 renamed <code>scripts/rollback.sh</code> after the page was last verified, so step 2 may be out of date. Want me to draft a fix for Dana to review?
+                  <div><span class="cite"><svg class="icon icon-16 muted" aria-hidden="true"><use href="#i-page"/></svg>Payments rollback runbook <span class="badge badge-possibly"><svg class="icon" aria-hidden="true"><use href="#i-slip"/></svg>Possibly stale</span></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="connect">
+          <div class="panel">
+            <h3 class="heading-md">Connect a coding agent</h3>
+            <p>One MCP server per site. Agents read as the person who signs in, so they only see pages that person can view.</p>
+            <ol class="numbered">
+              <li>
+                <div>
+                  <b>An admin turns on the tools</b>
+                  <p>In Atlassian Administration: Apps, Sites, your site, Connected apps, Doc Drift Sentinel, then Tools.</p>
+                </div>
+              </li>
+              <li>
+                <div>
+                  <b>Open the app once in Confluence</b>
+                  <p>Click any Doc Drift badge and allow access. Agents act as you, so this consent comes first.</p>
+                </div>
+              </li>
+              <li>
+                <div>
+                  <b>Add the server and sign in</b>
+                  <p>In Claude Code, run this, then <code>/mcp</code> to sign in.</p>
+                  <div class="copy-field">
+                    <code id="cmd-add">claude mcp add --transport http doc-drift https://mcp.atlassian.com/forge/12e968a1-a45d-4524-ba28-d47e2315db1a</code>
+                    <button class="copy-btn" type="button" data-copy="cmd-add" aria-label="Copy the claude mcp add command"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span data-copy-label>Copy</span></button>
+                  </div>
+                </div>
+              </li>
+            </ol>
+            <details class="more">
+              <summary>Cursor and other MCP clients</summary>
+              <span class="label">Server URL</span>
+              <div class="copy-field">
+                <code id="mcp-url">https://mcp.atlassian.com/forge/12e968a1-a45d-4524-ba28-d47e2315db1a</code>
+                <button class="copy-btn" type="button" data-copy="mcp-url" aria-label="Copy the MCP server URL"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span data-copy-label>Copy</span></button>
+              </div>
+              <span class="label">Cursor, in <code>.cursor/mcp.json</code></span>
+              <div class="copy-field">
+                <code id="cursor-json">{ "mcpServers": { "doc-drift": { "url": "https://mcp.atlassian.com/forge/12e968a1-a45d-4524-ba28-d47e2315db1a" } } }</code>
+                <button class="copy-btn" type="button" data-copy="cursor-json" aria-label="Copy the Cursor configuration"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span data-copy-label>Copy</span></button>
+              </div>
+            </details>
+          </div>
+
+          <div class="panel">
+            <h3 class="heading-md">Tell your agent the rule</h3>
+            <p>Paste this into <code>CLAUDE.md</code> or <code>AGENTS.md</code>. Your agent then checks a page before it relies on it, and trusts the code when the two disagree.</p>
+            <div class="instruction" id="agent-rule">Before you rely on a Confluence page, call the `check-page-freshness` tool from the doc-drift MCP server with its page ID or URL. If the state is not `verified`, do not present its steps as current, and tell the user which page needs a review. When a page and the code disagree, trust the code.</div>
+            <div class="actions-row">
+              <button class="btn btn-secondary btn-sm" type="button" data-copy="agent-rule"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span data-copy-label>Copy</span></button>
+            </div>
+            <span class="label">What agents can and can't do</span>
+            <ul class="checklist" style="margin-top:12px;font-family:var(--sans)">
+              <li style="font-family:var(--sans);font-size:15px;line-height:22px"><svg class="icon icon-16" aria-hidden="true" style="color:var(--verified)"><use href="#i-check"/></svg><span style="white-space:normal">Read page states, open changes and the pages that cover a file</span></li>
+              <li style="font-family:var(--sans);font-size:15px;line-height:22px"><svg class="icon icon-16" aria-hidden="true" style="color:var(--verified)"><use href="#i-check"/></svg><span style="white-space:normal">Draft a fix for a person to accept (Drift Reviewer only)</span></li>
+              <li style="font-family:var(--sans);font-size:15px;line-height:22px"><svg class="icon icon-16 muted" aria-hidden="true"><use href="#i-x"/></svg><span style="white-space:normal">Never edit a page, and never see a page the person can't view</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trust -->
+    <section class="section" id="trust" aria-labelledby="trust-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Built to be trusted</p>
+          <h2 class="title" id="trust-title">A person decides.</h2>
+          <p class="body-lg">Doc Drift watches and flags. It never claims a page is wrong, only that what it describes has changed.</p>
+        </div>
+        <div class="trust">
+          <div>
+            <svg class="icon" aria-hidden="true"><use href="#i-rule"/></svg>
+            <h3>No AI in detection</h3>
+            <p>A deterministic matcher scores each change against anchors: paths, globs, renames, removed identifiers. Same input, same result, no credits spent.</p>
+          </div>
+          <div>
+            <svg class="icon" aria-hidden="true"><use href="#i-hand"/></svg>
+            <h3>Agents never edit pages</h3>
+            <p>Page text changes only when a person clicks Accept, as that person, with a version message naming the pull request. Page history can undo it.</p>
+          </div>
+          <div>
+            <svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg>
+            <h3>Permission-aware</h3>
+            <p>Agents and tools read as the signed-in person. A page they can't view comes back as unknown, with no title.</p>
+          </div>
+          <div>
+            <svg class="icon" aria-hidden="true"><use href="#i-store"/></svg>
+            <h3>No page bodies stored</h3>
+            <p>Doc Drift keeps anchors, scores, pull request details and file paths. Diff text is deleted after 30 days. A fix draft keeps only the block it replaces.</p>
+          </div>
+          <div>
+            <svg class="icon" aria-hidden="true"><use href="#i-key"/></svg>
+            <h3>Signed changes, no servers of ours</h3>
+            <p>Both apps run on Atlassian Forge. The Bitbucket relay signs each change with a secret unique to your site, and talks only to the Confluence app.</p>
+          </div>
+          <div>
+            <svg class="icon" aria-hidden="true"><use href="#i-words"/></svg>
+            <h3>AI only when you ask</h3>
+            <p>Drafting a fix runs in Rovo on your site, only after someone clicks Propose fix. It sees the affected sections and the change, not your repository.</p>
+          </div>
+        </div>
+        <p style="margin-top:28px"><a href="privacy.html">Read how Doc Drift handles data</a></p>
+      </div>
+    </section>
+
+    <!-- Get started -->
+    <section class="section" id="start" aria-labelledby="start-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Get started</p>
+          <h2 class="title" id="start-title">Three steps to your first flag.</h2>
+        </div>
+        <ol class="start">
+          <li>
+            <span class="step-num">01</span>
+            <h3 class="heading-md">Install in Confluence</h3>
+            <p>A site admin installs Doc Drift Sentinel. Jira is optional: connect it to watch issues too.</p>
+          </li>
+          <li>
+            <span class="step-num">02</span>
+            <h3 class="heading-md">Connect Bitbucket</h3>
+            <p>Install the relay in your Bitbucket workspace and paste the URL and secret from settings. Or skip this for now and replay the demo pull request.</p>
+          </li>
+          <li>
+            <span class="step-num">03</span>
+            <h3 class="heading-md">Anchor your pages</h3>
+            <p>Click the badge on a runbook and accept the suggested anchors. The next merge that touches them flags the page.</p>
+          </li>
+        </ol>
+        <div class="start-cta">
+          <a class="btn btn-primary" href="docs.html#install" data-install>Install for Confluence</a>
+          <a class="btn btn-secondary" href="docs.html">Read the setup guide</a>
+          <span class="muted" data-install-pending>The install link is shared with Codegeist 2026 judges first.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section" id="faq" aria-labelledby="faq-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Questions</p>
+          <h2 class="title" id="faq-title">Good to know.</h2>
+        </div>
+        <div class="faq">
+          <details>
+            <summary>Does it use AI to decide a page is stale?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+            <div class="answer"><p>No. Detection is a deterministic matcher: it compares the files and identifiers a change touched with the anchors on each page. AI runs only when someone clicks Propose fix, and a person still accepts the result.</p></div>
+          </details>
+          <details>
+            <summary>Which code hosts does it support?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+            <div class="answer"><p>Bitbucket Cloud, through a small relay app in a team workspace. GitHub and GitLab are not supported yet. Jira issues can be anchors on their own, so a page can be watched with no code host at all.</p></div>
+          </details>
+          <details>
+            <summary>Do I need Rovo?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+            <div class="answer"><p>No. The badge, review panel, dashboard, comments, Jira tasks and the rename quick fix work without it. The Drift Reviewer agent and Propose fix need Rovo on your site, and drafting a fix uses Rovo credits there.</p></div>
+          </details>
+          <details>
+            <summary>Will it edit my pages?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+            <div class="answer"><p>Only when you accept a proposed fix. The edit is saved as a new page version under your name, with a message that names the pull request, so page history can undo it. The app writes its badge to page metadata, never to the page text.</p></div>
+          </details>
+          <details>
+            <summary>What about pages with view restrictions?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+            <div class="answer"><p>They can't be watched yet. The app can't read them, so it says so in the badge and tells agents to check those pages against the code before citing them.</p></div>
+          </details>
+          <details>
+            <summary>How much does it cost?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+            <div class="answer"><p>Doc Drift Sentinel is free while it's in preview. Drafting fixes with Drift Reviewer uses Rovo credits on your own site.</p></div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="closing" aria-labelledby="closing-title">
+      <svg class="tide" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.25">
+        <path d="M0 80c140-30 260 26 400 0s260-56 420-18 260 44 380 8"/>
+        <path d="M0 160c140-30 260 26 400 0s260-56 420-18 260 44 380 8"/>
+        <path d="M0 240c140-30 260 26 400 0s260-56 420-18 260 44 380 8"/>
+        <path d="M0 320c140-30 260 26 400 0s260-56 420-18 260 44 380 8"/>
+      </svg>
+      <div class="wrap" style="position:relative">
+        <h2 class="title" id="closing-title">Catch the slip before your agents do.</h2>
+        <p class="body-lg">Docs that agents can trust, because they know when to stop trusting them.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="docs.html#install" data-install>Install for Confluence</a>
+          <a class="btn btn-secondary" href="docs.html">Read the setup guide</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="lockup" href="./"><img src="assets/doc-drift-icon.svg" alt="" width="40" height="40"><span>Doc Drift Sentinel</span></a>
+          <p>Docs that know when the code moved. A Forge app for Confluence, built for Codegeist 2026.</p>
+        </div>
+        <div>
+          <h2>Product</h2>
+          <ul>
+            <li><a href="#how">How it works</a></li>
+            <li><a href="#confluence">In Confluence</a></li>
+            <li><a href="#agents">For agents</a></li>
+            <li><a href="#faq">Questions</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Docs</h2>
+          <ul>
+            <li><a href="docs.html">Setup guide</a></li>
+            <li><a href="docs.html#mcp">Connect coding agents</a></li>
+            <li><a href="docs.html#troubleshooting">Troubleshooting</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Trust</h2>
+          <ul>
+            <li><a href="privacy.html">Privacy and data</a></li>
+            <li><a href="docs.html#support">Support</a></li>
+            <li><a href="https://github.com/razvanstatescu/doc-drift">Source on GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <p class="legal">© <span data-year>2026</span> Doc Drift Sentinel. An independent app built on Atlassian Forge, not made or endorsed by Atlassian. Atlassian, Confluence, Jira, Bitbucket and Rovo are trademarks of Atlassian.</p>
+    </div>
+  </footer>
+
+  <script src="assets/site.js" defer></script>
+</body>
+</html>

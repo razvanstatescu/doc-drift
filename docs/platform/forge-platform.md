@@ -258,6 +258,12 @@ Verified: https://developer.atlassian.com/platform/forge/manifest-reference/modu
   - No foreign keys.
 - **Tunnel.** SQL run while tunnelling hits the provisioned database. Verified: https://developer.atlassian.com/platform/forge/storage-reference/sql-tutorial/
 
+### Data lifecycle (hosted storage)
+Verified 2026-11-13 via the Forge MCP docs search:
+- Every hosted store (KVS, custom entities, Forge SQL, Object Store) encrypts data on disk, scopes it per installation, and keeps it in the host Atlassian app's location (data residency is inherited). https://developer.atlassian.com/platform/forge/storage-reference/
+- On uninstall, data is soft-deleted and **retained for 28 days**. A reinstall is a new installation; the developer can ask Atlassian support to re-link the old data within 21 days, with customer consent. Data an app deletes itself is also kept soft-deleted for the retention period (recoverable on request within 21 days). https://developer.atlassian.com/platform/forge/storage-reference/hosted-storage-data-lifecycle/
+- Used on the public privacy page (`site/privacy.html`).
+
 ### Recommendation
 Use **Forge SQL** for `binding`, `page_state`, `drift_event`, `change_record` and `verification`. The dashboard needs grouped counts per space and status, and custom entities have no aggregates: you would page through 100 rows at a time, or maintain counters by hand. Keep KVS for settings and the secret store for the HMAC secret. Fall back to custom entities only if spike 7 fails.
 

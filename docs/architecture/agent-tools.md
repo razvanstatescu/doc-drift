@@ -23,7 +23,7 @@ Common results:
 
 `guidance` strings (brand/voice-and-copy.md):
 - verified: "Safe to cite."
-- possibly stale: "Do not present steps from this page as current. Cite with caveat: changed by PR #482 on 2026-12-02." Up to 3 changes are named, newest first ("… and 2 more changes").
+- possibly stale: "Do not present steps from this page as current. Cite with caveat: what it describes changed in PR #482 on 2026-12-02, after it was last verified." Up to 3 changes are named, newest first ("… and 2 more changes").
 - stale: the same, plus "Unreviewed for 8 days." (or "Unreviewed drift." under a day).
 - unanchored: "No code or Jira anchors are set, so Doc Drift can't tell if this page is current. Cite with care."
 

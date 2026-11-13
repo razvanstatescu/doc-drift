@@ -98,7 +98,7 @@ describe('guidance', () => {
   });
   it('drifted pages name each change and date once (brand copy)', () => {
     expect(freshnessGuidance('possibly_stale', events.slice(0, 1))).toBe(
-      'Do not present steps from this page as current. Cite with caveat: changed by PR #482 on 2026-12-02.',
+      'Do not present steps from this page as current. Cite with caveat: what it describes changed in PR #482 on 2026-12-02, after it was last verified.',
     );
     expect(changeList(events)).toBe('PR #482 on 2026-12-02 and PAY-21 on 2026-12-01');
   });

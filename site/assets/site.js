@@ -169,7 +169,7 @@
       if (stateText) stateText.textContent = drifted ? '"possibly_stale"' : '"verified"';
       if (guidanceText)
         guidanceText.textContent = drifted
-          ? '"Do not present steps from this page as current. Cite with caveat: changed by PR #482 on 2026-11-10."'
+          ? '"Do not present steps from this page as current. Cite with caveat: what it describes changed in PR #482 on 2026-11-10, after it was last verified."'
           : '"Safe to cite."';
       if (toggle) toggle.textContent = drifted ? 'Mark verified' : 'Merge PR #482';
       if (status) status.textContent = drifted ? 'PR #482 merged 2 minutes ago' : 'Verified by Dana, 3 days ago';

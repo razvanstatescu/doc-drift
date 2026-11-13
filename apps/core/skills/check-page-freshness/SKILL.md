@@ -13,7 +13,7 @@ Always name the page you're talking about. If the user names a page, resolve it;
 3. Open the answer with the page `title` (as a link to `url`), then the state word. Never write "this page" without naming it.
 4. Follow `citePolicy`:
    - `cite`: cite the page normally.
-   - `cite_with_caveat`: cite it with the caveat in `guidance`, naming the change ref and date from `openDrift` (for example, "changed by PR #482 on 2026-12-02"). For `unanchored`, say no code anchors are set, so Doc Drift can't tell if it is current.
+   - `cite_with_caveat`: cite it with the caveat in `guidance`, naming the change ref and date from `openDrift` (for example, "what it describes changed in PR #482 on 2026-12-02"; the PR changed the code, never the page itself). For `unanchored`, say no code anchors are set, so Doc Drift can't tell if it is current.
    - `do_not_cite`: do not present its steps as current. Say which change it waits on and that someone must review it.
 5. When `affectedSections` is not empty, name the affected sections by heading.
 6. `status: "unknown"`: the user cannot view the page, or it was not found. Do not reveal or guess a title. Say you could not check it.

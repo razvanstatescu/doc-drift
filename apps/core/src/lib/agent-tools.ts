@@ -238,7 +238,8 @@ export function freshnessGuidance(status: StoredPageState | 'unknown', events: D
     case 'possibly_stale':
     case 'stale': {
       const list = changeList(events);
-      const caveat = list ? ` Cite with caveat: changed by ${list}.` : ' Cite with caveat: its anchors changed after the last verification.';
+      // Name what changed, never the page: "changed by PR #482" read to agents as if the PR had edited the page (video shoot, 2026-11-13).
+      const caveat = list ? ` Cite with caveat: what it describes changed in ${list}, after it was last verified.` : ' Cite with caveat: its anchors changed after the last verification.';
       let tail = '';
       if (status === 'stale') {
         const oldest = events.length > 0 ? Math.min(...events.map((e) => e.at)) : undefined;

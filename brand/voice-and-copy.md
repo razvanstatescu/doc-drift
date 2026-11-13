@@ -82,7 +82,7 @@ Calm, specific, on watch. Say what changed, where and when, with numbers. Never 
 ### Agent and tool guidance strings
 
 - `guidance` for verified pages: Safe to cite.
-- `guidance` for drifted pages: Do not present steps from this page as current. Cite with caveat: changed by PR #482 on 2026-12-02.
+- `guidance` for drifted pages: Do not present steps from this page as current. Cite with caveat: what it describes changed in PR #482 on 2026-12-02, after it was last verified. (Name what changed, never the page: agents read "changed by PR #482" as if the PR had edited the page.)
 - Not visible to caller: Page not found or not visible to you.
 - Drift Reviewer answer example: "The rollback runbook is Possibly stale. PR #482 renamed `scripts/rollback.sh` after the page was last verified, so step 2 may be out of date."
 

@@ -107,3 +107,21 @@ export default A1;
 - On this Mac the first frame sometimes waits 20 s or more for the GPU process while other Chrome instances are busy;
   the delayRender timeout is 90 s for that reason.
 - Fonts load from `public/fonts/` with `@remotion/fonts`; a missing file fails the render instead of falling back.
+
+## Publishing
+
+1. Render and master: `bash tools/render-master.sh <tag>` writes `out/doc-drift-<tag>.mp4` (1920x1080, 30 fps,
+   H.264 CRF 16, AAC 320k, −14 LUFS / −1 dBTP) and runs the WCAG flash screen on the cold open.
+2. Captions and description: `node tools/publish.mjs <tag>` writes `out/doc-drift-<tag>.srt` (narration and the
+   real clip, timed from `timeline.json`) and `out/doc-drift-<tag>-description.md` (pitch, chapters from the scene
+   starts, credits for every plate the cold open uses, the AI line and the trademark line).
+3. Upload to YouTube as **public** (the rules require it), attach the `.srt` as English captions, paste the
+   description. When YouTube asks about altered or synthetic content, answer truthfully: the narration, music and
+   effects are AI-generated; nothing shows a real person saying something they did not say.
+4. Checks before upload: a human listens to the whole mix once (nobody has yet: every audio judgement so far is
+   measured), PEAT or a Harding test on the master (our flash check is a screen, not a sign-off), and the MoJ banner
+   plate (D2-03) re-checked against the live page.
+
+Open items: the product footage is from the development install (the "(Development)" suffix is covered and logged
+in `captures.json`); production captures can replace them later without touching scene code. Review history:
+`out/qa-v1/` (frame-by-frame review of v1, 50 issues) and `out/qa-v2/` (verification of v2).

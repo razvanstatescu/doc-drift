@@ -25,10 +25,11 @@ import { Whip } from "../../motion/whip";
  *              is Possibly stale." (the link re-renders as a chip during the move); on "why" move to "What it
  *              describes changed in PR #482 on 2026-11-13, after it was last verified."                    (V17)
  *   V18        whip to the terminal (a beat before V18): find-docs-for-path (payments-api, scripts/rollback.sh)
- *              and the runbook's row, highlighted on "same signal"; then check-page-freshness clears the first
- *              call out in one smooth scroll and prints status, the openDrift ref and the guidance, highlighted on
- *              "and which to trust", held still for 3.4 s. Real values only; omitted keys, the two QA pages from a
- *              DDSTEST space and the second drift entry are marked "…"                                      (V18)
+ *              and the runbook's row, highlighted on "same signal"; on "which" check-page-freshness clears the
+ *              first call out in one smooth scroll and prints status, the openDrift ref and the guidance, which
+ *              lands highlighted and then holds perfectly still for 110 frames (3.7 s) to the whip out. Real values
+ *              only; omitted keys, the two QA pages from a DDSTEST space and the second drift entry are marked "…"
+ *                                                                                                           (V18)
  */
 const sc = getScene("P3");
 
@@ -49,8 +50,8 @@ export const P3_T = {
   call1: sc.snap(sc.cue("V18")) - 8,
   result1: sc.wordAt("V18", "same") - 4,
   signal: sc.wordAt("V18", "signal"),
-  call2: sc.wordAt("V18", "cover") - 6,
-  trust: sc.wordAt("V18", "and", "from", 0),
+  /** check-page-freshness, on "which": its block must be still for >= 105 frames before the whip out */
+  call2: sc.wordAt("V18", "which") + 4,
   end: sc.durationInFrames,
 };
 const T = P3_T;
@@ -123,7 +124,12 @@ if (!page || `${G[0]} ${G[1]} ${G[2]} ${G[3]} ${G[4]}` !== guidance || drift[0]?
 }
 
 // Real output, trimmed: every omitted key, array item or value is marked "…" (keys keep their real order).
-const R2 = (k: number) => T.call2 + 14 + k * 2;
+// The second call prints after its scroll (12 f), a row every 1.5 f; its highlight lands with the last row.
+const R2 = (k: number) => T.call2 + 12 + Math.round(k * 1.5);
+const GUIDANCE_SET = R2(10.5);
+if (T.end - 4 - (GUIDANCE_SET + 6) < 105) {
+  throw new Error("P3: the guidance block must hold still for at least 105 frames before the whip out");
+}
 const ROWS: Row[] = [
   { at: T.call1, kind: "tool", text: "doc-drift · find-docs-for-path" },
   { at: T.call1 + 3, kind: "json", indent: 2, text: `{ "repo": "${find.input.repo}", "path": "${find.input.path}" }` },
@@ -156,10 +162,10 @@ const TerminalShot: React.FC = () => (
       rows={ROWS}
       width={TERM_W}
       viewRows={VIEW_ROWS}
-      scroll={[{ at: T.call2, rows: 7, dur: 13 }]}
+      scroll={[{ at: T.call2, rows: 7, dur: 12 }]}
       highlights={[
         { from: T.signal, to: T.call2, rows: [3, 5] },
-        { from: T.trust, rows: [10, 15] },
+        { from: GUIDANCE_SET, rows: [10, 15] },
       ]}
       style={{ position: "absolute", left: (1920 - TERM_W) / 2, top: TOP }}
     />
@@ -199,8 +205,8 @@ const P3: React.FC = () => {
       <Sfx id="whoosh-short" at={T.toTerminal} />
       <Sfx id="type-burst" at={T.call1} gainDb={-8} />
       <Sfx id="tick-soft" at={T.result1} />
-      <Sfx id="type-burst" at={T.call2 + 14} gainDb={-8} />
-      <Sfx id="tick-soft" at={T.trust} />
+      <Sfx id="type-burst" at={T.call2 + 12} gainDb={-8} />
+      <Sfx id="tick-soft" at={GUIDANCE_SET} />
       <Sfx id="whoosh-short" at={T.end - 3} />
     </World>
   );

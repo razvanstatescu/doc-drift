@@ -34,10 +34,12 @@ import { getScene } from "../../lib/timeline";
  *   V20        cut to the rename quick fix ("No AI used."); the cursor clicks Replace on "fix"; on "no" punch
  *              in on "No AI used."; then the panel's confirmation                                          (V20)
  *   V21        the remaining change: the cursor clicks Propose fix on "bigger"; Rovo opens with the button's
- *              own prompt; Drift Reviewer's real steps, then a cut to its "Please review" card (the take's 3 s of
- *              empty panel between them are skipped)                                                     (V21)
- *   "Nothing"  the draft as a diff, "Nothing changes until you accept."; the cursor clicks Accept fix on
- *              "accepts"; "Accepted. A new page version names PR #482." (the save spinner compressed)
+ *              own prompt; Drift Reviewer's real steps, then a cut to its "Please review" card on "Drift" (the
+ *              take's 3 s of empty panel between them are skipped)                                       (V21)
+ *   "edit"     the draft as a diff, "Nothing changes until you accept."; on "Nothing" to the footer; the cursor
+ *              clicks Accept fix on "changes" and leaves; "Accepted. A new page version names PR #482." holds
+ *              still for 61 frames, to the cut to the page (the proof that a person changed the page; the click
+ *              is on "changes", not "accepts", because the snap back after it is fixed on snapBack)
  *   snapBack   the page: the badge, out of line since P2, snaps home and reads Verified (markers.snapBack)  (V22)
  *   "Now"      the coding agent's terminal slides up into the frame's bottom: check-page-freshness → verified,
  *              "Safe to cite."; it stays in place for the cut
@@ -61,10 +63,11 @@ export const P4_T = {
   propose: sc.snap(sc.cue("V21")),
   proposeClick: sc.wordAt("V21", "bigger"),
   rovo: sc.wordAt("V21", "bigger") + 2,
-  card: sc.wordAt("V21", "drift") + 24,
-  diff: sc.snap(sc.wordAt("V21", "nothing") - 4),
-  footer: sc.wordAt("V21", "until"),
-  accept: sc.wordAt("V21", "accepts"),
+  card: sc.wordAt("V21", "drift") + 4,
+  diff: sc.snap(sc.wordAt("V21", "edit") - 4),
+  footer: sc.wordAt("V21", "nothing"),
+  /** Accept fix: early enough that "Accepted. …" (from accept + 3) is still and alone for 61 frames before the page */
+  accept: back - 6 - 66,
   /** the page, 6 frames before the snap: the badge is still out of line, glowing */
   page: back - 6,
   back,
@@ -189,16 +192,17 @@ const PROPOSE_CURSOR = [
   { frame: T.proposeClick, x: 1268, y: 1742, click: true, cursor: "pointer" },
 ];
 
-// ---- p4-accept.mp4: diffs 10.6 s; Accept fix 12.373 s at (1929, 1894); spinner to 16.5 s; "Accepted." 16.6 s;
-// reload; Verified 22.5 s. Its log lists only the sidebar mask; the byline's suffix is covered here (Possibly stale
-// x 2679-2841 before the reload, Verified x 2612-2773 after it).
+// ---- p4-accept.mp4: diffs 10.6 s; Accept fix 12.373 s at (1929, 1894); spinner to 16.45 s; "Accepted." from
+// 16.47 s, untouched to 16.83 s (small changes elsewhere from 16.87 s); reload; Verified 22.5 s. Its log lists only
+// the sidebar mask; the byline's suffix is covered here (Possibly stale x 2679-2841 before the reload, Verified
+// x 2612-2773 after it).
 const ACCEPT_TIME: [number, number][] = [
   [T.diff, 10.6],
   [T.accept - 1, 12.3],
   [T.accept + 1, 12.45],
-  // the spinner in 2 frames, so "Accepted. A new page version names PR #482." is up for the rest of the shot
-  [T.accept + 3, 16.6],
-  [T.page - 1, 17.4],
+  // the spinner in 2 frames; then ONE frame of the take (16.7 s) for the whole banner hold: fully still
+  [T.accept + 3, 16.7],
+  [T.page - 1, 16.7],
 ];
 const ACCEPT_CAM: Cam[] = [
   // the second draft: the code diff, its reason, "Nothing changes until you accept."
@@ -298,7 +302,8 @@ const P4: React.FC = () => {
     );
   else if (frame < T.propose) shot = <Stage label="Confluence" cam={REVIEW_CAM} layers={REVIEW_LAYERS} cursor={REVIEW_CURSOR} show={T.top - 2} hide={T.replace + 8} />;
   else if (frame < T.diff) shot = <Stage label="Confluence" cam={PROPOSE_CAM} layers={PROPOSE_LAYERS} cursor={PROPOSE_CURSOR} show={T.propose + 2} hide={T.proposeClick + 6} />;
-  else if (frame < T.page) shot = <Stage label="Confluence" cam={ACCEPT_CAM} layers={ACCEPT_LAYERS} cursor={ACCEPT_CURSOR} show={T.footer - 4} hide={T.accept + 10} />;
+  // the cursor fades out from the click (5 frames), so it never sits on the banner that replaces the button
+  else if (frame < T.page) shot = <Stage label="Confluence" cam={ACCEPT_CAM} layers={ACCEPT_LAYERS} cursor={ACCEPT_CURSOR} show={T.footer - 4} hide={T.accept} />;
   else if (frame < T.history)
     shot = (
       <Stage label="Confluence" cam={PAGE_CAM} layers={PAGE_LAYERS}>

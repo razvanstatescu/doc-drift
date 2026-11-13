@@ -9,7 +9,7 @@ Decision D19: we do only what the Codegeist rules require. That is an installati
 | Core app install link | Developer console > the app > Distribution > "Start sharing your app" (production environment). Confluence required, Jira optional. |
 | Bitbucket relay install link | The same flow, for a Bitbucket team workspace. Optional for judges: demo mode covers it. |
 | Setup guide | Step by step, including connecting Jira, enabling external MCP, the demo mode replay, and how to get a Rovo-enabled site. Draft outline in [demo-and-pitch.md](demo-and-pitch.md#judge-setup-guide-to-write). |
-| Video | Public YouTube, under 5 minutes, core story before 3:00 |
+| Video | Public YouTube, under 5 minutes; planned at 2:30 ([../video/research.md](../video/research.md)) |
 | Devpost text | Features, and how it meets the technology requirement |
 
 ## Rules for the apps

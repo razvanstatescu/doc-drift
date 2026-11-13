@@ -14,6 +14,8 @@
 
 ## Video script
 
+> **Superseded 2026-11-13 (D37).** The video is replanned as a 2:30 hypermotion film built in Remotion: see [../video/research.md](../video/research.md). The v2 table below is kept for history. Two facts in it are out of date: the live rules say judges need not watch beyond **five** minutes (not 3:00), and the rule on third-party trademarks and material is stricter than this section assumed.
+
 The video must be under 5 minutes, public on YouTube, and show the app running. **Judges do not have to watch past 3:00**, so the full end-to-end flow and the agent and MCP proof (bonus evidence) must land before 3:00. Avoid third-party marks without permission: no Slack UI mock; use a generic pager/alert card instead. Keep any Claude Code branding incidental (a terminal).
 
 ### Revised script (v2, 2026-11-11). Core story ends at 2:55.

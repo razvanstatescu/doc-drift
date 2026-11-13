@@ -49,7 +49,7 @@ For our own surfaces (website, docs, decks, dashboard mockups). Inside Confluenc
 ## 6. In context
 
 - **Website hero:** nav (How it works · For agents · Docs · Install for Confluence). Headline, body, two CTAs (Install for Confluence, Watch the 4 minute demo). A page mock with "Owned by Dana" and a Possibly stale badge.
-- **Marketplace listing:** "Doc Drift Sentinel for Confluence", by [Partner name], one-line summary, categories (Documentation, Developer tools, Rovo agents). The logo is exported at 144 x 144 px from `doc-drift-icon.svg`.
+- **Marketplace listing:** "Doc Drift Sentinel for Confluence", by Nano Soft (Nano-Soft Technology SRL), one-line summary, categories (Documentation, Developer tools, Rovo agents). The logo is exported at 144 x 144 px from `doc-drift-icon.svg`.
 - **Confluence page:** the byline badge with a tooltip, and an optional banner reading "Agents won't trust this page until it's reviewed."
 - **Agent answer:** the Drift Reviewer reply to "How do I roll back payments-api?" with a page citation chip showing the state.
 - **Coding agent over MCP:** a terminal transcript. The user asks "Before I edit deploy/helm/values.yaml, which docs describe it?" and the agent calls `doc-drift · find-docs-for-path (payments-api, deploy/helm/values.yaml)`. Results: Payments rollback runbook, `possibly_stale`; Scaling payment workers, `verified`. Then: "I'll update the runbook in the same PR."

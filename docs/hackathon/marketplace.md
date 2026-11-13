@@ -41,4 +41,4 @@ Goal (if revived): the "Best Marketplace published app" bonus requires an app "p
 - Logo: 144 x 144 px PNG exported from [brand/logos/doc-drift-icon.svg](../../brand/logos/doc-drift-icon.svg)
 - Summary: "Flags pages when the code or Jira work they describe changes, and tells agents which pages to trust."
 - Categories (draft): Documentation, Developer tools, Rovo agents
-- Vendor: [Partner name] (to decide)
+- Vendor: Nano-Soft Technology SRL, trading as Nano Soft (https://nano-soft.tech/, hello@nano-soft.tech). Decided 2026-11-13.

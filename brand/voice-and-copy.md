@@ -90,6 +90,10 @@ Calm, specific, on watch. Say what changed, where and when, with numbers. Never 
 
 - Doc Drift: accepted proposal for PR #482
 
+## Maker
+
+Doc Drift Sentinel is made by **Nano-Soft Technology SRL**, trading as **Nano Soft** (Bucharest, Romania; https://nano-soft.tech/). Contact and support: hello@nano-soft.tech. Use "Nano Soft" in bylines and footers, and the legal name in copyright and privacy text.
+
 ## Placeholders
 
 Use `[Partner name]` and similar bracketed placeholders for facts not decided yet. Never invent stats for marketing copy. Use numbers from the eval harness or the demo space and label them "sample data from the demo space".

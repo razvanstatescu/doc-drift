@@ -1,0 +1,3243 @@
+{
+  "note": "Real product captures for the launch video (capture agent). Coordinates are capture pixels (2x CSS, 3840x2160). Videos are constant 60 fps with real timing; clicks[].atMs and hovers[].atMs count from the first frame. Masks cover the \"(Development)\" suffix only (BRIEF decision 7). Log: tools/capture/LOG.md.",
+  "captures": [
+    {
+      "id": "p1-anchor-this-space",
+      "file": "captures/p1-anchor-this-space.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T15:55:26+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "PLAT Drift dashboard",
+      "shows": "\"Anchor this space\": the table of unanchored PLAT pages with suggested anchors (strong ones pre-checked). Not saved. Save button reads \"Save anchors for 2 pages\".",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1389,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            1069,
+            140,
+            333,
+            67
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Taken while the runbook was Unanchored for P1, so it is in the table (17 of 24 anchored). Table text: Page Suggested anchors Payments rollback runbook PAY-6 Jira issue scripts/rollback.sh Needs a repository Weak PSP outage runbook PAY-16 Jira issue"
+    },
+    {
+      "id": "p1-anchor-this-space-before",
+      "file": "captures/p1-anchor-this-space-before.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T15:55:26+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "PLAT Drift dashboard",
+      "shows": "Drift dashboard before clicking Anchor this space. KPI: Pages anchored",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1389,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            1069,
+            140,
+            333,
+            67
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Taken while the runbook was Unanchored for P1, so it is in the table (17 of 24 anchored)."
+    },
+    {
+      "id": "p1-anchor-this-space-rec",
+      "file": "captures/p1-anchor-this-space.mp4",
+      "kind": "video",
+      "width": 3840,
+      "height": 2160,
+      "fps": 60,
+      "takenAt": "2026-11-13T15:55:26+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "PLAT Drift dashboard",
+      "shows": "Click \"Anchor this space\"; the suggestions table loads. Not saved.",
+      "clicks": [
+        {
+          "x": 865,
+          "y": 784,
+          "label": "Anchor this space",
+          "atMs": 1919
+        }
+      ],
+      "hovers": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1389,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            1069,
+            140,
+            333,
+            67
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Taken while the runbook was Unanchored for P1, so it is in the table (17 of 24 anchored). Start still p1-anchor-this-space-before.png, end still p1-anchor-this-space.png. Source frames: {\"frames\":147,\"durationS\":7.279,\"sourceFps\":20.2,\"maxGapMs\":1557,\"frameSize\":\"1920x1080 css\",\"firstFrameEpochMs\":1794578113427}"
+    },
+    {
+      "id": "p1-unanchored",
+      "file": "captures/p1-unanchored.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T15:57:44+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "The runbook with its byline badge \"Unanchored · Doc Drift (Development)\".",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2578,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p1-unanchored-tooltip",
+      "file": "captures/p1-unanchored-tooltip.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T15:57:48+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "Hovering the Unanchored badge. Tooltip: \"Not linked to code or Jira. Add anchors.\"",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2578,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p1-suggestions",
+      "file": "captures/p1-suggestions.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T15:57:53+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "The badge modal for an unanchored page: no anchors yet, \"Suggested from this page (2)\": PAY-6 (Jira issue, pre-checked) and scripts/rollback.sh (\"Needs a repository\", weak, unchecked).",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2578,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Doc Drift Close Modal Payments rollback runbook Unanchored Not linked to code or Jira. Add anchors. Anchors An anchor is a file, folder or Jira issue this page describes. When it changes, the page is flagged. No anchors yet. Pick suggestions below or add one by hand. Suggested from this page (2) Checked suggestions are added when you save. Weak ones start unchecked. Repository for suggested paths PAY-6 Jira issue scripts/rollback.sh Needs a repository Weak Add an anchor Type File path or glob Repository Anchor path Globs work too, for example deploy/helm/** Critical anchor Add anchor Save and mark verified You have unsaved changes. Saving replaces the anchors and marks this page Verified."
+    },
+    {
+      "id": "p1-suggestions-ticked",
+      "file": "captures/p1-suggestions-ticked.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T15:57:58+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "Repository typed (payments-api); suggestions ticked: scripts/rollback.sh in payments-api (true), PAY-6 (true).",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2578,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p1-saved",
+      "file": "captures/p1-saved.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T15:58:02+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "After \"Save and mark verified\": the modal confirms the anchors were saved and the page is Verified.",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2578,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Doc Drift Close Modal Payments rollback runbook Verified Verified by Razvan Statescu, just now. Watching 2 anchors. No changes to anchored code since. Saved 2 anchors. This page is Verified. Reload the page to see the new badge. Reload page Anchors An anchor is a file, folder or Jira issue this page describes. When it changes, the page is flagged. Anchor Weight Actions PAY-6 Critical anchor Remove payments-api: scripts/rollback.sh Critical anchor Remove Critical anchors raise the severity of cha"
+    },
+    {
+      "id": "p1-verified",
+      "file": "captures/p1-verified.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T15:58:08+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "After reload: the byline badge reads \"Verified · Doc Drift (Development)\".",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2526,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p1-verified-tooltip",
+      "file": "captures/p1-verified-tooltip.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T15:58:10+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "Hovering the Verified badge. Tooltip: \"Verified on Nov 13. Watching 2 anchors.\"",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2526,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p1-anchor-rec",
+      "file": "captures/p1-anchor.mp4",
+      "kind": "video",
+      "width": 3840,
+      "height": 2160,
+      "fps": 60,
+      "takenAt": "2026-11-13T15:58:28+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "Badge Unanchored (hover, tooltip), click; suggestions; type payments-api into \"Repository for suggested paths\"; tick scripts/rollback.sh; \"Save and mark verified\"; \"Reload page\"; badge Verified; hover tooltip.",
+      "clicks": [
+        {
+          "x": 2514,
+          "y": 484,
+          "label": "Doc Drift badge (Unanchored)",
+          "atMs": 4870
+        },
+        {
+          "x": 1920,
+          "y": 874,
+          "label": "Repository for suggested paths field",
+          "atMs": 9313
+        },
+        {
+          "x": 1218,
+          "y": 1010,
+          "label": "Tick suggestion scripts/rollback.sh",
+          "atMs": 12263
+        },
+        {
+          "x": 1346,
+          "y": 1673,
+          "label": "Save and mark verified",
+          "atMs": 14698
+        },
+        {
+          "x": 1387,
+          "y": 688,
+          "label": "Reload page",
+          "atMs": 18939
+        }
+      ],
+      "hovers": [
+        {
+          "x": 2514,
+          "y": 484,
+          "label": "Doc Drift badge (Unanchored)",
+          "atMs": 1983
+        },
+        {
+          "x": 2488,
+          "y": 484,
+          "label": "Doc Drift badge (Verified)",
+          "atMs": 24096
+        }
+      ],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2526,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Saved at 2026-11-13T13:58:00.901Z. Stills in order: p1-unanchored, p1-unanchored-tooltip, p1-suggestions, p1-suggestions-ticked, p1-saved, p1-verified, p1-verified-tooltip. The modal title bar reads \"Doc Drift\" (no suffix); the byline and the sidebar's \"Drift dashboard\" carry \"(Development)\": masks are per still. Source frames: {\"frames\":530,\"durationS\":28.605,\"sourceFps\":18.5,\"maxGapMs\":1741,\"frameSize\":\"1920x1080 css\",\"firstFrameEpochMs\":1794578264297}"
+    },
+    {
+      "id": "p5-jira-before",
+      "file": "captures/p5-jira-before.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:12:03+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Jira PAY-18 (epic \"Multi-region active-passive database\")",
+      "shows": "The epic PAY-18 in Jira, status To Do.",
+      "clicks": [],
+      "masks": []
+    },
+    {
+      "id": "p5-jira-menu",
+      "file": "captures/p5-jira-menu.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:12:07+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Jira PAY-18",
+      "shows": "The status menu of PAY-18 (In Progress, Done). This workflow has no Won't Do status.",
+      "clicks": [],
+      "masks": []
+    },
+    {
+      "id": "p5-jira-done",
+      "file": "captures/p5-jira-done.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:12:10+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Jira PAY-18",
+      "shows": "PAY-18 after the change: status Done.",
+      "clicks": [],
+      "masks": []
+    },
+    {
+      "id": "p5-jira-rec",
+      "file": "captures/p5-jira.mp4",
+      "kind": "video",
+      "width": 3840,
+      "height": 2160,
+      "fps": 60,
+      "takenAt": "2026-11-13T16:12:15+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Jira PAY-18",
+      "shows": "PAY-18 status To Do -> click -> Done.",
+      "clicks": [
+        {
+          "x": 2795,
+          "y": 262,
+          "label": "Status: To Do",
+          "atMs": 2318
+        },
+        {
+          "x": 2932,
+          "y": 434,
+          "label": "Done",
+          "atMs": 4049
+        }
+      ],
+      "hovers": [],
+      "masks": [],
+      "notes": "Done clicked at 2026-11-13T14:12:07.706Z. Source frames: {\"frames\":133,\"durationS\":7.294,\"sourceFps\":18.2,\"maxGapMs\":1680,\"frameSize\":\"1920x1080 css\",\"firstFrameEpochMs\":1794579123544}"
+    },
+    {
+      "id": "p5-adr-flagged",
+      "file": "captures/p5-adr-flagged.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:12:26+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "ADR-015: Active-passive multi-region database (PLAT 2752707)",
+      "shows": "ADR-015 after PAY-18 moved to Done: badge \"Possibly stale · Doc Drift (Development)\".",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1645,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2589,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p5-adr-tooltip",
+      "file": "captures/p5-adr-tooltip.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:12:28+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "ADR-015: Active-passive multi-region database (PLAT 2752707)",
+      "shows": "Hovering the badge on ADR-015. Tooltip: \"PAY-18 moved to Done on Nov 13. Review.\"",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1645,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2589,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p5-adr-panel",
+      "file": "captures/p5-adr-panel.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:12:35+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "ADR-015: Active-passive multi-region database (PLAT 2752707)",
+      "shows": "The review panel on ADR-015: the Jira change (PAY-18 moved to Done) and the affected sections.",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1645,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2589,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Doc Drift Close Modal ADR-015: Active-passive multi-region database Possibly stale PAY-18 moved to Done, and this page is anchored to it. Section \"Top of page\" names it. Score 0.70 (threshold 0.5). Agents are told not to trust this page until someone reviews it. Review (1) Anchors (1) What changed PAY-18 PAY-18 moved to Done · Just now High Anchor PAY-18 resolution: set to Done status: To Do → Done Affected section Top of page Status Accepted, implementation planned for Q1 2027 Date 2026-09-10 Deciders Priya, Marco, Dana, Lena Owner Priya (Payments engineer) Jira PAY-18 Multi-region active-passive database Proposed fix Drift Reviewer drafts the change. Nothing changes until you accept it. Propose fix Track in Jira Creates a Jira task as you, with the changes and sections to re-read. Closing it does not mark the page Verified. Create Jira task Dismiss Snooze 7 days Mark verified"
+    },
+    {
+      "id": "p5-adr-rec",
+      "file": "captures/p5-adr.mp4",
+      "kind": "video",
+      "width": 3840,
+      "height": 2160,
+      "fps": 60,
+      "takenAt": "2026-11-13T16:12:47+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "ADR-015: Active-passive multi-region database (PLAT 2752707)",
+      "shows": "ADR-015 flagged by the Jira change: badge, tooltip, review panel.",
+      "clicks": [
+        {
+          "x": 2517,
+          "y": 484,
+          "label": "Doc Drift badge (Possibly stale)",
+          "atMs": 4812
+        }
+      ],
+      "hovers": [
+        {
+          "x": 2517,
+          "y": 484,
+          "label": "Doc Drift badge (Possibly stale)",
+          "atMs": 1906
+        },
+        {
+          "x": 1920,
+          "y": 1200,
+          "label": "wheel down 500 css px",
+          "atMs": 11511
+        }
+      ],
+      "masks": [
+        {
+          "box": [
+            323,
+            1645,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2589,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Source frames: {\"frames\":241,\"durationS\":13.644,\"sourceFps\":17.7,\"maxGapMs\":2591,\"frameSize\":\"1920x1080 css\",\"firstFrameEpochMs\":1794579145003}"
+    },
+    {
+      "id": "p5-dashboard-rec",
+      "file": "captures/p5-dashboard.mp4",
+      "kind": "video",
+      "width": 3840,
+      "height": 2160,
+      "fps": 60,
+      "takenAt": "2026-11-13T16:13:24+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "PLAT Drift dashboard",
+      "shows": "The dashboard, a slow scroll down to the drifted pages and back.",
+      "clicks": [],
+      "hovers": [
+        {
+          "x": 2200,
+          "y": 1400,
+          "label": "wheel down 420 css px",
+          "atMs": 1984
+        },
+        {
+          "x": 2200,
+          "y": 1400,
+          "label": "wheel up 420 css px",
+          "atMs": 4209
+        }
+      ],
+      "masks": [
+        {
+          "box": [
+            323,
+            1389,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            1069,
+            140,
+            333,
+            67
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Source frames: {\"frames\":82,\"durationS\":5.812,\"sourceFps\":14.1,\"maxGapMs\":1628,\"frameSize\":\"1920x1080 css\",\"firstFrameEpochMs\":1794579194764}"
+    },
+    {
+      "id": "p5-dashboard-2",
+      "file": "captures/p5-dashboard-2.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:14:27+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "PLAT Drift dashboard",
+      "shows": "The Drift dashboard scrolled to \"Pages with drift\" and the owner backlog.",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1389,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p5-dashboard",
+      "file": "captures/p5-dashboard.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:14:54+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "PLAT Drift dashboard",
+      "shows": "The Drift dashboard for PLAT (sample data from the demo space). Pages anchored 18 of 24 75% of the space Possibly stale 6 6 pages Stale 0 0 pages Median time to verify Under 3 hours Anchor this space 6 pages in PLAT are not anchored. Get suggestions for all of them at",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1389,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            1069,
+            140,
+            333,
+            67
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p5-track-section",
+      "file": "captures/p5-track-section.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:15:19+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "ADR-015: Active-passive multi-region database (PLAT 2752707)",
+      "shows": "The \"Track in Jira\" section of the review panel.",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1645,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2589,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p5-track-form",
+      "file": "captures/p5-track-form.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:15:24+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "ADR-015: Active-passive multi-region database (PLAT 2752707)",
+      "shows": "The Create Jira task form: project and prefilled summary.",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1645,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2589,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": " 2 minutes ago High Anchor PAY-18 resolution: set to Done status: To Do → Done Affected section Top of page Status Accepted, implementation planned for Q1 2027 Date 2026-09-10 Deciders Priya, Marco, Dana, Lena Owner Priya (Payments engineer) Jira PAY-18 Multi-region active-passive database Proposed fix Drift Reviewer drafts the change. Nothing changes until you accept it. Propose fix Track in Jira Creates a Jira task as you, with the changes and sections to re-read. Closing it does not mark the page Verified. Project Payments (PAY) Summary Create task Cancel Dismiss Snooze 7 days Mark verified"
+    },
+    {
+      "id": "p5-track-created",
+      "file": "captures/p5-track-created.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:15:31+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "ADR-015: Active-passive multi-region database (PLAT 2752707)",
+      "shows": "The task was created: Jira task created PAY-24 tracks this change. When the page is up to date, open it and click Mark verified.",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1645,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2589,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p5-track-rec",
+      "file": "captures/p5-track.mp4",
+      "kind": "video",
+      "width": 3840,
+      "height": 2160,
+      "fps": 60,
+      "takenAt": "2026-11-13T16:15:44+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "ADR-015: Active-passive multi-region database (PLAT 2752707)",
+      "shows": "Review panel on ADR-015: Track in Jira, Create Jira task, the form, Create task, \"Jira task created\".",
+      "clicks": [
+        {
+          "x": 2517,
+          "y": 484,
+          "label": "Doc Drift badge",
+          "atMs": 2022
+        },
+        {
+          "x": 1297,
+          "y": 1658,
+          "label": "Create Jira task",
+          "atMs": 9043
+        },
+        {
+          "x": 1294,
+          "y": 1820,
+          "label": "Create task",
+          "atMs": 14447
+        }
+      ],
+      "hovers": [
+        {
+          "x": 1920,
+          "y": 1280,
+          "label": "wheel down 110 css px",
+          "atMs": 12685
+        }
+      ],
+      "masks": [
+        {
+          "box": [
+            323,
+            1645,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2589,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Source frames: {\"frames\":485,\"durationS\":20.809,\"sourceFps\":23.3,\"maxGapMs\":3875,\"frameSize\":\"1920x1080 css\",\"firstFrameEpochMs\":1794579310931}"
+    },
+    {
+      "id": "p2-pr482",
+      "file": "captures/p2-pr482.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:45:06+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Bitbucket nano-soft-dev/payments-api PR #482",
+      "shows": "Bitbucket pull request #482 \"Rename rollback script and timeout variable\", open, scenario/rename-rollback-script -> main, before the merge.",
+      "clicks": [],
+      "masks": []
+    },
+    {
+      "id": "p2-pr482-files",
+      "file": "captures/p2-pr482-files.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:45:12+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Bitbucket nano-soft-dev/payments-api PR #482",
+      "shows": "Files changed tab of PR #482: deploy/helm/values.yaml (ROLLBACK_TIMEOUT -> ROLLBACK_TIMEOUT_SECS) and scripts/rollback.sh renamed to scripts/rollback-v2.sh.",
+      "clicks": [],
+      "masks": []
+    },
+    {
+      "id": "p2-merge-dialog",
+      "file": "captures/p2-merge-dialog.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:46:12+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Bitbucket nano-soft-dev/payments-api PR #482",
+      "shows": "The Merge dialog of PR #482.",
+      "clicks": [],
+      "masks": [],
+      "notes": "Merge pull request Source scenario/rename-rollback-script Destination main Merge strategy Merge commit Commit message Close source branch Merge Cancel"
+    },
+    {
+      "id": "p2-merged",
+      "file": "captures/p2-merged.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:46:23+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Bitbucket nano-soft-dev/payments-api PR #482",
+      "shows": "PR #482 after the merge: state Merged.",
+      "clicks": [],
+      "masks": []
+    },
+    {
+      "id": "p2-merge-rec",
+      "file": "captures/p2-merge.mp4",
+      "kind": "video",
+      "width": 3840,
+      "height": 2160,
+      "fps": 60,
+      "takenAt": "2026-11-13T16:46:33+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Bitbucket nano-soft-dev/payments-api PR #482",
+      "shows": "PR #482 overview; click Merge; the Merge dialog; click Merge; the pull request reads Merged.",
+      "clicks": [
+        {
+          "x": 3621,
+          "y": 393,
+          "label": "Merge",
+          "atMs": 2523
+        },
+        {
+          "x": 2256,
+          "y": 925,
+          "label": "Merge (confirm)",
+          "atMs": 5178
+        }
+      ],
+      "hovers": [],
+      "masks": [],
+      "notes": "Merge confirm clicked at 2026-11-13T14:46:13.391Z (atMs 5263). Bitbucket: state MERGED, updated_on 2026-11-13T14:46:18.934284+00:00, merge commit bf02bd0dcfb6. Source frames: {\"frames\":586,\"durationS\":15.873,\"sourceFps\":36.9,\"maxGapMs\":2006,\"frameSize\":\"1920x1080 css\",\"firstFrameEpochMs\":1794581168128}"
+    },
+    {
+      "id": "p2-before-reload",
+      "file": "captures/p2-before-reload.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:46:40+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "The runbook as it first loaded after the merge (the merge video was still being saved, so this is about 20 s after the click): already flagged, badge \"Possibly stale · Doc Drift (Development)\", and Confluence's own notification flag at bottom left: \"Doc Drift Sentinel commented just now: @Razvan Statescu PR #482 (merged by Razvan Statescu) changed 2 files this...\" with \"View their comment\".",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2594,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p2-flagged",
+      "file": "captures/p2-flagged.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:46:46+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "After reload: the badge reads \"Possibly stale · Doc Drift (Development)\".",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2594,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p2-flagged-tooltip",
+      "file": "captures/p2-flagged-tooltip.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:46:48+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "Hovering the Possibly stale badge. Tooltip: \"PR #482 changed deploy/helm/values.yaml on Nov 13. Review.\"",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2594,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p2-flag-rec",
+      "file": "captures/p2-flag.mp4",
+      "kind": "video",
+      "width": 3840,
+      "height": 2160,
+      "fps": 60,
+      "takenAt": "2026-11-13T16:46:57+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "The runbook right after the merge: it loads already flagged (badge \"Possibly stale · Doc Drift (Development)\") while Confluence pops its notification flag for the app's comment mentioning the owner; then a reload (still Possibly stale) and a hover on the badge: the tooltip.",
+      "clicks": [],
+      "hovers": [
+        {
+          "x": 2522,
+          "y": 484,
+          "label": "Doc Drift badge (Possibly stale)",
+          "atMs": 7029
+        }
+      ],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2594,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "The byline was written Possibly stale at 2026-11-13T14:46:32.025Z (18.6 s after the Merge click); this recording starts a few seconds later, so it does not contain the Verified-to-Possibly-stale change itself (use p1-verified / p2-flagged for before and after). Flag observed over REST 19.5 s after the Merge click; the reload starts about 1.2 s later. Source frames: {\"frames\":92,\"durationS\":11.306,\"sourceFps\":8.1,\"maxGapMs\":1783,\"frameSize\":\"1920x1080 css\",\"firstFrameEpochMs\":1794581199544}"
+    },
+    {
+      "id": "x-settings-relay",
+      "file": "captures/x-settings-relay.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:48:57+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Confluence administration > Doc Drift Sentinel (Development) settings",
+      "shows": "The Bitbucket relay section of the settings page: Connected, workspace, last test ping, last change, repositories seen, ingest URL, relay secret fingerprint.",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            1167,
+            154,
+            392,
+            76
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Get started 1. Connect the Bitbucket relay Done The relay is sending merged pull requests. Details are under Bitbucket relay below. 2. Anchor pages Open a page and click its Doc Drift badge to link it to the code paths and Jira issues it describes. To anchor many pages at once, open a space's Drift dashboard and use Anchor this space. 3. Try the demo replay Replays seeded PR #482 from payments-api: scripts/rollback.sh renamed to scripts/rollback-v2.sh, and ROLLBACK_TIMEOUT renamed to ROLLBACK_TIMEOUT_SECS. It runs through the same path as the relay, with no Bitbucket needed. Replay seeded PR #482"
+    },
+    {
+      "id": "p3-rovo-agent",
+      "file": "captures/p3-rovo-agent.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:50:35+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100), Rovo chat with Drift Reviewer",
+      "shows": "Rovo panel with the agent switched to \"Drift Reviewer\" on the runbook (context: the page).",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2155,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "SUPERSEDED by p3-rovo-v2 (director, D38): this answer says \"The page was changed by PR #482\", which is inaccurate (the PR changed the code the page describes)."
+    },
+    {
+      "id": "p3-rovo-question",
+      "file": "captures/p3-rovo-question.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:50:40+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100), Rovo chat with Drift Reviewer",
+      "shows": "The question typed to Drift Reviewer: \"How do I roll back payments-api?\".",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2155,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "SUPERSEDED by p3-rovo-v2 (director, D38): this answer says \"The page was changed by PR #482\", which is inaccurate (the PR changed the code the page describes)."
+    },
+    {
+      "id": "p3-rovo-answer",
+      "file": "captures/p3-rovo-answer.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:51:04+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100), Rovo chat with Drift Reviewer",
+      "shows": "Drift Reviewer's full answer (bottom of the conversation, as the panel shows it after streaming).",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2155,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "SUPERSEDED by p3-rovo-v2 (director, D38): this answer says \"The page was changed by PR #482\", which is inaccurate (the PR changed the code the page describes)."
+    },
+    {
+      "id": "p3-rovo-rec",
+      "file": "captures/p3-rovo.mp4",
+      "kind": "video",
+      "width": 3840,
+      "height": 2160,
+      "fps": 60,
+      "takenAt": "2026-11-13T16:51:05+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100), Rovo chat with Drift Reviewer",
+      "shows": "Badge \"Possibly stale · Doc Drift (Development)\". Ask Rovo; switch agent: search \"Drift\", pick Drift Reviewer; type \"How do I roll back payments-api?\"; Enter; the answer streams in.",
+      "clicks": [
+        {
+          "x": 3420,
+          "y": 47,
+          "label": "Ask Rovo",
+          "atMs": 2308
+        },
+        {
+          "x": 3164,
+          "y": 158,
+          "label": "Change agent (Rovo)",
+          "atMs": 6517
+        },
+        {
+          "x": 3341,
+          "y": 338,
+          "label": "Search agents",
+          "atMs": 8216
+        },
+        {
+          "x": 3251,
+          "y": 454,
+          "label": "Drift Reviewer",
+          "atMs": 11395
+        },
+        {
+          "x": 3402,
+          "y": 1918,
+          "label": "Chat input",
+          "atMs": 15332
+        }
+      ],
+      "hovers": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2155,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "SUPERSEDED by p3-rovo-v2 (director, D38): this answer says \"The page was changed by PR #482\", which is inaccurate (the PR changed the code the page describes). Sent at atMs 19635; answer stable from atMs 35324. Text growth samples: [{\"atMs\":528,\"len\":460},{\"atMs\":1055,\"len\":532},{\"atMs\":3659,\"len\":572},{\"atMs\":5781,\"len\":606},{\"atMs\":12100,\"len\":659},{\"atMs\":12605,\"len\":856},{\"atMs\":15689,\"len\":1006}]. Full panel text: tools/capture/p3-rovo-answer.txt. Answer stills: . Source frames: {\"frames\":1316,\"durationS\":43.989,\"sourceFps\":29.9,\"maxGapMs\":1709,\"frameSize\":\"1920x1080 css\",\"firstFrameEpochMs\":1794581421287}",
+      "keys": [
+        {
+          "label": "Enter (send)",
+          "atMs": 19635
+        }
+      ]
+    },
+    {
+      "id": "p4-comment",
+      "file": "captures/p4-comment.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:52:57+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "The footer comment Doc Drift Sentinel posted after the merge, mentioning the page owner.",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Razvan Statescu PR #482 (merged by Razvan Statescu) changed 2 files this page documents. Review in the Doc Drift badge."
+    },
+    {
+      "id": "p4-panel",
+      "file": "captures/p4-panel.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:53:09+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "The review panel opens: header with the state and the why sentence, \"What changed\".",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2672,
+            408,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Doc Drift Close Modal Payments rollback runbook Possibly stale PR #482 renamed scripts/rollback.sh to scripts/rollback-v2.sh, an anchor of this page. The page mentions ROLLBACK_TIMEOUT and rollback.sh, which PR #482 removed. Section \"Steps\" names it. Score 1.00 (threshold 0.5). Agents are told not to trust this page until someone reviews it. Review (2) Anchors (3) What changed PR #482 merged by Razvan Statescu · 6 minutes ago High PR #482 renamed scripts/rollback.sh to scripts/rollback-v2.sh, an anchor of this page. The page mentions ROLLBACK_TIMEOUT and rollback.sh, which PR #482 removed. Section \"Steps\" names it. Score 1.00 (threshold 0.5). Rename rollback script and timeout variable scripts/rollback.sh → scripts/rollback-v2.sh · +3 −3 Anchor payments-api: scripts/rollback.sh Show diff View PR #482 in Bitbucket PR #482 merged by Razvan Statescu · 6 minutes ago Medium PR #482 changed deploy/helm/values.yaml (2 lines), an anchor of this page. The page mentions ROLLBACK_TIMEOUT and rollback.sh, which PR #482 removed. Section \"Steps\" names it. Score 0.73 (threshold 0.5). Rename rollback script and timeout variable deploy/helm/values.yaml · +1 −1 Anchor payments-api: deploy/helm/value"
+    },
+    {
+      "id": "p4-affected",
+      "file": "captures/p4-affected.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:53:12+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "The review panel scrolled down: the Medium change (deploy/helm/values.yaml), \"Affected section\" (Steps, with the step 2 code lines), the rename \"Quick fix\" card (Replace scripts/rollback.sh with scripts/rollback-v2.sh in 1 place. Suggested from PR #482. No AI used. [Replace in 1 place]), \"Proposed fix\" and \"Renamed anchors\".",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2672,
+            408,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p4-quickfix-done",
+      "file": "captures/p4-quickfix-done.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:53:21+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "After the quick fix: the panel confirms the page was edited (a new version naming PR #482).",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2672,
+            408,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Doc Drift Close Modal Payments rollback runbook Possibly stale PR #482 changed deploy/helm/values.yaml (2 lines), an anchor of this page. The page mentions ROLLBACK_TIMEOUT and rollback.sh, which PR #482 removed. Section \"Steps\" names it. Score 0.73 (threshold 0.5). Agents are told not to trust this page until someone reviews it. Review (1) Anchors (3) What changed PR #482 merged by Razvan Statescu · 6 minutes ago Medium Rename rollback script and timeout variable deploy/helm/values.yaml · +1 −1 Anchor payments-api: deploy/helm/values.yaml Show diff View PR #482 in Bitbucket Affected section Steps …payments -n payments --max 5 Run the rollback script from the root of the payments-api repo. ROLLBACK_TIMEOUT is in seconds and defaults to 300. Raise it to 600 if the cluster is under load. export ROLLBACK_TIMEOUT=300 ./scripts/rollback-v2.sh --timeout $ROLLBACK_TIMEOUT The script calls… Prop"
+    },
+    {
+      "id": "p4-review-rec",
+      "file": "captures/p4-review.mp4",
+      "kind": "video",
+      "width": 3840,
+      "height": 2160,
+      "fps": 60,
+      "takenAt": "2026-11-13T16:53:22+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "Scroll to the owner comment, back up, open the badge: review panel (why, what changed, affected section), the rename quick fix, Replace.",
+      "clicks": [
+        {
+          "x": 2601,
+          "y": 427,
+          "label": "Doc Drift badge (Possibly stale)",
+          "atMs": 26009
+        },
+        {
+          "x": 1337,
+          "y": 1577,
+          "label": "Quick fix: Replace",
+          "atMs": 38308
+        }
+      ],
+      "hovers": [
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 300 css px",
+          "atMs": 2237
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 300 css px",
+          "atMs": 2801
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 300 css px",
+          "atMs": 3364
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 300 css px",
+          "atMs": 3895
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 300 css px",
+          "atMs": 4455
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 4864
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 5329
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 5739
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 6146
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 6554
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 6963
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 7371
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 7781
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 8187
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 8596
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 9007
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 9414
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 9823
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 10231
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 10637
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 11047
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 11454
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 11863
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 12272
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 12679
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 13089
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 13498
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 13904
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 14315
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 14723
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 15131
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 15538
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 15946
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 16355
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 16764
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 17171
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 17579
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 17988
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 18398
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 74.9375 css px",
+          "atMs": 18798
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel up 300 css px",
+          "atMs": 21886
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel up 300 css px",
+          "atMs": 22456
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel up 300 css px",
+          "atMs": 22983
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel up 300 css px",
+          "atMs": 23554
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel up 228.5 css px",
+          "atMs": 24058
+        },
+        {
+          "x": 1920,
+          "y": 1200,
+          "label": "wheel down 300 css px",
+          "atMs": 33726
+        },
+        {
+          "x": 1920,
+          "y": 1200,
+          "label": "wheel down 163 css px",
+          "atMs": 34207
+        }
+      ],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2672,
+            408,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Quick fix clicked at 2026-11-13T14:53:14.399Z; page now version 2 \"Doc Drift: renamed scripts/rollback.sh to scripts/rollback-v2.sh for PR #482\". Source frames: {\"frames\":1065,\"durationS\":45.594,\"sourceFps\":23.4,\"maxGapMs\":2525,\"frameSize\":\"1920x1080 css\",\"firstFrameEpochMs\":1794581556015}"
+    },
+    {
+      "id": "p4-propose-rec",
+      "file": "captures/p4-propose.mp4",
+      "kind": "video",
+      "width": 3840,
+      "height": 2160,
+      "fps": 60,
+      "takenAt": "2026-11-13T16:54:33+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100), review panel and Rovo",
+      "shows": "Badge -> review panel (one change left: deploy/helm/values.yaml) -> scroll to Proposed fix -> click Propose fix -> the modal closes, Rovo opens with Drift Reviewer and the prompt already sent (\"Draft a fix for the drifted sections of page \\\"Payments rollback runbook\\\" (id 2720100). Use get-drift-context, then submit-fix-proposal once per changed block. Do not edit the page.\") -> \"Drift Reviewer is thinking\" with its tool steps (check page freshness, get drift context) -> the \"Please review\" card with two Submit fix proposal actions. Ends before the confirmation (see p4-confirm).",
+      "clicks": [
+        {
+          "x": 2517,
+          "y": 484,
+          "label": "Doc Drift badge (Possibly stale) [estimated: the take crashed before saving its click log; the modal opens at 2333 ms]",
+          "atMs": 1600
+        },
+        {
+          "x": 1268,
+          "y": 1742,
+          "label": "Propose fix [estimated position from still p4-propose-button; time from the modal closing at 10417 ms]",
+          "atMs": 10100
+        }
+      ],
+      "hovers": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7) [0 to 10.4 s, modal open; measured on still p4-propose-button]"
+        },
+        {
+          "box": [
+            2672,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7) [0 to 10.4 s, modal open; measured on still p4-propose-button]"
+        },
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7) [10.4 s to end, Rovo open; measured on still p4-rovo-review-card]"
+        },
+        {
+          "box": [
+            2233,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7) [10.4 s to end, Rovo open; measured on still p4-rovo-review-card]"
+        }
+      ],
+      "notes": "Salvaged: the take script failed after Rovo opened (it expected an empty chat input, but Propose fix sends its prompt by itself), so the frames were assembled afterwards with timestamps taken from each frame file write time (written as each CDP frame arrived; accurate to a few ms). 1332 source frames, 55.3 s, 14:54:33.4Z to 14:55:28.2Z. Click positions and times are estimates (see labels). Masks come from the two stills that bracket the clip."
+    },
+    {
+      "id": "p4-propose-button",
+      "file": "captures/p4-propose-button.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:54:42+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "The remaining change (the timeout variable) with \"Propose fix\": \"Drift Reviewer drafts the change. Nothing changes until you accept it.\"",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2672,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p4-rovo-prompt",
+      "file": "captures/p4-rovo-prompt.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:55:18+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "Rovo as opened by Propose fix, about 34 s later: the prompt the button sent to Drift Reviewer by itself (\"Draft a fix for the drifted sections of page \\\"Payments rollback runbook\\\" (id 2720100). Use get-drift-context, then submit-fix-proposal once per changed block. Do not edit the page.\") and the agent's \"Please review\" card: Submit fix proposal for block b21 (section Steps, rationale \"PR #482 renamed ROLLBACK_TIMEOUT to ROLLBACK_TIMEOUT_SECS.\", proposed text).",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2233,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Taken inside the salvaged p4-propose recording (about 44 s into it)."
+    },
+    {
+      "id": "p4-rovo-review-card",
+      "file": "captures/p4-rovo-review-card.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:56:29+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "Rovo after Propose fix: the prompt the button sent to Drift Reviewer, and the \"Please review\" card with two \"Submit fix proposal\" actions (blocks b21 and b22, section Steps, rationale \"PR #482 renamed ROLLBACK_TIMEOUT to ROLLBACK_TIMEOUT_SECS.\").",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2233,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p4-rovo-review-card-2",
+      "file": "captures/p4-rovo-review-card-2.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:56:33+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "The \"Please review\" card scrolled: the second proposal (block b22, the code block).",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2233,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p4-rovo-confirm",
+      "file": "captures/p4-rovo-confirm.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:56:52+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "The bottom of the card: \"Confirm selected\" and \"Cancel\" (the CREATE confirmation Rovo asks for before the agent stores drafts).",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2233,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p4-rovo-drafted",
+      "file": "captures/p4-rovo-drafted.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T16:57:13+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "Drift Reviewer's reply after the confirmation: the drafts are stored for review; the page is unchanged until someone accepts.",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2233,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p4-confirm-rec",
+      "file": "captures/p4-confirm.mp4",
+      "kind": "video",
+      "width": 3840,
+      "height": 2160,
+      "fps": 60,
+      "takenAt": "2026-11-13T16:57:14+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100), Rovo with Drift Reviewer",
+      "shows": "The Please review card: scroll through the two Submit fix proposal actions, click \"Confirm selected\", Drift Reviewer replies.",
+      "clicks": [
+        {
+          "x": 3462,
+          "y": 1550,
+          "label": "Confirm selected",
+          "atMs": 23361
+        }
+      ],
+      "hovers": [
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 260 css px",
+          "atMs": 1660
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 300 css px",
+          "atMs": 3552
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 4010
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 4487
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 4960
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 5394
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 5841
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 6281
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 6741
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 7191
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 7633
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 8080
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 8527
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 8981
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 9425
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 9878
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 10323
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 10770
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 11228
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 11670
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 12111
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 12563
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 13004
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 13453
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 13886
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 14344
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 14791
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 15226
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 15663
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 16100
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 16539
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 16983
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 17437
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 17896
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 18347
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 18804
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 19246
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 19704
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 20153
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 20602
+        },
+        {
+          "x": 3400,
+          "y": 900,
+          "label": "wheel down 141.1953125 css px",
+          "atMs": 21054
+        }
+      ],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2233,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Confirm clicked at atMs 23475. Reply text: tools/capture/p4-confirm-answer.txt. Source frames: {\"frames\":1089,\"durationS\":44.438,\"sourceFps\":24.5,\"maxGapMs\":8466,\"frameSize\":\"1920x1080 css\",\"firstFrameEpochMs\":1794581789816}"
+    },
+    {
+      "id": "p4-draft-diff",
+      "file": "captures/p4-draft-diff.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T17:00:44+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "The drafted fix in the review panel, shown as a diff, waiting for a person.",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2672,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p4-accept-button",
+      "file": "captures/p4-accept-button.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T17:00:46+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "The footer with \"Accept fix\" (primary).",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2672,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p4-accepted",
+      "file": "captures/p4-accepted.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T17:00:54+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "After Accept fix: the panel confirms a new page version names PR #482.",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2672,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Doc Drift Close Modal Payments rollback runbook Verified Verified by Razvan Statescu, just now. Watching 3 anchors. No changes to anchored code since. Accepted. A new page version names PR #482. Reload the page to see the change. Reload page Anchors An anchor is a file, folder or Jira issue this page describes. When it changes, the page is flagged. Anchor Weight Actions PAY-6 Critical anchor Remove payments-api: scripts/rollback-v2.sh Critical anchor Remove payments-api: deploy/helm/values.yaml Critical anchor Remove Critical anchors raise the severity of changes to them. Add an anchor Type File path or glob Repository Anchor path Globs work too, for example deploy/helm/** Critical anchor Add anchor Save and mark verified Saving replaces the anchors and marks this page Verified."
+    },
+    {
+      "id": "p4-verified",
+      "file": "captures/p4-verified.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T17:00:59+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "After reload: badge \"Verified · Doc Drift (Development)\"; the page text now reads rollback-v2.sh and ROLLBACK_TIMEOUT_SECS.",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2605,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p4-verified-tooltip",
+      "file": "captures/p4-verified-tooltip.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T17:01:01+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "Hovering the Verified badge. Tooltip: \"Verified on Nov 13. Watching 3 anchors.\"",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2605,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ]
+    },
+    {
+      "id": "p4-step2-fixed",
+      "file": "captures/p4-step2-fixed.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T17:01:06+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "Step 2 of the runbook after the accepted fixes.",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Retaken with the pointer parked away from the code block (no hover buttons). Step 2 at y 1423 capture px."
+    },
+    {
+      "id": "p4-accept-rec",
+      "file": "captures/p4-accept.mp4",
+      "kind": "video",
+      "width": 3840,
+      "height": 2160,
+      "fps": 60,
+      "takenAt": "2026-11-13T17:01:07+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "Review panel: the draft diff, Accept fix, accepted; reload; badge Verified (tooltip); step 2 now reads rollback-v2.sh and ROLLBACK_TIMEOUT_SECS.",
+      "clicks": [
+        {
+          "x": 2601,
+          "y": 484,
+          "label": "Doc Drift badge (Possibly stale)",
+          "atMs": 2044
+        },
+        {
+          "x": 1929,
+          "y": 1894,
+          "label": "Accept fix",
+          "atMs": 12373
+        },
+        {
+          "x": 1387,
+          "y": 665,
+          "label": "Reload page",
+          "atMs": 20689
+        }
+      ],
+      "hovers": [
+        {
+          "x": 1920,
+          "y": 1200,
+          "label": "wheel down 300 css px",
+          "atMs": 7626
+        },
+        {
+          "x": 1920,
+          "y": 1200,
+          "label": "wheel down 163.5 css px",
+          "atMs": 8107
+        },
+        {
+          "x": 1920,
+          "y": 1200,
+          "label": "wheel down 159.5 css px",
+          "atMs": 10218
+        },
+        {
+          "x": 2567,
+          "y": 484,
+          "label": "Doc Drift badge (Verified)",
+          "atMs": 25579
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 300 css px",
+          "atMs": 29078
+        },
+        {
+          "x": 2200,
+          "y": 1200,
+          "label": "wheel down 200.234375 css px",
+          "atMs": 29578
+        }
+      ],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Accept fix clicked at 2026-11-13T15:00:46.712Z; page now version 4 \"Doc Drift: accepted proposal for PR #482\". Tooltip \"Verified on Nov 13. Watching 3 anchors.\". Source frames: {\"frames\":742,\"durationS\":32.272,\"sourceFps\":23,\"maxGapMs\":2966,\"frameSize\":\"1920x1080 css\",\"firstFrameEpochMs\":1794582034260}"
+    },
+    {
+      "id": "p4-history",
+      "file": "captures/p4-history.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T17:02:04+02:00",
+      "env": "development",
+      "app": "core 5.4.0",
+      "page": "Payments rollback runbook (PLAT 2720100)",
+      "shows": "Page history of the runbook: the Doc Drift versions with their messages naming PR #482.",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            322,
+            1389,
+            205,
+            41
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Doc Drift: accepted proposal for PR #482 | Doc Drift: accepted proposal for PR #482"
+    },
+    {
+      "id": "p3-rovo-v2-agent",
+      "file": "captures/p3-rovo-v2-agent.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T19:00:43+02:00",
+      "env": "development",
+      "app": "core 5.5.0",
+      "page": "Payments rollback runbook (PLAT 2720100), Rovo chat with Drift Reviewer",
+      "shows": "Rovo panel with the agent switched to \"Drift Reviewer\" on the runbook (context: the page).",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2233,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Re-capture on core 5.5.0 (D38 wording), first attempt in a new chat. The runbook was flagged by settings > Get started > \"Replay seeded PR #482\" (the seeded record of the same PR #482 rename, no Bitbucket change), not by the real merge of P2."
+    },
+    {
+      "id": "p3-rovo-v2-question",
+      "file": "captures/p3-rovo-v2-question.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T19:00:47+02:00",
+      "env": "development",
+      "app": "core 5.5.0",
+      "page": "Payments rollback runbook (PLAT 2720100), Rovo chat with Drift Reviewer",
+      "shows": "The question typed to Drift Reviewer: \"How do I roll back payments-api?\".",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2233,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Re-capture on core 5.5.0 (D38 wording), first attempt in a new chat. The runbook was flagged by settings > Get started > \"Replay seeded PR #482\" (the seeded record of the same PR #482 rename, no Bitbucket change), not by the real merge of P2."
+    },
+    {
+      "id": "p3-rovo-v2-answer",
+      "file": "captures/p3-rovo-v2-answer.png",
+      "kind": "still",
+      "width": 3840,
+      "height": 2160,
+      "takenAt": "2026-11-13T19:01:08+02:00",
+      "env": "development",
+      "app": "core 5.5.0",
+      "page": "Payments rollback runbook (PLAT 2720100), Rovo chat with Drift Reviewer",
+      "shows": "Drift Reviewer's full answer (bottom of the conversation, as the panel shows it after streaming).",
+      "clicks": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2233,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Re-capture on core 5.5.0 (D38 wording), first attempt in a new chat. The runbook was flagged by settings > Get started > \"Replay seeded PR #482\" (the seeded record of the same PR #482 rename, no Bitbucket change), not by the real merge of P2. Answer (verbatim): \"Payments rollback runbook is Possibly stale. What it describes changed in PR #482 on 2026-11-13, after it was last verified. The affected section is \"Steps\". Do not present steps from this page as current. The review is in the Doc Drift badge on the page.\" It does not say the page was changed by the PR, names no author, and does not repeat the old step; it names the PR but not the rename itself."
+    },
+    {
+      "id": "p3-rovo-v2-rec",
+      "file": "captures/p3-rovo-v2.mp4",
+      "kind": "video",
+      "width": 3840,
+      "height": 2160,
+      "fps": 60,
+      "takenAt": "2026-11-13T19:01:09+02:00",
+      "env": "development",
+      "app": "core 5.5.0",
+      "page": "Payments rollback runbook (PLAT 2720100), Rovo chat with Drift Reviewer",
+      "shows": "Badge \"Possibly stale · Doc Drift (Development)\". Ask Rovo; switch agent: search \"Drift\", pick Drift Reviewer; type \"How do I roll back payments-api?\"; Enter; the answer streams in.",
+      "clicks": [
+        {
+          "x": 3420,
+          "y": 47,
+          "label": "Ask Rovo",
+          "atMs": 2282
+        },
+        {
+          "x": 3164,
+          "y": 158,
+          "label": "Change agent (Rovo)",
+          "atMs": 5794
+        },
+        {
+          "x": 3341,
+          "y": 338,
+          "label": "Search agents",
+          "atMs": 7484
+        },
+        {
+          "x": 3251,
+          "y": 454,
+          "label": "Drift Reviewer",
+          "atMs": 10741
+        },
+        {
+          "x": 3402,
+          "y": 1918,
+          "label": "Chat input",
+          "atMs": 14635
+        },
+        {
+          "x": null,
+          "y": null,
+          "label": "Enter (send)",
+          "atMs": 18934
+        }
+      ],
+      "hovers": [],
+      "masks": [
+        {
+          "box": [
+            323,
+            1901,
+            206,
+            42
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        },
+        {
+          "box": [
+            2233,
+            465,
+            176,
+            37
+          ],
+          "why": "Development install suffix (BRIEF decision 7)"
+        }
+      ],
+      "notes": "Re-capture on core 5.5.0 (D38 wording), first attempt in a new chat. The runbook was flagged by settings > Get started > \"Replay seeded PR #482\" (the seeded record of the same PR #482 rename, no Bitbucket change), not by the real merge of P2. Answer (verbatim): \"Payments rollback runbook is Possibly stale. What it describes changed in PR #482 on 2026-11-13, after it was last verified. The affected section is \"Steps\". Do not present steps from this page as current. The review is in the Doc Drift badge on the page.\" It does not say the page was changed by the PR, names no author, and does not repeat the old step; it names the PR but not the rename itself. Sent at atMs 18934; answer stable from atMs 31474. Text growth samples: [{\"atMs\":536,\"len\":460},{\"atMs\":1051,\"len\":532},{\"atMs\":3173,\"len\":572},{\"atMs\":5253,\"len\":606},{\"atMs\":9949,\"len\":728},{\"atMs\":10455,\"len\":692},{\"atMs\":11993,\"len\":791},{\"atMs\":12540,\"len\":833}]. Full panel text: tools/capture/p3-rovo-v2-answer.txt. Answer stills: . Source frames: {\"frames\":1200,\"durationS\":40.142,\"sourceFps\":29.9,\"maxGapMs\":1704,\"frameSize\":\"1920x1080 css\",\"firstFrameEpochMs\":1794589229058}"
+    }
+  ],
+  "runbookText": {
+    "source": "Payments rollback runbook (PLAT 2720100), version 1, rendered page text and storage format, read 2026-11-13 before the shoot",
+    "pageTitle": "Payments rollback runbook",
+    "header": [
+      [
+        "Owner",
+        "Dana (Platform on-call lead)"
+      ],
+      [
+        "Service",
+        "payments-api"
+      ],
+      [
+        "Severity",
+        "Use during a SEV1 or SEV2 caused by a bad payments release"
+      ],
+      [
+        "Jira",
+        "PAY-6 Safer payments deploys and rollbacks"
+      ],
+      [
+        "Last reviewed",
+        "2026-10-14"
+      ]
+    ],
+    "stepsHeading": "Steps",
+    "steps": [
+      {
+        "n": 1,
+        "text": "Confirm the current and previous release. The previous revision is the one you are rolling back to.",
+        "code": [
+          "kubectl config use-context prod-eu-west-1",
+          "helm history payments -n payments --max 5"
+        ]
+      },
+      {
+        "n": 2,
+        "text": "Run the rollback script from the root of the payments-api repo. ROLLBACK_TIMEOUT is in seconds and defaults to 300. Raise it to 600 if the cluster is under load.",
+        "inlineCode": [
+          "payments-api",
+          "ROLLBACK_TIMEOUT"
+        ],
+        "code": [
+          "export ROLLBACK_TIMEOUT=300",
+          "./scripts/rollback.sh --timeout $ROLLBACK_TIMEOUT"
+        ],
+        "codeLanguage": "bash",
+        "after": "The script calls helm rollback payments 0 --wait, so it returns only when the previous release is ready or the timeout expires.",
+        "afterInlineCode": [
+          "helm rollback payments 0 --wait"
+        ]
+      },
+      {
+        "n": 3,
+        "text": "Check that the pods are on the previous image tag and passing readiness.",
+        "code": [
+          "kubectl -n payments get pods -l app=payments-api -o wide",
+          "kubectl -n payments get deploy payments-api -o jsonpath='{.spec.template.spec.containers[0].image}'"
+        ]
+      },
+      {
+        "n": 4,
+        "text": "Watch the charge success rate for 10 minutes. It should be back above 99%."
+      },
+      {
+        "n": 5,
+        "text": "Freeze deploys: add the deploy-freeze label to the payments-api repo's open release PR and say so in the incident channel.",
+        "inlineCode": [
+          "deploy-freeze"
+        ]
+      }
+    ],
+    "elsewhere": {
+      "beforeSteps": "If the release also ran a database migration, read Migrations below before step 2. A rollback does not undo schema changes.",
+      "warningPanel": "Post in the incident channel before you start, and name yourself as the person rolling back. Only one person runs the rollback.",
+      "timeoutSection": "If a pod is stuck, delete it and let the deployment replace it. Then run step 2 again with a longer timeout."
+    },
+    "storageStep2": "<li><p>Run the rollback script from the root of the <code>payments-api</code> repo. <code>ROLLBACK_TIMEOUT</code> is in seconds and defaults to 300. Raise it to 600 if the cluster is under load.</p>\n<ac:structured-macro ac:name=\"code\" ...><ac:parameter ac:name=\"language\">bash</ac:parameter><ac:plain-text-body><![CDATA[export ROLLBACK_TIMEOUT=300\n./scripts/rollback.sh --timeout $ROLLBACK_TIMEOUT]]></ac:plain-text-body></ac:structured-macro>\n<p>The script calls <code>helm rollback payments 0 --wait</code>, so it returns only when the previous release is ready or the timeout expires.</p>\n</li>"
+  },
+  "toolOutput": {
+    "checkBefore": {
+      "calledAt": "2026-11-13T16:03:14+02:00",
+      "tool": "check-page-freshness",
+      "server": "doc-drift (development), via MCP as Razvan Statescu",
+      "input": {
+        "pageId": "2720100"
+      },
+      "output": {
+        "ok": true,
+        "pageId": "2720100",
+        "title": "Payments rollback runbook",
+        "url": "https://one-atlas-jzzf.atlassian.net/wiki/spaces/PLAT/pages/2720100/Payments+rollback+runbook",
+        "resolvedFrom": "pageId",
+        "status": "verified",
+        "statusLabel": "Verified",
+        "citePolicy": "cite",
+        "verifiedAt": "2026-11-13T13:59:32.217Z",
+        "verifiedBy": "Razvan Statescu",
+        "openDrift": [],
+        "affectedSections": [],
+        "guidance": "\"Payments rollback runbook\" is Verified. Safe to cite."
+      },
+      "note": "Before the merge, right after P1 re-anchoring. Not for the film's terminal scene (that uses checkFlagged and checkVerified)."
+    },
+    "findDocsFlagged": {
+      "calledAt": "2026-11-13T16:52:19+02:00",
+      "tool": "find-docs-for-path",
+      "server": "doc-drift MCP (development install), called by the capture agent's MCP client as Razvan Statescu",
+      "input": {
+        "repo": "payments-api",
+        "path": "scripts/rollback.sh"
+      },
+      "output": {
+        "ok": true,
+        "repo": "payments-api",
+        "path": "scripts/rollback.sh",
+        "pages": [
+          {
+            "pageId": "2752731",
+            "title": "DDS test: Payments rollback runbook",
+            "url": "https://one-atlas-jzzf.atlassian.net/wiki/spaces/DDSTEST/pages/2752731/DDS+test+Payments+rollback+runbook",
+            "anchor": "payments-api: scripts/rollback.sh",
+            "match": "exact",
+            "status": "possibly_stale",
+            "statusLabel": "Possibly stale",
+            "citePolicy": "cite_with_caveat"
+          },
+          {
+            "pageId": "2720100",
+            "title": "Payments rollback runbook",
+            "url": "https://one-atlas-jzzf.atlassian.net/wiki/spaces/PLAT/pages/2720100/Payments+rollback+runbook",
+            "anchor": "payments-api: scripts/rollback.sh",
+            "match": "exact",
+            "status": "possibly_stale",
+            "statusLabel": "Possibly stale",
+            "citePolicy": "cite_with_caveat"
+          },
+          {
+            "pageId": "2982418",
+            "title": "Refund worker runbook (UX review)",
+            "url": "https://one-atlas-jzzf.atlassian.net/wiki/spaces/DDSTEST/pages/2982418/Refund+worker+runbook+UX+review",
+            "anchor": "payments-api: scripts/rollback.sh",
+            "match": "exact",
+            "status": "possibly_stale",
+            "statusLabel": "Possibly stale",
+            "citePolicy": "cite_with_caveat"
+          }
+        ],
+        "guidance": "3 pages document this path: \"DDS test: Payments rollback runbook\" (Possibly stale), \"Payments rollback runbook\" (Possibly stale), \"Refund worker runbook (UX review)\" (Possibly stale). 3 of them are Possibly stale or Stale. Call check-page-freshness before citing any of these pages. Name each page by its title."
+      },
+      "note": "Real output. 2 of the 3 pages are QA pages in the DDSTEST space (\"DDS test: ...\", \"(UX review)\") that are anchored to the same path; the PLAT runbook is the second row."
+    },
+    "checkFlagged": {
+      "calledAt": "2026-11-13T16:52:19+02:00",
+      "tool": "check-page-freshness",
+      "server": "doc-drift MCP (development install), as Razvan Statescu",
+      "input": {
+        "pageId": "2720100"
+      },
+      "output": {
+        "ok": true,
+        "pageId": "2720100",
+        "title": "Payments rollback runbook",
+        "url": "https://one-atlas-jzzf.atlassian.net/wiki/spaces/PLAT/pages/2720100/Payments+rollback+runbook",
+        "resolvedFrom": "pageId",
+        "status": "possibly_stale",
+        "statusLabel": "Possibly stale",
+        "citePolicy": "cite_with_caveat",
+        "verifiedAt": "2026-11-13T13:59:32.217Z",
+        "verifiedBy": "Razvan Statescu",
+        "openDrift": [
+          {
+            "source": "bitbucket",
+            "ref": "PR #482",
+            "summary": "deploy/helm/values.yaml changed: 1 line added, 1 removed",
+            "severity": "medium",
+            "score": 0.73,
+            "at": "2026-11-13T14:46:30.801Z"
+          },
+          {
+            "source": "bitbucket",
+            "ref": "PR #482",
+            "summary": "scripts/rollback.sh renamed to scripts/rollback-v2.sh",
+            "severity": "high",
+            "score": 1,
+            "at": "2026-11-13T14:46:30.518Z"
+          }
+        ],
+        "affectedSections": [
+          {
+            "heading": "Steps",
+            "blockIds": [
+              "b21",
+              "b22"
+            ]
+          }
+        ],
+        "guidance": "\"Payments rollback runbook\" is Possibly stale. Do not present steps from this page as current. Cite with caveat: changed by PR #482 on 2026-11-13. Affected: \"Steps\"."
+      },
+      "note": "Superseded by checkFlaggedV2 (core 5.5.0, D38): this older caveat (\"changed by PR #482\") led Drift Reviewer to say the page was changed by the PR."
+    },
+    "checkVerified": {
+      "calledAt": "2026-11-13T17:02:22+02:00",
+      "tool": "check-page-freshness",
+      "server": "doc-drift MCP (development install), as Razvan Statescu",
+      "input": {
+        "pageId": "2720100"
+      },
+      "output": {
+        "ok": true,
+        "pageId": "2720100",
+        "title": "Payments rollback runbook",
+        "url": "https://one-atlas-jzzf.atlassian.net/wiki/spaces/PLAT/pages/2720100/Payments+rollback+runbook",
+        "resolvedFrom": "pageId",
+        "status": "verified",
+        "statusLabel": "Verified",
+        "citePolicy": "cite",
+        "verifiedAt": "2026-11-13T15:00:50.117Z",
+        "verifiedBy": "Razvan Statescu",
+        "openDrift": [],
+        "affectedSections": [],
+        "guidance": "\"Payments rollback runbook\" is Verified. Safe to cite."
+      },
+      "note": "After the rename quick fix (v2) and the two accepted Drift Reviewer drafts (v3, v4)."
+    },
+    "findDocsFlaggedV2": {
+      "calledAt": "2026-11-13T19:01:40+02:00",
+      "tool": "find-docs-for-path",
+      "app": "core 5.5.0",
+      "server": "doc-drift MCP (development install), as Razvan Statescu",
+      "input": {
+        "repo": "payments-api",
+        "path": "scripts/rollback.sh"
+      },
+      "output": {
+        "ok": true,
+        "repo": "payments-api",
+        "path": "scripts/rollback.sh",
+        "pages": [
+          {
+            "pageId": "2752731",
+            "title": "DDS test: Payments rollback runbook",
+            "url": "https://one-atlas-jzzf.atlassian.net/wiki/spaces/DDSTEST/pages/2752731/DDS+test+Payments+rollback+runbook",
+            "anchor": "payments-api: scripts/rollback.sh",
+            "match": "exact",
+            "status": "possibly_stale",
+            "statusLabel": "Possibly stale",
+            "citePolicy": "cite_with_caveat"
+          },
+          {
+            "pageId": "2720100",
+            "title": "Payments rollback runbook",
+            "url": "https://one-atlas-jzzf.atlassian.net/wiki/spaces/PLAT/pages/2720100/Payments+rollback+runbook",
+            "anchor": "payments-api: scripts/rollback.sh",
+            "match": "exact",
+            "status": "possibly_stale",
+            "statusLabel": "Possibly stale",
+            "citePolicy": "cite_with_caveat"
+          },
+          {
+            "pageId": "2982418",
+            "title": "Refund worker runbook (UX review)",
+            "url": "https://one-atlas-jzzf.atlassian.net/wiki/spaces/DDSTEST/pages/2982418/Refund+worker+runbook+UX+review",
+            "anchor": "payments-api: scripts/rollback.sh",
+            "match": "exact",
+            "status": "possibly_stale",
+            "statusLabel": "Possibly stale",
+            "citePolicy": "cite_with_caveat"
+          }
+        ],
+        "guidance": "3 pages document this path: \"DDS test: Payments rollback runbook\" (Possibly stale), \"Payments rollback runbook\" (Possibly stale), \"Refund worker runbook (UX review)\" (Possibly stale). 3 of them are Possibly stale or Stale. Call check-page-freshness before citing any of these pages. Name each page by its title."
+      },
+      "note": "Same shape as findDocsFlagged; still includes the 2 DDSTEST QA pages anchored to the same path. The runbook was flagged by the settings demo replay of seeded PR #482 (no Bitbucket change)."
+    },
+    "checkFlaggedV2": {
+      "calledAt": "2026-11-13T19:01:40+02:00",
+      "tool": "check-page-freshness",
+      "app": "core 5.5.0",
+      "server": "doc-drift MCP (development install), as Razvan Statescu",
+      "input": {
+        "pageId": "2720100"
+      },
+      "output": {
+        "ok": true,
+        "pageId": "2720100",
+        "title": "Payments rollback runbook",
+        "url": "https://one-atlas-jzzf.atlassian.net/wiki/spaces/PLAT/pages/2720100/Payments+rollback+runbook",
+        "resolvedFrom": "pageId",
+        "status": "possibly_stale",
+        "statusLabel": "Possibly stale",
+        "citePolicy": "cite_with_caveat",
+        "verifiedAt": "2026-11-13T15:04:32.234Z",
+        "verifiedBy": "Razvan Statescu",
+        "openDrift": [
+          {
+            "source": "bitbucket",
+            "ref": "PR #482",
+            "summary": "deploy/helm/values.yaml changed: 1 line added, 1 removed",
+            "severity": "medium",
+            "score": 0.73,
+            "at": "2026-11-13T16:59:16.968Z"
+          },
+          {
+            "source": "bitbucket",
+            "ref": "PR #482",
+            "summary": "scripts/rollback.sh renamed to scripts/rollback-v2.sh",
+            "severity": "high",
+            "score": 1,
+            "at": "2026-11-13T16:59:16.726Z"
+          }
+        ],
+        "affectedSections": [
+          {
+            "heading": "Steps",
+            "blockIds": [
+              "b21",
+              "b22"
+            ]
+          }
+        ],
+        "guidance": "\"Payments rollback runbook\" is Possibly stale. Do not present steps from this page as current. Cite with caveat: what it describes changed in PR #482 on 2026-11-13, after it was last verified. Affected: \"Steps\"."
+      },
+      "note": "D38 wording (core 5.5.0). Prefer this over checkFlagged for the film: the old caveat read \"changed by PR #482\"."
+    }
+  },
+  "measured": {
+    "jiraToFlagSeconds": 9,
+    "jiraToFlagNote": "From the click on Done in the PAY-18 status menu to the first REST read (1 s polling) of ADR-015's byline property that was no longer Verified.",
+    "mergeToFlagSeconds": 19,
+    "mergeToFlagExact": 18.6,
+    "mergeClickAt": "2026-11-13T14:46:13.391Z",
+    "flaggedAt": "2026-11-13T14:46:32.025Z",
+    "method": "From the click on the Merge dialog's Merge button in Bitbucket (PR #482, 2026-11-13T14:46:13.391Z) to the moment the app wrote the runbook's byline content property dds-byline-7f3c2a as \"Possibly stale · Doc Drift\" (property version 11, createdAt 2026-11-13T14:46:32.025Z, author: the app). Bitbucket's merge commit bf02bd0dcfb6 is dated 14:46:14, so merge commit to flag is 18 s. A REST poll (1 s) first saw it at 19.5 s; the poll had a gap from 10.0 s to 19.5 s while the merge video was encoding, so the property's own timestamp is the authoritative one. Development install, demo site.",
+    "bitbucketMerge": {
+      "state": "MERGED",
+      "mergeCommit": "bf02bd0dcfb6",
+      "updatedOn": "2026-11-13T14:46:18.934284+00:00"
+    },
+    "observations": [
+      {
+        "atMs": 0,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 1002,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 2002,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 3003,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 4004,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 5005,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 6005,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 7010,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 8011,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 9013,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 10014,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 19542,
+        "title": "Possibly stale · Doc Drift"
+      }
+    ],
+    "commentAfterMergeSeconds": 24,
+    "commentId": "3735566",
+    "mergeCommitAt": "2026-11-13T14:46:14Z",
+    "mergeCommitToFlagSeconds": 18,
+    "pollFirstSawFlagSeconds": 19.5,
+    "flagTooltip": "PR #482 changed deploy/helm/values.yaml on Nov 13. Review.",
+    "eventsCreatedAt": [
+      "2026-11-13T14:46:30.518Z (scripts/rollback.sh renamed, high, 1.0)",
+      "2026-11-13T14:46:30.801Z (deploy/helm/values.yaml, medium, 0.73)"
+    ],
+    "replayToFlagSeconds": 6.8,
+    "replayNote": "Re-capture 2026-11-13 18:59:11 local: settings \"Replay seeded PR #482\" to the runbook byline reading Possibly stale (1 s polling). Not a Bitbucket merge; do not use for the merge timer."
+  }
+}

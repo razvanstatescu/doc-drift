@@ -1,0 +1,82 @@
+Doc Drift
+Close Modal
+Payments rollback runbook
+Possibly stale
+
+PR #482 renamed scripts/rollback.sh to scripts/rollback-v2.sh, an anchor of this page. The page mentions ROLLBACK_TIMEOUT and rollback.sh, which PR #482 removed. Section "Steps" names it. Score 1.00 (threshold 0.5).
+
+Agents are told not to trust this page until someone reviews it.
+
+Review (2)
+Anchors (3)
+What changed
+
+PR #482 merged by Razvan Statescu · 6 minutes ago
+
+High
+
+PR #482 renamed scripts/rollback.sh to scripts/rollback-v2.sh, an anchor of this page. The page mentions ROLLBACK_TIMEOUT and rollback.sh, which PR #482 removed. Section "Steps" names it. Score 1.00 (threshold 0.5).
+
+Rename rollback script and timeout variable
+
+scripts/rollback.sh → scripts/rollback-v2.sh · +3 −3
+
+Anchor payments-api: scripts/rollback.sh
+
+Show diff
+
+View PR #482 in Bitbucket
+
+PR #482 merged by Razvan Statescu · 6 minutes ago
+
+Medium
+
+PR #482 changed deploy/helm/values.yaml (2 lines), an anchor of this page. The page mentions ROLLBACK_TIMEOUT and rollback.sh, which PR #482 removed. Section "Steps" names it. Score 0.73 (threshold 0.5).
+
+Rename rollback script and timeout variable
+
+deploy/helm/values.yaml · +1 −1
+
+Anchor payments-api: deploy/helm/values.yaml
+
+Show diff
+
+View PR #482 in Bitbucket
+
+Affected section
+Steps
+
+…payments -n payments --max 5 Run the rollback script from the root of the payments-api repo. ROLLBACK_TIMEOUT is in seconds and defaults to 300. Raise it to 600 if the cluster is under load.
+
+export ROLLBACK_TIMEOUT=300
+
+./scripts/rollback.sh --timeout $ROLLBACK_TIMEOUT
+
+The script calls helm…
+
+Quick fix
+
+Replace scripts/rollback.sh with scripts/rollback-v2.sh in 1 place.
+
+Suggested from PR #482. No AI used. Edits the page as you, with a version message that names the PR.
+
+Replace in 1 place
+Proposed fix
+
+Drift Reviewer drafts the change. Nothing changes until you accept it.
+
+Propose fix
+Renamed anchors
+
+scripts/rollback.sh was renamed to scripts/rollback-v2.sh. Move the anchor?
+
+Move anchor
+Keep
+Track in Jira
+
+Creates a Jira task as you, with the changes and sections to re-read. Closing it does not mark the page Verified.
+
+Create Jira task
+Dismiss
+Snooze 7 days
+Mark verified

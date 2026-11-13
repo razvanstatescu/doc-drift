@@ -1,0 +1,20 @@
+{
+ "_comment": "M0, the cold-open bed (3 bars = 6.000 s = 180 f): a bar-line edit of one Eleven Music take (music_v2_5, seed 909, 20 s, 119.992 BPM, beats at 0.004 + k/2 s). Raw take: sparse sub pulse with ticks 0-6.5 s, sub drop-out 6.75-7.5, the build with glitch stabs from 8, a 0.25 s stop at 15.0, the peak 16-20 (no fade). Bar 1 is the sparse pulse; bars 2-3 the build and the peak; a synthesized riser climbs over the last 2.5 s and is cut dead with everything by the hard stop (6 ms ramp) on the bar line at 6.000 s.",
+ "source": "tools/audio/cache/music/m0-music_v2_5.wav",
+ "out": "public/music/m0.wav",
+ "beatOffset": 0.004,
+ "durationSec": 6.0,
+ "endFadeMs": 6,
+ "peakDb": -3,
+ "segments": [
+  { "t0": 0, "t1": 2, "s0": 0, "why": "bar 1: the sparse sub pulse and ticks" },
+  { "t0": 2, "t1": 4, "s0": 10, "why": "bar 2: source bar 6, the build (stabs on 1 and the and of 2)" },
+  { "t0": 4, "t1": 6, "s0": 18, "why": "bar 3: source bar 10, the peak; hard stop at 6.0" }
+ ],
+ "sweeps": [],
+ "gain": [],
+ "synth": [
+  { "type": "riser", "t0": 3.5, "t1": 6.0, "db": -10, "fromHz": 180, "toHz": 2400, "why": "the riser, at its top on the hard stop" }
+ ],
+ "subHits": []
+}

@@ -1,0 +1,337 @@
+{
+ "at": "2026-11-13T14:20:08.814Z",
+ "voLoudness": {
+  "medianLufs": -20,
+  "min": -20,
+  "max": -20,
+  "withinOneLU": true,
+  "maxTruePeak": -2.9,
+  "lines": [
+   {
+    "id": "V00",
+    "I": -20,
+    "LRA": 0,
+    "TP": -2.9,
+    "Mmax": -17.9,
+    "Smax": -120.7
+   },
+   {
+    "id": "V01",
+    "I": -20,
+    "LRA": 0,
+    "TP": -3,
+    "Mmax": -16.7,
+    "Smax": -120.7
+   },
+   {
+    "id": "V02",
+    "I": -20,
+    "LRA": 0,
+    "TP": -3.6,
+    "Mmax": -18.2,
+    "Smax": -120.7
+   },
+   {
+    "id": "V03",
+    "I": -20,
+    "LRA": 0,
+    "TP": -3,
+    "Mmax": -17.2,
+    "Smax": -120.7
+   },
+   {
+    "id": "V04",
+    "I": -20,
+    "LRA": 0,
+    "TP": -3,
+    "Mmax": -17.6,
+    "Smax": -120.7
+   },
+   {
+    "id": "V05",
+    "I": -20,
+    "LRA": 20,
+    "TP": -3.2,
+    "Mmax": -17.7,
+    "Smax": -20.4
+   },
+   {
+    "id": "V06",
+    "I": -20,
+    "LRA": 2.1,
+    "TP": -3,
+    "Mmax": -15.5,
+    "Smax": -19.1
+   },
+   {
+    "id": "V07",
+    "I": -20,
+    "LRA": 0.7,
+    "TP": -3,
+    "Mmax": -16.5,
+    "Smax": -19.7
+   },
+   {
+    "id": "V08",
+    "I": -20,
+    "LRA": 1.5,
+    "TP": -3,
+    "Mmax": -16.2,
+    "Smax": -20.2
+   },
+   {
+    "id": "V09",
+    "I": -20,
+    "LRA": 0,
+    "TP": -2.9,
+    "Mmax": -17.3,
+    "Smax": -120.7
+   },
+   {
+    "id": "V10",
+    "I": -20,
+    "LRA": 1.5,
+    "TP": -2.9,
+    "Mmax": -16.9,
+    "Smax": -20.1
+   },
+   {
+    "id": "V11",
+    "I": -20,
+    "LRA": 1.2,
+    "TP": -3,
+    "Mmax": -16.9,
+    "Smax": -19.7
+   },
+   {
+    "id": "V12",
+    "I": -20,
+    "LRA": 0,
+    "TP": -3,
+    "Mmax": -17,
+    "Smax": -120.7
+   },
+   {
+    "id": "V13",
+    "I": -20,
+    "LRA": 1.7,
+    "TP": -2.9,
+    "Mmax": -16,
+    "Smax": -19.3
+   },
+   {
+    "id": "V14",
+    "I": -20,
+    "LRA": 1,
+    "TP": -2.9,
+    "Mmax": -16.8,
+    "Smax": -19.7
+   },
+   {
+    "id": "V15",
+    "I": -20,
+    "LRA": 1.7,
+    "TP": -3,
+    "Mmax": -16,
+    "Smax": -19.8
+   },
+   {
+    "id": "V16",
+    "I": -20,
+    "LRA": 0.4,
+    "TP": -3,
+    "Mmax": -17.4,
+    "Smax": -19.8
+   },
+   {
+    "id": "V17",
+    "I": -20,
+    "LRA": 1.2,
+    "TP": -2.9,
+    "Mmax": -17,
+    "Smax": -19.6
+   },
+   {
+    "id": "V18",
+    "I": -20,
+    "LRA": 0.9,
+    "TP": -3,
+    "Mmax": -16,
+    "Smax": -20
+   },
+   {
+    "id": "V19",
+    "I": -20,
+    "LRA": 20.1,
+    "TP": -4.3,
+    "Mmax": -16.4,
+    "Smax": -19.9
+   },
+   {
+    "id": "V20",
+    "I": -20,
+    "LRA": 20.2,
+    "TP": -3,
+    "Mmax": -16.1,
+    "Smax": -19.8
+   },
+   {
+    "id": "V21",
+    "I": -20,
+    "LRA": 2.1,
+    "TP": -2.9,
+    "Mmax": -17.1,
+    "Smax": -19.7
+   },
+   {
+    "id": "V22",
+    "I": -20,
+    "LRA": 0,
+    "TP": -2.9,
+    "Mmax": -16.1,
+    "Smax": -120.7
+   },
+   {
+    "id": "V23",
+    "I": -20,
+    "LRA": 2,
+    "TP": -3,
+    "Mmax": -16.1,
+    "Smax": -19.7
+   },
+   {
+    "id": "V24",
+    "I": -20,
+    "LRA": 1.2,
+    "TP": -2.9,
+    "Mmax": -16.8,
+    "Smax": -20
+   },
+   {
+    "id": "V25",
+    "I": -20,
+    "LRA": 1,
+    "TP": -2.9,
+    "Mmax": -17.5,
+    "Smax": -20.1
+   }
+  ]
+ },
+ "music": {
+  "score": {
+   "bpm": 120.003,
+   "within01": true,
+   "gridRmsMs": 6.2,
+   "firstBeatSec": 0.0062,
+   "loudness": {
+    "I": -16.2,
+    "LRA": 7,
+    "TP": -3,
+    "Mmax": -12.5,
+    "Smax": -14.6
+   },
+   "kicksOnGrid": {
+    "lowOnsets": 367,
+    "onBeatWithin20ms": 128,
+    "medianAbsDevMs16th": 13.8,
+    "within15ms16th": 186
+   }
+  },
+  "m0Source": {
+   "bpm": 119.992,
+   "within01": true,
+   "gridRmsMs": 2.5
+  },
+  "m0": {
+   "duration": 6,
+   "sampleRate": 48000,
+   "channels": 2,
+   "codec": "pcm_s16le",
+   "bits": 16,
+   "loudness": {
+    "I": -15.4,
+    "LRA": 0.4,
+    "TP": -2.7,
+    "Mmax": -13.7,
+    "Smax": -15.1
+   },
+   "kicksOnGrid": {
+    "lowOnsets": 13,
+    "onBeatWithin20ms": 10,
+    "medianAbsDevMs16th": 6,
+    "within15ms16th": 12
+   }
+  },
+  "m0_4bar": {
+   "duration": 8,
+   "sampleRate": 48000,
+   "channels": 2,
+   "codec": "pcm_s16le",
+   "bits": 16,
+   "loudness": {
+    "I": -15.2,
+    "LRA": 0.2,
+    "TP": -2.7,
+    "Mmax": -13.3,
+    "Smax": -14.9
+   },
+   "kicksOnGrid": {
+    "lowOnsets": 18,
+    "onBeatWithin20ms": 16,
+    "medianAbsDevMs16th": 6,
+    "within15ms16th": 15
+   }
+  }
+ },
+ "files": {
+  "checked": 80,
+  "bad": [],
+  "sfxCatalogMissingFiles": []
+ },
+ "previewMix": {
+  "file": "/Users/razvanstatescu/Documents/Work/doc-drift/video/tools/audio/cache/qa/preview-mix.wav",
+  "loudness": {
+   "I": -20.8,
+   "LRA": 4.7,
+   "TP": -5.1,
+   "Mmax": -15.6,
+   "Smax": -19.1
+  },
+  "note": "M0 at -6 dB, score at gainDb with duck ranges, VO at 0 dB; no effects, no real-voice clip"
+ },
+ "narration": {
+  "file": "/Users/razvanstatescu/Documents/Work/doc-drift/video/tools/audio/cache/qa/narration.wav",
+  "wordsMatch": true,
+  "exact": false,
+  "diffs": [
+   {
+    "script": "doc drift",
+    "heard": "docdrift",
+    "kind": "joined"
+   },
+   {
+    "script": "doc drift",
+    "heard": "docdrift",
+    "kind": "joined"
+   },
+   {
+    "script": "doc drift",
+    "heard": "docdrift",
+    "kind": "joined"
+   },
+   {
+    "script": "doc drift",
+    "heard": "docdrift",
+    "kind": "joined"
+   }
+  ],
+  "linesInPlace": true,
+  "lineMismatches": [],
+  "transcript": "That's why we built DocDrift Sentinel, docs that know when the code moved. It's 3:00 a.m., payments is down. The runbook says to run rollback.sh. That script was renamed last week. The page still looks fine. It was reviewed a month ago. Ask an AI agent, and it reads you the same step with confidence. DocDrift Sentinel anchors each Confluence page to the code and Jira work it describes. When those change, the page is flagged, possibly stale, and every agent that reads it is told the same. Anchor, flag, tell the agents, then a person decides. Open any page. DocDrift reads the paths and Jira keys already on it and suggests anchors. Save, and the page is verified. Now a teammate merges a pull request that renames the rollback script. Seconds later, the runbook is flagged with the exact change. No AI made that call. Same change, same result every time. Ask Drift Reviewer, our Rovo agent, how to roll back. It doesn't repeat the old step. It says the page is possibly stale and why. Coding agents get the same signal over MCP, which pages cover a file and which to trust. The page owner gets one comment and opens the review. A rename gets a one-click fix with no AI. For anything bigger, Drift Reviewer drafts the edit. Nothing changes until a person accepts. Verified. Now the agent can cite it. Jira changes count too, and every space gets a Drift dashboard. Next time it's 3:00 a.m., the runbook tells you and your agent before step two. DocDrift Sentinel, catch the slip before your agents do.",
+  "credits": {
+   "before": 17684,
+   "after": 17684
+  },
+  "note": "kept from the Scribe run of 2026-11-13T14:17:56.080Z"
+ }
+}

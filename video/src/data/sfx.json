@@ -1,0 +1,463 @@
+{
+  "slip": {
+    "file": "sfx/slip.wav",
+    "durationInFrames": 16,
+    "peakFrame": 10,
+    "gainDb": -5.5,
+    "desc": "The brand sound: a precise metal plate slides smoothly and lands with a soft latch click. peakFrame = the latch (when the band stops).",
+    "peakSec": 0.32,
+    "durationSec": 0.515,
+    "hits": [
+      0,
+      1,
+      2,
+      10
+    ],
+    "take": "composite c0 of eleven_text_to_sound_v3 takes (tools/sfx/composites.json)"
+  },
+  "slip-alt1": {
+    "file": "sfx/slip-alt1.wav",
+    "durationInFrames": 17,
+    "peakFrame": 9,
+    "gainDb": 1.5,
+    "desc": "Alternate of slip: generated take: latch at 0.32 s but its slide sits 26 dB under it (barely audible), 0.2 s ring.",
+    "peakSec": 0.315,
+    "durationSec": 0.55,
+    "hits": [
+      0,
+      2,
+      7,
+      8,
+      9
+    ],
+    "take": "eleven_text_to_sound_v3 take 0",
+    "alt": true
+  },
+  "slip-alt2": {
+    "file": "sfx/slip-alt2.wav",
+    "durationInFrames": 17,
+    "peakFrame": 6,
+    "gainDb": -2,
+    "desc": "Alternate of slip: generated take: quick dry latch at 0.17 s, slide 25 dB under it (barely audible).",
+    "peakSec": 0.195,
+    "durationSec": 0.549,
+    "hits": [
+      0,
+      2,
+      3,
+      5
+    ],
+    "take": "eleven_text_to_sound_v3 take 1",
+    "alt": true
+  },
+  "slip-alt3": {
+    "file": "sfx/slip-alt3.wav",
+    "durationInFrames": 17,
+    "peakFrame": 10,
+    "gainDb": -12,
+    "desc": "Alternate of slip: generated take: an audible 0.55 s friction slide with no latch.",
+    "peakSec": 0.325,
+    "durationSec": 0.55,
+    "hits": [
+      0,
+      2
+    ],
+    "take": "eleven_text_to_sound_v3 take 2",
+    "alt": true
+  },
+  "slip-alt4": {
+    "file": "sfx/slip-alt4.wav",
+    "durationInFrames": 17,
+    "peakFrame": 7,
+    "gainDb": -11,
+    "desc": "Alternate of slip: generated take: an audible 0.55 s friction slide with no latch (its first 0.34 s is the slide in the composite).",
+    "peakSec": 0.225,
+    "durationSec": 0.55,
+    "hits": [
+      0,
+      2,
+      3
+    ],
+    "take": "eleven_text_to_sound_v3 take 3",
+    "alt": true
+  },
+  "snap": {
+    "file": "sfx/snap.wav",
+    "durationInFrames": 5,
+    "peakFrame": 2,
+    "gainDb": 2,
+    "desc": "The slip in reverse: a brighter, quicker click-lock as the band snaps back into line. peakFrame = the lock click.",
+    "peakSec": 0.075,
+    "durationSec": 0.14,
+    "take": "eleven_text_to_sound_v3 take 3"
+  },
+  "snap-alt1": {
+    "file": "sfx/snap-alt1.wav",
+    "durationInFrames": 6,
+    "peakFrame": 1,
+    "gainDb": 1.5,
+    "desc": "Alternate of snap: generated take: bright (5.4 kHz) but four small clicks.",
+    "peakSec": 0.035,
+    "durationSec": 0.175,
+    "take": "eleven_text_to_sound_v3 take 2",
+    "alt": true
+  },
+  "snap-alt2": {
+    "file": "sfx/snap-alt2.wav",
+    "durationInFrames": 9,
+    "peakFrame": 2,
+    "gainDb": -4,
+    "desc": "Alternate of snap: generated take: duller (3.4 kHz), rings 0.15 s.",
+    "peakSec": 0.065,
+    "durationSec": 0.3,
+    "take": "eleven_text_to_sound_v3 take 1",
+    "alt": true
+  },
+  "snap-alt3": {
+    "file": "sfx/snap-alt3.wav",
+    "durationInFrames": 9,
+    "peakFrame": 2,
+    "gainDb": -3,
+    "desc": "Alternate of snap: generated take: duller (3.2 kHz), rings 0.18 s.",
+    "peakSec": 0.065,
+    "durationSec": 0.3,
+    "take": "eleven_text_to_sound_v3 take 0",
+    "alt": true
+  },
+  "tick": {
+    "file": "sfx/tick.wav",
+    "durationInFrames": 2,
+    "peakFrame": 0,
+    "gainDb": -4,
+    "desc": "One crisp small mechanical tick.",
+    "peakSec": 0.005,
+    "durationSec": 0.054,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "tick-soft": {
+    "file": "sfx/tick-soft.wav",
+    "durationInFrames": 3,
+    "peakFrame": 0,
+    "gainDb": -7.5,
+    "desc": "A softer, rounded tick for small UI changes.",
+    "peakSec": 0.015,
+    "durationSec": 0.08,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "click": {
+    "file": "sfx/click.wav",
+    "durationInFrames": 4,
+    "peakFrame": 0,
+    "gainDb": -4.5,
+    "desc": "A clean modern trackpad or mouse click (cursor clicks in real UI shots).",
+    "peakSec": 0.005,
+    "durationSec": 0.12,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "type-key": {
+    "file": "sfx/type-key.wav",
+    "durationInFrames": 4,
+    "peakFrame": 0,
+    "gainDb": -3.5,
+    "desc": "One key press on a quiet low-profile laptop keyboard.",
+    "peakSec": 0.015,
+    "durationSec": 0.12,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "type-burst": {
+    "file": "sfx/type-burst.wav",
+    "durationInFrames": 30,
+    "peakFrame": 0,
+    "gainDb": -5,
+    "desc": "1 s of fast typing on a quiet laptop keyboard (a question typed in Rovo, a terminal command).",
+    "peakSec": 0.005,
+    "durationSec": 1,
+    "hits": [
+      0,
+      3,
+      7,
+      12,
+      17,
+      23,
+      25,
+      29
+    ],
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "pop": {
+    "file": "sfx/pop.wav",
+    "durationInFrames": 5,
+    "peakFrame": 1,
+    "gainDb": -7.5,
+    "desc": "A small round clean interface pop (a chip or card appears).",
+    "peakSec": 0.025,
+    "durationSec": 0.15,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "whoosh-short": {
+    "file": "sfx/whoosh-short.wav",
+    "durationInFrames": 9,
+    "peakFrame": 4,
+    "gainDb": -5.5,
+    "desc": "An 8-frame whip between surfaces; place its peak on the cut frame.",
+    "peakSec": 0.135,
+    "durationSec": 0.272,
+    "take": "eleven_text_to_sound_v3 take 1"
+  },
+  "whoosh": {
+    "file": "sfx/whoosh.wav",
+    "durationInFrames": 22,
+    "peakFrame": 7,
+    "gainDb": -8,
+    "desc": "A smooth cinematic pass-by whoosh, rising to a peak and falling away; peak on the cut.",
+    "peakSec": 0.235,
+    "durationSec": 0.708,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "swish-up": {
+    "file": "sfx/swish-up.wav",
+    "durationInFrames": 17,
+    "peakFrame": 10,
+    "gainDb": -11.5,
+    "desc": "A light rising swish (type or a card sets in).",
+    "peakSec": 0.335,
+    "durationSec": 0.566,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "reverse-swell": {
+    "file": "sfx/reverse-swell.wav",
+    "durationInFrames": 45,
+    "peakFrame": 44,
+    "gainDb": -12,
+    "desc": "A reversed cymbal swell that ends on its loudest point on the last frame; end it on the cut.",
+    "peakSec": 1.483,
+    "durationSec": 1.5,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "riser-2bar": {
+    "file": "sfx/riser-2bar.wav",
+    "durationInFrames": 120,
+    "peakFrame": 119,
+    "gainDb": -16,
+    "desc": "A 2-bar (4 s) tense riser that ends on its top; end it on the bar line.",
+    "peakSec": 3.983,
+    "durationSec": 4,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "downlifter": {
+    "file": "sfx/downlifter.wav",
+    "durationInFrames": 60,
+    "peakFrame": 0,
+    "gainDb": -16,
+    "desc": "A descending noise sweep that falls in pitch and fades out over 2 s (after a hit or a reveal).",
+    "peakSec": 0.005,
+    "durationSec": 1.977,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "hit-soft": {
+    "file": "sfx/hit-soft.wav",
+    "durationInFrames": 23,
+    "peakFrame": 2,
+    "gainDb": -5,
+    "desc": "A soft muted low thump with a short tail.",
+    "peakSec": 0.065,
+    "durationSec": 0.751,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "hit-deep": {
+    "file": "sfx/hit-deep.wav",
+    "durationInFrames": 36,
+    "peakFrame": 2,
+    "gainDb": -3,
+    "desc": "A deep cinematic impact with a short boom tail.",
+    "peakSec": 0.065,
+    "durationSec": 1.2,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "boom": {
+    "file": "sfx/boom.wav",
+    "durationInFrames": 83,
+    "peakFrame": 3,
+    "gainDb": -1,
+    "desc": "The big one: a cinematic impact with a long tail (the reveal, the end card).",
+    "peakSec": 0.085,
+    "durationSec": 2.742,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "boom-alt": {
+    "file": "sfx/boom-alt.wav",
+    "durationInFrames": 84,
+    "peakFrame": 8,
+    "gainDb": -1,
+    "desc": "Alternate of boom: generated take: slower attack (peak at 0.28 s), 1.7 s tail.",
+    "peakSec": 0.275,
+    "durationSec": 2.774,
+    "take": "eleven_text_to_sound_v3 take 1",
+    "alt": true
+  },
+  "sub-drop": {
+    "file": "sfx/sub-drop.wav",
+    "durationInFrames": 36,
+    "peakFrame": 11,
+    "gainDb": -13,
+    "desc": "A deep sub bass drop that falls in pitch and fades over 1 s.",
+    "peakSec": 0.365,
+    "durationSec": 1.2,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "glitch-1": {
+    "file": "sfx/glitch-1.wav",
+    "durationInFrames": 6,
+    "peakFrame": 3,
+    "gainDb": -6,
+    "desc": "Digital glitch, 0.1-0.2 s (barrage only).",
+    "peakSec": 0.085,
+    "durationSec": 0.18,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "glitch-2": {
+    "file": "sfx/glitch-2.wav",
+    "durationInFrames": 5,
+    "peakFrame": 0,
+    "gainDb": -4.5,
+    "desc": "Digital glitch, 0.1-0.2 s (barrage only).",
+    "peakSec": 0.015,
+    "durationSec": 0.15,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "glitch-3": {
+    "file": "sfx/glitch-3.wav",
+    "durationInFrames": 4,
+    "peakFrame": 3,
+    "gainDb": -4,
+    "desc": "Digital glitch, 0.1-0.2 s (barrage only).",
+    "peakSec": 0.085,
+    "durationSec": 0.12,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "shutter": {
+    "file": "sfx/shutter.wav",
+    "durationInFrames": 6,
+    "peakFrame": 2,
+    "gainDb": -6.5,
+    "desc": "A crisp camera shutter click (a plate freezes).",
+    "peakSec": 0.055,
+    "durationSec": 0.2,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "stutter": {
+    "file": "sfx/stutter.wav",
+    "durationInFrames": 15,
+    "peakFrame": 0,
+    "gainDb": -10.5,
+    "desc": "A fast digital stutter that speeds up like a skipping CD (barrage only).",
+    "peakSec": 0.005,
+    "durationSec": 0.481,
+    "hits": [
+      0,
+      1,
+      2,
+      3,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      12,
+      12,
+      14
+    ],
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "suck-in": {
+    "file": "sfx/suck-in.wav",
+    "durationInFrames": 15,
+    "peakFrame": 14,
+    "gainDb": -5,
+    "desc": "Reverse suction to a dead stop: ends on its loudest point on the last frame (the barrage is sucked to the centre).",
+    "peakSec": 0.483,
+    "durationSec": 0.5,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "static": {
+    "file": "sfx/static.wav",
+    "durationInFrames": 12,
+    "peakFrame": 1,
+    "gainDb": -17,
+    "desc": "A short burst of harsh analog TV static, cut abruptly (barrage only).",
+    "peakSec": 0.035,
+    "durationSec": 0.4,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "alert": {
+    "file": "sfx/alert.wav",
+    "durationInFrames": 13,
+    "peakFrame": 2,
+    "gainDb": -16,
+    "desc": "A generic urgent pager alert: three short identical tones (the 3 a.m. alert card). Not any real product's sound.",
+    "peakSec": 0.055,
+    "durationSec": 0.408,
+    "hits": [
+      0,
+      4,
+      8
+    ],
+    "take": "eleven_text_to_sound_v3 take 1"
+  },
+  "alert-alt": {
+    "file": "sfx/alert-alt.wav",
+    "durationInFrames": 24,
+    "peakFrame": 0,
+    "gainDb": -14,
+    "desc": "Alternate of alert: generated take: two long tones 0.5 s apart (not three).",
+    "peakSec": 0.015,
+    "durationSec": 0.796,
+    "hits": [
+      0,
+      15
+    ],
+    "take": "eleven_text_to_sound_v3 take 0",
+    "alt": true
+  },
+  "error-blip": {
+    "file": "sfx/error-blip.wav",
+    "durationInFrames": 8,
+    "peakFrame": 1,
+    "gainDb": -13,
+    "desc": "A short dull low error blip (no such file or directory).",
+    "peakSec": 0.045,
+    "durationSec": 0.25,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "clock-tick": {
+    "file": "sfx/clock-tick.wav",
+    "durationInFrames": 5,
+    "peakFrame": 1,
+    "gainDb": -5.5,
+    "desc": "One tick of a quiet mechanical clock at night (repeat it on beats).",
+    "peakSec": 0.035,
+    "durationSec": 0.15,
+    "take": "eleven_text_to_sound_v3 take 1"
+  },
+  "merge": {
+    "file": "sfx/merge.wav",
+    "durationInFrames": 13,
+    "peakFrame": 4,
+    "gainDb": -13.5,
+    "desc": "A satisfying soft confirm (the PR merges).",
+    "peakSec": 0.135,
+    "durationSec": 0.426,
+    "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "chime-soft": {
+    "file": "sfx/chime-soft.wav",
+    "durationInFrames": 30,
+    "peakFrame": 1,
+    "gainDb": -13.5,
+    "desc": "A single soft glassy chime with a quick decay.",
+    "peakSec": 0.025,
+    "durationSec": 1,
+    "take": "eleven_text_to_sound_v3 take 0"
+  }
+}

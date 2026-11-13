@@ -1,0 +1,139 @@
+{
+ "_comment": "The score: a bar-line edit of one Eleven Music take (music_v2_5, seed 7101, 152 s, 120.004 BPM, beats at 0.0065 + k/2 s) onto the film from R (score clock 0 = film frame R = 277; 146.0 s = 4380 f). The take followed the plan's contrasts but ran its Night section 3 bars long, so the lift sits at source 32.0 (plan 26) and the final hit at source 144.0 (plan 138); the rest of the plan (resolve, build) it played as one steady groove. One splice removes source 6-12 (3 Night bars; the 2-loud/2-quiet bar pattern of the mid band carries on across it), so after film 6 every film time = source time - 6: the lift lands on A2's first frame (film 26), the take's own final hit on endHit (film 138), its ring-out ends with the film (146 = source 152). P4 is made to resolve with a low-pass (900 Hz) from P4's start that opens over the 2 bars before snapBack, plus a small synthesized sub hit on snapBack; P5-A4 build with a 3-bar synthesized riser and a 2-bar high-pass into endHit, where a big sub hit doubles the take's own hit.",
+ "source": "tools/audio/cache/music/score-music_v2_5-s7101.wav",
+ "out": "public/music/score.wav",
+ "beatOffset": 0.0065,
+ "durationSec": 146.0,
+ "endFadeMs": 50,
+ "peakDb": -3,
+ "segments": [
+  {
+   "t0": 0,
+   "t1": 6,
+   "s0": 0,
+   "why": "M1 title swell (0-4, from silence) and the first Night bar (4-6)"
+  },
+  {
+   "t0": 6,
+   "t1": 146,
+   "s0": 12,
+   "why": "Night from source bar 6 (source 6-12 removed), the lift at film 26 = source 32, the groove, the final hit at film 138 = source 144, the ring-out to film 146 = source 152"
+  }
+ ],
+ "sweeps": [
+  {
+   "type": "lowpass",
+   "t0": 100,
+   "t1": 114,
+   "fromHz": 900,
+   "toHz": 900,
+   "why": "M5: P4's review, the groove muffled on P4's first frame"
+  },
+  {
+   "type": "lowpass",
+   "t0": 114,
+   "t1": 116,
+   "fromHz": 900,
+   "toHz": 14000,
+   "why": "M5: the filter opens over the 2 bars before snapBack"
+  },
+  {
+   "type": "highpass",
+   "t0": 134,
+   "t1": 138,
+   "fromHz": 30,
+   "toHz": 700,
+   "why": "M6: 2-bar high-pass build, full band back on endHit"
+  }
+ ],
+ "gain": [
+  {
+   "t0": 145.0,
+   "t1": 146.0,
+   "db": -60,
+   "ramp": true,
+   "curve": "db",
+   "why": "the ring-out fades to silence on the film's last frame"
+  }
+ ],
+ "synth": [
+  {
+   "type": "riser",
+   "t0": 132,
+   "t1": 138,
+   "db": -15,
+   "fromHz": 180,
+   "toHz": 2400,
+   "why": "M6: 3-bar riser into endHit"
+  }
+ ],
+ "subHits": [
+  {
+   "t": 116.0,
+   "db": -16,
+   "why": "M5: the small hit on snapBack (V22, Verified)"
+  },
+  {
+   "t": 138.0,
+   "db": -8,
+   "why": "M7: the final hit on the end card (endHit), doubling the take's own hit"
+  }
+ ],
+ "cues": [
+  {
+   "id": "M1",
+   "from": 0,
+   "to": 4,
+   "what": "warm title swell from silence under V01 (no drums)"
+  },
+  {
+   "id": "M2",
+   "from": 4,
+   "to": 26,
+   "what": "Night: low pulse on the beat, ticking hats, dark pad; mid band alternates 2 loud / 2 quiet bars and rises over the last 3 bars"
+  },
+  {
+   "id": "M3",
+   "from": 26,
+   "to": 48,
+   "what": "Day lift on A2's first frame: kick on the beat, backbeat, bright synths"
+  },
+  {
+   "id": "M4",
+   "from": 48,
+   "to": 100,
+   "what": "steady groove (P1-P3); kick drop-out fills at 56-58 and 72.5-73.5"
+  },
+  {
+   "id": "M5",
+   "from": 100,
+   "to": 122,
+   "what": "P4: groove muffled (low-pass 900 Hz), opening 114-116; full band and a small sub hit on snapBack (116)"
+  },
+  {
+   "id": "M6",
+   "from": 122,
+   "to": 138,
+   "what": "P5-A4: groove; riser from 132 and high-pass build 134-138"
+  },
+  {
+   "id": "M7",
+   "from": 138,
+   "to": 146,
+   "what": "final hit on endHit (the take's hit plus a sub hit), ring-out to silence at the film's end"
+  }
+ ],
+ "expect": {
+  "_why": "timeline.mjs checks these against src/data/timeline.json (seconds from R); a mismatch marks the score stale",
+  "R": 277,
+  "A1": 4,
+  "A2": 26,
+  "P1": 48,
+  "P4": 100,
+  "P5": 122,
+  "A4": 130,
+  "snapBack": 116,
+  "endHit": 138,
+  "durationSec": 146
+ }
+}

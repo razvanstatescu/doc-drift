@@ -1,0 +1,444 @@
+{
+  "takenAt": "2026-11-13T15:44:08+02:00",
+  "site": "one-atlas-jzzf.atlassian.net",
+  "confluence": {
+    "spaceId": "2981890",
+    "spaceKey": "PLAT",
+    "pages": [
+      {
+        "id": "2818170",
+        "title": "ADR-009: Retire the v1 refunds API",
+        "version": 1,
+        "parentId": "2818075",
+        "bylineTitle": "Verified · Doc Drift",
+        "bylineTooltip": "Verified on Nov 11. Watching 1 anchor.",
+        "state": "verified"
+      },
+      {
+        "id": "2982213",
+        "title": "ADR-012: Idempotency keys for charge creation",
+        "version": 1,
+        "parentId": "2818075",
+        "bylineTitle": "Verified · Doc Drift",
+        "bylineTooltip": "Verified on Nov 11. 1 anchor change since, none flagged. Watching 2 anchors.",
+        "state": "verified"
+      },
+      {
+        "id": "3080193",
+        "title": "ADR-014: Async settlement worker queue",
+        "version": 1,
+        "parentId": "2818075",
+        "bylineTitle": "Verified · Doc Drift",
+        "bylineTooltip": "Verified on Nov 11. 1 anchor change since, none flagged. Watching 2 anchors.",
+        "state": "verified"
+      },
+      {
+        "id": "2752707",
+        "title": "ADR-015: Active-passive multi-region database",
+        "version": 1,
+        "parentId": "2818075",
+        "bylineTitle": "Verified · Doc Drift",
+        "bylineTooltip": "Verified on Nov 11. Watching 1 anchor.",
+        "state": "verified"
+      },
+      {
+        "id": "2720277",
+        "title": "Charges API guide",
+        "version": 1,
+        "parentId": "2818079",
+        "bylineTitle": "Verified · Doc Drift",
+        "bylineTooltip": "Verified on Nov 11. 1 anchor change since, none flagged. Watching 2 anchors.",
+        "state": "verified"
+      },
+      {
+        "id": "2883687",
+        "title": "Drain the settlement queue",
+        "version": 1,
+        "parentId": "2883678",
+        "bylineTitle": "Verified · Doc Drift",
+        "bylineTooltip": "Verified on Nov 11. 1 anchor change since, none flagged. Watching 2 anchors.",
+        "state": "verified"
+      },
+      {
+        "id": "2818111",
+        "title": "Fail over the payments database",
+        "version": 1,
+        "parentId": "2883678",
+        "bylineTitle": "Verified · Doc Drift",
+        "bylineTooltip": "Verified on Nov 11. 4 anchor changes since, 1 flagged. Watching 3 anchors.",
+        "state": "verified"
+      },
+      {
+        "id": "2720215",
+        "title": "Fraud screening service overview",
+        "version": 1,
+        "parentId": "2720096",
+        "bylineTitle": null,
+        "bylineTooltip": null,
+        "state": "unanchored (no property)"
+      },
+      {
+        "id": "2752656",
+        "title": "Ledger service overview",
+        "version": 1,
+        "parentId": "2720096",
+        "bylineTitle": null,
+        "bylineTooltip": null,
+        "state": "unanchored (no property)"
+      },
+      {
+        "id": "2720160",
+        "title": "PSP outage runbook",
+        "version": 1,
+        "parentId": "2883678",
+        "bylineTitle": null,
+        "bylineTooltip": null,
+        "state": "unanchored (no property)"
+      },
+      {
+        "id": "2883745",
+        "title": "Payments API service overview",
+        "version": 1,
+        "parentId": "2720096",
+        "bylineTitle": "Possibly stale · Doc Drift",
+        "bylineTooltip": "PR #13 changed src/config.ts and 8 files on Nov 11 (+1 change). Review.",
+        "state": "possibly_stale"
+      },
+      {
+        "id": "2752676",
+        "title": "Payments codebase tour",
+        "version": 1,
+        "parentId": "2818071",
+        "bylineTitle": "Possibly stale · Doc Drift",
+        "bylineTooltip": "PR #13 changed src/config.ts and 8 files on Nov 11. Review.",
+        "state": "possibly_stale"
+      },
+      {
+        "id": "2720188",
+        "title": "Payments deployment and Helm chart",
+        "version": 1,
+        "parentId": "2720096",
+        "bylineTitle": "Verified · Doc Drift",
+        "bylineTooltip": "Verified on Nov 11. 3 anchor changes since, 1 flagged. Watching 1 anchor.",
+        "state": "verified"
+      },
+      {
+        "id": "2883716",
+        "title": "Payments incident response checklist",
+        "version": 1,
+        "parentId": "2883678",
+        "bylineTitle": null,
+        "bylineTooltip": null,
+        "state": "unanchored (no property)"
+      },
+      {
+        "id": "2883809",
+        "title": "Payments local development setup",
+        "version": 1,
+        "parentId": "2818071",
+        "bylineTitle": "Possibly stale · Doc Drift",
+        "bylineTooltip": "PR #13 changed src/config.ts on Nov 11. Review.",
+        "state": "possibly_stale"
+      },
+      {
+        "id": "2720100",
+        "title": "Payments rollback runbook",
+        "version": 1,
+        "parentId": "2883678",
+        "bylineTitle": "Verified · Doc Drift",
+        "bylineTooltip": "Verified on Nov 11. 2 anchor changes since, none flagged. Watching 3 anchors.",
+        "state": "verified"
+      },
+      {
+        "id": "2982161",
+        "title": "Platform Home",
+        "version": 1,
+        "parentId": null,
+        "bylineTitle": null,
+        "bylineTooltip": null,
+        "state": "unanchored (no property)"
+      },
+      {
+        "id": "2982188",
+        "title": "Platform on-call onboarding",
+        "version": 1,
+        "parentId": "2818071",
+        "bylineTitle": null,
+        "bylineTooltip": null,
+        "state": "unanchored (no property)"
+      },
+      {
+        "id": "2720246",
+        "title": "Refunds API guide",
+        "version": 1,
+        "parentId": "2818079",
+        "bylineTitle": "Possibly stale · Doc Drift",
+        "bylineTooltip": "PR #12 changed src/routes/refunds-v1.ts on Nov 11. Review.",
+        "state": "possibly_stale"
+      },
+      {
+        "id": "2818138",
+        "title": "Replay failed PSP webhooks",
+        "version": 1,
+        "parentId": "2883678",
+        "bylineTitle": "Verified · Doc Drift",
+        "bylineTooltip": "Verified on Nov 11. 1 anchor change since, none flagged. Watching 2 anchors.",
+        "state": "verified"
+      },
+      {
+        "id": "2818083",
+        "title": "Rotate payments secrets",
+        "version": 1,
+        "parentId": "2883678",
+        "bylineTitle": "Verified · Doc Drift",
+        "bylineTooltip": "Verified on Nov 11. 1 anchor change since, none flagged. Watching 2 anchors.",
+        "state": "verified"
+      },
+      {
+        "id": "2720129",
+        "title": "Scale payment workers",
+        "version": 1,
+        "parentId": "2883678",
+        "bylineTitle": "Possibly stale · Doc Drift",
+        "bylineTooltip": "PR #5 changed scripts/scale-workers.sh on Nov 11. Review.",
+        "state": "possibly_stale"
+      },
+      {
+        "id": "2752625",
+        "title": "Settlement worker overview",
+        "version": 1,
+        "parentId": "2720096",
+        "bylineTitle": "Verified · Doc Drift",
+        "bylineTooltip": "Verified on Nov 11. 1 anchor change since, none flagged. Watching 2 anchors.",
+        "state": "verified"
+      },
+      {
+        "id": "2883781",
+        "title": "Webhook ingestion service overview",
+        "version": 1,
+        "parentId": "2720096",
+        "bylineTitle": "Verified · Doc Drift",
+        "bylineTooltip": "Verified on Nov 11. 1 anchor change since, none flagged. Watching 1 anchor.",
+        "state": "verified"
+      },
+      {
+        "id": "3014667",
+        "title": "Welcome to the Platform team",
+        "version": 1,
+        "parentId": "2818071",
+        "bylineTitle": null,
+        "bylineTooltip": null,
+        "state": "unanchored (no property)"
+      }
+    ],
+    "summary": {
+      "pagesInListing": 25,
+      "homepageId": "2982161",
+      "totalExcludingHome": 24,
+      "anchored": 18,
+      "verified": 13,
+      "possiblyStale": 5,
+      "stale": 0,
+      "unanchored": 6
+    }
+  },
+  "runbook": {
+    "id": "2720100",
+    "title": "Payments rollback runbook",
+    "version": 1,
+    "versionMessage": "",
+    "versionCreatedAt": "2026-11-11T15:12:31.161Z",
+    "ownerId": "5e8d4e6bacb63e0b834222ee",
+    "bodyFile": "runbook-before.xhtml",
+    "bodyLength": 4825,
+    "mentionsRollbackSh": true,
+    "mentionsRollbackV2": false,
+    "mentionsTimeoutVar": true,
+    "mentionsTimeoutSecs": false,
+    "byline": {
+      "title": "Verified · Doc Drift",
+      "tooltip": "Verified on Nov 11. 2 anchor changes since, none flagged. Watching 3 anchors."
+    },
+    "state": "verified"
+  },
+  "bitbucket": {
+    "repo": "nano-soft-dev/payments-api",
+    "uuid": "{dc5e508e-e4a7-4e6f-80fb-2faccbe89533}",
+    "defaultBranch": "main",
+    "mainHead": "cf59050c4e06",
+    "rollbackShOnMain": false,
+    "rollbackV2OnMain": true,
+    "rollbackShUsesTimeoutVar": false,
+    "valuesYamlHasRollbackTimeout": false,
+    "valuesYamlHasRollbackTimeoutSecs": true,
+    "branches": [
+      {
+        "name": "main",
+        "head": "cf59050c4e06",
+        "message": "QA cleanup: remove qa/ test files"
+      },
+      {
+        "name": "spike/s1-base",
+        "head": "6b6d7d83f919",
+        "message": "Merged in spike/s1-change-1 (pull request #2)"
+      }
+    ],
+    "highestPrId": 19,
+    "recentPrs": [
+      {
+        "id": 19,
+        "title": "QA R-6: rewrite r6.sh",
+        "state": "MERGED"
+      },
+      {
+        "id": 18,
+        "title": "QA R-6: real merge author mention",
+        "state": "MERGED"
+      },
+      {
+        "id": 17,
+        "title": "QA relay D: add 320 files",
+        "state": "MERGED"
+      },
+      {
+        "id": 16,
+        "title": "QA relay C: merge into a non-main branch",
+        "state": "MERGED"
+      },
+      {
+        "id": 15,
+        "title": "QA relay B: rename helper, drop logo, rename flag",
+        "state": "MERGED"
+      }
+    ],
+    "openPrs": []
+  },
+  "jira": {
+    "PAY-6": {
+      "summary": "Safer payments deploys and rollbacks",
+      "type": "Epic",
+      "status": "In Progress",
+      "statusCategory": "indeterminate",
+      "resolution": null,
+      "transitions": [
+        {
+          "id": "11",
+          "name": "To Do",
+          "to": "To Do"
+        },
+        {
+          "id": "21",
+          "name": "In Progress",
+          "to": "In Progress"
+        },
+        {
+          "id": "31",
+          "name": "Done",
+          "to": "Done"
+        }
+      ]
+    },
+    "PAY-18": {
+      "summary": "Multi-region active-passive database",
+      "type": "Epic",
+      "status": "To Do",
+      "statusCategory": "new",
+      "resolution": null,
+      "transitions": [
+        {
+          "id": "11",
+          "name": "To Do",
+          "to": "To Do"
+        },
+        {
+          "id": "21",
+          "name": "In Progress",
+          "to": "In Progress"
+        },
+        {
+          "id": "31",
+          "name": "Done",
+          "to": "Done"
+        }
+      ]
+    },
+    "PAY-15": {
+      "summary": "Remove the v1 refunds endpoint",
+      "type": "Story",
+      "status": "To Do",
+      "statusCategory": "new",
+      "resolution": null,
+      "transitions": [
+        {
+          "id": "11",
+          "name": "To Do",
+          "to": "To Do"
+        },
+        {
+          "id": "21",
+          "name": "In Progress",
+          "to": "In Progress"
+        },
+        {
+          "id": "31",
+          "name": "Done",
+          "to": "Done"
+        }
+      ]
+    }
+  },
+  "settings": {
+    "readAt": "2026-11-13T15:51:30+02:00",
+    "source": "core settings page (Confluence administration > Doc Drift Sentinel (Development))",
+    "url": "https://one-atlas-jzzf.atlassian.net/wiki/admin/forge/apps/12e968a1-a45d-4524-ba28-d47e2315db1a/b7eadd8c-211c-4cdf-98c0-86172909ead2/dds-settings",
+    "sensitivity": "balanced",
+    "ignoreGlobs": [
+      "**/*.test.*",
+      "**/__tests__/**",
+      "**/*.lock",
+      "package-lock.json",
+      "yarn.lock",
+      "pnpm-lock.yaml",
+      "**/*.snap",
+      "**/dist/**",
+      "**/*.md"
+    ],
+    "ignoreNonDefaultBranches": true,
+    "spaceMode": "all",
+    "escalationDays": 7,
+    "notifyEnabled": true,
+    "notifyDebounceMinutes": 10,
+    "jiraEnabled": true,
+    "relay": {
+      "status": "Connected",
+      "workspace": "{d19ef018-a86d-4e26-8e22-181fa4e143ea}",
+      "lastTestPing": "Nov 11, 05:51 PM",
+      "lastChange": "nano-soft-dev/payments-api PR #19, Nov 12, 01:22 PM. 16 changes in the last 30 days.",
+      "secretFingerprint": "b58d58c4"
+    }
+  },
+  "runbookAnchors": {
+    "readAt": "2026-11-13T15:52:27+02:00",
+    "source": "Doc Drift badge modal on page 2720100",
+    "anchors": [
+      {
+        "anchorType": "path",
+        "repo": "payments-api",
+        "pattern": "scripts/rollback.sh",
+        "weight": "critical"
+      },
+      {
+        "anchorType": "path",
+        "repo": "payments-api",
+        "pattern": "deploy/helm/values.yaml",
+        "weight": "normal"
+      },
+      {
+        "anchorType": "jira",
+        "jiraKey": "PAY-6",
+        "weight": "normal"
+      }
+    ],
+    "modalText": "Verified by Razvan Statescu, yesterday. Watching 3 anchors. 2 changes to anchored code since, none flagged."
+  }
+}

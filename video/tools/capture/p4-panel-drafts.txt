@@ -1,0 +1,79 @@
+Doc Drift
+Close Modal
+Payments rollback runbook
+Possibly stale
+
+PR #482 changed deploy/helm/values.yaml (2 lines), an anchor of this page. The page mentions ROLLBACK_TIMEOUT and rollback.sh, which PR #482 removed. Section "Steps" names it. Score 0.73 (threshold 0.5).
+
+Agents are told not to trust this page until someone reviews it.
+
+Review (1)
+Anchors (3)
+What changed
+
+PR #482 merged by Razvan Statescu · 14 minutes ago
+
+Medium
+
+Rename rollback script and timeout variable
+
+deploy/helm/values.yaml · +1 −1
+
+Anchor payments-api: deploy/helm/values.yaml
+
+Show diff
+
+View PR #482 in Bitbucket
+
+Affected section
+Steps
+
+…payments -n payments --max 5 Run the rollback script from the root of the payments-api repo. ROLLBACK_TIMEOUT is in seconds and defaults to 300. Raise it to 600 if the cluster is under load.
+
+export ROLLBACK_TIMEOUT=300
+
+./scripts/rollback-v2.sh --timeout $ROLLBACK_TIMEOUT
+
+The script calls…
+
+Proposed fix
+Steps
+- Run the rollback script from the root of the payments-api repo. ROLLBACK_TIMEOUT is in seconds and defaults to 300. Raise it to 600 if the cluster is under load.
+
++ Run the rollback script from the root of the payments-api repo. ROLLBACK_TIMEOUT_SECS is in seconds and defaults to 300. Raise it to 600 if the cluster is under load.
+
+PR #482 renamed ROLLBACK_TIMEOUT to ROLLBACK_TIMEOUT_SECS.
+
+Drafted by Drift Reviewer from PR #482. Nothing changes until you accept.
+
+Requested by Razvan Statescu · 3 minutes ago
+
+Accept draft
+Reject draft
+- export ROLLBACK_TIMEOUT=300
+
+- ./scripts/rollback-v2.sh --timeout $ROLLBACK_TIMEOUT
+
++ export ROLLBACK_TIMEOUT_SECS=300
+
++ ./scripts/rollback-v2.sh --timeout $ROLLBACK_TIMEOUT_SECS
+
+PR #482 renamed ROLLBACK_TIMEOUT to ROLLBACK_TIMEOUT_SECS.
+
+Drafted by Drift Reviewer from PR #482. Nothing changes until you accept.
+
+Requested by Razvan Statescu · 3 minutes ago
+
+Accept draft
+Reject draft
+Accept all for this section
+Track in Jira
+
+Creates a Jira task as you, with the changes and sections to re-read. Closing it does not mark the page Verified.
+
+Create Jira task
+Dismiss
+Snooze 7 days
+Mark verified
+Accept fix
+Accepts 2 drafts in page order.

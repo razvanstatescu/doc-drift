@@ -1,0 +1,368 @@
+{
+ "_about": "Hand-written source facts per plate, merged with the measured geometry by build-json.py into src/data/plates.json. 'date' is the publication date shown on or stated by the page; 'licence' is as stated on the page on the day it was read, or 'none stated'. 'label' is a suggested on-screen source line (Decision 11 wording for individuals).",
+ "A2-01": {
+  "source": "arXiv 2610.27381, W. De Michele and K. Tantithamthavorn, \"Documentation Drift in AI-Generated Pull Requests\" (Accepted at APSEC 2026, Early Research Achievements)",
+  "label": "arXiv, Oct 2026",
+  "date": "2026-10-19",
+  "dateNote": "Submitted 19 Oct 2026 (v1), shown on the page",
+  "text": "We find that 63.2% of AI PRs change code without updating any documentation.",
+  "licence": "CC BY-SA 4.0 (licence link on the abstract page: creativecommons.org/licenses/by-sa/4.0/)",
+  "tier": "open licence",
+  "notes": [
+   "'Documentation' here means documentation files in the same repository, not Confluence pages.",
+   "CC BY-SA: the processed plate is an adaptation; publish it under CC BY-SA with attribution if the plate files are shared."
+  ]
+ },
+ "D1-02": {
+  "source": "Google, The Site Reliability Workbook, chapter 8 \"On-Call\", sidebar \"Maintaining Playbooks\" (sre.google)",
+  "label": "Google, The Site Reliability Workbook, 2018",
+  "date": "2018",
+  "dateNote": "Book year; the page footer reads \"Copyright © 2018 Google, Inc. Published by O'Reilly Media, Inc.\"",
+  "text": "Details in playbooks go out of date at the same rate as production environment changes.",
+  "licence": "CC BY-NC-ND 4.0 (page footer: \"Copyright © 2018 Google, Inc. Published by O'Reilly Media, Inc. Licensed under CC BY-NC-ND 4.0\")",
+  "tier": "brief quotation as commentary (NC-ND does not cover a product film)",
+  "notes": [
+   "The licence is NonCommercial-NoDerivatives, so the film relies on brief quotation, not on the licence."
+  ]
+ },
+ "D1-04": {
+  "source": "Hacker News comment (handle blurred), thread \"Should never happen. If it does, call the developers\"",
+  "label": "Hacker News comment, 2021",
+  "date": "2021-03-27",
+  "dateNote": "Shown on the page as \"on March 27, 2021\"",
+  "text": "Secondly, throw away your runbooks. They are out of date the moment you hit save.",
+  "licence": "none stated",
+  "tier": "brief quotation as commentary",
+  "notes": [
+   "The commenter's remedy is automation, not a flagging tool. Show the problem sentences only; no endorsement implied.",
+   "A one-line plate: the comment's header (handle, date) sits two paragraphs above, so the date is not in frame; label it.",
+   "The crop ends in the space before the next sentence (\"Spend your time ...\"), which is not shown."
+  ]
+ },
+ "D1-11": {
+  "source": "Wednesday Wisdom (Substack), \"The loneliness of the long distance runbook\"",
+  "label": "Wednesday Wisdom (blog), 2024",
+  "date": "2024-12-11",
+  "dateNote": "Shown under the post title as \"DEC 11, 2024\"",
+  "text": "In a more than completely static environment, runbooks are always out of date. There is unfortunately nothing to be done about that, just live with it!",
+  "licence": "none stated",
+  "tier": "brief quotation as commentary",
+  "notes": [
+   "The author is an individual; the plate shows the paragraph only (no name, photo or masthead). Label it with the publication name.",
+   "A subscribe pop-up was hidden with CSS."
+  ]
+ },
+ "D1-21": {
+  "source": "Hacker News comment (handle blurred), thread \"We should revisit literate programming in the agent era\"",
+  "label": "Hacker News comment, 2026",
+  "date": "2026-03-08",
+  "dateNote": "Shown on the page as a relative age (\"8 months ago\"); exact date from the item's timestamp",
+  "text": "Documentation rots a lot more quickly than the code - it doesn't need to be correct for the code to work.",
+  "licence": "none stated",
+  "tier": "brief quotation as commentary",
+  "notes": [
+   "The comment's second sentence advises ignoring docs and reading the code; the crop ends in the space before it.",
+   "The handle in the comment header is blurred; the header still shows the age (\"8 months ago\") and the thread title."
+  ]
+ },
+ "D1-12": {
+  "source": "Simon Willison's Weblog, \"The Perfect Commit\"",
+  "label": "Simon Willison's Weblog, 2022",
+  "date": "2022-10-29",
+  "dateNote": "Post date (URL and page)",
+  "text": "If your docs live in a separate wiki somewhere it’s easy for them to get out of date—but more importantly it’s hard for anyone to quickly confirm if the documentation is being updated in sync with the code or not.",
+  "licence": "none stated",
+  "tier": "brief quotation as commentary",
+  "notes": [
+   "His answer is to keep docs in the repository; we answer the case where they are not. No endorsement implied."
+  ]
+ },
+ "D1-06": {
+  "source": "Wikimedia Foundation, Wikitech, \"Incidents/2017-07-18 JobQueue\", section Conclusions",
+  "label": "Wikimedia incident report, 2017",
+  "date": "2017-07-18",
+  "dateNote": "Incident date (page title); page last edited 8 April 2022",
+  "text": "Documentation was outdated for jobrunner, dsh, and salt",
+  "licence": "CC BY-SA 4.0 (page footer: \"Text is available under the Creative Commons Attribution-ShareAlike License; additional terms may apply\", linking to creativecommons.org/licenses/by-sa/4.0/)",
+  "tier": "open licence",
+  "notes": [
+   "A struck-through bullet (\"Salt no longer exists ...\") sits two bullets below; it is outside the crop and must stay out.",
+   "CC BY-SA: share the processed plate under CC BY-SA with attribution."
+  ]
+ },
+ "D1-07": {
+  "source": "Wikimedia Foundation, Wikitech, \"Incidents/20190327-elasticsearch\", section What went poorly?",
+  "label": "Wikimedia incident report, 2019",
+  "date": "2019-03-27",
+  "dateNote": "Incident date (page title); page last edited 8 April 2022",
+  "text": "The documentation associated with the frozen indexing alert is out of date -- Search#Pausing Indexing needs an update (DONE).",
+  "licence": "CC BY-SA 4.0 (page footer: \"Text is available under the Creative Commons Attribution-ShareAlike License; additional terms may apply\", linking to creativecommons.org/licenses/by-sa/4.0/)",
+  "tier": "open licence",
+  "notes": [
+   "\"(DONE)\" means the doc was fixed after the incident."
+  ]
+ },
+ "D2-03": {
+  "source": "UK Ministry of Justice, Cloud Platform Runbooks, \"Cloud Platform Disaster Recovery Scenarios\" (review banner)",
+  "label": "UK Ministry of Justice runbook, read 13 Nov 2026",
+  "date": "2025-07-18",
+  "dateNote": "Last reviewed 18 July 2025 (page HTML); the rendered banner says the review was due before 18 January 2026",
+  "text": "This page was set to be reviewed before 18 January 2026 by the page owner #cloud-platform-notify. This might mean the content is out of date.",
+  "licence": "Open Government Licence v3.0 (page footer: \"All content is available under the Open Government Licence v3.0, except where otherwise stated\"; © Crown copyright)",
+  "tier": "open licence",
+  "notes": [
+   "Confirmed at capture: the expired wording renders (the other sentence is in the HTML but hidden).",
+   "Overdue for review is not the same as wrong; never caption it as wrong.",
+   "Credit line required: \"Contains public sector information licensed under the Open Government Licence v3.0.\""
+  ]
+ },
+ "D1-03": {
+  "source": "The Register, On Call column (headline)",
+  "label": "The Register, 2019",
+  "date": "2019-05-10",
+  "dateNote": "Shown as \"Published Fri 10 May 2019 // 07:03 UTC\"",
+  "text": "Techie with outdated documentation gets his step count in searching for non-existent cabinet",
+  "licence": "none stated (\"All rights reserved © 1998-2026\")",
+  "tier": "brief quotation as commentary",
+  "notes": [
+   "Masthead in frame; regions.headline gives a tighter crop if the masthead is unwanted.",
+   "A reader anecdote about network cabinets after a rename, not code."
+  ]
+ },
+ "D2-04": {
+  "source": "unfinished.bike (write.as blog), \"The anatomy of a great playbook entry\"",
+  "label": "unfinished.bike, 2021",
+  "date": "2021-05-21",
+  "dateNote": "Shown under the title as \"21 May 2021\"",
+  "text": "Big-bang efforts such as auditing all of the playbooks for relevance are best made once initially, to get the playbooks into the same structure. I have never seen quarterly playbook reviews work.",
+  "licence": "none stated",
+  "tier": "brief quotation as commentary",
+  "notes": [
+   "A thank-you line naming a private person sits just below; it is outside the crop."
+  ]
+ },
+ "D2-01": {
+  "source": "Stack Overflow Blog, \"How Stackers ditched the wiki and migrated to Articles\" (pull quote)",
+  "label": "Stack Overflow Blog, 2020",
+  "date": "2020-09-28",
+  "dateNote": "Shown as \"SEPTEMBER 28, 2020\"",
+  "text": "“The author of 90% of our documentation doesn't work here anymore!”",
+  "licence": "none stated (© 2026 Stack Exchange Inc)",
+  "tier": "brief quotation as commentary",
+  "notes": [
+   "One team's remark, not a survey result. The post promotes Stack Overflow's own Articles feature."
+  ]
+ },
+ "D1-01": {
+  "source": "GitHub, Open Source Survey 2017 (opensourcesurvey.org), Insights",
+  "label": "GitHub Open Source Survey, 2017",
+  "date": "2017",
+  "dateNote": "Survey year; page footer \"© 2017 GitHub, Inc.\"",
+  "text": "Incomplete or outdated documentation is a pervasive problem, observed by 93% of respondents, yet 60% of contributors say they rarely or never contribute to documentation.",
+  "licence": "Page © 2017 GitHub, Inc.; \"The data and questionnaire are released under CC0-1.0\" (stated on the page)",
+  "tier": "brief quotation as commentary (the figure itself is CC0 data)",
+  "notes": [
+   "The figure covers incomplete OR outdated docs, open-source respondents, 2017. Never caption it as \"93% of docs are outdated\"."
+  ]
+ },
+ "D1-05": {
+  "source": "Microsoft Tech Community, Microsoft Foundry Blog, \"The Future of AI: Autonomous Agents for Identifying the Root Cause of Cloud Service Incidents\"",
+  "label": "Microsoft Foundry Blog, 2025",
+  "date": "2025-05-12",
+  "dateNote": "Shown as \"May 12, 2025\"; updated Oct 03, 2025",
+  "text": "However, in practice, because they are manually crafted, these guides are often outdated, incomplete, hard to understand without sufficient background in the problem, and/or difficult to locate, as they tend to be scattered across various platforms.",
+  "licence": "none stated (© Microsoft 2026)",
+  "tier": "brief quotation as commentary",
+  "notes": [
+   "The byline (a Microsoft employee account) is above the crop.",
+   "The post goes on to pitch AI agents as the fix; the plate shows the problem sentence only."
+  ]
+ },
+ "D2-02": {
+  "source": "Software Engineering at Google (Winters, Manshreck, Wright), chapter 10 \"Documentation\" (abseil.io)",
+  "label": "Software Engineering at Google, 2020",
+  "date": "2020",
+  "dateNote": "Book year",
+  "text": "Like code, documents should also have owners. Documents without owners become stale and difficult to maintain.",
+  "licence": "CC BY-NC-ND 4.0 (stated on the page, linking to the legal code)",
+  "tier": "brief quotation as commentary (NC-ND does not cover a product film)",
+  "notes": []
+ },
+ "A1-06": {
+  "source": "Atlassian Community, Q&A › Rovo, question title (poster blurred)",
+  "label": "Atlassian Community, Jul 2026",
+  "date": "2026-07-03",
+  "dateNote": "Shown as \"Jul 3, 2026\"",
+  "text": "ROVO Agent - It always reads from an OLD confluence source.",
+  "licence": "none stated (Copyright © 2026 Atlassian); Atlassian is the sponsor",
+  "tier": "sponsor's site, member's words",
+  "notes": [
+   "The case is an agent answering from a page the user had replaced (an index problem). Show it as a customer's words, not as how Rovo works.",
+   "The sign-in prompt and quick-links sidebar were hidden with CSS (page chrome, no words of the post)."
+  ]
+ },
+ "A4-02": {
+  "source": "Atlassian public issue tracker (jira.atlassian.com), ROVO-730 \"Knowledge Source Freshness Monitoring for Rovo Agents\" (Suggestion, Gathering Interest; reporter blurred)",
+  "label": "jira.atlassian.com, ROVO-730, Apr 2026",
+  "date": "2026-04-07",
+  "dateNote": "Created 07/Apr/2026 6:05 AM (shown on the page)",
+  "text": "Rovo agents are only as good as the content they draw from. When knowledge source pages are not updated, the agent continues to serve outdated information with the same confidence as current information.",
+  "licence": "none stated; Atlassian is the sponsor",
+  "tier": "sponsor's site, reporter's words",
+  "notes": [
+   "A suggestion with 2 votes and an unverified reporter: never caption it \"Atlassian says\"."
+  ]
+ },
+ "A1-07": {
+  "source": "Atlassian Community, Q&A › Rovo, \"How to avoid Rovo using archived content in CHAT results?\" (poster blurred)",
+  "label": "Atlassian Community, Dec 2025",
+  "date": "2025-12-03",
+  "dateNote": "Shown as \"Dec 3, 2025\"",
+  "text": "we realized when using Rovo Chat we have a lot of outdated results. This is because Rovo uses our archived pages for responses.",
+  "licence": "none stated (Copyright © 2026 Atlassian); Atlassian is the sponsor",
+  "tier": "sponsor's site, member's words",
+  "notes": [
+   "This thread shows a \"Closed\" badge: the accepted answer says it duplicates an earlier post, whose link no longer loads.",
+   "Archive and index behaviour, disputed in the thread: show it as the customer's experience, not as how Rovo works.",
+   "The sign-in prompt and quick-links sidebar were hidden with CSS."
+  ]
+ },
+ "A1-13": {
+  "source": "arXiv 2609.31342, M. S. Ahmed, L. G. Poech and R. Röttger, \"Stale-Document Poisoning: When Outdated Retrieval Overrides Correct Model Answers\" (preprint)",
+  "label": "arXiv, Sep 2026",
+  "date": "2026-09-25",
+  "dateNote": "Submitted 25 Sep 2026, shown on the page",
+  "text": "More importantly, outdated retrieval flips 30% of Llama and 37% of Qwen answers even without instructions to trust the document; explicit follow instructions raise these rates to 66% and 75%.",
+  "licence": "CC BY 4.0 (licence link on the abstract page: creativecommons.org/licenses/by/4.0/)",
+  "tier": "open licence",
+  "notes": [
+   "Pair the title with its subtitle so \"Poisoning\" does not read as a security story.",
+   "A benchmark of public facts that changed, with open-weight models; not a study of internal wikis."
+  ]
+ },
+ "R3": {
+  "source": "arXiv 2610.30571, X. Xu and W. Wu, \"Stale Instruction Files Override the Code in Coding Agents: A One-Sentence Fix\" (preprint, submitted to SN Computer Science)",
+  "label": "arXiv, Oct 2026",
+  "date": "2026-10-22",
+  "dateNote": "Submitted 22 Oct 2026, shown on the page",
+  "text": "Results: Without the sentence, 90.1% of the agents' choices followed the stale file.",
+  "licence": "arXiv.org perpetual, non-exclusive licence to distribute 1.0 (licence link on the abstract page); no reuse licence",
+  "tier": "brief quotation as commentary",
+  "notes": [
+   "The crop ends after this sentence; the next sentence names a product and is out of frame.",
+   "The projects are synthetic (40 Python projects); a preprint under review."
+  ]
+ },
+ "R3-title": {
+  "source": "arXiv 2610.30571 (as R3), title and authors",
+  "label": "arXiv, Oct 2026",
+  "date": "2026-10-22",
+  "dateNote": "Submitted 22 Oct 2026",
+  "text": "Stale Instruction Files Override the Code in Coding Agents: A One-Sentence Fix",
+  "licence": "arXiv.org perpetual, non-exclusive licence to distribute 1.0 (licence link on the abstract page); no reuse licence",
+  "tier": "brief quotation as commentary",
+  "notes": [
+   "Optional companion to R3 (header, title, authors); it names no product."
+  ]
+ },
+ "A2-02": {
+  "source": "arXiv 2606.09090, C. Treude and S. Baltes, \"Context Rot in AI-Assisted Software Development: Repurposing Documentation Consistency for AI Configuration Artifacts\" (preprint)",
+  "label": "arXiv, Jun 2026",
+  "date": "2026-06-08",
+  "dateNote": "Submitted 8 Jun 2026, shown on the page",
+  "text": "As preliminary evidence, applying an existing README/wiki consistency checker to a statistically representative sample of 356 repositories identifies stale code element references in 23.0% of repositories, showing that traditional documentation consistency tools can already surface context rot.",
+  "licence": "CC BY 4.0 (licence link on the abstract page: creativecommons.org/licenses/by/4.0/)",
+  "tier": "open licence",
+  "notes": [
+   "The abstract calls it preliminary evidence. The files are CLAUDE.md, AGENTS.md and .cursorrules (arXiv renders two of them as \"this http URL\")."
+  ]
+ },
+ "A1-01": {
+  "source": "Microsoft Support, \"What information does Copilot use to answer my prompt?\", section Limitations and tips of grounding in Copilot",
+  "label": "Microsoft Support, 2026",
+  "date": "2026-07-01",
+  "dateNote": "No date is shown on the page; 2026-07-01 is the page's ms.date metadata (updated_at 2026-11-06)",
+  "text": "Copilot can give outdated answers if you point it at an old website or an earlier version of a file.",
+  "licence": "none stated",
+  "tier": "brief quotation as commentary",
+  "notes": [
+   "Live docs page: re-read before release."
+  ]
+ },
+ "A1-03": {
+  "source": "Practical 365, Tony Redmond, \"Microsoft 365 Archive Could Help SharePoint Online Cope with Digital Debris\" (first subheading)",
+  "label": "Practical 365, 2024",
+  "date": "2024-05-20",
+  "dateNote": "Shown under the byline as \"May 20, 2024\"",
+  "text": "Gently Rotting Documents Can Corrupt Copilot Output",
+  "licence": "none stated (© 2026 Quest Software Inc. All Rights Reserved)",
+  "tier": "brief quotation as commentary",
+  "notes": [
+   "The line is the first subheading, shown in place under the H1 (not the article headline).",
+   "Author photo blurred (not needed)."
+  ]
+ },
+ "A1-05": {
+  "source": "Reworked, Karteek Sonapuram (contributor), headline",
+  "label": "Reworked, Oct 2026",
+  "date": "2026-10-08",
+  "dateNote": "Shown in the header as \"OCT 8, 2026\"",
+  "text": "Why Your AI Assistant Cites Outdated Policy — and How to Fix It",
+  "licence": "none stated",
+  "tier": "brief quotation as commentary",
+  "notes": [
+   "The headline sits on an article photo; the photo is blurred around the words (the words are untouched).",
+   "Captured at 700 px wide (compact header with the date in it); the empty ad slot is hidden."
+  ]
+ },
+ "A2-05": {
+  "source": "Thoughtworks Technology Radar, blip \"AI-driven documentation sprawl\", ring Caution",
+  "label": "Thoughtworks Technology Radar, Nov 2026",
+  "date": "2026-11-04",
+  "dateNote": "Shown as \"Published : Nov 04, 2026\"",
+  "text": "Rather than aiding development, obsolete context can lead AI tools astray and result in poor code generation.",
+  "licence": "none stated (© 2026 Thoughtworks, Inc.)",
+  "tier": "brief quotation as commentary",
+  "notes": [
+   "Tall plate: punch in on regions.blip and regions.ring, then on the key phrase."
+  ]
+ },
+ "A3-01": {
+  "source": "Stack Overflow Developer Survey 2026, AI › Data, \"Trust in AI tools\"",
+  "label": "Stack Overflow Developer Survey, 2026",
+  "date": "2026",
+  "dateNote": "Survey year (the page's own citation: \"Stack Exchange Inc. (2026)\")",
+  "text": "How much do you trust the output from AI tools or AI agents as part of your workflow? · I trust it when I can easily verify the output · 6,872 · 48.0%",
+  "licence": "Survey data: Open Database License (ODbL) 1.0, stated on the page (\"Data licensed under Open Database License (ODbL) 1.0\"; \"Response data is released under the ODbL 1.0, which asks that you attribute it\"); site footer: user contributions CC BY-SA",
+  "tier": "open licence (data, attribution)",
+  "notes": [
+   "14,304 respondents answered this question.",
+   "The 2026 survey frames trust as rising but conditional; do not pair it with the 2025 \"46% distrust\" figure.",
+   "Attribution asked by the page: \"Stack Exchange Inc. (2026). 'Trust in AI tools'. Stack Overflow Developer Survey 2026. Licensed under ODbL 1.0.\""
+  ]
+ },
+ "A4-01": {
+  "source": "Atlassian blog (Inside Atlassian), Jamil Valliani, \"Atlassian Teamwork Graph: The context engine behind your AI—everywhere\"",
+  "label": "Atlassian blog, May 2026",
+  "date": "2026-05-06",
+  "dateNote": "Shown as \"May 6, 2026\" (modified 2026-08-06)",
+  "text": "AI agents are only as good as what they know. Right now, most don’t know enough.",
+  "licence": "none stated (Copyright 2026 Atlassian); Atlassian is the sponsor",
+  "tier": "sponsor's own page",
+  "notes": [
+   "The hero, last slam. Captured as the reader sees it: the sticky article bar over the paragraph."
+  ]
+ },
+ "A4-01-title": {
+  "source": "Atlassian blog (Inside Atlassian), as A4-01: masthead, title and date",
+  "label": "Atlassian blog, May 2026",
+  "date": "2026-05-06",
+  "dateNote": "Shown as \"May 6, 2026\"",
+  "text": "Atlassian Teamwork Graph: The context engine behind your AI—everywhere",
+  "licence": "none stated (Copyright 2026 Atlassian); Atlassian is the sponsor",
+  "tier": "sponsor's own page",
+  "notes": [
+   "Optional companion to A4-01 for a longer hero hold. The Rovo promo strip above the masthead was closed."
+  ]
+ }
+}

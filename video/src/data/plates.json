@@ -1,0 +1,1904 @@
+{
+ "generated": "2026-11-13",
+ "by": "evidence agent (tools/plates/: capture.mjs, process.py, build-json.py)",
+ "units": "pixels in the plate PNG, [x, y, w, h] from the top-left; plates are captured at deviceScaleFactor 3",
+ "readOn": "2026-11-13",
+ "rules": "Words are never changed. Blurs cover private names, handles, avatars, and one article photo behind a headline (A1-05). CSS was used only to hide consent notices, ads, promos and sidebar chrome.",
+ "balance": [
+  "Rovo appears in three plates (A1-06, A1-07, A4-02). Research 6.3 allows at most two that put Rovo in a bad light: pick two, keep A1-06 and A4-02 apart, and give the last word to A4-01.",
+  "Wikimedia appears twice (D1-06, D1-07) and Hacker News twice (D1-04, D1-21); the source appendix suggests one Wikimedia item.",
+  "Microsoft or Copilot appears three times (D1-05, A1-01, A1-03).",
+  "Companions R3-title and A4-01-title are optional extra plates of the same pages (title and date).",
+  "Grade every third-party plate the same way (research 6.3: about 25% desaturated, light pages to about 0.6 brightness). A3-01 carries orange in the site graphic and D1-03 a red masthead: grade them so no amber reads before the reveal."
+ ],
+ "plates": [
+  {
+   "id": "A2-01",
+   "bar": 1,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/A2-01.png",
+   "width": 3840,
+   "height": 822,
+   "source": "arXiv 2610.27381, W. De Michele and K. Tantithamthavorn, \"Documentation Drift in AI-Generated Pull Requests\" (Accepted at APSEC 2026, Early Research Achievements)",
+   "label": "arXiv, Oct 2026",
+   "url": "https://arxiv.org/abs/2610.27381",
+   "finalUrl": "https://arxiv.org/abs/2610.27381",
+   "date": "2026-10-19",
+   "dateNote": "Submitted 19 Oct 2026 (v1), shown on the page",
+   "readOn": "2026-11-13",
+   "text": "We find that 63.2% of AI PRs change code without updating any documentation.",
+   "exactOnPage": "63.2% of AI PRs change code without updating any documentation.",
+   "keyPhrases": [
+    {
+     "text": "63.2%",
+     "box": [
+      1962,
+      695,
+      118,
+      48
+     ],
+     "lines": [
+      [
+       1962,
+       695,
+       118,
+       48
+      ]
+     ]
+    },
+    {
+     "text": "without updating any documentation",
+     "box": [
+      120,
+      695,
+      2762,
+      111
+     ],
+     "lines": [
+      [
+       2543,
+       695,
+       340,
+       48
+      ],
+      [
+       120,
+       758,
+       381,
+       48
+      ]
+     ]
+    }
+   ],
+   "regions": {
+    "title": [
+     60,
+     324,
+     3002,
+     84
+    ],
+    "dateline": [
+     60,
+     265,
+     3002,
+     42
+    ],
+    "licence": [
+     3126,
+     450,
+     666,
+     53
+    ]
+   },
+   "licence": "CC BY-SA 4.0 (licence link on the abstract page: creativecommons.org/licenses/by-sa/4.0/)",
+   "rightsBasis": "open licence",
+   "blurred": [],
+   "notes": [
+    "'Documentation' here means documentation files in the same repository, not Confluence pages.",
+    "CC BY-SA: the processed plate is an adaptation; publish it under CC BY-SA with attribution if the plate files are shared.",
+    "Captured 2026-11-13 14:28 UTC in Chrome at 1280x1000 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/A2-01.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "D1-02",
+   "bar": 1,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/D1-02.png",
+   "width": 2874,
+   "height": 598,
+   "source": "Google, The Site Reliability Workbook, chapter 8 \"On-Call\", sidebar \"Maintaining Playbooks\" (sre.google)",
+   "label": "Google, The Site Reliability Workbook, 2018",
+   "url": "https://sre.google/workbook/on-call/",
+   "finalUrl": "https://sre.google/workbook/on-call/",
+   "date": "2018",
+   "dateNote": "Book year; the page footer reads \"Copyright © 2018 Google, Inc. Published by O'Reilly Media, Inc.\"",
+   "readOn": "2026-11-13",
+   "text": "Details in playbooks go out of date at the same rate as production environment changes.",
+   "exactOnPage": "Details in playbooks go out of date at the same rate as production environment changes.",
+   "keyPhrases": [
+    {
+     "text": "go out of date",
+     "box": [
+      644,
+      314,
+      335,
+      63
+     ],
+     "lines": [
+      [
+       644,
+       314,
+       335,
+       63
+      ]
+     ]
+    },
+    {
+     "text": "at the same rate as production environment changes",
+     "box": [
+      992,
+      314,
+      1263,
+      63
+     ],
+     "lines": [
+      [
+       992,
+       314,
+       1263,
+       63
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "CC BY-NC-ND 4.0 (page footer: \"Copyright © 2018 Google, Inc. Published by O'Reilly Media, Inc. Licensed under CC BY-NC-ND 4.0\")",
+   "rightsBasis": "brief quotation as commentary (NC-ND does not cover a product film)",
+   "blurred": [],
+   "notes": [
+    "The licence is NonCommercial-NoDerivatives, so the film relies on brief quotation, not on the licence.",
+    "Captured 2026-11-13 14:28 UTC in Chrome at 1280x1000 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/D1-02.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "D1-04",
+   "bar": 1,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/D1-04.png",
+   "width": 1617,
+   "height": 56,
+   "source": "Hacker News comment (handle blurred), thread \"Should never happen. If it does, call the developers\"",
+   "label": "Hacker News comment, 2021",
+   "url": "https://news.ycombinator.com/item?id=26605818",
+   "finalUrl": "https://news.ycombinator.com/item?id=26605818",
+   "date": "2021-03-27",
+   "dateNote": "Shown on the page as \"on March 27, 2021\"",
+   "readOn": "2026-11-13",
+   "text": "Secondly, throw away your runbooks. They are out of date the moment you hit save.",
+   "exactOnPage": "throw away your runbooks.  They are out of date the moment you hit save.",
+   "keyPhrases": [
+    {
+     "text": "out of date the moment you hit save",
+     "box": [
+      932,
+      12,
+      665,
+      44
+     ],
+     "lines": [
+      [
+       932,
+       12,
+       665,
+       44
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "none stated",
+   "rightsBasis": "brief quotation as commentary",
+   "blurred": [],
+   "notes": [
+    "The commenter's remedy is automation, not a flagging tool. Show the problem sentences only; no endorsement implied.",
+    "A one-line plate: the comment's header (handle, date) sits two paragraphs above, so the date is not in frame; label it.",
+    "The crop ends in the space before the next sentence (\"Spend your time ...\"), which is not shown.",
+    "Crop edges moved to avoid cutting text lines (top +0.0 px, bottom -1.3 px CSS).",
+    "Captured 2026-11-13 14:28 UTC in Chrome at 1280x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/D1-04.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "D1-11",
+   "bar": 1,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/D1-11.png",
+   "width": 2328,
+   "height": 267,
+   "source": "Wednesday Wisdom (Substack), \"The loneliness of the long distance runbook\"",
+   "label": "Wednesday Wisdom (blog), 2024",
+   "url": "https://josvisser.substack.com/p/the-loneliness-of-the-long-distance",
+   "finalUrl": "https://josvisser.substack.com/p/the-loneliness-of-the-long-distance",
+   "date": "2024-12-11",
+   "dateNote": "Shown under the post title as \"DEC 11, 2024\"",
+   "readOn": "2026-11-13",
+   "text": "In a more than completely static environment, runbooks are always out of date. There is unfortunately nothing to be done about that, just live with it!",
+   "exactOnPage": "runbooks are always out of date.",
+   "keyPhrases": [
+    {
+     "text": "runbooks are always out of date",
+     "box": [
+      1248,
+      44,
+      793,
+      87
+     ],
+     "lines": [
+      [
+       1248,
+       44,
+       793,
+       87
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "none stated",
+   "rightsBasis": "brief quotation as commentary",
+   "blurred": [],
+   "notes": [
+    "The author is an individual; the plate shows the paragraph only (no name, photo or masthead). Label it with the publication name.",
+    "A subscribe pop-up was hidden with CSS.",
+    "Captured 2026-11-13 14:29 UTC in Chrome at 1280x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/D1-11.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "D1-21",
+   "bar": 1,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/D1-21.png",
+   "width": 1987,
+   "height": 217,
+   "source": "Hacker News comment (handle blurred), thread \"We should revisit literate programming in the agent era\"",
+   "label": "Hacker News comment, 2026",
+   "url": "https://news.ycombinator.com/item?id=47302108",
+   "finalUrl": "https://news.ycombinator.com/item?id=47302108",
+   "date": "2026-03-08",
+   "dateNote": "Shown on the page as a relative age (\"8 months ago\"); exact date from the item's timestamp",
+   "readOn": "2026-11-13",
+   "text": "Documentation rots a lot more quickly than the code - it doesn't need to be correct for the code to work.",
+   "exactOnPage": "Documentation rots a lot more quickly than the code",
+   "keyPhrases": [
+    {
+     "text": "rots a lot more quickly than the code",
+     "box": [
+      363,
+      174,
+      671,
+      44
+     ],
+     "lines": [
+      [
+       363,
+       174,
+       671,
+       44
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "none stated",
+   "rightsBasis": "brief quotation as commentary",
+   "blurred": [
+    {
+     "what": "Hacker News handle",
+     "box": [
+      69,
+      114,
+      135,
+      44
+     ],
+     "method": "pixelate + blur"
+    }
+   ],
+   "notes": [
+    "The comment's second sentence advises ignoring docs and reading the code; the crop ends in the space before it.",
+    "The handle in the comment header is blurred; the header still shows the age (\"8 months ago\") and the thread title.",
+    "Crop edges moved to avoid cutting text lines (top +0.0 px, bottom -2.3 px CSS).",
+    "Captured 2026-11-13 14:29 UTC in Chrome at 1280x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/D1-21.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "D1-12",
+   "bar": 1,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/D1-12.png",
+   "width": 1776,
+   "height": 288,
+   "source": "Simon Willison's Weblog, \"The Perfect Commit\"",
+   "label": "Simon Willison's Weblog, 2022",
+   "url": "https://simonwillison.net/2022/Oct/29/the-perfect-commit/",
+   "finalUrl": "https://simonwillison.net/2022/Oct/29/the-perfect-commit/",
+   "date": "2022-10-29",
+   "dateNote": "Post date (URL and page)",
+   "readOn": "2026-11-13",
+   "text": "If your docs live in a separate wiki somewhere it’s easy for them to get out of date—but more importantly it’s hard for anyone to quickly confirm if the documentation is being updated in sync with the code or not.",
+   "exactOnPage": "If your docs live in a separate wiki somewhere it’s easy for them to get out of date",
+   "keyPhrases": [
+    {
+     "text": "separate wiki",
+     "box": [
+      489,
+      48,
+      283,
+      56
+     ],
+     "lines": [
+      [
+       489,
+       48,
+       283,
+       56
+      ]
+     ]
+    },
+    {
+     "text": "easy for them to get out of date",
+     "box": [
+      48,
+      48,
+      1639,
+      125
+     ],
+     "lines": [
+      [
+       1119,
+       48,
+       568,
+       56
+      ],
+      [
+       48,
+       118,
+       95,
+       56
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "none stated",
+   "rightsBasis": "brief quotation as commentary",
+   "blurred": [],
+   "notes": [
+    "His answer is to keep docs in the repository; we answer the case where they are not. No endorsement implied.",
+    "Captured 2026-11-13 14:29 UTC in Chrome at 1280x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/D1-12.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "D1-06",
+   "bar": 2,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/D1-06.png",
+   "width": 2340,
+   "height": 652,
+   "source": "Wikimedia Foundation, Wikitech, \"Incidents/2017-07-18 JobQueue\", section Conclusions",
+   "label": "Wikimedia incident report, 2017",
+   "url": "https://wikitech.wikimedia.org/wiki/Incidents/2017-07-18_JobQueue",
+   "finalUrl": "https://wikitech.wikimedia.org/wiki/Incidents/2017-07-18_JobQueue",
+   "date": "2017-07-18",
+   "dateNote": "Incident date (page title); page last edited 8 April 2022",
+   "readOn": "2026-11-13",
+   "text": "Documentation was outdated for jobrunner, dsh, and salt",
+   "exactOnPage": "Documentation was outdated for jobrunner, dsh, and salt",
+   "keyPhrases": [
+    {
+     "text": "Documentation was outdated",
+     "box": [
+      119,
+      569,
+      622,
+      56
+     ],
+     "lines": [
+      [
+       119,
+       569,
+       622,
+       56
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "CC BY-SA 4.0 (page footer: \"Text is available under the Creative Commons Attribution-ShareAlike License; additional terms may apply\", linking to creativecommons.org/licenses/by-sa/4.0/)",
+   "rightsBasis": "open licence",
+   "blurred": [],
+   "notes": [
+    "A struck-through bullet (\"Salt no longer exists ...\") sits two bullets below; it is outside the crop and must stay out.",
+    "CC BY-SA: share the processed plate under CC BY-SA with attribution.",
+    "Crop edges moved to avoid cutting text lines (top +6.3 px, bottom -5.2 px CSS).",
+    "Captured 2026-11-13 14:29 UTC in Chrome at 1280x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/D1-06.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "D1-07",
+   "bar": 2,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/D1-07.png",
+   "width": 2340,
+   "height": 333,
+   "source": "Wikimedia Foundation, Wikitech, \"Incidents/20190327-elasticsearch\", section What went poorly?",
+   "label": "Wikimedia incident report, 2019",
+   "url": "https://wikitech.wikimedia.org/wiki/Incidents/20190327-elasticsearch",
+   "finalUrl": "https://wikitech.wikimedia.org/wiki/Incidents/20190327-elasticsearch",
+   "date": "2019-03-27",
+   "dateNote": "Incident date (page title); page last edited 8 April 2022",
+   "readOn": "2026-11-13",
+   "text": "The documentation associated with the frozen indexing alert is out of date -- Search#Pausing Indexing needs an update (DONE).",
+   "exactOnPage": "The documentation associated with the frozen indexing alert is out of date",
+   "keyPhrases": [
+    {
+     "text": "is out of date",
+     "box": [
+      1410,
+      171,
+      275,
+      56
+     ],
+     "lines": [
+      [
+       1410,
+       171,
+       275,
+       56
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "CC BY-SA 4.0 (page footer: \"Text is available under the Creative Commons Attribution-ShareAlike License; additional terms may apply\", linking to creativecommons.org/licenses/by-sa/4.0/)",
+   "rightsBasis": "open licence",
+   "blurred": [],
+   "notes": [
+    "\"(DONE)\" means the doc was fixed after the incident.",
+    "Crop edges moved to avoid cutting text lines (top +5.5 px, bottom -5.2 px CSS).",
+    "Captured 2026-11-13 14:29 UTC in Chrome at 1280x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/D1-07.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "D2-03",
+   "bar": 2,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/D2-03.png",
+   "width": 2364,
+   "height": 364,
+   "source": "UK Ministry of Justice, Cloud Platform Runbooks, \"Cloud Platform Disaster Recovery Scenarios\" (review banner)",
+   "label": "UK Ministry of Justice runbook, read 13 Nov 2026",
+   "url": "https://runbooks.cloud-platform.service.justice.gov.uk/disaster-recovery-scenarios.html",
+   "finalUrl": "https://runbooks.cloud-platform.service.justice.gov.uk/disaster-recovery-scenarios.html",
+   "date": "2025-07-18",
+   "dateNote": "Last reviewed 18 July 2025 (page HTML); the rendered banner says the review was due before 18 January 2026",
+   "readOn": "2026-11-13",
+   "text": "This page was set to be reviewed before 18 January 2026 by the page owner #cloud-platform-notify. This might mean the content is out of date.",
+   "exactOnPage": "reviewed",
+   "keyPhrases": [
+    {
+     "text": "might mean the content is out of date",
+     "box": [
+      606,
+      186,
+      915,
+      70
+     ],
+     "lines": [
+      [
+       606,
+       186,
+       915,
+       70
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "Open Government Licence v3.0 (page footer: \"All content is available under the Open Government Licence v3.0, except where otherwise stated\"; © Crown copyright)",
+   "rightsBasis": "open licence",
+   "blurred": [],
+   "notes": [
+    "Confirmed at capture: the expired wording renders (the other sentence is in the HTML but hidden).",
+    "Overdue for review is not the same as wrong; never caption it as wrong.",
+    "Credit line required: \"Contains public sector information licensed under the Open Government Licence v3.0.\"",
+    "Captured 2026-11-13 14:29 UTC in Chrome at 1280x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/D2-03.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "D1-03",
+   "bar": 2,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/D1-03.png",
+   "width": 3600,
+   "height": 1288,
+   "source": "The Register, On Call column (headline)",
+   "label": "The Register, 2019",
+   "url": "https://www.theregister.com/2019/05/10/on-call/",
+   "finalUrl": "https://www.theregister.com/on-prem/2019/05/10/techie-with-outdated-documentation-gets-his-step-count-in-searching-for-non-existent-cabinet/519773",
+   "date": "2019-05-10",
+   "dateNote": "Shown as \"Published Fri 10 May 2019 // 07:03 UTC\"",
+   "readOn": "2026-11-13",
+   "text": "Techie with outdated documentation gets his step count in searching for non-existent cabinet",
+   "exactOnPage": "Techie with outdated documentation gets his step count in searching for non-existent cabinet",
+   "keyPhrases": [
+    {
+     "text": "outdated documentation",
+     "box": [
+      746,
+      535,
+      1456,
+      154
+     ],
+     "lines": [
+      [
+       746,
+       535,
+       1456,
+       154
+      ]
+     ]
+    }
+   ],
+   "regions": {
+    "masthead": [
+     -120,
+     0,
+     3840,
+     210
+    ],
+    "headline": [
+     34,
+     535,
+     2168,
+     154
+    ],
+    "date": [
+     34,
+     1192,
+     540,
+     48
+    ]
+   },
+   "licence": "none stated (\"All rights reserved © 1998-2026\")",
+   "rightsBasis": "brief quotation as commentary",
+   "blurred": [],
+   "notes": [
+    "Masthead in frame; regions.headline gives a tighter crop if the masthead is unwanted.",
+    "A reader anecdote about network cabinets after a rename, not code.",
+    "Captured 2026-11-13 14:29 UTC in Chrome at 1280x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/D1-03.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "D2-04",
+   "bar": 2,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/D2-04.png",
+   "width": 2927,
+   "height": 240,
+   "source": "unfinished.bike (write.as blog), \"The anatomy of a great playbook entry\"",
+   "label": "unfinished.bike, 2021",
+   "url": "https://write.as/thomrstrom/the-anatomy-of-a-great-playbook-entry",
+   "finalUrl": "https://unfinished.bike/the-anatomy-of-a-great-playbook-entry",
+   "date": "2021-05-21",
+   "dateNote": "Shown under the title as \"21 May 2021\"",
+   "readOn": "2026-11-13",
+   "text": "Big-bang efforts such as auditing all of the playbooks for relevance are best made once initially, to get the playbooks into the same structure. I have never seen quarterly playbook reviews work.",
+   "exactOnPage": "I have never seen quarterly playbook reviews work.",
+   "keyPhrases": [
+    {
+     "text": "never seen quarterly playbook reviews work",
+     "box": [
+      1164,
+      128,
+      1178,
+      75
+     ],
+     "lines": [
+      [
+       1164,
+       128,
+       1178,
+       75
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "none stated",
+   "rightsBasis": "brief quotation as commentary",
+   "blurred": [],
+   "notes": [
+    "A thank-you line naming a private person sits just below; it is outside the crop.",
+    "Captured 2026-11-13 14:29 UTC in Chrome at 1280x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/D2-04.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "D2-01",
+   "bar": 2,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/D2-01.png",
+   "width": 1912,
+   "height": 243,
+   "source": "Stack Overflow Blog, \"How Stackers ditched the wiki and migrated to Articles\" (pull quote)",
+   "label": "Stack Overflow Blog, 2020",
+   "url": "https://stackoverflow.blog/2020/09/28/migration-wiki-documentation-articles/",
+   "finalUrl": "https://stackoverflow.blog/2020/09/28/migration-wiki-documentation-articles/",
+   "date": "2020-09-28",
+   "dateNote": "Shown as \"SEPTEMBER 28, 2020\"",
+   "readOn": "2026-11-13",
+   "text": "“The author of 90% of our documentation doesn't work here anymore!”",
+   "exactOnPage": "The author of 90% of our documentation doesn’t work here anymore!",
+   "keyPhrases": [
+    {
+     "text": "90% of our documentation",
+     "box": [
+      451,
+      89,
+      643,
+      63
+     ],
+     "lines": [
+      [
+       451,
+       89,
+       643,
+       63
+      ]
+     ]
+    },
+    {
+     "text": "doesn't work here anymore",
+     "box": [
+      1105,
+      89,
+      650,
+      63
+     ],
+     "lines": [
+      [
+       1105,
+       89,
+       650,
+       63
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "none stated (© 2026 Stack Exchange Inc)",
+   "rightsBasis": "brief quotation as commentary",
+   "blurred": [],
+   "notes": [
+    "One team's remark, not a survey result. The post promotes Stack Overflow's own Articles feature.",
+    "Captured 2026-11-13 14:30 UTC in Chrome at 1280x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/D2-01.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "D1-01",
+   "bar": 2,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/D1-01.png",
+   "width": 1920,
+   "height": 833,
+   "source": "GitHub, Open Source Survey 2017 (opensourcesurvey.org), Insights",
+   "label": "GitHub Open Source Survey, 2017",
+   "url": "https://opensourcesurvey.org/2017/",
+   "finalUrl": "https://opensourcesurvey.org/2017/",
+   "date": "2017",
+   "dateNote": "Survey year; page footer \"© 2017 GitHub, Inc.\"",
+   "readOn": "2026-11-13",
+   "text": "Incomplete or outdated documentation is a pervasive problem, observed by 93% of respondents, yet 60% of contributors say they rarely or never contribute to documentation.",
+   "exactOnPage": "Incomplete or outdated documentation is a pervasive problem, observed by 93% of respondents",
+   "keyPhrases": [
+    {
+     "text": "outdated documentation",
+     "box": [
+      432,
+      520,
+      536,
+      57
+     ],
+     "lines": [
+      [
+       432,
+       520,
+       536,
+       57
+      ]
+     ]
+    },
+    {
+     "text": "93% of respondents",
+     "box": [
+      120,
+      592,
+      444,
+      57
+     ],
+     "lines": [
+      [
+       120,
+       592,
+       444,
+       57
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "Page © 2017 GitHub, Inc.; \"The data and questionnaire are released under CC0-1.0\" (stated on the page)",
+   "rightsBasis": "brief quotation as commentary (the figure itself is CC0 data)",
+   "blurred": [],
+   "notes": [
+    "The figure covers incomplete OR outdated docs, open-source respondents, 2017. Never caption it as \"93% of docs are outdated\".",
+    "Crop edges moved to avoid cutting text lines (top +0.0 px, bottom -1.8 px CSS).",
+    "Captured 2026-11-13 14:30 UTC in Chrome at 1280x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/D1-01.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "D1-05",
+   "bar": 2,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/D1-05.png",
+   "width": 3840,
+   "height": 666,
+   "source": "Microsoft Tech Community, Microsoft Foundry Blog, \"The Future of AI: Autonomous Agents for Identifying the Root Cause of Cloud Service Incidents\"",
+   "label": "Microsoft Foundry Blog, 2025",
+   "url": "https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/the-future-of-ai-autonomous-agents-for-identifying-the-root-cause-of-cloud-servi/4412494",
+   "finalUrl": "https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/the-future-of-ai-autonomous-agents-for-identifying-the-root-cause-of-cloud-servi/4412494",
+   "date": "2025-05-12",
+   "dateNote": "Shown as \"May 12, 2025\"; updated Oct 03, 2025",
+   "readOn": "2026-11-13",
+   "text": "However, in practice, because they are manually crafted, these guides are often outdated, incomplete, hard to understand without sufficient background in the problem, and/or difficult to locate, as they tend to be scattered across various platforms.",
+   "exactOnPage": "these guides are often outdated, incomplete, hard to understand",
+   "keyPhrases": [
+    {
+     "text": "often outdated",
+     "box": [
+      1405,
+      375,
+      317,
+      64
+     ],
+     "lines": [
+      [
+       1405,
+       375,
+       317,
+       64
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "none stated (© Microsoft 2026)",
+   "rightsBasis": "brief quotation as commentary",
+   "blurred": [],
+   "notes": [
+    "The byline (a Microsoft employee account) is above the crop.",
+    "The post goes on to pitch AI agents as the fix; the plate shows the problem sentence only.",
+    "Captured 2026-11-13 14:40 UTC in Chrome at 1280x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/D1-05.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "D2-02",
+   "bar": 2,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/D2-02.png",
+   "width": 1716,
+   "height": 153,
+   "source": "Software Engineering at Google (Winters, Manshreck, Wright), chapter 10 \"Documentation\" (abseil.io)",
+   "label": "Software Engineering at Google, 2020",
+   "url": "https://abseil.io/resources/swe-book/html/ch10.html",
+   "finalUrl": "https://abseil.io/resources/swe-book/html/ch10.html",
+   "date": "2020",
+   "dateNote": "Book year",
+   "readOn": "2026-11-13",
+   "text": "Like code, documents should also have owners. Documents without owners become stale and difficult to maintain.",
+   "exactOnPage": "Documents without owners become stale and difficult to maintain.",
+   "keyPhrases": [
+    {
+     "text": "Documents without owners become stale",
+     "box": [
+      42,
+      32,
+      1578,
+      117
+     ],
+     "lines": [
+      [
+       1053,
+       32,
+       567,
+       57
+      ],
+      [
+       42,
+       92,
+       278,
+       57
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "CC BY-NC-ND 4.0 (stated on the page, linking to the legal code)",
+   "rightsBasis": "brief quotation as commentary (NC-ND does not cover a product film)",
+   "blurred": [],
+   "notes": [
+    "Crop edges moved to avoid cutting text lines (top +3.8 px, bottom -5.3 px CSS).",
+    "Captured 2026-11-13 14:30 UTC in Chrome at 1280x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/D2-02.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "A1-06",
+   "bar": 3,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/A1-06.png",
+   "width": 3840,
+   "height": 942,
+   "source": "Atlassian Community, Q&A › Rovo, question title (poster blurred)",
+   "label": "Atlassian Community, Jul 2026",
+   "url": "https://community.atlassian.com/forums/discussion/3256922/rovo-agent-it-always-reads-from-an-old-confluence-source",
+   "finalUrl": "https://community.atlassian.com/forums/discussion/3256922/rovo-agent-it-always-reads-from-an-old-confluence-source",
+   "date": "2026-07-03",
+   "dateNote": "Shown as \"Jul 3, 2026\"",
+   "readOn": "2026-11-13",
+   "text": "ROVO Agent - It always reads from an OLD confluence source.",
+   "exactOnPage": "ROVO Agent - It always reads from an OLD confluence source.",
+   "keyPhrases": [
+    {
+     "text": "always reads from an OLD confluence source",
+     "box": [
+      673,
+      621,
+      1642,
+      100
+     ],
+     "lines": [
+      [
+       673,
+       621,
+       1642,
+       100
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "none stated (Copyright © 2026 Atlassian); Atlassian is the sponsor",
+   "rightsBasis": "sponsor's site, member's words",
+   "blurred": [
+    {
+     "what": "community member name or avatar",
+     "box": [
+      75,
+      777,
+      138,
+      132
+     ],
+     "method": "pixelate + blur"
+    },
+    {
+     "what": "community member name or avatar",
+     "box": [
+      78,
+      780,
+      132,
+      126
+     ],
+     "method": "pixelate + blur"
+    },
+    {
+     "what": "community member name or avatar",
+     "box": [
+      219,
+      763,
+      371,
+      84
+     ],
+     "method": "pixelate + blur"
+    },
+    {
+     "what": "community member name or avatar",
+     "box": [
+      958,
+      852,
+      327,
+      72
+     ],
+     "method": "pixelate + blur"
+    }
+   ],
+   "notes": [
+    "The case is an agent answering from a page the user had replaced (an index problem). Show it as a customer's words, not as how Rovo works.",
+    "The sign-in prompt and quick-links sidebar were hidden with CSS (page chrome, no words of the post).",
+    "Crop edges moved to avoid cutting text lines (top +0.0 px, bottom -8.5 px CSS).",
+    "Captured 2026-11-13 14:30 UTC in Chrome at 1280x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/A1-06.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "A4-02",
+   "bar": 3,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/A4-02.png",
+   "width": 2940,
+   "height": 1719,
+   "source": "Atlassian public issue tracker (jira.atlassian.com), ROVO-730 \"Knowledge Source Freshness Monitoring for Rovo Agents\" (Suggestion, Gathering Interest; reporter blurred)",
+   "label": "jira.atlassian.com, ROVO-730, Apr 2026",
+   "url": "https://jira.atlassian.com/browse/ROVO-730",
+   "finalUrl": "https://jira.atlassian.com/browse/ROVO-730",
+   "date": "2026-04-07",
+   "dateNote": "Created 07/Apr/2026 6:05 AM (shown on the page)",
+   "readOn": "2026-11-13",
+   "text": "Rovo agents are only as good as the content they draw from. When knowledge source pages are not updated, the agent continues to serve outdated information with the same confidence as current information.",
+   "exactOnPage": "the agent continues to serve outdated information with the same confidence as current information",
+   "keyPhrases": [
+    {
+     "text": "outdated information",
+     "box": [
+      985,
+      1508,
+      406,
+      50
+     ],
+     "lines": [
+      [
+       985,
+       1508,
+       406,
+       50
+      ]
+     ]
+    },
+    {
+     "text": "same confidence as current information",
+     "box": [
+      90,
+      1508,
+      1810,
+      110
+     ],
+     "lines": [
+      [
+       1569,
+       1508,
+       331,
+       50
+      ],
+      [
+       90,
+       1568,
+       427,
+       50
+      ]
+     ]
+    }
+   ],
+   "regions": {
+    "title": [
+     189,
+     114,
+     2115,
+     102
+    ],
+    "status": [
+     63,
+     292,
+     369,
+     50
+    ],
+    "created": [
+     2052,
+     1100,
+     166,
+     50
+    ]
+   },
+   "licence": "none stated; Atlassian is the sponsor",
+   "rightsBasis": "sponsor's site, reporter's words",
+   "blurred": [
+    {
+     "what": "reporter name and avatar",
+     "box": [
+      2475,
+      570,
+      447,
+      108
+     ],
+     "method": "pixelate + blur"
+    }
+   ],
+   "notes": [
+    "A suggestion with 2 votes and an unverified reporter: never caption it \"Atlassian says\".",
+    "Captured 2026-11-13 14:37 UTC in Chrome at 1280x1000 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/A4-02.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "A1-07",
+   "bar": 3,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/A1-07.png",
+   "width": 3840,
+   "height": 1122,
+   "source": "Atlassian Community, Q&A › Rovo, \"How to avoid Rovo using archived content in CHAT results?\" (poster blurred)",
+   "label": "Atlassian Community, Dec 2025",
+   "url": "https://community.atlassian.com/forums/discussion/3156949/how-to-avoid-rovo-using-archived-content-in-chat-results",
+   "finalUrl": "https://community.atlassian.com/forums/discussion/3156949/how-to-avoid-rovo-using-archived-content-in-chat-results",
+   "date": "2025-12-03",
+   "dateNote": "Shown as \"Dec 3, 2025\"",
+   "readOn": "2026-11-13",
+   "text": "we realized when using Rovo Chat we have a lot of outdated results. This is because Rovo uses our archived pages for responses.",
+   "exactOnPage": "we have a lot of outdated results",
+   "keyPhrases": [
+    {
+     "text": "a lot of outdated results",
+     "box": [
+      1093,
+      1003,
+      474,
+      51
+     ],
+     "lines": [
+      [
+       1093,
+       1003,
+       474,
+       51
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "none stated (Copyright © 2026 Atlassian); Atlassian is the sponsor",
+   "rightsBasis": "sponsor's site, member's words",
+   "blurred": [
+    {
+     "what": "community member name or avatar",
+     "box": [
+      75,
+      777,
+      138,
+      132
+     ],
+     "method": "pixelate + blur"
+    },
+    {
+     "what": "community member name or avatar",
+     "box": [
+      78,
+      780,
+      132,
+      126
+     ],
+     "method": "pixelate + blur"
+    },
+    {
+     "what": "community member name or avatar",
+     "box": [
+      219,
+      763,
+      229,
+      84
+     ],
+     "method": "pixelate + blur"
+    },
+    {
+     "what": "community member name or avatar",
+     "box": [
+      999,
+      852,
+      202,
+      72
+     ],
+     "method": "pixelate + blur"
+    }
+   ],
+   "notes": [
+    "This thread shows a \"Closed\" badge: the accepted answer says it duplicates an earlier post, whose link no longer loads.",
+    "Archive and index behaviour, disputed in the thread: show it as the customer's experience, not as how Rovo works.",
+    "The sign-in prompt and quick-links sidebar were hidden with CSS.",
+    "Crop edges moved to avoid cutting text lines (top +0.0 px, bottom -14.8 px CSS).",
+    "Captured 2026-11-13 14:31 UTC in Chrome at 1280x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/A1-07.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "A1-13",
+   "bar": 3,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/A1-13.png",
+   "width": 3840,
+   "height": 1089,
+   "source": "arXiv 2609.31342, M. S. Ahmed, L. G. Poech and R. Röttger, \"Stale-Document Poisoning: When Outdated Retrieval Overrides Correct Model Answers\" (preprint)",
+   "label": "arXiv, Sep 2026",
+   "url": "https://arxiv.org/abs/2609.31342",
+   "finalUrl": "https://arxiv.org/abs/2609.31342",
+   "date": "2026-09-25",
+   "dateNote": "Submitted 25 Sep 2026, shown on the page",
+   "readOn": "2026-11-13",
+   "text": "More importantly, outdated retrieval flips 30% of Llama and 37% of Qwen answers even without instructions to trust the document; explicit follow instructions raise these rates to 66% and 75%.",
+   "exactOnPage": "outdated retrieval flips 30% of Llama and 37% of Qwen answers even without instructions to trust the document",
+   "keyPhrases": [
+    {
+     "text": "Outdated Retrieval Overrides Correct Model Answers",
+     "box": [
+      60,
+      324,
+      2805,
+      166
+     ],
+     "lines": [
+      [
+       1283,
+       324,
+       1583,
+       82
+      ],
+      [
+       60,
+       408,
+       310,
+       82
+      ]
+     ]
+    },
+    {
+     "text": "30%",
+     "box": [
+      1308,
+      906,
+      79,
+      48
+     ],
+     "lines": [
+      [
+       1308,
+       906,
+       79,
+       48
+      ]
+     ]
+    },
+    {
+     "text": "37%",
+     "box": [
+      1669,
+      906,
+      79,
+      48
+     ],
+     "lines": [
+      [
+       1669,
+       906,
+       79,
+       48
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "CC BY 4.0 (licence link on the abstract page: creativecommons.org/licenses/by/4.0/)",
+   "rightsBasis": "open licence",
+   "blurred": [],
+   "notes": [
+    "Pair the title with its subtitle so \"Poisoning\" does not read as a security story.",
+    "A benchmark of public facts that changed, with open-weight models; not a study of internal wikis.",
+    "Crop edges moved to avoid cutting text lines (top +0.0 px, bottom -2.1 px CSS).",
+    "Captured 2026-11-13 14:36 UTC in Chrome at 1280x1000 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/A1-13.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "R3",
+   "bar": 3,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/R3.png",
+   "width": 1721,
+   "height": 78,
+   "source": "arXiv 2610.30571, X. Xu and W. Wu, \"Stale Instruction Files Override the Code in Coding Agents: A One-Sentence Fix\" (preprint, submitted to SN Computer Science)",
+   "label": "arXiv, Oct 2026",
+   "url": "https://arxiv.org/abs/2610.30571",
+   "finalUrl": "https://arxiv.org/abs/2610.30571",
+   "date": "2026-10-22",
+   "dateNote": "Submitted 22 Oct 2026, shown on the page",
+   "readOn": "2026-11-13",
+   "text": "Results: Without the sentence, 90.1% of the agents' choices followed the stale file.",
+   "exactOnPage": "Without the sentence, 90.1% of the agents' choices followed the stale file.",
+   "keyPhrases": [
+    {
+     "text": "90.1%",
+     "box": [
+      660,
+      15,
+      118,
+      48
+     ],
+     "lines": [
+      [
+       660,
+       15,
+       118,
+       48
+      ]
+     ]
+    },
+    {
+     "text": "followed the stale file",
+     "box": [
+      1235,
+      15,
+      425,
+      48
+     ],
+     "lines": [
+      [
+       1235,
+       15,
+       425,
+       48
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "arXiv.org perpetual, non-exclusive licence to distribute 1.0 (licence link on the abstract page); no reuse licence",
+   "rightsBasis": "brief quotation as commentary",
+   "blurred": [],
+   "notes": [
+    "The crop ends after this sentence; the next sentence names a product and is out of frame.",
+    "The projects are synthetic (40 Python projects); a preprint under review.",
+    "Viewport width 930 CSS px chosen so the line ends after \"followed the stale file.\" (the next words start the next line).",
+    "Crop edges moved to avoid cutting text lines (top +5.2 px, bottom -5.2 px CSS).",
+    "Captured 2026-11-13 14:31 UTC in Chrome at 930x800 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/R3.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "R3-title",
+   "bar": 3,
+   "kind": "real",
+   "companionOf": "R3",
+   "file": "plates/R3-title.png",
+   "width": 3840,
+   "height": 554,
+   "source": "arXiv 2610.30571 (as R3), title and authors",
+   "label": "arXiv, Oct 2026",
+   "url": "https://arxiv.org/abs/2610.30571",
+   "finalUrl": "https://arxiv.org/abs/2610.30571",
+   "date": "2026-10-22",
+   "dateNote": "Submitted 22 Oct 2026",
+   "readOn": "2026-11-13",
+   "text": "Stale Instruction Files Override the Code in Coding Agents: A One-Sentence Fix",
+   "exactOnPage": "Without the sentence, 90.1% of the agents' choices followed the stale file.",
+   "keyPhrases": [
+    {
+     "text": "Stale Instruction Files Override the Code",
+     "box": [
+      60,
+      324,
+      1460,
+      82
+     ],
+     "lines": [
+      [
+       60,
+       324,
+       1460,
+       82
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "arXiv.org perpetual, non-exclusive licence to distribute 1.0 (licence link on the abstract page); no reuse licence",
+   "rightsBasis": "brief quotation as commentary",
+   "blurred": [],
+   "notes": [
+    "Optional companion to R3 (header, title, authors); it names no product.",
+    "Captured 2026-11-13 14:31 UTC in Chrome at 1280x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/R3-title.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "A2-02",
+   "bar": 3,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/A2-02.png",
+   "width": 3840,
+   "height": 1206,
+   "source": "arXiv 2606.09090, C. Treude and S. Baltes, \"Context Rot in AI-Assisted Software Development: Repurposing Documentation Consistency for AI Configuration Artifacts\" (preprint)",
+   "label": "arXiv, Jun 2026",
+   "url": "https://arxiv.org/abs/2606.09090",
+   "finalUrl": "https://arxiv.org/abs/2606.09090",
+   "date": "2026-06-08",
+   "dateNote": "Submitted 8 Jun 2026, shown on the page",
+   "readOn": "2026-11-13",
+   "text": "As preliminary evidence, applying an existing README/wiki consistency checker to a statistically representative sample of 356 repositories identifies stale code element references in 23.0% of repositories, showing that traditional documentation consistency tools can already surface context rot.",
+   "exactOnPage": "identifies stale code element references in 23.0% of repositories",
+   "keyPhrases": [
+    {
+     "text": "Context Rot",
+     "box": [
+      60,
+      324,
+      424,
+      82
+     ],
+     "lines": [
+      [
+       60,
+       324,
+       424,
+       82
+      ]
+     ]
+    },
+    {
+     "text": "23.0% of repositories",
+     "box": [
+      668,
+      1159,
+      419,
+      48
+     ],
+     "lines": [
+      [
+       668,
+       1159,
+       419,
+       48
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "CC BY 4.0 (licence link on the abstract page: creativecommons.org/licenses/by/4.0/)",
+   "rightsBasis": "open licence",
+   "blurred": [],
+   "notes": [
+    "The abstract calls it preliminary evidence. The files are CLAUDE.md, AGENTS.md and .cursorrules (arXiv renders two of them as \"this http URL\").",
+    "Crop edges moved to avoid cutting text lines (top +0.0 px, bottom -6.3 px CSS).",
+    "Crop bottom edge grown to take in a whole text line beside the key text.",
+    "Captured 2026-11-13 14:36 UTC in Chrome at 1280x1000 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/A2-02.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "A1-01",
+   "bar": 3,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/A1-01.png",
+   "width": 2589,
+   "height": 889,
+   "source": "Microsoft Support, \"What information does Copilot use to answer my prompt?\", section Limitations and tips of grounding in Copilot",
+   "label": "Microsoft Support, 2026",
+   "url": "https://support.microsoft.com/en-us/microsoft-365-copilot/what-information-does-copilot-use-to-answer-my-prompt",
+   "finalUrl": "https://support.microsoft.com/en-us/microsoft-365-copilot/what-information-does-copilot-use-to-answer-my-prompt",
+   "date": "2026-07-01",
+   "dateNote": "No date is shown on the page; 2026-07-01 is the page's ms.date metadata (updated_at 2026-11-06)",
+   "readOn": "2026-11-13",
+   "text": "Copilot can give outdated answers if you point it at an old website or an earlier version of a file.",
+   "exactOnPage": "Copilot can give outdated answers if you point it at an old website or an earlier version of a file.",
+   "keyPhrases": [
+    {
+     "text": "outdated answers",
+     "box": [
+      499,
+      633,
+      376,
+      64
+     ],
+     "lines": [
+      [
+       499,
+       633,
+       376,
+       64
+      ]
+     ]
+    },
+    {
+     "text": "earlier version of a file",
+     "box": [
+      1682,
+      633,
+      467,
+      64
+     ],
+     "lines": [
+      [
+       1682,
+       633,
+       467,
+       64
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "none stated",
+   "rightsBasis": "brief quotation as commentary",
+   "blurred": [],
+   "notes": [
+    "Live docs page: re-read before release.",
+    "Captured 2026-11-13 14:31 UTC in Chrome at 1280x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/A1-01.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "A1-03",
+   "bar": 3,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/A1-03.png",
+   "width": 2955,
+   "height": 1432,
+   "source": "Practical 365, Tony Redmond, \"Microsoft 365 Archive Could Help SharePoint Online Cope with Digital Debris\" (first subheading)",
+   "label": "Practical 365, 2024",
+   "url": "https://practical365.com/microsoft-365-archive-copilot/",
+   "finalUrl": "https://practical365.com/microsoft-365-archive-copilot/",
+   "date": "2024-05-20",
+   "dateNote": "Shown under the byline as \"May 20, 2024\"",
+   "readOn": "2026-11-13",
+   "text": "Gently Rotting Documents Can Corrupt Copilot Output",
+   "exactOnPage": "Gently Rotting Documents Can Corrupt Copilot Output",
+   "keyPhrases": [
+    {
+     "text": "Gently Rotting Documents",
+     "box": [
+      510,
+      1259,
+      1151,
+      118
+     ],
+     "lines": [
+      [
+       510,
+       1259,
+       1151,
+       118
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "none stated (© 2026 Quest Software Inc. All Rights Reserved)",
+   "rightsBasis": "brief quotation as commentary",
+   "blurred": [
+    {
+     "what": "author photo (not needed)",
+     "box": [
+      504,
+      594,
+      162,
+      162
+     ],
+     "method": "pixelate + blur"
+    }
+   ],
+   "notes": [
+    "The line is the first subheading, shown in place under the H1 (not the article headline).",
+    "Author photo blurred (not needed).",
+    "Captured 2026-11-13 14:37 UTC in Chrome at 1280x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/A1-03.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "A1-05",
+   "bar": 3,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/A1-05.png",
+   "width": 2100,
+   "height": 741,
+   "source": "Reworked, Karteek Sonapuram (contributor), headline",
+   "label": "Reworked, Oct 2026",
+   "url": "https://www.reworked.co/information-management/when-your-ai-assistant-still-quotes-last-weeks-policy/",
+   "finalUrl": "https://www.reworked.co/information-management/when-your-ai-assistant-still-quotes-last-weeks-policy/",
+   "date": "2026-10-08",
+   "dateNote": "Shown in the header as \"OCT 8, 2026\"",
+   "readOn": "2026-11-13",
+   "text": "Why Your AI Assistant Cites Outdated Policy — and How to Fix It",
+   "exactOnPage": "Why Your AI Assistant Cites Outdated Policy",
+   "keyPhrases": [
+    {
+     "text": "Cites Outdated Policy",
+     "box": [
+      794,
+      396,
+      706,
+      87
+     ],
+     "lines": [
+      [
+       794,
+       396,
+       706,
+       87
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "none stated",
+   "rightsBasis": "brief quotation as commentary",
+   "blurred": [
+    {
+     "what": "article photo behind the headline",
+     "box": [
+      0,
+      225,
+      2100,
+      516
+     ],
+     "method": "gaussian blur except the text lines"
+    }
+   ],
+   "notes": [
+    "The headline sits on an article photo; the photo is blurred around the words (the words are untouched).",
+    "Captured at 700 px wide (compact header with the date in it); the empty ad slot is hidden.",
+    "Captured 2026-11-13 14:34 UTC in Chrome at 700x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/A1-05.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "A2-05",
+   "bar": 3,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/A2-05.png",
+   "width": 3540,
+   "height": 2890,
+   "source": "Thoughtworks Technology Radar, blip \"AI-driven documentation sprawl\", ring Caution",
+   "label": "Thoughtworks Technology Radar, Nov 2026",
+   "url": "https://www.thoughtworks.com/radar/techniques/ai-driven-documentation-sprawl",
+   "finalUrl": "https://www.thoughtworks.com/radar/techniques/ai-driven-documentation-sprawl",
+   "date": "2026-11-04",
+   "dateNote": "Shown as \"Published : Nov 04, 2026\"",
+   "readOn": "2026-11-13",
+   "text": "Rather than aiding development, obsolete context can lead AI tools astray and result in poor code generation.",
+   "exactOnPage": "obsolete context can lead AI tools astray",
+   "keyPhrases": [
+    {
+     "text": "AI-driven documentation sprawl",
+     "box": [
+      384,
+      613,
+      2233,
+      172
+     ],
+     "lines": [
+      [
+       384,
+       613,
+       2233,
+       172
+      ]
+     ]
+    },
+    {
+     "text": "lead AI tools astray",
+     "box": [
+      759,
+      2728,
+      2577,
+      147
+     ],
+     "lines": [
+      [
+       3026,
+       2728,
+       310,
+       66
+      ],
+      [
+       759,
+       2809,
+       155,
+       66
+      ]
+     ]
+    }
+   ],
+   "regions": {
+    "blip": [
+     384,
+     613,
+     2233,
+     172
+    ],
+    "ring": [
+     759,
+     1762,
+     273,
+     88
+    ],
+    "published": [
+     480,
+     1564,
+     635,
+     66
+    ]
+   },
+   "licence": "none stated (© 2026 Thoughtworks, Inc.)",
+   "rightsBasis": "brief quotation as commentary",
+   "blurred": [],
+   "notes": [
+    "Tall plate: punch in on regions.blip and regions.ring, then on the key phrase.",
+    "Crop edges moved to avoid cutting text lines (top +0.0 px, bottom -5.3 px CSS).",
+    "Captured 2026-11-13 14:41 UTC in Chrome at 1280x1200 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/A2-05.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "A3-01",
+   "bar": 3,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/A3-01.png",
+   "width": 3840,
+   "height": 3987,
+   "source": "Stack Overflow Developer Survey 2026, AI › Data, \"Trust in AI tools\"",
+   "label": "Stack Overflow Developer Survey, 2026",
+   "url": "https://survey.stackoverflow.co/2026/ai/data/ai-trust",
+   "finalUrl": "https://survey.stackoverflow.co/2026/ai/data/ai-trust",
+   "date": "2026",
+   "dateNote": "Survey year (the page's own citation: \"Stack Exchange Inc. (2026)\")",
+   "readOn": "2026-11-13",
+   "text": "How much do you trust the output from AI tools or AI agents as part of your workflow? · I trust it when I can easily verify the output · 6,872 · 48.0%",
+   "exactOnPage": "I trust it when I can easily verify the output",
+   "keyPhrases": [
+    {
+     "text": "48.0%",
+     "box": [
+      3491,
+      3384,
+      133,
+      54
+     ],
+     "lines": [
+      [
+       3491,
+       3384,
+       133,
+       54
+      ]
+     ]
+    },
+    {
+     "text": "I trust it when I can easily verify the output",
+     "box": [
+      216,
+      3384,
+      869,
+      54
+     ],
+     "lines": [
+      [
+       216,
+       3384,
+       869,
+       54
+      ]
+     ]
+    }
+   ],
+   "regions": {
+    "title": [
+     601,
+     315,
+     741,
+     78
+    ],
+    "summary": [
+     310,
+     534,
+     503,
+     70
+    ],
+    "question": [
+     192,
+     2748,
+     2358,
+     78
+    ],
+    "row": [
+     216,
+     3384,
+     869,
+     54
+    ]
+   },
+   "licence": "Survey data: Open Database License (ODbL) 1.0, stated on the page (\"Data licensed under Open Database License (ODbL) 1.0\"; \"Response data is released under the ODbL 1.0, which asks that you attribute it\"); site footer: user contributions CC BY-SA",
+   "rightsBasis": "open licence (data, attribution)",
+   "blurred": [],
+   "notes": [
+    "14,304 respondents answered this question.",
+    "The 2026 survey frames trust as rising but conditional; do not pair it with the 2025 \"46% distrust\" figure.",
+    "Attribution asked by the page: \"Stack Exchange Inc. (2026). 'Trust in AI tools'. Stack Overflow Developer Survey 2026. Licensed under ODbL 1.0.\"",
+    "Captured 2026-11-13 14:39 UTC in Chrome at 1280x1400 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/A3-01.png (unblurred, not for the film)."
+   ],
+   "warnings": []
+  },
+  {
+   "id": "A4-01-title",
+   "bar": 3,
+   "kind": "real",
+   "companionOf": "A4-01",
+   "file": "plates/A4-01-title.png",
+   "width": 3840,
+   "height": 816,
+   "source": "Atlassian blog (Inside Atlassian), as A4-01: masthead, title and date",
+   "label": "Atlassian blog, May 2026",
+   "url": "https://www.atlassian.com/blog/company-news/teamwork-graph-team-26",
+   "finalUrl": "https://www.atlassian.com/blog/company-news/teamwork-graph-team-26",
+   "date": "2026-05-06",
+   "dateNote": "Shown as \"May 6, 2026\"",
+   "readOn": "2026-11-13",
+   "text": "Atlassian Teamwork Graph: The context engine behind your AI—everywhere",
+   "exactOnPage": "AI agents are only as good as what they know. Right now, most don’t know enough.",
+   "keyPhrases": [
+    {
+     "text": "The context engine behind your AI",
+     "box": [
+      1600,
+      382,
+      1712,
+      154
+     ],
+     "lines": [
+      [
+       1600,
+       382,
+       1712,
+       154
+      ]
+     ]
+    },
+    {
+     "text": "May 6, 2026",
+     "box": [
+      168,
+      703,
+      243,
+      57
+     ],
+     "lines": [
+      [
+       168,
+       703,
+       243,
+       57
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "none stated (Copyright 2026 Atlassian); Atlassian is the sponsor",
+   "rightsBasis": "sponsor's own page",
+   "blurred": [],
+   "notes": [
+    "Optional companion to A4-01 for a longer hero hold. The Rovo promo strip above the masthead was closed.",
+    "Captured 2026-11-13 14:34 UTC in Chrome at 1280x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/A4-01-title.png (unblurred, not for the film).",
+    "Consent notice dismissed: #onetrust-reject-all-handler@www.atlassian.com"
+   ],
+   "warnings": []
+  },
+  {
+   "id": "A4-01",
+   "bar": 3,
+   "kind": "real",
+   "companionOf": null,
+   "file": "plates/A4-01.png",
+   "width": 3840,
+   "height": 395,
+   "source": "Atlassian blog (Inside Atlassian), Jamil Valliani, \"Atlassian Teamwork Graph: The context engine behind your AI—everywhere\"",
+   "label": "Atlassian blog, May 2026",
+   "url": "https://www.atlassian.com/blog/company-news/teamwork-graph-team-26",
+   "finalUrl": "https://www.atlassian.com/blog/company-news/teamwork-graph-team-26",
+   "date": "2026-05-06",
+   "dateNote": "Shown as \"May 6, 2026\" (modified 2026-08-06)",
+   "readOn": "2026-11-13",
+   "text": "AI agents are only as good as what they know. Right now, most don’t know enough.",
+   "exactOnPage": "AI agents are only as good as what they know. Right now, most don’t know enough.",
+   "keyPhrases": [
+    {
+     "text": "only as good as what they know",
+     "box": [
+      1080,
+      259,
+      735,
+      64
+     ],
+     "lines": [
+      [
+       1080,
+       259,
+       735,
+       64
+      ]
+     ]
+    },
+    {
+     "text": "most don’t know enough",
+     "box": [
+      2088,
+      259,
+      565,
+      64
+     ],
+     "lines": [
+      [
+       2088,
+       259,
+       565,
+       64
+      ]
+     ]
+    }
+   ],
+   "regions": {},
+   "licence": "none stated (Copyright 2026 Atlassian); Atlassian is the sponsor",
+   "rightsBasis": "sponsor's own page",
+   "blurred": [],
+   "notes": [
+    "The hero, last slam. Captured as the reader sees it: the sticky article bar over the paragraph.",
+    "Crop edges moved to avoid cutting text lines (top +5.5 px, bottom -0.0 px CSS).",
+    "Captured 2026-11-13 14:35 UTC in Chrome at 1280x900 CSS px, deviceScaleFactor 3, light scheme; full viewport in public/plates/raw/A4-01.png (unblurred, not for the film).",
+    "Consent notice dismissed: #onetrust-reject-all-handler@www.atlassian.com"
+   ],
+   "warnings": []
+  }
+ ],
+ "dropped": []
+}

@@ -1,0 +1,21 @@
+{
+ "_comment": "M0, 4-bar variant (8.000 s = 240 f), same take as m0-3bar.json: the sparse bar, two build bars, the peak, a 3 s riser, hard stop on the bar line at 8.000 s.",
+ "source": "tools/audio/cache/music/m0-music_v2_5.wav",
+ "out": "public/music/m0-4bar.wav",
+ "beatOffset": 0.004,
+ "durationSec": 8.0,
+ "endFadeMs": 6,
+ "peakDb": -3,
+ "segments": [
+  { "t0": 0, "t1": 2, "s0": 0, "why": "bar 1: the sparse sub pulse and ticks" },
+  { "t0": 2, "t1": 4, "s0": 8, "why": "bar 2: source bar 5, the build enters after the take's drop-out" },
+  { "t0": 4, "t1": 6, "s0": 12, "why": "bar 3: source bar 7, the build, denser" },
+  { "t0": 6, "t1": 8, "s0": 18, "why": "bar 4: source bar 10, the peak; hard stop at 8.0" }
+ ],
+ "sweeps": [],
+ "gain": [],
+ "synth": [
+  { "type": "riser", "t0": 5.0, "t1": 8.0, "db": -10, "fromHz": 180, "toHz": 2400, "why": "the riser, at its top on the hard stop" }
+ ],
+ "subHits": []
+}

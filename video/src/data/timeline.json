@@ -1,0 +1,1872 @@
+{
+ "fps": 30,
+ "bpm": 120,
+ "totalFrames": 4657,
+ "markers": {
+  "blackStart": 180,
+  "v00": 195,
+  "reveal": 277,
+  "scoreStart": 277,
+  "A0": 0,
+  "A1": 397,
+  "A2": 1057,
+  "P1": 1717,
+  "P2": 2077,
+  "P3": 2617,
+  "P4": 3277,
+  "P5": 3937,
+  "A4": 4177,
+  "endHit": 4417,
+  "daySlip": 1057,
+  "snapBack": 3757,
+  "filmEnd": 4657
+ },
+ "scenes": [
+  {
+   "id": "A0",
+   "from": 0,
+   "durationInFrames": 397
+  },
+  {
+   "id": "A1",
+   "from": 397,
+   "durationInFrames": 660
+  },
+  {
+   "id": "A2",
+   "from": 1057,
+   "durationInFrames": 660
+  },
+  {
+   "id": "P1",
+   "from": 1717,
+   "durationInFrames": 360
+  },
+  {
+   "id": "P2",
+   "from": 2077,
+   "durationInFrames": 540
+  },
+  {
+   "id": "P3",
+   "from": 2617,
+   "durationInFrames": 660
+  },
+  {
+   "id": "P4",
+   "from": 3277,
+   "durationInFrames": 660
+  },
+  {
+   "id": "P5",
+   "from": 3937,
+   "durationInFrames": 240
+  },
+  {
+   "id": "A4",
+   "from": 4177,
+   "durationInFrames": 480
+  }
+ ],
+ "vo": [
+  {
+   "id": "V00",
+   "scene": "A0",
+   "from": 195,
+   "durationInFrames": 69,
+   "file": "vo/V00.wav",
+   "text": "That's why we built Doc Drift Sentinel.",
+   "words": [
+    {
+     "text": "That's",
+     "from": 200,
+     "to": 208
+    },
+    {
+     "text": "why",
+     "from": 209,
+     "to": 214
+    },
+    {
+     "text": "we",
+     "from": 215,
+     "to": 219
+    },
+    {
+     "text": "built",
+     "from": 220,
+     "to": 229
+    },
+    {
+     "text": "Doc",
+     "from": 230,
+     "to": 236
+    },
+    {
+     "text": "Drift",
+     "from": 238,
+     "to": 245
+    },
+    {
+     "text": "Sentinel.",
+     "from": 248,
+     "to": 260
+    }
+   ]
+  },
+  {
+   "id": "V01",
+   "scene": "A0",
+   "from": 292,
+   "durationInFrames": 67,
+   "file": "vo/V01.wav",
+   "text": "Docs that know when the code moved.",
+   "words": [
+    {
+     "text": "Docs",
+     "from": 296,
+     "to": 306
+    },
+    {
+     "text": "that",
+     "from": 308,
+     "to": 312
+    },
+    {
+     "text": "know",
+     "from": 316,
+     "to": 321
+    },
+    {
+     "text": "when",
+     "from": 324,
+     "to": 327
+    },
+    {
+     "text": "the",
+     "from": 329,
+     "to": 332
+    },
+    {
+     "text": "code",
+     "from": 333,
+     "to": 341
+    },
+    {
+     "text": "moved.",
+     "from": 344,
+     "to": 354
+    }
+   ]
+  },
+  {
+   "id": "V02",
+   "scene": "A1",
+   "from": 427,
+   "durationInFrames": 62,
+   "file": "vo/V02.wav",
+   "text": "It's 3 a.m. Payments is down.",
+   "words": [
+    {
+     "text": "It's",
+     "from": 429,
+     "to": 435
+    },
+    {
+     "text": "3",
+     "from": 441,
+     "to": 443
+    },
+    {
+     "text": "a.m.",
+     "from": 445,
+     "to": 450
+    },
+    {
+     "text": "Payments",
+     "from": 455,
+     "to": 467
+    },
+    {
+     "text": "is",
+     "from": 469,
+     "to": 473
+    },
+    {
+     "text": "down.",
+     "from": 475,
+     "to": 485
+    }
+   ]
+  },
+  {
+   "id": "V03",
+   "scene": "A1",
+   "from": 517,
+   "durationInFrames": 84,
+   "file": "vo/V03.wav",
+   "text": "The runbook says to run rollback.sh.",
+   "words": [
+    {
+     "text": "The",
+     "from": 519,
+     "to": 520
+    },
+    {
+     "text": "runbook",
+     "from": 522,
+     "to": 533
+    },
+    {
+     "text": "says",
+     "from": 536,
+     "to": 543
+    },
+    {
+     "text": "to",
+     "from": 544,
+     "to": 546
+    },
+    {
+     "text": "run",
+     "from": 548,
+     "to": 553
+    },
+    {
+     "text": "rollback.sh.",
+     "from": 557,
+     "to": 596
+    }
+   ]
+  },
+  {
+   "id": "V04",
+   "scene": "A1",
+   "from": 637,
+   "durationInFrames": 63,
+   "file": "vo/V04.wav",
+   "text": "That script was renamed last week.",
+   "words": [
+    {
+     "text": "That",
+     "from": 640,
+     "to": 644
+    },
+    {
+     "text": "script",
+     "from": 647,
+     "to": 656
+    },
+    {
+     "text": "was",
+     "from": 657,
+     "to": 662
+    },
+    {
+     "text": "renamed",
+     "from": 663,
+     "to": 676
+    },
+    {
+     "text": "last",
+     "from": 678,
+     "to": 686
+    },
+    {
+     "text": "week.",
+     "from": 688,
+     "to": 696
+    }
+   ]
+  },
+  {
+   "id": "V05",
+   "scene": "A1",
+   "from": 742,
+   "durationInFrames": 91,
+   "file": "vo/V05.wav",
+   "text": "The page still looks fine. It was reviewed a month ago.",
+   "words": [
+    {
+     "text": "The",
+     "from": 744,
+     "to": 746
+    },
+    {
+     "text": "page",
+     "from": 748,
+     "to": 755
+    },
+    {
+     "text": "still",
+     "from": 759,
+     "to": 764
+    },
+    {
+     "text": "looks",
+     "from": 765,
+     "to": 771
+    },
+    {
+     "text": "fine.",
+     "from": 773,
+     "to": 782
+    },
+    {
+     "text": "It",
+     "from": 795,
+     "to": 797
+    },
+    {
+     "text": "was",
+     "from": 798,
+     "to": 803
+    },
+    {
+     "text": "reviewed",
+     "from": 804,
+     "to": 813
+    },
+    {
+     "text": "a",
+     "from": 814,
+     "to": 815
+    },
+    {
+     "text": "month",
+     "from": 816,
+     "to": 822
+    },
+    {
+     "text": "ago.",
+     "from": 824,
+     "to": 831
+    }
+   ]
+  },
+  {
+   "id": "V06",
+   "scene": "A1",
+   "from": 877,
+   "durationInFrames": 125,
+   "file": "vo/V06.wav",
+   "text": "Ask an AI agent, and it reads you the same step, with confidence.",
+   "words": [
+    {
+     "text": "Ask",
+     "from": 881,
+     "to": 886
+    },
+    {
+     "text": "an",
+     "from": 887,
+     "to": 890
+    },
+    {
+     "text": "AI",
+     "from": 894,
+     "to": 902
+    },
+    {
+     "text": "agent,",
+     "from": 906,
+     "to": 917
+    },
+    {
+     "text": "and",
+     "from": 923,
+     "to": 926
+    },
+    {
+     "text": "it",
+     "from": 927,
+     "to": 930
+    },
+    {
+     "text": "reads",
+     "from": 931,
+     "to": 937
+    },
+    {
+     "text": "you",
+     "from": 938,
+     "to": 941
+    },
+    {
+     "text": "the",
+     "from": 942,
+     "to": 946
+    },
+    {
+     "text": "same",
+     "from": 948,
+     "to": 954
+    },
+    {
+     "text": "step,",
+     "from": 959,
+     "to": 966
+    },
+    {
+     "text": "with",
+     "from": 975,
+     "to": 979
+    },
+    {
+     "text": "confidence.",
+     "from": 981,
+     "to": 998
+    }
+   ]
+  },
+  {
+   "id": "V07",
+   "scene": "A2",
+   "from": 1087,
+   "durationInFrames": 157,
+   "file": "vo/V07.wav",
+   "text": "Doc Drift Sentinel anchors each Confluence page to the code and Jira work it describes.",
+   "words": [
+    {
+     "text": "Doc",
+     "from": 1088,
+     "to": 1094
+    },
+    {
+     "text": "Drift",
+     "from": 1095,
+     "to": 1103
+    },
+    {
+     "text": "Sentinel",
+     "from": 1106,
+     "to": 1118
+    },
+    {
+     "text": "anchors",
+     "from": 1124,
+     "to": 1133
+    },
+    {
+     "text": "each",
+     "from": 1138,
+     "to": 1142
+    },
+    {
+     "text": "Confluence",
+     "from": 1145,
+     "to": 1161
+    },
+    {
+     "text": "page",
+     "from": 1164,
+     "to": 1173
+    },
+    {
+     "text": "to",
+     "from": 1175,
+     "to": 1177
+    },
+    {
+     "text": "the",
+     "from": 1178,
+     "to": 1181
+    },
+    {
+     "text": "code",
+     "from": 1183,
+     "to": 1194
+    },
+    {
+     "text": "and",
+     "from": 1195,
+     "to": 1198
+    },
+    {
+     "text": "Jira",
+     "from": 1201,
+     "to": 1209
+    },
+    {
+     "text": "work",
+     "from": 1212,
+     "to": 1218
+    },
+    {
+     "text": "it",
+     "from": 1219,
+     "to": 1221
+    },
+    {
+     "text": "describes.",
+     "from": 1222,
+     "to": 1240
+    }
+   ]
+  },
+  {
+   "id": "V08",
+   "scene": "A2",
+   "from": 1282,
+   "durationInFrames": 114,
+   "file": "vo/V08.wav",
+   "text": "When those change, the page is flagged: Possibly stale.",
+   "words": [
+    {
+     "text": "When",
+     "from": 1284,
+     "to": 1287
+    },
+    {
+     "text": "those",
+     "from": 1289,
+     "to": 1296
+    },
+    {
+     "text": "change,",
+     "from": 1298,
+     "to": 1311
+    },
+    {
+     "text": "the",
+     "from": 1318,
+     "to": 1321
+    },
+    {
+     "text": "page",
+     "from": 1323,
+     "to": 1329
+    },
+    {
+     "text": "is",
+     "from": 1330,
+     "to": 1334
+    },
+    {
+     "text": "flagged:",
+     "from": 1336,
+     "to": 1347
+    },
+    {
+     "text": "Possibly",
+     "from": 1364,
+     "to": 1378
+    },
+    {
+     "text": "stale.",
+     "from": 1383,
+     "to": 1392
+    }
+   ]
+  },
+  {
+   "id": "V09",
+   "scene": "A2",
+   "from": 1417,
+   "durationInFrames": 80,
+   "file": "vo/V09.wav",
+   "text": "And every agent that reads it is told the same.",
+   "words": [
+    {
+     "text": "And",
+     "from": 1418,
+     "to": 1421
+    },
+    {
+     "text": "every",
+     "from": 1427,
+     "to": 1435
+    },
+    {
+     "text": "agent",
+     "from": 1437,
+     "to": 1445
+    },
+    {
+     "text": "that",
+     "from": 1446,
+     "to": 1451
+    },
+    {
+     "text": "reads",
+     "from": 1454,
+     "to": 1460
+    },
+    {
+     "text": "it",
+     "from": 1462,
+     "to": 1467
+    },
+    {
+     "text": "is",
+     "from": 1469,
+     "to": 1472
+    },
+    {
+     "text": "told",
+     "from": 1474,
+     "to": 1480
+    },
+    {
+     "text": "the",
+     "from": 1481,
+     "to": 1484
+    },
+    {
+     "text": "same.",
+     "from": 1485,
+     "to": 1494
+    }
+   ]
+  },
+  {
+   "id": "V10",
+   "scene": "A2",
+   "from": 1537,
+   "durationInFrames": 138,
+   "file": "vo/V10.wav",
+   "text": "Anchor. Flag. Tell the agents. Then a person decides.",
+   "words": [
+    {
+     "text": "Anchor.",
+     "from": 1539,
+     "to": 1550
+    },
+    {
+     "text": "Flag.",
+     "from": 1566,
+     "to": 1577
+    },
+    {
+     "text": "Tell",
+     "from": 1593,
+     "to": 1598
+    },
+    {
+     "text": "the",
+     "from": 1599,
+     "to": 1601
+    },
+    {
+     "text": "agents.",
+     "from": 1604,
+     "to": 1616
+    },
+    {
+     "text": "Then",
+     "from": 1633,
+     "to": 1641
+    },
+    {
+     "text": "a",
+     "from": 1643,
+     "to": 1645
+    },
+    {
+     "text": "person",
+     "from": 1646,
+     "to": 1654
+    },
+    {
+     "text": "decides.",
+     "from": 1656,
+     "to": 1671
+    }
+   ]
+  },
+  {
+   "id": "V11",
+   "scene": "P1",
+   "from": 1732,
+   "durationInFrames": 197,
+   "file": "vo/V11.wav",
+   "text": "Open any page. Doc Drift reads the paths and Jira keys already on it, and suggests anchors.",
+   "words": [
+    {
+     "text": "Open",
+     "from": 1735,
+     "to": 1742
+    },
+    {
+     "text": "any",
+     "from": 1748,
+     "to": 1752
+    },
+    {
+     "text": "page.",
+     "from": 1755,
+     "to": 1766
+    },
+    {
+     "text": "Doc",
+     "from": 1788,
+     "to": 1794
+    },
+    {
+     "text": "Drift",
+     "from": 1796,
+     "to": 1803
+    },
+    {
+     "text": "reads",
+     "from": 1808,
+     "to": 1815
+    },
+    {
+     "text": "the",
+     "from": 1817,
+     "to": 1819
+    },
+    {
+     "text": "paths",
+     "from": 1821,
+     "to": 1833
+    },
+    {
+     "text": "and",
+     "from": 1835,
+     "to": 1837
+    },
+    {
+     "text": "Jira",
+     "from": 1840,
+     "to": 1848
+    },
+    {
+     "text": "keys",
+     "from": 1850,
+     "to": 1860
+    },
+    {
+     "text": "already",
+     "from": 1862,
+     "to": 1873
+    },
+    {
+     "text": "on",
+     "from": 1875,
+     "to": 1879
+    },
+    {
+     "text": "it,",
+     "from": 1880,
+     "to": 1883
+    },
+    {
+     "text": "and",
+     "from": 1891,
+     "to": 1893
+    },
+    {
+     "text": "suggests",
+     "from": 1895,
+     "to": 1909
+    },
+    {
+     "text": "anchors.",
+     "from": 1913,
+     "to": 1926
+    }
+   ]
+  },
+  {
+   "id": "V12",
+   "scene": "P1",
+   "from": 1972,
+   "durationInFrames": 65,
+   "file": "vo/V12.wav",
+   "text": "Save, and the page is Verified.",
+   "words": [
+    {
+     "text": "Save,",
+     "from": 1976,
+     "to": 1987
+    },
+    {
+     "text": "and",
+     "from": 1995,
+     "to": 1998
+    },
+    {
+     "text": "the",
+     "from": 2000,
+     "to": 2002
+    },
+    {
+     "text": "page",
+     "from": 2004,
+     "to": 2010
+    },
+    {
+     "text": "is",
+     "from": 2012,
+     "to": 2015
+    },
+    {
+     "text": "Verified.",
+     "from": 2016,
+     "to": 2033
+    }
+   ]
+  },
+  {
+   "id": "V13",
+   "scene": "P2",
+   "from": 2092,
+   "durationInFrames": 122,
+   "file": "vo/V13.wav",
+   "text": "Now a teammate merges a pull request that renames the rollback script.",
+   "words": [
+    {
+     "text": "Now",
+     "from": 2096,
+     "to": 2100
+    },
+    {
+     "text": "a",
+     "from": 2102,
+     "to": 2104
+    },
+    {
+     "text": "teammate",
+     "from": 2106,
+     "to": 2116
+    },
+    {
+     "text": "merges",
+     "from": 2121,
+     "to": 2130
+    },
+    {
+     "text": "a",
+     "from": 2132,
+     "to": 2134
+    },
+    {
+     "text": "pull",
+     "from": 2135,
+     "to": 2141
+    },
+    {
+     "text": "request",
+     "from": 2142,
+     "to": 2157
+    },
+    {
+     "text": "that",
+     "from": 2160,
+     "to": 2166
+    },
+    {
+     "text": "renames",
+     "from": 2167,
+     "to": 2181
+    },
+    {
+     "text": "the",
+     "from": 2182,
+     "to": 2185
+    },
+    {
+     "text": "rollback",
+     "from": 2186,
+     "to": 2198
+    },
+    {
+     "text": "script.",
+     "from": 2200,
+     "to": 2210
+    }
+   ]
+  },
+  {
+   "id": "V14",
+   "scene": "P2",
+   "from": 2287,
+   "durationInFrames": 121,
+   "file": "vo/V14.wav",
+   "text": "Seconds later, the runbook is flagged, with the exact change.",
+   "words": [
+    {
+     "text": "Seconds",
+     "from": 2291,
+     "to": 2300
+    },
+    {
+     "text": "later,",
+     "from": 2303,
+     "to": 2310
+    },
+    {
+     "text": "the",
+     "from": 2320,
+     "to": 2322
+    },
+    {
+     "text": "runbook",
+     "from": 2325,
+     "to": 2335
+    },
+    {
+     "text": "is",
+     "from": 2336,
+     "to": 2339
+    },
+    {
+     "text": "flagged,",
+     "from": 2342,
+     "to": 2354
+    },
+    {
+     "text": "with",
+     "from": 2363,
+     "to": 2366
+    },
+    {
+     "text": "the",
+     "from": 2367,
+     "to": 2370
+    },
+    {
+     "text": "exact",
+     "from": 2371,
+     "to": 2387
+    },
+    {
+     "text": "change.",
+     "from": 2391,
+     "to": 2404
+    }
+   ]
+  },
+  {
+   "id": "V15",
+   "scene": "P2",
+   "from": 2437,
+   "durationInFrames": 145,
+   "file": "vo/V15.wav",
+   "text": "No AI made that call. Same change, same result, every time.",
+   "words": [
+    {
+     "text": "No",
+     "from": 2439,
+     "to": 2444
+    },
+    {
+     "text": "AI",
+     "from": 2450,
+     "to": 2461
+    },
+    {
+     "text": "made",
+     "from": 2463,
+     "to": 2469
+    },
+    {
+     "text": "that",
+     "from": 2469,
+     "to": 2475
+    },
+    {
+     "text": "call.",
+     "from": 2477,
+     "to": 2484
+    },
+    {
+     "text": "Same",
+     "from": 2502,
+     "to": 2507
+    },
+    {
+     "text": "change,",
+     "from": 2510,
+     "to": 2520
+    },
+    {
+     "text": "same",
+     "from": 2533,
+     "to": 2538
+    },
+    {
+     "text": "result,",
+     "from": 2540,
+     "to": 2551
+    },
+    {
+     "text": "every",
+     "from": 2563,
+     "to": 2569
+    },
+    {
+     "text": "time.",
+     "from": 2572,
+     "to": 2580
+    }
+   ]
+  },
+  {
+   "id": "V16",
+   "scene": "P3",
+   "from": 2632,
+   "durationInFrames": 107,
+   "file": "vo/V16.wav",
+   "text": "Ask Drift Reviewer, our Rovo agent, how to roll back.",
+   "words": [
+    {
+     "text": "Ask",
+     "from": 2635,
+     "to": 2642
+    },
+    {
+     "text": "Drift",
+     "from": 2645,
+     "to": 2652
+    },
+    {
+     "text": "Reviewer,",
+     "from": 2655,
+     "to": 2667
+    },
+    {
+     "text": "our",
+     "from": 2676,
+     "to": 2681
+    },
+    {
+     "text": "Rovo",
+     "from": 2682,
+     "to": 2690
+    },
+    {
+     "text": "agent,",
+     "from": 2693,
+     "to": 2702
+    },
+    {
+     "text": "how",
+     "from": 2712,
+     "to": 2715
+    },
+    {
+     "text": "to",
+     "from": 2716,
+     "to": 2718
+    },
+    {
+     "text": "roll",
+     "from": 2720,
+     "to": 2724
+    },
+    {
+     "text": "back.",
+     "from": 2727,
+     "to": 2735
+    }
+   ]
+  },
+  {
+   "id": "V17",
+   "scene": "P3",
+   "from": 2827,
+   "durationInFrames": 153,
+   "file": "vo/V17.wav",
+   "text": "It doesn't repeat the old step. It says the page is Possibly stale, and why.",
+   "words": [
+    {
+     "text": "It",
+     "from": 2829,
+     "to": 2832
+    },
+    {
+     "text": "doesn't",
+     "from": 2834,
+     "to": 2842
+    },
+    {
+     "text": "repeat",
+     "from": 2843,
+     "to": 2855
+    },
+    {
+     "text": "the",
+     "from": 2855,
+     "to": 2859
+    },
+    {
+     "text": "old",
+     "from": 2861,
+     "to": 2865
+    },
+    {
+     "text": "step.",
+     "from": 2870,
+     "to": 2877
+    },
+    {
+     "text": "It",
+     "from": 2891,
+     "to": 2894
+    },
+    {
+     "text": "says",
+     "from": 2896,
+     "to": 2902
+    },
+    {
+     "text": "the",
+     "from": 2903,
+     "to": 2906
+    },
+    {
+     "text": "page",
+     "from": 2907,
+     "to": 2918
+    },
+    {
+     "text": "is",
+     "from": 2919,
+     "to": 2923
+    },
+    {
+     "text": "Possibly",
+     "from": 2925,
+     "to": 2939
+    },
+    {
+     "text": "stale,",
+     "from": 2945,
+     "to": 2954
+    },
+    {
+     "text": "and",
+     "from": 2963,
+     "to": 2966
+    },
+    {
+     "text": "why.",
+     "from": 2969,
+     "to": 2978
+    }
+   ]
+  },
+  {
+   "id": "V18",
+   "scene": "P3",
+   "from": 3022,
+   "durationInFrames": 185,
+   "file": "vo/V18.wav",
+   "text": "Coding agents get the same signal over MCP: which pages cover a file, and which to trust.",
+   "words": [
+    {
+     "text": "Coding",
+     "from": 3023,
+     "to": 3032
+    },
+    {
+     "text": "agents",
+     "from": 3033,
+     "to": 3044
+    },
+    {
+     "text": "get",
+     "from": 3046,
+     "to": 3050
+    },
+    {
+     "text": "the",
+     "from": 3051,
+     "to": 3054
+    },
+    {
+     "text": "same",
+     "from": 3057,
+     "to": 3063
+    },
+    {
+     "text": "signal",
+     "from": 3068,
+     "to": 3079
+    },
+    {
+     "text": "over",
+     "from": 3081,
+     "to": 3087
+    },
+    {
+     "text": "MCP:",
+     "from": 3089,
+     "to": 3107
+    },
+    {
+     "text": "which",
+     "from": 3125,
+     "to": 3129
+    },
+    {
+     "text": "pages",
+     "from": 3132,
+     "to": 3143
+    },
+    {
+     "text": "cover",
+     "from": 3144,
+     "to": 3152
+    },
+    {
+     "text": "a",
+     "from": 3153,
+     "to": 3156
+    },
+    {
+     "text": "file,",
+     "from": 3157,
+     "to": 3166
+    },
+    {
+     "text": "and",
+     "from": 3175,
+     "to": 3180
+    },
+    {
+     "text": "which",
+     "from": 3181,
+     "to": 3188
+    },
+    {
+     "text": "to",
+     "from": 3189,
+     "to": 3191
+    },
+    {
+     "text": "trust.",
+     "from": 3193,
+     "to": 3204
+    }
+   ]
+  },
+  {
+   "id": "V19",
+   "scene": "P4",
+   "from": 3292,
+   "durationInFrames": 94,
+   "file": "vo/V19.wav",
+   "text": "The page owner gets one comment, and opens the review.",
+   "words": [
+    {
+     "text": "The",
+     "from": 3294,
+     "to": 3297
+    },
+    {
+     "text": "page",
+     "from": 3299,
+     "to": 3306
+    },
+    {
+     "text": "owner",
+     "from": 3308,
+     "to": 3317
+    },
+    {
+     "text": "gets",
+     "from": 3318,
+     "to": 3326
+    },
+    {
+     "text": "one",
+     "from": 3329,
+     "to": 3332
+    },
+    {
+     "text": "comment,",
+     "from": 3335,
+     "to": 3347
+    },
+    {
+     "text": "and",
+     "from": 3353,
+     "to": 3355
+    },
+    {
+     "text": "opens",
+     "from": 3359,
+     "to": 3368
+    },
+    {
+     "text": "the",
+     "from": 3369,
+     "to": 3372
+    },
+    {
+     "text": "review.",
+     "from": 3373,
+     "to": 3384
+    }
+   ]
+  },
+  {
+   "id": "V20",
+   "scene": "P4",
+   "from": 3427,
+   "durationInFrames": 94,
+   "file": "vo/V20.wav",
+   "text": "A rename gets a one-click fix, with no AI.",
+   "words": [
+    {
+     "text": "A",
+     "from": 3429,
+     "to": 3431
+    },
+    {
+     "text": "rename",
+     "from": 3432,
+     "to": 3444
+    },
+    {
+     "text": "gets",
+     "from": 3448,
+     "to": 3452
+    },
+    {
+     "text": "a",
+     "from": 3455,
+     "to": 3457
+    },
+    {
+     "text": "one-click",
+     "from": 3459,
+     "to": 3472
+    },
+    {
+     "text": "fix,",
+     "from": 3476,
+     "to": 3485
+    },
+    {
+     "text": "with",
+     "from": 3492,
+     "to": 3497
+    },
+    {
+     "text": "no",
+     "from": 3500,
+     "to": 3505
+    },
+    {
+     "text": "AI.",
+     "from": 3508,
+     "to": 3518
+    }
+   ]
+  },
+  {
+   "id": "V21",
+   "scene": "P4",
+   "from": 3562,
+   "durationInFrames": 180,
+   "file": "vo/V21.wav",
+   "text": "For anything bigger, Drift Reviewer drafts the edit. Nothing changes until a person accepts.",
+   "words": [
+    {
+     "text": "For",
+     "from": 3564,
+     "to": 3568
+    },
+    {
+     "text": "anything",
+     "from": 3570,
+     "to": 3579
+    },
+    {
+     "text": "bigger,",
+     "from": 3582,
+     "to": 3590
+    },
+    {
+     "text": "Drift",
+     "from": 3605,
+     "to": 3612
+    },
+    {
+     "text": "Reviewer",
+     "from": 3614,
+     "to": 3625
+    },
+    {
+     "text": "drafts",
+     "from": 3628,
+     "to": 3639
+    },
+    {
+     "text": "the",
+     "from": 3641,
+     "to": 3644
+    },
+    {
+     "text": "edit.",
+     "from": 3645,
+     "to": 3653
+    },
+    {
+     "text": "Nothing",
+     "from": 3673,
+     "to": 3681
+    },
+    {
+     "text": "changes",
+     "from": 3684,
+     "to": 3696
+    },
+    {
+     "text": "until",
+     "from": 3699,
+     "to": 3706
+    },
+    {
+     "text": "a",
+     "from": 3708,
+     "to": 3710
+    },
+    {
+     "text": "person",
+     "from": 3712,
+     "to": 3720
+    },
+    {
+     "text": "accepts.",
+     "from": 3722,
+     "to": 3737
+    }
+   ]
+  },
+  {
+   "id": "V22",
+   "scene": "P4",
+   "from": 3757,
+   "durationInFrames": 79,
+   "file": "vo/V22.wav",
+   "text": "Verified. Now the agent can cite it.",
+   "words": [
+    {
+     "text": "Verified.",
+     "from": 3760,
+     "to": 3777
+    },
+    {
+     "text": "Now",
+     "from": 3792,
+     "to": 3799
+    },
+    {
+     "text": "the",
+     "from": 3800,
+     "to": 3802
+    },
+    {
+     "text": "agent",
+     "from": 3806,
+     "to": 3813
+    },
+    {
+     "text": "can",
+     "from": 3815,
+     "to": 3818
+    },
+    {
+     "text": "cite",
+     "from": 3822,
+     "to": 3828
+    },
+    {
+     "text": "it.",
+     "from": 3829,
+     "to": 3833
+    }
+   ]
+  },
+  {
+   "id": "V23",
+   "scene": "P5",
+   "from": 3952,
+   "durationInFrames": 132,
+   "file": "vo/V23.wav",
+   "text": "Jira changes count too. And every space gets a drift dashboard.",
+   "words": [
+    {
+     "text": "Jira",
+     "from": 3955,
+     "to": 3962
+    },
+    {
+     "text": "changes",
+     "from": 3965,
+     "to": 3975
+    },
+    {
+     "text": "count",
+     "from": 3977,
+     "to": 3984
+    },
+    {
+     "text": "too.",
+     "from": 3986,
+     "to": 3993
+    },
+    {
+     "text": "And",
+     "from": 4012,
+     "to": 4018
+    },
+    {
+     "text": "every",
+     "from": 4020,
+     "to": 4027
+    },
+    {
+     "text": "space",
+     "from": 4032,
+     "to": 4042
+    },
+    {
+     "text": "gets",
+     "from": 4043,
+     "to": 4047
+    },
+    {
+     "text": "a",
+     "from": 4049,
+     "to": 4052
+    },
+    {
+     "text": "drift",
+     "from": 4053,
+     "to": 4061
+    },
+    {
+     "text": "dashboard.",
+     "from": 4064,
+     "to": 4080
+    }
+   ]
+  },
+  {
+   "id": "V24",
+   "scene": "A4",
+   "from": 4207,
+   "durationInFrames": 153,
+   "file": "vo/V24.wav",
+   "text": "Next time it's 3 a.m., the runbook tells you, and your agent, before step 2.",
+   "words": [
+    {
+     "text": "Next",
+     "from": 4209,
+     "to": 4215
+    },
+    {
+     "text": "time",
+     "from": 4218,
+     "to": 4224
+    },
+    {
+     "text": "it's",
+     "from": 4225,
+     "to": 4230
+    },
+    {
+     "text": "3",
+     "from": 4237,
+     "to": 4238
+    },
+    {
+     "text": "a.m.,",
+     "from": 4241,
+     "to": 4248
+    },
+    {
+     "text": "the",
+     "from": 4262,
+     "to": 4263
+    },
+    {
+     "text": "runbook",
+     "from": 4266,
+     "to": 4276
+    },
+    {
+     "text": "tells",
+     "from": 4277,
+     "to": 4284
+    },
+    {
+     "text": "you,",
+     "from": 4286,
+     "to": 4289
+    },
+    {
+     "text": "and",
+     "from": 4301,
+     "to": 4305
+    },
+    {
+     "text": "your",
+     "from": 4306,
+     "to": 4309
+    },
+    {
+     "text": "agent,",
+     "from": 4311,
+     "to": 4320
+    },
+    {
+     "text": "before",
+     "from": 4328,
+     "to": 4339
+    },
+    {
+     "text": "step",
+     "from": 4341,
+     "to": 4348
+    },
+    {
+     "text": "2.",
+     "from": 4355,
+     "to": 4356
+    }
+   ]
+  },
+  {
+   "id": "V25",
+   "scene": "A4",
+   "from": 4447,
+   "durationInFrames": 116,
+   "file": "vo/V25.wav",
+   "text": "Doc Drift Sentinel. Catch the slip before your agents do.",
+   "words": [
+    {
+     "text": "Doc",
+     "from": 4449,
+     "to": 4455
+    },
+    {
+     "text": "Drift",
+     "from": 4458,
+     "to": 4466
+    },
+    {
+     "text": "Sentinel.",
+     "from": 4469,
+     "to": 4482
+    },
+    {
+     "text": "Catch",
+     "from": 4501,
+     "to": 4509
+    },
+    {
+     "text": "the",
+     "from": 4510,
+     "to": 4514
+    },
+    {
+     "text": "slip",
+     "from": 4515,
+     "to": 4524
+    },
+    {
+     "text": "before",
+     "from": 4525,
+     "to": 4534
+    },
+    {
+     "text": "your",
+     "from": 4535,
+     "to": 4539
+    },
+    {
+     "text": "agents",
+     "from": 4541,
+     "to": 4552
+    },
+    {
+     "text": "do.",
+     "from": 4553,
+     "to": 4559
+    }
+   ]
+  }
+ ],
+ "music": [
+  {
+   "id": "score",
+   "file": "music/score.wav",
+   "from": 277,
+   "durationInFrames": 4380,
+   "gainDb": -12,
+   "duckDb": -8,
+   "bpm": 120.003,
+   "firstBeatSec": 0.0062,
+   "lufs": -16.2,
+   "cues": [
+    {
+     "id": "M1",
+     "from": 277,
+     "to": 397,
+     "what": "warm title swell from silence under V01 (no drums)"
+    },
+    {
+     "id": "M2",
+     "from": 397,
+     "to": 1057,
+     "what": "Night: low pulse on the beat, ticking hats, dark pad; mid band alternates 2 loud / 2 quiet bars and rises over the last 3 bars"
+    },
+    {
+     "id": "M3",
+     "from": 1057,
+     "to": 1717,
+     "what": "Day lift on A2's first frame: kick on the beat, backbeat, bright synths"
+    },
+    {
+     "id": "M4",
+     "from": 1717,
+     "to": 3277,
+     "what": "steady groove (P1-P3); kick drop-out fills at 56-58 and 72.5-73.5"
+    },
+    {
+     "id": "M5",
+     "from": 3277,
+     "to": 3937,
+     "what": "P4: groove muffled (low-pass 900 Hz), opening 114-116; full band and a small sub hit on snapBack (116)"
+    },
+    {
+     "id": "M6",
+     "from": 3937,
+     "to": 4417,
+     "what": "P5-A4: groove; riser from 132 and high-pass build 134-138"
+    },
+    {
+     "id": "M7",
+     "from": 4417,
+     "to": 4657,
+     "what": "final hit on endHit (the take's hit plus a sub hit), ring-out to silence at the film's end"
+    }
+   ],
+   "hits": [
+    {
+     "at": 3757,
+     "why": "M5: the small hit on snapBack (V22, Verified)"
+    },
+    {
+     "at": 4417,
+     "why": "M7: the final hit on the end card (endHit), doubling the take's own hit"
+    }
+   ]
+  }
+ ],
+ "duck": [
+  [
+   190,
+   274
+  ],
+  [
+   287,
+   369
+  ],
+  [
+   422,
+   499
+  ],
+  [
+   512,
+   611
+  ],
+  [
+   632,
+   710
+  ],
+  [
+   737,
+   843
+  ],
+  [
+   872,
+   1012
+  ],
+  [
+   1082,
+   1254
+  ],
+  [
+   1277,
+   1406
+  ],
+  [
+   1412,
+   1507
+  ],
+  [
+   1532,
+   1685
+  ],
+  [
+   1727,
+   1939
+  ],
+  [
+   1967,
+   2047
+  ],
+  [
+   2087,
+   2224
+  ],
+  [
+   2282,
+   2418
+  ],
+  [
+   2432,
+   2592
+  ],
+  [
+   2627,
+   2749
+  ],
+  [
+   2822,
+   2990
+  ],
+  [
+   3017,
+   3217
+  ],
+  [
+   3287,
+   3396
+  ],
+  [
+   3422,
+   3531
+  ],
+  [
+   3557,
+   3846
+  ],
+  [
+   3947,
+   4094
+  ],
+  [
+   4202,
+   4370
+  ],
+  [
+   4442,
+   4573
+  ]
+ ],
+ "voice": {
+  "id": "cjVigY5qzO86Huf0OWal",
+  "name": "Eric",
+  "model": "eleven_v4"
+ }
+}

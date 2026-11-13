@@ -1,0 +1,44 @@
+Go back to Rovo chat
+Menu
+Drift Reviewer
+New chat with Drift Reviewer
+Switch to
+More options
+Close
+Response complete.
+Copy
+Share chat up to this point
+
+How do I roll back payments-api?
+
+Referencing
+Payments rollback runbook
+
+Payments rollback runbook is Possibly stale.
+
+The page was changed by PR #482 on 2026-11-13. The "Steps" section is affected because scripts/rollback.sh was renamed to scripts/rollback-v2.sh and deploy/helm/values.yaml was updated.
+
+Because of these changes, the steps on the page may not be current. You can find the review in the Doc Drift badge on the page. Would you like me to draft a fix for the affected sections?
+
+Good response
+Bad response
+Copy
+Share chat up to this point
+Debug response
+How do I use rollback-v2.sh?
+What changed in the rollback steps?
+Can you draft the updated runbook section?
+Context:
+Payments rollback runbook
+Remove context
+
+Describe what you want to know or do next
+
+
+Add
++4
+Auto
+Start dictation
+Submit
+Uses AI. Verify results.﻿
+, (opens new window)

@@ -1,0 +1,403 @@
+{
+  "runbookText": {
+    "source": "Payments rollback runbook (PLAT 2720100), version 1, rendered page text and storage format, read 2026-11-13 before the shoot",
+    "pageTitle": "Payments rollback runbook",
+    "header": [
+      [
+        "Owner",
+        "Dana (Platform on-call lead)"
+      ],
+      [
+        "Service",
+        "payments-api"
+      ],
+      [
+        "Severity",
+        "Use during a SEV1 or SEV2 caused by a bad payments release"
+      ],
+      [
+        "Jira",
+        "PAY-6 Safer payments deploys and rollbacks"
+      ],
+      [
+        "Last reviewed",
+        "2026-10-14"
+      ]
+    ],
+    "stepsHeading": "Steps",
+    "steps": [
+      {
+        "n": 1,
+        "text": "Confirm the current and previous release. The previous revision is the one you are rolling back to.",
+        "code": [
+          "kubectl config use-context prod-eu-west-1",
+          "helm history payments -n payments --max 5"
+        ]
+      },
+      {
+        "n": 2,
+        "text": "Run the rollback script from the root of the payments-api repo. ROLLBACK_TIMEOUT is in seconds and defaults to 300. Raise it to 600 if the cluster is under load.",
+        "inlineCode": [
+          "payments-api",
+          "ROLLBACK_TIMEOUT"
+        ],
+        "code": [
+          "export ROLLBACK_TIMEOUT=300",
+          "./scripts/rollback.sh --timeout $ROLLBACK_TIMEOUT"
+        ],
+        "codeLanguage": "bash",
+        "after": "The script calls helm rollback payments 0 --wait, so it returns only when the previous release is ready or the timeout expires.",
+        "afterInlineCode": [
+          "helm rollback payments 0 --wait"
+        ]
+      },
+      {
+        "n": 3,
+        "text": "Check that the pods are on the previous image tag and passing readiness.",
+        "code": [
+          "kubectl -n payments get pods -l app=payments-api -o wide",
+          "kubectl -n payments get deploy payments-api -o jsonpath='{.spec.template.spec.containers[0].image}'"
+        ]
+      },
+      {
+        "n": 4,
+        "text": "Watch the charge success rate for 10 minutes. It should be back above 99%."
+      },
+      {
+        "n": 5,
+        "text": "Freeze deploys: add the deploy-freeze label to the payments-api repo's open release PR and say so in the incident channel.",
+        "inlineCode": [
+          "deploy-freeze"
+        ]
+      }
+    ],
+    "elsewhere": {
+      "beforeSteps": "If the release also ran a database migration, read Migrations below before step 2. A rollback does not undo schema changes.",
+      "warningPanel": "Post in the incident channel before you start, and name yourself as the person rolling back. Only one person runs the rollback.",
+      "timeoutSection": "If a pod is stuck, delete it and let the deployment replace it. Then run step 2 again with a longer timeout."
+    },
+    "storageStep2": "<li><p>Run the rollback script from the root of the <code>payments-api</code> repo. <code>ROLLBACK_TIMEOUT</code> is in seconds and defaults to 300. Raise it to 600 if the cluster is under load.</p>\n<ac:structured-macro ac:name=\"code\" ...><ac:parameter ac:name=\"language\">bash</ac:parameter><ac:plain-text-body><![CDATA[export ROLLBACK_TIMEOUT=300\n./scripts/rollback.sh --timeout $ROLLBACK_TIMEOUT]]></ac:plain-text-body></ac:structured-macro>\n<p>The script calls <code>helm rollback payments 0 --wait</code>, so it returns only when the previous release is ready or the timeout expires.</p>\n</li>"
+  },
+  "toolOutput": {
+    "checkBefore": {
+      "calledAt": "2026-11-13T16:03:14+02:00",
+      "tool": "check-page-freshness",
+      "server": "doc-drift (development), via MCP as Razvan Statescu",
+      "input": {
+        "pageId": "2720100"
+      },
+      "output": {
+        "ok": true,
+        "pageId": "2720100",
+        "title": "Payments rollback runbook",
+        "url": "https://one-atlas-jzzf.atlassian.net/wiki/spaces/PLAT/pages/2720100/Payments+rollback+runbook",
+        "resolvedFrom": "pageId",
+        "status": "verified",
+        "statusLabel": "Verified",
+        "citePolicy": "cite",
+        "verifiedAt": "2026-11-13T13:59:32.217Z",
+        "verifiedBy": "Razvan Statescu",
+        "openDrift": [],
+        "affectedSections": [],
+        "guidance": "\"Payments rollback runbook\" is Verified. Safe to cite."
+      },
+      "note": "Before the merge, right after P1 re-anchoring. Not for the film's terminal scene (that uses checkFlagged and checkVerified)."
+    },
+    "findDocsFlagged": {
+      "calledAt": "2026-11-13T16:52:19+02:00",
+      "tool": "find-docs-for-path",
+      "server": "doc-drift MCP (development install), called by the capture agent's MCP client as Razvan Statescu",
+      "input": {
+        "repo": "payments-api",
+        "path": "scripts/rollback.sh"
+      },
+      "output": {
+        "ok": true,
+        "repo": "payments-api",
+        "path": "scripts/rollback.sh",
+        "pages": [
+          {
+            "pageId": "2752731",
+            "title": "DDS test: Payments rollback runbook",
+            "url": "https://one-atlas-jzzf.atlassian.net/wiki/spaces/DDSTEST/pages/2752731/DDS+test+Payments+rollback+runbook",
+            "anchor": "payments-api: scripts/rollback.sh",
+            "match": "exact",
+            "status": "possibly_stale",
+            "statusLabel": "Possibly stale",
+            "citePolicy": "cite_with_caveat"
+          },
+          {
+            "pageId": "2720100",
+            "title": "Payments rollback runbook",
+            "url": "https://one-atlas-jzzf.atlassian.net/wiki/spaces/PLAT/pages/2720100/Payments+rollback+runbook",
+            "anchor": "payments-api: scripts/rollback.sh",
+            "match": "exact",
+            "status": "possibly_stale",
+            "statusLabel": "Possibly stale",
+            "citePolicy": "cite_with_caveat"
+          },
+          {
+            "pageId": "2982418",
+            "title": "Refund worker runbook (UX review)",
+            "url": "https://one-atlas-jzzf.atlassian.net/wiki/spaces/DDSTEST/pages/2982418/Refund+worker+runbook+UX+review",
+            "anchor": "payments-api: scripts/rollback.sh",
+            "match": "exact",
+            "status": "possibly_stale",
+            "statusLabel": "Possibly stale",
+            "citePolicy": "cite_with_caveat"
+          }
+        ],
+        "guidance": "3 pages document this path: \"DDS test: Payments rollback runbook\" (Possibly stale), \"Payments rollback runbook\" (Possibly stale), \"Refund worker runbook (UX review)\" (Possibly stale). 3 of them are Possibly stale or Stale. Call check-page-freshness before citing any of these pages. Name each page by its title."
+      },
+      "note": "Real output. 2 of the 3 pages are QA pages in the DDSTEST space (\"DDS test: ...\", \"(UX review)\") that are anchored to the same path; the PLAT runbook is the second row."
+    },
+    "checkFlagged": {
+      "calledAt": "2026-11-13T16:52:19+02:00",
+      "tool": "check-page-freshness",
+      "server": "doc-drift MCP (development install), as Razvan Statescu",
+      "input": {
+        "pageId": "2720100"
+      },
+      "output": {
+        "ok": true,
+        "pageId": "2720100",
+        "title": "Payments rollback runbook",
+        "url": "https://one-atlas-jzzf.atlassian.net/wiki/spaces/PLAT/pages/2720100/Payments+rollback+runbook",
+        "resolvedFrom": "pageId",
+        "status": "possibly_stale",
+        "statusLabel": "Possibly stale",
+        "citePolicy": "cite_with_caveat",
+        "verifiedAt": "2026-11-13T13:59:32.217Z",
+        "verifiedBy": "Razvan Statescu",
+        "openDrift": [
+          {
+            "source": "bitbucket",
+            "ref": "PR #482",
+            "summary": "deploy/helm/values.yaml changed: 1 line added, 1 removed",
+            "severity": "medium",
+            "score": 0.73,
+            "at": "2026-11-13T14:46:30.801Z"
+          },
+          {
+            "source": "bitbucket",
+            "ref": "PR #482",
+            "summary": "scripts/rollback.sh renamed to scripts/rollback-v2.sh",
+            "severity": "high",
+            "score": 1,
+            "at": "2026-11-13T14:46:30.518Z"
+          }
+        ],
+        "affectedSections": [
+          {
+            "heading": "Steps",
+            "blockIds": [
+              "b21",
+              "b22"
+            ]
+          }
+        ],
+        "guidance": "\"Payments rollback runbook\" is Possibly stale. Do not present steps from this page as current. Cite with caveat: changed by PR #482 on 2026-11-13. Affected: \"Steps\"."
+      },
+      "note": "Superseded by checkFlaggedV2 (core 5.5.0, D38): this older caveat (\"changed by PR #482\") led Drift Reviewer to say the page was changed by the PR."
+    },
+    "checkVerified": {
+      "calledAt": "2026-11-13T17:02:22+02:00",
+      "tool": "check-page-freshness",
+      "server": "doc-drift MCP (development install), as Razvan Statescu",
+      "input": {
+        "pageId": "2720100"
+      },
+      "output": {
+        "ok": true,
+        "pageId": "2720100",
+        "title": "Payments rollback runbook",
+        "url": "https://one-atlas-jzzf.atlassian.net/wiki/spaces/PLAT/pages/2720100/Payments+rollback+runbook",
+        "resolvedFrom": "pageId",
+        "status": "verified",
+        "statusLabel": "Verified",
+        "citePolicy": "cite",
+        "verifiedAt": "2026-11-13T15:00:50.117Z",
+        "verifiedBy": "Razvan Statescu",
+        "openDrift": [],
+        "affectedSections": [],
+        "guidance": "\"Payments rollback runbook\" is Verified. Safe to cite."
+      },
+      "note": "After the rename quick fix (v2) and the two accepted Drift Reviewer drafts (v3, v4)."
+    },
+    "findDocsFlaggedV2": {
+      "calledAt": "2026-11-13T19:01:40+02:00",
+      "tool": "find-docs-for-path",
+      "app": "core 5.5.0",
+      "server": "doc-drift MCP (development install), as Razvan Statescu",
+      "input": {
+        "repo": "payments-api",
+        "path": "scripts/rollback.sh"
+      },
+      "output": {
+        "ok": true,
+        "repo": "payments-api",
+        "path": "scripts/rollback.sh",
+        "pages": [
+          {
+            "pageId": "2752731",
+            "title": "DDS test: Payments rollback runbook",
+            "url": "https://one-atlas-jzzf.atlassian.net/wiki/spaces/DDSTEST/pages/2752731/DDS+test+Payments+rollback+runbook",
+            "anchor": "payments-api: scripts/rollback.sh",
+            "match": "exact",
+            "status": "possibly_stale",
+            "statusLabel": "Possibly stale",
+            "citePolicy": "cite_with_caveat"
+          },
+          {
+            "pageId": "2720100",
+            "title": "Payments rollback runbook",
+            "url": "https://one-atlas-jzzf.atlassian.net/wiki/spaces/PLAT/pages/2720100/Payments+rollback+runbook",
+            "anchor": "payments-api: scripts/rollback.sh",
+            "match": "exact",
+            "status": "possibly_stale",
+            "statusLabel": "Possibly stale",
+            "citePolicy": "cite_with_caveat"
+          },
+          {
+            "pageId": "2982418",
+            "title": "Refund worker runbook (UX review)",
+            "url": "https://one-atlas-jzzf.atlassian.net/wiki/spaces/DDSTEST/pages/2982418/Refund+worker+runbook+UX+review",
+            "anchor": "payments-api: scripts/rollback.sh",
+            "match": "exact",
+            "status": "possibly_stale",
+            "statusLabel": "Possibly stale",
+            "citePolicy": "cite_with_caveat"
+          }
+        ],
+        "guidance": "3 pages document this path: \"DDS test: Payments rollback runbook\" (Possibly stale), \"Payments rollback runbook\" (Possibly stale), \"Refund worker runbook (UX review)\" (Possibly stale). 3 of them are Possibly stale or Stale. Call check-page-freshness before citing any of these pages. Name each page by its title."
+      },
+      "note": "Same shape as findDocsFlagged; still includes the 2 DDSTEST QA pages anchored to the same path. The runbook was flagged by the settings demo replay of seeded PR #482 (no Bitbucket change)."
+    },
+    "checkFlaggedV2": {
+      "calledAt": "2026-11-13T19:01:40+02:00",
+      "tool": "check-page-freshness",
+      "app": "core 5.5.0",
+      "server": "doc-drift MCP (development install), as Razvan Statescu",
+      "input": {
+        "pageId": "2720100"
+      },
+      "output": {
+        "ok": true,
+        "pageId": "2720100",
+        "title": "Payments rollback runbook",
+        "url": "https://one-atlas-jzzf.atlassian.net/wiki/spaces/PLAT/pages/2720100/Payments+rollback+runbook",
+        "resolvedFrom": "pageId",
+        "status": "possibly_stale",
+        "statusLabel": "Possibly stale",
+        "citePolicy": "cite_with_caveat",
+        "verifiedAt": "2026-11-13T15:04:32.234Z",
+        "verifiedBy": "Razvan Statescu",
+        "openDrift": [
+          {
+            "source": "bitbucket",
+            "ref": "PR #482",
+            "summary": "deploy/helm/values.yaml changed: 1 line added, 1 removed",
+            "severity": "medium",
+            "score": 0.73,
+            "at": "2026-11-13T16:59:16.968Z"
+          },
+          {
+            "source": "bitbucket",
+            "ref": "PR #482",
+            "summary": "scripts/rollback.sh renamed to scripts/rollback-v2.sh",
+            "severity": "high",
+            "score": 1,
+            "at": "2026-11-13T16:59:16.726Z"
+          }
+        ],
+        "affectedSections": [
+          {
+            "heading": "Steps",
+            "blockIds": [
+              "b21",
+              "b22"
+            ]
+          }
+        ],
+        "guidance": "\"Payments rollback runbook\" is Possibly stale. Do not present steps from this page as current. Cite with caveat: what it describes changed in PR #482 on 2026-11-13, after it was last verified. Affected: \"Steps\"."
+      },
+      "note": "D38 wording (core 5.5.0). Prefer this over checkFlagged for the film: the old caveat read \"changed by PR #482\"."
+    }
+  },
+  "measured": {
+    "jiraToFlagSeconds": 9,
+    "jiraToFlagNote": "From the click on Done in the PAY-18 status menu to the first REST read (1 s polling) of ADR-015's byline property that was no longer Verified.",
+    "mergeToFlagSeconds": 19,
+    "mergeToFlagExact": 18.6,
+    "mergeClickAt": "2026-11-13T14:46:13.391Z",
+    "flaggedAt": "2026-11-13T14:46:32.025Z",
+    "method": "From the click on the Merge dialog's Merge button in Bitbucket (PR #482, 2026-11-13T14:46:13.391Z) to the moment the app wrote the runbook's byline content property dds-byline-7f3c2a as \"Possibly stale · Doc Drift\" (property version 11, createdAt 2026-11-13T14:46:32.025Z, author: the app). Bitbucket's merge commit bf02bd0dcfb6 is dated 14:46:14, so merge commit to flag is 18 s. A REST poll (1 s) first saw it at 19.5 s; the poll had a gap from 10.0 s to 19.5 s while the merge video was encoding, so the property's own timestamp is the authoritative one. Development install, demo site.",
+    "bitbucketMerge": {
+      "state": "MERGED",
+      "mergeCommit": "bf02bd0dcfb6",
+      "updatedOn": "2026-11-13T14:46:18.934284+00:00"
+    },
+    "observations": [
+      {
+        "atMs": 0,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 1002,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 2002,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 3003,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 4004,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 5005,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 6005,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 7010,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 8011,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 9013,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 10014,
+        "title": "Verified · Doc Drift"
+      },
+      {
+        "atMs": 19542,
+        "title": "Possibly stale · Doc Drift"
+      }
+    ],
+    "commentAfterMergeSeconds": 24,
+    "commentId": "3735566",
+    "mergeCommitAt": "2026-11-13T14:46:14Z",
+    "mergeCommitToFlagSeconds": 18,
+    "pollFirstSawFlagSeconds": 19.5,
+    "flagTooltip": "PR #482 changed deploy/helm/values.yaml on Nov 13. Review.",
+    "eventsCreatedAt": [
+      "2026-11-13T14:46:30.518Z (scripts/rollback.sh renamed, high, 1.0)",
+      "2026-11-13T14:46:30.801Z (deploy/helm/values.yaml, medium, 0.73)"
+    ],
+    "replayToFlagSeconds": 6.8,
+    "replayNote": "Re-capture 2026-11-13 18:59:11 local: settings \"Replay seeded PR #482\" to the runbook byline reading Possibly stale (1 s polling). Not a Bitbucket merge; do not use for the merge timer."
+  }
+}

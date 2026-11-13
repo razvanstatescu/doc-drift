@@ -1,0 +1,16 @@
+{
+ "slip.c0.wav": {
+  "slideFrom": "slip.t3.wav",
+  "slideSec": [
+   0.091,
+   0.431
+  ],
+  "slideGainDb": 6.3,
+  "latchFrom": "slip.t1.wav",
+  "latchSec": [
+   0.309,
+   0.509
+  ],
+  "latchAtSec": 0.34
+ }
+}

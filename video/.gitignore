@@ -1,0 +1,13 @@
+node_modules/
+out/
+.env
+# Heavy media (generated audio ~50 MB, captures, renders) and third-party material stay out of git (the repo goes public).
+# Manifests, generators and logs are committed, so everything can be regenerated or re-captured.
+public/plates/
+public/captures/
+public/clips/
+public/gen/
+tools/**/cache/
+public/music/
+public/sfx/
+public/vo/

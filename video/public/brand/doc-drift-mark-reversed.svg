@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="dds-t">
+  <title id="dds-t">Doc Drift Sentinel logo</title>
+  <path id="doc-top" d="M140 120H222A136 136 0 0 1 347.19 202.88A8 8 0 0 1 339.83 214H118A8 8 0 0 1 110 206V150A30 30 0 0 1 140 120Z" fill="#F2F6F7"/>
+  <path id="doc-bottom" d="M118 298H339.83A8 8 0 0 1 347.19 309.12A136 136 0 0 1 222 392H140A30 30 0 0 1 110 362V306A8 8 0 0 1 118 298Z" fill="#F2F6F7"/>
+  <path id="drift-trace" d="M118 226H348.1A8 8 0 0 1 355.98 232.62A136 136 0 0 1 355.98 279.38A8 8 0 0 1 348.1 286H118A8 8 0 0 1 110 278V234A8 8 0 0 1 118 226Z" fill="#F2F6F7" fill-opacity="0.16"/>
+  <path id="drift-slice" d="M174 226H404.1A8 8 0 0 1 411.98 232.62A136 136 0 0 1 411.98 279.38A8 8 0 0 1 404.1 286H174A8 8 0 0 1 166 278V234A8 8 0 0 1 174 226Z" fill="#FFAA1F"/>
+</svg>

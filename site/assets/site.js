@@ -21,7 +21,7 @@
     return null;
   }
 
-  // Theme: Night shift by default, Day on request. The inline head script applies the saved choice
+  // Theme: Day (light) by default, Night shift on request. The inline head script applies the saved choice
   // before first paint; this wires the toggle.
   document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
     function label() {

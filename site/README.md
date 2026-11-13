@@ -8,7 +8,7 @@ The public site for Doc Drift Sentinel (D36), published to GitHub Pages by [../.
 | `docs.html` | Setup guide: install, Jira, Bitbucket relay, demo replay, anchors, review panel, dashboard, settings, MCP, Rovo, states, troubleshooting, support |
 | `privacy.html` | Privacy and data handling: what is read, stored and for how long, AI use, permissions (scopes), deletion |
 | `404.html` | Not found. Uses absolute `/doc-drift/` paths because GitHub Pages serves it from any depth; change them if the site moves to a custom domain |
-| `assets/site.css` | All styles. Tokens copied from [../brand/tokens.json](../brand/tokens.json): Night shift by default, Day on toggle |
+| `assets/site.css` | All styles. Tokens copied from [../brand/tokens.json](../brand/tokens.json): Day (light) by default, Night shift on toggle (Razvan, 2026-11-13) |
 | `assets/site.js` | Theme toggle, mobile menu, tabs, copy buttons, the hero demo, table of contents. `CONFIG` at the top holds the install link and video URL |
 | `assets/icons.svg` | Icon sprite (1.75 px strokes on a 20 px grid). `index.html` inlines the same symbols |
 | `assets/doc-drift-*.svg` | The logo files from [../brand/logos/](../brand/logos/) with the C2PA metadata stripped (4 KB instead of 12 KB) |

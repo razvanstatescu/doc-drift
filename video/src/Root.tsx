@@ -36,6 +36,9 @@ export const RemotionRoot: React.FC = () => (
     </Folder>
     <Folder name="Dev">
       <Composition id="Kit" component={Kit} durationInFrames={KIT_FRAMES} fps={FPS} width={W} height={H} />
+      <Composition id="StyleFrames" lazyComponent={() => import("./styleframes")} durationInFrames={1200} fps={FPS} width={W} height={H} />
+      <Composition id="Kit4" lazyComponent={() => import("./v4/kit/Gallery")} durationInFrames={1800} fps={FPS} width={W} height={H} />
+      <Composition id="Twins" lazyComponent={() => import("./v4/twins/Gallery")} durationInFrames={1800} fps={FPS} width={W} height={H} />
     </Folder>
   </>
 );

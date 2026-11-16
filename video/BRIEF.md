@@ -1,5 +1,7 @@
 # Production brief: Doc Drift Sentinel launch video (v1)
 
+> **v4 (2026-11-16, D39):** the picture is directed by [V4.md](V4.md), which replaces SCENES.md and section 7 of this brief. The script, facts, owners and the rules in section 6 still apply.
+
 Every agent working on the film reads this first. The research and reasoning behind it is in
 [../docs/video/research.md](../docs/video/research.md) (read sections 5, 6, 7 and 9) and its appendices. Brand: [../brand/](../brand/)
 (README, tokens.json, logo.md, voice-and-copy.md). Where this brief and the research file disagree, **this brief wins**.

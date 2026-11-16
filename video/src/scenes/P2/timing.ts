@@ -59,6 +59,9 @@ export const MERGE_REC = {
 const r5 = beatAtOrBefore(w13.merges + 4); // 45, on "merges"
 const r5Jump = r5 + 15; // 60, the bar: the wait from 5.38 s to 13.30 s is cut here (logged in README.md)
 
+/** Frames a proof takes to wipe away (left to right, the slip's direction) while its twin comes back. */
+export const WIPE = 4;
+
 export const T = {
   w13,
   w14,
@@ -69,16 +72,17 @@ export const T = {
   /** The cursor comes in, travels to the twin's Merge button and presses it 2 frames before "merges". */
   cursorIn: 8,
   mergePress: w13.merges - 2,
-  /** R5: the real Merge dialog morphs out of the twin's Merge button, on the beat at "merges". */
+  /** R5: one proof. The real Merge dialog grows out of the twin's Merge button on the beat at "merges"... */
   r5,
-  /** The real confirm click, at its recorded time (5.178 s), shown with the kit cursor at the recorded point. */
+  /** ...the real confirm click at its recorded time (5.178 s) and point, with the kit cursor... */
   r5Click: r5 + Math.round((MERGE_REC.confirmAt - MERGE_REC.dialogFrom) * 30),
+  /** ...and a reframing jump on the bar to the Merged banner (13.30 s on, at 0.8). */
   r5Jump,
-  /** Merged holds 21 frames (13.30 to 14.00 s), then the proof drops and the twin is back (Merged). */
-  r5Out: r5Jump + 21,
+  /** R5 ends (39 frames: the dialog 15, Merged 24) and wipes away; the twin is back, Merged. */
+  r5Out: r5Jump + 24,
   /** The twin reads Merged from the frame the proof showed it. */
   mergedAt: r5Jump,
-  /** The rename row lifts out of the twin and grows into the 64 px literal, on "renames". */
+  /** The rename row lifts out of the twin and grows into the 64 px literal, on "renames" (the camera pushes in). */
   renameLift: w13.renames - 2,
   /** `.sh` slides one unit right, then `-v2` drops into the gap in amber (lands before "rollback"). */
   renameSlide: w13.renames + 8,
@@ -88,45 +92,59 @@ export const T = {
   r6Out: beatAtOrBefore(w13.script) + 30,
 
   // ── The gap: the change record's journey, merge to flag ─────────────────────────────────────────────────────────
-  /** The record pops out of the real header as R6 drops and rides its line; the PR card leaves; the camera tracks. */
+  /** The record pops out of the real header as R6 wipes away and rides its line; the PR card leaves; the camera tracks. */
   recordAt: beatAtOrBefore(w13.script) + 30,
   prOut: beatAtOrBefore(w13.script) + 27,
   /** The timer: "Merge to flag" counts from 0 and lands on the measured value with the flag. */
   timerIn: beatAtOrBefore(w13.script) + 42,
-  /** Pulses as the record passes each station (on beats: 2 and 4 beats after it leaves). */
+  /** Pulses as the record passes each station (on beats: 2 and 4 beats after it leaves); each leaves once passed. */
   relayAt: beatAtOrBefore(w13.script) + 60,
   matcherAt: beatAtOrBefore(w13.script) + 90,
-  /** The record reaches the runbook's Steps band. */
+  relayOut: beatAtOrBefore(w13.script) + 108,
+  matcherOut: beatAtOrBefore(w13.script) + 118,
+  /** The record reaches the runbook's left edge, level with the Steps band. */
   arrive: w14.flagged - 10,
 
   // ── V14 · the flag ──────────────────────────────────────────────────────────────────────────────────────────────
-  /** The Steps band slips amber 2 frames before "flagged"; the amber docks into the byline 6 frames later. */
-  flag: w14.flagged - 2,
-  handoff: w14.flagged + 4,
-  /** The byline swaps Verified to Possibly stale as the amber arrives. */
-  bylineSwap: w14.flagged + 2,
-  tooltip: w14.flagged + 6,
+  /** The Steps band slips amber (6 frames) and lands 2 frames before "flagged"; the count lands with it. */
+  flag: w14.flagged - 8,
+  land: w14.flagged - 2,
+  /** The byline swaps to "Possibly stale · Doc Drift" (the shared swap reads by at + 3, so 3 frames before the word). */
+  bylineSwap: w14.flagged - 6,
+  /** The amber hands off from the band to the byline as the byline swaps (director, round 2: handoff = byline.at). */
+  handoff: w14.flagged - 6,
+  /** The camera pushes onto the byline, landing on "flagged" (the line's one decisive push). */
+  flagPush: w14.flagged - 14,
+  tooltip: w14.flagged + 4,
+  /** The record's line fades as a trace once the page has flagged. */
+  lineOut: w14.flagged + 6,
   /** R7: the real byline and tooltip, by T3 from the twin's badge and tooltip, on the beat before "with the exact". */
   r7: beatAtOrBefore(w14.exact - 8),
   r7Out: beatAtOrBefore(w14.exact - 8) + 45,
-  /** The number leaves the type zone for the statement. */
-  timerOut: w15.no - 18,
+  /**
+   * "PR #482" lifts out of the twin tooltip once R7 has gone, hovers over the page (the flag's link to the matcher)
+   * and carries into the matcher's input as the card arrives (R3 V14 to V15).
+   */
+  tokenLift: beatAtOrBefore(w14.exact - 8) + 45 + 8,
+  tokenGo: w15.no + 6,
+  dock: w15.no + 20,
+  /** The number leaves upward as the statement's first word rises into the same place (the left never empties). */
+  timerOut: w15.no - 12,
   /** V15's plane (statement, matcher card) exists from here: its camera starts square, its first word rises next. */
-  v15: w15.no - 10,
+  v15: w15.no - 12,
 
   // ── V15 · the matcher ───────────────────────────────────────────────────────────────────────────────────────────
   /**
-   * The matcher lifts in front of the page just after "No" (the statement sets on the clear left first, so the page and
-   * its tooltip stay sharp as long as possible); the page racks out behind it (R2 section 10).
+   * The matcher lifts in front of the page with its content (the rules pending), just after V15's first beat, so the
+   * twin tooltip holds into it; the page racks out behind the card (R2 section 10).
    */
-  matcherIn: w15.no + 4,
-  /** "PR #482" lifts out of the tooltip and docks into the matcher's input. */
-  prLift: w15.no + 2,
-  dock: w15.no + 16,
-  /** Run 1's rules tick through, the score crosses the threshold and the result lands on "call". */
-  rows: [w15.no + 18, w15.no + 24, w15.no + 30] as const,
-  score: w15.call - 6,
-  result: w15.call - 2,
+  matcherIn: w15.no + 10,
+  /** Run 1: the rules tick, the score crosses the threshold, and the result lands on "call". */
+  rows: [w15.no + 21, w15.no + 25, w15.no + 29] as const,
+  score: w15.call - 12,
+  result: w15.call - 6,
+  /** The V15 camera's decisive push, landing on "call". */
+  v15Push: w15.call - 8,
   zeroChip: w15.call + 4,
   evalLine: w15.call + 6,
   /** R8: the real why sentence and score (p4-panel), by T3 from the score line. */

@@ -71,15 +71,21 @@ const P0: React.FC = () => {
   );
 };
 
-const P1: React.FC = () => {
-  const props: PageTwinProps = { world: "day", doc: "runbook", k: 1.4, x: 140, y: 80, byline: { kind: "dds", state: "possibly_stale", from: "verified", at: 60 }, slip: { at: 20, handoff: 60 } };
-  return (
-    <AbsoluteFill style={{ background: sweep("40%", "40%") }}>
-      <PageTwin {...props} />
-      <Label x={1240} y={80}>slip at 20, handoff to the byline at 60</Label>
-    </AbsoluteFill>
-  );
+/**
+ * Byline swap timing (BYLINE_SWAP): A, Verified to Possibly stale at 40, the band slipped amber at 30 and handing its
+ * amber to the item at 40; B, the snap back: Possibly stale (lit) to Verified at 70, the band snapping home from 67.
+ */
+export const SWAP_TEST = {
+  a: { world: "day", doc: "runbook", k: 1.3, x: 60, y: 60, byline: { kind: "dds", state: "possibly_stale", from: "verified", at: 40 }, slip: { at: 30, handoff: 40 } } as PageTwinProps,
+  b: { world: "day", doc: "runbook", k: 1.3, x: 990, y: 60, byline: { kind: "dds", state: "verified", from: "possibly_stale", at: 70 }, slip: { at: -60, handoff: -50, back: 67 } } as PageTwinProps,
 };
+
+const P1: React.FC = () => (
+  <AbsoluteFill style={{ background: sweep("50%", "40%") }}>
+    <PageTwin {...SWAP_TEST.a} />
+    <PageTwin {...SWAP_TEST.b} />
+  </AbsoluteFill>
+);
 
 const P2: React.FC = () => {
   const frame = useCurrentFrame();

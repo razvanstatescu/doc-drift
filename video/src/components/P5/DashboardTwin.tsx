@@ -28,8 +28,8 @@ export const DASH = {
   pagesWithDrift: "Pages with drift",
   rankedBy: "Ranked by severity, then state and open changes.",
   kpis: [
-    { label: "Pages anchored", value: "18", tail: " of 24", sub: "75% of the space", icon: undefined },
-    { label: "Possibly stale", value: "6", tail: "", sub: "6 pages", icon: "alert" as IconName },
+    { label: "Pages anchored", value: "18", tail: " of 24", sub: "75% of the space", icon: undefined, rolls: true },
+    { label: "Possibly stale", value: "6", tail: "", sub: "6 pages", icon: "alert" as IconName, rolls: true },
     { label: "Stale", value: "0", tail: "", sub: "0 pages", icon: "clock" as IconName },
     { label: "Median time to verify", value: "3", head: "Under ", tail: " hours", sub: "", icon: undefined },
   ],
@@ -70,43 +70,16 @@ export const dashRect = (key: "kpiRow" | "rows" | "title", x: number, y: number,
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 
-/** One digit on a wheel: spins `turns` times and stops on `to` as p goes 0 to 1 (tabular figures). */
-const Wheel: React.FC<{ to: number; p: number; turns?: number; h: number }> = ({ to, p, turns = 1, h }) => {
-  const e = EASE.expoOut(clamp01(p));
-  const pos = to + 10 * turns * (1 - e); // counts down onto the value
-  const base = Math.floor(pos);
-  const frac = pos - base;
-  const digit = (n: number) => ((n % 10) + 10) % 10;
-  return (
-    <span style={{ position: "relative", display: "inline-block", height: h, overflow: "hidden", verticalAlign: "bottom", width: "0.62em" }}>
-      {[0, 1].map((i) => (
-        <span
-          key={i}
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: 0,
-            height: h,
-            lineHeight: `${h}px`,
-            textAlign: "center",
-            transform: `translateY(${(i - frac) * h * -1}px)`,
-          }}
-        >
-          {digit(base + i)}
-        </span>
-      ))}
-    </span>
-  );
+/**
+ * A KPI value counting up from 0 to the real value and stopping there (QA R-14: never through values the dashboard
+ * never showed above). Values that are not counts ("0", the median) do not roll: they arrive with their card.
+ */
+const CountUp: React.FC<{ value: string; p: number; roll: boolean }> = ({ value, p, roll }) => {
+  const target = Number(value);
+  if (!roll || !Number.isFinite(target) || target === 0) return <span style={{ fontVariantNumeric: "tabular-nums" }}>{value}</span>;
+  const shown = Math.round(target * EASE.expoOut(clamp01(p)));
+  return <span style={{ fontVariantNumeric: "tabular-nums", display: "inline-block", minWidth: `${value.length * 0.62}em` }}>{shown}</span>;
 };
-
-const RollNumber: React.FC<{ value: string; p: number; h: number }> = ({ value, p, h }) => (
-  <span style={{ display: "inline-flex", fontVariantNumeric: "tabular-nums" }}>
-    {value.split("").map((c, i) => (
-      <Wheel key={i} to={Number(c)} p={p} turns={1 + (value.length - 1 - i)} h={h} />
-    ))}
-  </span>
-);
 
 const KpiCard: React.FC<{ k: number; i: number; drop: number; roll: number; w: number }> = ({ k, i, drop, roll, w }) => {
   const kp = DASH.kpis[i];
@@ -150,7 +123,7 @@ const KpiCard: React.FC<{ k: number; i: number; drop: number; roll: number; w: n
         }}
       >
         {"head" in kp && kp.head ? <span style={{ whiteSpace: "pre" }}>{kp.head}</span> : null}
-        <RollNumber value={kp.value} p={roll} h={h} />
+        <CountUp value={kp.value} p={roll} roll={"rolls" in kp && kp.rolls === true} />
         {kp.tail ? <span style={{ whiteSpace: "pre" }}>{kp.tail}</span> : null}
       </div>
       {kp.sub ? <div style={{ marginTop: 10 * k, fontSize: 12 * k, lineHeight: 1, color: DAY.textMuted, whiteSpace: "nowrap" }}>{kp.sub}</div> : null}
@@ -255,8 +228,13 @@ export const DashboardTwin: React.FC<{
   slip?: number;
   /** Show the honesty label (always true in the film; false only for a 1:1 comparison). */
   label?: boolean;
+  /**
+   * 0..1: the KPI row steps back (the kit's rest: 18%, 7 px blur, drained) while a proof of the real KPI cards is up
+   * (QA K-1), so the rest of the dashboard, and its one amber row, stays as it is.
+   */
+  kpiRest?: number;
   style?: React.CSSProperties;
-}> = ({ k = 1.5, kpiDrop = [1, 1, 1, 1], kpiRoll = [1, 1, 1, 1], rows = 6, slip = 0, label = true, style }) => {
+}> = ({ k = 1.5, kpiDrop = [1, 1, 1, 1], kpiRoll = [1, 1, 1, 1], rows = 6, slip = 0, label = true, kpiRest = 0, style }) => {
   const u = (n: number) => n * k;
   const kw = (DASH_UI.kpiRow.w - 3 * DASH_UI.kpiGap) / 4;
   return (
@@ -304,7 +282,17 @@ export const DashboardTwin: React.FC<{
           {DASH.label}
         </div>
       ) : null}
-      <div style={{ position: "absolute", left: u(DASH_UI.kpiRow.x), top: u(DASH_UI.kpiRow.y), display: "flex", gap: u(DASH_UI.kpiGap) }}>
+      <div
+        style={{
+          position: "absolute",
+          left: u(DASH_UI.kpiRow.x),
+          top: u(DASH_UI.kpiRow.y),
+          display: "flex",
+          gap: u(DASH_UI.kpiGap),
+          opacity: kpiRest > 0.001 ? 1 - 0.82 * kpiRest : undefined,
+          filter: kpiRest > 0.001 ? `blur(${(7 * kpiRest).toFixed(2)}px) grayscale(${kpiRest.toFixed(3)})` : undefined,
+        }}
+      >
         {[0, 1, 2, 3].map((i) => (
           <KpiCard key={i} k={k} i={i} drop={kpiDrop[i] ?? 1} roll={kpiRoll[i] ?? 1} w={u(kw)} />
         ))}

@@ -14,7 +14,7 @@ export const NODE_W = 430;
 export const NODE_H = 124;
 
 /** A station stands this far above the track; a stem joins it to the track where the record passes. */
-export const NODE_RISE = 150;
+export const NODE_RISE = 140;
 
 /** The card's rect and the point on the track under it, for a station over the track point (cx, lineY). */
 export const nodeGeom = (cx: number, lineY: number) => {

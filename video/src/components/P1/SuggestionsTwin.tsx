@@ -68,6 +68,11 @@ export type SuggestionsTwinProps = {
   appear: number;
   /** Frames the two rows dock (their chips land; the row text sets in just after). Row 1 is checked on arrival. */
   rows: [number, number];
+  /**
+   * The card grows to make room for the rows from this frame (8 frames, expo out), so it never shows empty space
+   * waiting for them (default rows[0] - 9). Before it, the card ends under the repository field.
+   */
+  rowsGrow?: number;
   /** "payments-api" types into the repository field from `at` over `dur` frames (one character a frame by default). */
   typed?: { at: number; dur?: number };
   /** Row 2's checkbox ticks (the real click). */
@@ -76,11 +81,11 @@ export type SuggestionsTwinProps = {
   savePress?: number;
   /** From this frame the panel shows the saved state (the notice and the 2 anchors). */
   saved?: number;
-  /** The word "Verified" leaves the notice title at this frame (its home keeps a trace; the scene flies the copy). */
+  /** The word "Verified" is lifted as a copy at this frame (the scene flies it; the sentence here stays whole). */
   verifiedLift?: number;
   /** Dims the whole panel (0..1 multiplier of opacity), for when a proof sits in front. */
   dim?: number;
-  /** The panel leaves by moving (M3): it slides out to the right from this frame (12 frames, expo in). */
+  /** The panel leaves by moving (M3): it slides out to the right from this frame (9 frames, cubic in). */
   leave?: number;
 };
 
@@ -120,6 +125,8 @@ export type SuggestionsRects = {
   chipFont: number;
   /** Font size (film px) of the notice title, for the flying word. */
   noticeFont: number;
+  /** Height the two rows add to the card (the card grows by it as they dock). */
+  rowsH: number;
 };
 
 const mono = (text: string, size: number) => textWidth(text, { size, mono: true, tracking: -0.01 });
@@ -144,13 +151,16 @@ export function suggestionsLayout(p: Pick<SuggestionsTwinProps, "x" | "y" | "k" 
   const chipX = rowX + u(S.row.box) + u(8);
   const chipH = u(22);
   const chipW = (t: string) => mono(t, u(S.row.chip)) + 2 * u(5);
+  const rowsTop = y;
   const row1: Rect = { x: rowX, y, w: cardInner, h: u(S.row.h) };
   const chip1: Rect = { x: chipX, y: y + (u(S.row.h) - chipH) / 2, w: chipW(STRINGS.row1Code), h: chipH };
   y += u(S.row.h) + u(S.row.gap);
   const row2: Rect = { x: rowX, y, w: cardInner, h: u(S.row.h) };
   const chip2: Rect = { x: chipX, y: y + (u(S.row.h) - chipH) / 2, w: chipW(STRINGS.row2Code), h: chipH };
   const check2: Rect = { x: rowX, y: y + (u(S.row.h) - u(S.row.box)) / 2, w: u(S.row.box), h: u(S.row.box) };
-  y += u(S.row.h) + u(CARD_PAD);
+  y += u(S.row.h);
+  const rowsH = y - rowsTop + u(11);
+  y += u(CARD_PAD);
   const card: Rect = { x: x0, y: cardY, w: inner, h: y - cardY };
   y += u(15);
   const save: Rect = { x: x0, y, w: textWidth(STRINGS.saveAnchors, { size: u(S.button.size), weight: 600 }) + 2 * u(16), h: u(S.button.h) };
@@ -169,7 +179,7 @@ export function suggestionsLayout(p: Pick<SuggestionsTwinProps, "x" | "y" | "k" 
   // the saved view below the notice: "Anchors" (22) + 10 + chip (22) + 16 + chip (22), then the panel padding
   const savedBottom = notice.y + notice.h + u(18) + u(22) + u(10) + u(22) + u(16) + u(22) + u(PAD);
   const panelSaved: Rect = { x: p.x, y: p.y, w: W, h: savedBottom - p.y };
-  return { panel, card, field, row1, row2, chip1, chip2, check2, save, notice, verifiedWord, panelSaved, chipFont: u(S.row.chip), noticeFont: nTitle };
+  return { panel, card, field, row1, row2, chip1, chip2, check2, save, notice, verifiedWord, panelSaved, chipFont: u(S.row.chip), noticeFont: nTitle, rowsH };
 }
 
 // ---- pieces ----
@@ -281,21 +291,28 @@ const Row: React.FC<{
   );
 };
 
-/** A note word that rolls from one text to another at `at` (old up and out, new up and in). */
-const RollText: React.FC<{ from: string; to: string; at: number; frame: number; style: React.CSSProperties }> = ({ from, to, at, frame, style }) => {
-  const out = tween(frame, at, at + 6, 0, 1, EASE.expoIn);
-  const inn = tween(frame, at + 3, at + 11, 0, 1, EASE.expoOut);
+/**
+ * A note that rolls from one text to another at `at` inside a clipped slot (S-8: no dissolve, the glyphs never overlap):
+ * the old words roll up and out while the new ones roll up into place, 7 frames; the slot's width follows.
+ */
+const RollText: React.FC<{ from: string; to: string; at: number; frame: number; size: number; weight: number; style: React.CSSProperties }> = ({ from, to, at, frame, size, weight, style }) => {
+  const p = tween(frame, at, at + 7, 0, 1, EASE.expoInOut);
+  const wFrom = textWidth(from, { size, weight });
+  const wTo = textWidth(to, { size, weight });
+  const h = size * 1.3;
+  if (p <= 0) return <span style={{ display: "inline-block", whiteSpace: "nowrap", ...style }}>{from}</span>;
+  if (p >= 1) return <span style={{ display: "inline-block", whiteSpace: "nowrap", ...style }}>{to}</span>;
   return (
-    <span style={{ display: "inline-grid", ...style }}>
-      {out < 1 ? <span style={{ gridArea: "1 / 1", opacity: 1 - out, transform: `translateY(${-out * 40}%)` }}>{from}</span> : null}
-      {inn > 0 ? <span style={{ gridArea: "1 / 1", opacity: inn, transform: `translateY(${(1 - inn) * 40}%)` }}>{to}</span> : null}
+    <span style={{ position: "relative", display: "inline-block", width: wFrom + (wTo - wFrom) * p, height: h, overflow: "hidden", verticalAlign: "middle", ...style }}>
+      <span style={{ position: "absolute", left: 0, top: 0, lineHeight: `${h}px`, whiteSpace: "nowrap", transform: `translateY(${-p * h}px)` }}>{from}</span>
+      <span style={{ position: "absolute", left: 0, top: 0, lineHeight: `${h}px`, whiteSpace: "nowrap", transform: `translateY(${(1 - p) * h}px)` }}>{to}</span>
     </span>
   );
 };
 
 export const SuggestionsTwin: React.FC<SuggestionsTwinProps> = (props) => {
   const frame = useCurrentFrame();
-  const { appear, rows, typed, check2, savePress, saved, verifiedLift, dim = 1, leave } = props;
+  const { appear, rows, typed, check2, savePress, saved, dim = 1, leave } = props;
   const k = props.k ?? 2;
   const u = (n: number) => n * k;
   const L = suggestionsLayout(props);
@@ -322,6 +339,11 @@ export const SuggestionsTwin: React.FC<SuggestionsTwinProps> = (props) => {
   const c2 = check2 !== undefined ? tween(frame, check2, check2 + 5, 0, 1, EASE.expoOut) : 0;
   const repoNoteAt = typed ? typedDone : Infinity;
 
+  // the card grows for the rows as they arrive (never an empty container): until then it ends under the field
+  const growAt = props.rowsGrow ?? rows[0] - 9;
+  const collapse = (1 - tween(frame, growAt, growAt + 8, 0, 1, EASE.expoOut)) * L.rowsH;
+  const up2 = (r: Rect): Rect => ({ ...r, y: r.y - collapse });
+
   const textStyle = (size: number, weight: number, color: string = DAY.text, line?: number): React.CSSProperties => ({
     fontFamily: FONT.sans,
     fontSize: u(size),
@@ -333,7 +355,7 @@ export const SuggestionsTwin: React.FC<SuggestionsTwinProps> = (props) => {
   const suggest = (
     <div style={{ position: "absolute", inset: 0, opacity: isSaved ? 1 - savedIn : 1, transform: isSaved ? `translateY(${-savedIn * u(10)}px)` : undefined }}>
       {/* the suggestions card */}
-      <div style={{ position: "absolute", ...rel(L.card), borderRadius: u(10), boxShadow: `inset 0 0 0 ${u(1)}px ${DAY.line}`, boxSizing: "border-box" }} />
+      <div style={{ position: "absolute", ...rel({ ...L.card, h: L.card.h - collapse }), borderRadius: u(10), boxShadow: `inset 0 0 0 ${u(1)}px ${DAY.line}`, boxSizing: "border-box" }} />
       <div style={{ position: "absolute", left: L.card.x - L.panel.x + u(CARD_PAD), top: L.card.y - L.panel.y + u(CARD_PAD), width: L.card.w - 2 * u(CARD_PAD) }}>
         <div style={textStyle(S.title.size, S.title.weight, DAY.text, S.title.line)}>{STRINGS.suggested}</div>
         <div style={{ ...textStyle(S.help.size, S.help.weight, DAY.textMuted, S.help.line), marginTop: u(5) }}>{STRINGS.suggestedHelp}</div>
@@ -367,13 +389,13 @@ export const SuggestionsTwin: React.FC<SuggestionsTwinProps> = (props) => {
         checked={c2}
         code={STRINGS.row2Code}
         weak
-        note={<RollText from={STRINGS.row2Need} to={STRINGS.row2In} at={repoNoteAt} frame={frame} style={textStyle(S.row.note, 600)} />}
+        note={<RollText from={STRINGS.row2Need} to={STRINGS.row2In} at={repoNoteAt} frame={frame} size={u(S.row.note)} weight={600} style={textStyle(S.row.note, 600)} />}
       />
       {/* save */}
       <div
         style={{
           position: "absolute",
-          ...rel(L.save),
+          ...rel(up2(L.save)),
           borderRadius: u(6),
           background: DAY.text,
           display: "grid",
@@ -386,13 +408,12 @@ export const SuggestionsTwin: React.FC<SuggestionsTwinProps> = (props) => {
       >
         {STRINGS.saveAnchors}
       </div>
-      <div style={{ position: "absolute", left: L.save.x - L.panel.x, top: L.save.y - L.panel.y + L.save.h + u(7), width: L.panel.w - 2 * u(PAD), ...textStyle(S.helper.size, 400, DAY.textMuted, S.helper.line) }}>
+      <div style={{ position: "absolute", left: L.save.x - L.panel.x, top: L.save.y - collapse - L.panel.y + L.save.h + u(7), width: L.panel.w - 2 * u(PAD), ...textStyle(S.helper.size, 400, DAY.textMuted, S.helper.line) }}>
         {STRINGS.saveHelp}
       </div>
     </div>
   );
 
-  const liftT = verifiedLift !== undefined ? tween(frame, verifiedLift, verifiedLift + 3, 0, 1, EASE.linear) : 0;
   const savedView = isSaved ? (
     <div style={{ position: "absolute", inset: 0, opacity: Math.min(1, savedIn * 1.4), transform: `translateY(${(1 - savedIn) * u(14)}px)` }}>
       <div
@@ -413,10 +434,7 @@ export const SuggestionsTwin: React.FC<SuggestionsTwinProps> = (props) => {
         <div>
           <div style={{ ...textStyle(S.notice.title, 600, DAY.text, S.notice.line), whiteSpace: "pre" }}>
             {STRINGS.savedTitleLead}
-            <span style={{ position: "relative", display: "inline-block" }}>
-              {liftT > 0 ? <span style={{ position: "absolute", inset: `${u(1)}px ${-u(2)}px`, borderRadius: u(3), background: DAY.trace, opacity: liftT }} /> : null}
-              <span style={{ opacity: 1 - liftT }}>{STRINGS.savedTitleWord}</span>
-            </span>
+            {STRINGS.savedTitleWord}
             {STRINGS.savedTitleTail}
           </div>
           <div style={{ ...textStyle(S.notice.body, 400, DAY.text, S.notice.line), marginTop: u(4) }}>{STRINGS.reloadBadge}</div>
@@ -447,8 +465,8 @@ export const SuggestionsTwin: React.FC<SuggestionsTwinProps> = (props) => {
     </div>
   ) : null;
 
-  const panelH = L.panel.h + (L.panelSaved.h - L.panel.h) * savedIn;
-  const away = leave !== undefined ? tween(frame, leave, leave + 12, 0, 1, EASE.expoIn) : 0;
+  const panelH = L.panel.h - collapse * (1 - savedIn) + (L.panelSaved.h - L.panel.h) * savedIn;
+  const away = leave !== undefined ? tween(frame, leave, leave + 8, 0, 1, (t: number) => t * t) : 0;
   if (away >= 1) return null;
   return (
     <div

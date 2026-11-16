@@ -25,7 +25,7 @@ export type AgentPanelTwinProps = {
   world?: World;
   variant: "drift-reviewer" | "generic";
   /** The question types into its bubble from `at` over `typeDur` frames (default: 34 chars per second). */
-  question: { text: string; at: number; typeDur?: number };
+  question: { text: string; at: number; typeDur?: number; prefilled?: boolean };
   /** Thinking steps: each shows a spinner from `at`, then a check when the next one starts (or 12 frames later). */
   steps?: { text: string; at: number }[];
   /** The answer paragraphs, streamed from `at` at `cps` characters per second (default 60). */
@@ -49,6 +49,18 @@ export type AgentPanelTwinProps = {
   size?: number;
   /** Keep the thinking steps above the answer (default false: they fold away as the answer starts, as in the real panel). */
   keepSteps?: boolean;
+  /**
+   * Arrive with the question already in its bubble (no typing): the card is never empty (review T-1). Same as
+   * `question.prefilled`.
+   */
+  prefilled?: boolean;
+  /**
+   * Content-sized: the card's height follows what it shows, growing (8 frames, expo out) as the question, the steps and
+   * each answer line arrive (default true unless `height` is given). `grow={false}` keeps the final height from the start.
+   */
+  grow?: boolean;
+  /** The avatar's size in film px (default 48; match the real avatar's size in a morph, review T-3). */
+  avatarSize?: number;
   style?: React.CSSProperties;
 };
 
@@ -73,7 +85,7 @@ function parseLine(line: string, source: string | null): Run[] {
   return runs;
 }
 
-type Block = { kind: "q" | "ref" | "thinking" | "step" | "answer" | "source"; y: number; h: number; lines?: Line[]; text?: string; at?: number; idx?: number };
+type Block = { kind: "q" | "ref" | "thinking" | "step" | "answer" | "source"; y: number; h: number; lines?: Line[]; text?: string; at?: number; idx?: number; starts?: number[] };
 
 type PanelLayout = {
   world: World;
@@ -129,8 +141,15 @@ function layoutPanel(props: AgentPanelTwinProps): PanelLayout {
   const duringThinking = y;
   const paras = props.answer.lines.map((l) => layoutRuns(parseLine(l, src ? src.text : null).map((r) => (r.chip ? { ...r, extraW: chipExtra } : r)), inner, { size, codeSize: size * 0.88 }));
   const answerY = y;
+  let chars = 0;
   paras.forEach((lines, i) => {
-    blocks.push({ kind: "answer", y, h: lines.length * lh, lines, idx: i });
+    // the character index each line starts at (the answer streams through all lines in order)
+    const starts = lines.map((l) => {
+      const at0 = chars;
+      l.runs.forEach((r) => (chars += r.t.length + (r.space > 0 ? 1 : 0)));
+      return at0;
+    });
+    blocks.push({ kind: "answer", y, h: lines.length * lh, lines, idx: i, starts });
     y += lines.length * lh + (i < paras.length - 1 ? 18 : 0);
   });
   if (src && props.variant === "generic") {
@@ -141,6 +160,47 @@ function layoutPanel(props: AgentPanelTwinProps): PanelLayout {
   const height = props.height ?? Math.max(y - fold, duringThinking + 40) + PAD;
 
   return { world, width, height, size, lh, inner, qSize, qLines, blocks, answerY, src, chipExtra, name, steps, fold };
+}
+
+/** When the question shows, and whether it is already typed. */
+const questionTiming = (props: AgentPanelTwinProps) => {
+  const prefilled = props.prefilled ?? props.question.prefilled ?? false;
+  const typeDur = prefilled ? 0 : props.question.typeDur ?? Math.ceil((props.question.text.length / 34) * 30);
+  return { prefilled, typeDur, shownFrom: prefilled ? -Infinity : props.question.at };
+};
+
+/** The card's content-sized height at a frame (what it shows then, each part growing in over 8 frames). */
+export function agentPanelHeightAt(props: AgentPanelTwinProps, frame: number): number {
+  const L = layoutPanel(props);
+  if (props.height !== undefined) return props.height;
+  if (props.grow === false) return L.height;
+  const q = questionTiming(props);
+  const g = (at: number, dur = 8) => (at === -Infinity ? 1 : tween(frame, at, at + dur, 0, 1, EASE.expoOut));
+  const cps = props.answer.cps ?? 60;
+  const fp = L.fold > 0 ? tween(frame, props.answer.at - 4, props.answer.at + 8, 0, 1, EASE.expoInOut) : 0;
+  let bottom = PAD + HEAD_H + 12;
+  L.blocks.forEach((b) => {
+    let at = -Infinity;
+    if (b.kind === "q") at = q.shownFrom;
+    else if (b.kind === "ref") at = L.src?.at ?? props.question.at + q.typeDur + 10;
+    else if (b.kind === "thinking" || b.kind === "step") at = b.at ?? 0;
+    else if (b.kind === "source") at = L.src?.at ?? props.answer.at;
+    if (b.kind === "answer") {
+      (b.lines ?? []).forEach((_, li) => {
+        const la = props.answer.at + ((b.starts?.[li] ?? 0) / cps) * 30;
+        if (frame < la) return;
+        const top = b.y - L.fold * fp + li * L.lh;
+        bottom = Math.max(bottom, top + L.lh * g(la, 6));
+      });
+      return;
+    }
+    if (frame < at) return;
+    const shift = b.y >= L.answerY ? L.fold * fp : 0;
+    const folding = b.kind === "thinking" || b.kind === "step" ? fp : 0;
+    if (folding >= 1) return;
+    bottom = Math.max(bottom, b.y - shift + b.h * g(at) - L.fold * folding);
+  });
+  return bottom + PAD;
 }
 
 /**
@@ -180,7 +240,7 @@ export function agentPanelRects(props: AgentPanelTwinProps) {
   return {
     panel: r(0, 0, L.width, L.height),
     header: r(PAD, PAD, L.inner, HEAD_H),
-    avatar: r(PAD, PAD + (HEAD_H - 48) / 2, 48, 48),
+    avatar: r(PAD, PAD + (HEAD_H - (props.avatarSize ?? 48)) / 2, props.avatarSize ?? 48, props.avatarSize ?? 48),
     question: r(L.width - PAD - bw, q.y, bw, q.h),
     referencing: ref ? r(PAD, ref.y, L.inner, ref.h) : null,
     thinking: thinking ? r(PAD, thinking.y, L.inner, thinking.h) : null,
@@ -201,13 +261,22 @@ export const AgentPanelTwin: React.FC<AgentPanelTwinProps> = (props) => {
   const p = palette(world);
   const fp = fold > 0 ? tween(frame, props.answer.at - 4, props.answer.at + 8, 0, 1, EASE.expoInOut) : 0;
   const shiftY = (y0: number) => (y0 >= answerY ? y0 - fold * fp : y0);
+  /** The fold: the answer slides up over the steps; a step is cut at the answer's current top (no fade, no overlap). */
+  const foldClip = (top: number, h: number) => {
+    if (fp <= 0) return undefined;
+    const edge = answerY - fold * fp - 10; // the answer's current top, less a small gap
+    const visible = Math.max(0, Math.min(h, edge - top));
+    return `inset(0px 0px ${(h - visible).toFixed(2)}px 0px)`;
+  };
   // ── reveal ──
   const cps = props.answer.cps ?? 60;
   let budget = Math.max(0, ((frame - props.answer.at) / 30) * cps);
-  const typeDur = props.question.typeDur ?? Math.ceil((props.question.text.length / 34) * 30);
-  const qN = Math.round(props.question.text.length * tween(frame, props.question.at, props.question.at + typeDur, 0, 1, EASE.linear));
-  const qShown = frame >= props.question.at;
-  const sent = tween(frame, props.question.at + typeDur, props.question.at + typeDur + 8, 0, 1, EASE.expoOut);
+  const qt = questionTiming(props);
+  const typeDur = qt.typeDur;
+  const qN = qt.prefilled ? props.question.text.length : Math.round(props.question.text.length * tween(frame, props.question.at, props.question.at + typeDur, 0, 1, EASE.linear));
+  const qShown = frame >= qt.shownFrom;
+  const sent = qt.prefilled ? 1 : tween(frame, props.question.at + typeDur, props.question.at + typeDur + 8, 0, 1, EASE.expoOut);
+  const panelH = agentPanelHeightAt(props, frame);
 
   const chip = (text: string, key?: React.Key, cs: number = size) => (
     <span
@@ -299,7 +368,7 @@ export const AgentPanelTwin: React.FC<AgentPanelTwinProps> = (props) => {
         left: props.x,
         top: props.y,
         width,
-        height,
+        height: panelH,
         borderRadius: 30,
         background: p.surface,
         boxShadow: elev(props.elev ?? 3, 1, world),
@@ -312,9 +381,9 @@ export const AgentPanelTwin: React.FC<AgentPanelTwinProps> = (props) => {
       {/* header */}
       <div style={{ position: "absolute", left: PAD, top: PAD, height: HEAD_H, display: "flex", alignItems: "center", gap: 16 }}>
         {props.variant === "drift-reviewer" ? (
-          <Mark size={48} variant="icon" />
+          <Mark size={props.avatarSize ?? 48} variant="icon" />
         ) : (
-          <span style={{ width: 48, height: 48, borderRadius: 14, display: "grid", placeItems: "center", background: night ? p.surfaceSunk : p.ground, boxShadow: `inset 0 0 0 1.5px ${p.line}` }}>
+          <span style={{ width: props.avatarSize ?? 48, height: props.avatarSize ?? 48, borderRadius: (props.avatarSize ?? 48) * 0.29, display: "grid", placeItems: "center", background: night ? p.surfaceSunk : p.ground, boxShadow: `inset 0 0 0 1.5px ${p.line}` }}>
             <Icon name="words" size={28} color={p.textMuted} />
           </span>
         )}
@@ -375,7 +444,7 @@ export const AgentPanelTwin: React.FC<AgentPanelTwinProps> = (props) => {
           const done = frame >= props.answer.at;
           const dots = done ? "." : ".".repeat(1 + (Math.floor(frame / 9) % 3));
           return (
-            <div key={bi} style={{ position: "absolute", left: PAD, top: b.y - fold * fp * 0.4, opacity: 1 - fp, height: b.h, display: "flex", alignItems: "center", gap: 12, fontSize: 26, color: p.textMuted, whiteSpace: "pre" }}>
+            <div key={bi} style={{ position: "absolute", left: PAD, top: b.y, height: b.h, display: "flex", alignItems: "center", gap: 12, fontSize: 26, color: p.textMuted, whiteSpace: "pre", clipPath: foldClip(b.y, b.h) }}>
               {props.variant === "drift-reviewer" ? <Mark size={30} variant="flat-ink" /> : null}
               {`${name} is thinking${dots}`}
             </div>
@@ -389,7 +458,7 @@ export const AgentPanelTwin: React.FC<AgentPanelTwinProps> = (props) => {
           const done = frame >= doneAt;
           const t = tween(frame, at, at + 8, 0, 1, EASE.expoOut);
           return (
-            <div key={bi} style={{ position: "absolute", left: PAD + 16, top: b.y + (1 - t) * 6 - fold * fp * 0.4, opacity: t * (1 - fp), height: b.h, display: "flex", alignItems: "center", gap: 14, fontSize: 26, color: p.text, whiteSpace: "nowrap" }}>
+            <div key={bi} style={{ position: "absolute", left: PAD + 16, top: b.y + (1 - t) * 6, opacity: t, height: b.h, display: "flex", alignItems: "center", gap: 14, fontSize: 26, color: p.text, whiteSpace: "nowrap", clipPath: foldClip(b.y + (1 - t) * 6, b.h) }}>
               {done ? (
                 <span style={{ width: 28, height: 28, borderRadius: 14, background: p.verified, display: "grid", placeItems: "center" }}>
                   <Icon name="check" size={20} color={p.surface} stroke={2.6} />

@@ -189,9 +189,10 @@ const DemoNumbers: React.FC = () => (
   </Stage>
 );
 
-// R3's R7 crop, 300 tall instead of 360: the last 60 px start the next table row ("Dana (Platform on-call lead)" in the
-// capture, a name V4.md rules out), so the crop stops above it (R2 section 9: never cut into the next block).
-const R7 = { capture: "p2-flagged-tooltip", crop: [1440, 300, 1460, 300] as [number, number, number, number], scale: 0.8 };
+// R3's R7 crop, 346 tall instead of 360: the tooltip ends at capture row 635 and the next table row's text (which reads
+// "Dana (Platform on-call lead)" in the capture, a name V4.md rules out) starts at 650, so the crop ends on row 645,
+// in the whitespace between them (R2 section 9: never cut a line; the kit's crop guard checks it).
+const R7 = { capture: "p2-flagged-tooltip", crop: [1440, 300, 1460, 346] as [number, number, number, number], scale: 0.8 };
 
 const DemoProof: React.FC = () => {
   const x = 960 - proofRect({ ...R7 }).outer.w / 2;

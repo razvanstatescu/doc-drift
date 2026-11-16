@@ -1,6 +1,6 @@
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { Video } from "@remotion/media";
-import { Img, Sequence, staticFile, useCurrentFrame } from "remotion";
+import { continueRender, delayRender, Img, Sequence, staticFile, useCurrentFrame } from "remotion";
 import type { IconName } from "../../brand/icons";
 import { findCapture, type Box, type CaptureMask } from "../../lib/captures";
 import { hasStaticFile } from "../../lib/files";
@@ -79,11 +79,18 @@ export type ProofFrameProps = {
   maskFill?: string | (string | undefined)[];
   /** Play pre-cut clips when they cover the proof (default true; false always decodes the 4K capture). */
   clips?: boolean;
+  /** Warn (console and render log) when the crop's top rows, bottom rows or left columns cut content (default true). */
+  cropCheck?: boolean;
   icon?: IconName;
   style?: React.CSSProperties;
 };
 
-export const MAT = { pad: 14, outerRadius: 26, innerRadius: 12, tagTop: -24, tagLeft: 22 } as const;
+/**
+ * The mat. The tag chip (an InkLabel at 26 px, 46.8 px tall) sits ABOVE the mat's top edge and overlaps only the mat's
+ * 14 px band: its bottom edge is 10 px into the mat, 4 px clear of the capture (round 2, QA K-3: it used to sit on the
+ * capture's first line). Leave about 40 px above a proof for it.
+ */
+export const MAT = { pad: 14, outerRadius: 26, innerRadius: 12, tagTop: -37, tagLeft: 22 } as const;
 
 /** The outer (mat) and image rects of a proof in film px (for its first crop). */
 export function proofRect(p: { crop: Box; scale: number; x?: number; y?: number }): { outer: Rect; image: Rect } {
@@ -120,6 +127,44 @@ export function proofVideoFrames(at: number, v: ProofVideo): number {
   const segs = segmentsOf(at, [0, 0, 1, 1], 1, v);
   const last = segs[segs.length - 1];
   return Math.max(1, last.start - at + Math.round((v.to - last.src) * FPS));
+}
+
+/**
+ * What a proof node will do, read from its props when it is a ProofFrame or ProofMat element (or a fragment of them):
+ * the frame it starts leaving (`end`, undefined when it never leaves on its own) and its rect with room for the tag.
+ * MorphToReal and RebuildFromReal use it so the twin returns when the proof leaves and the wipe crosses the proof only.
+ */
+export function proofInfo(node: React.ReactNode): { end?: number; rect?: Rect } | null {
+  if (!React.isValidElement(node)) return null;
+  if (node.type === React.Fragment) {
+    const kids = React.Children.toArray((node.props as { children?: React.ReactNode }).children).map(proofInfo);
+    if (kids.length === 0 || kids.some((k) => k === null)) return null;
+    const ends = kids.map((k) => k!.end);
+    const rects = kids.map((k) => k!.rect).filter((r): r is Rect => r !== undefined);
+    const x0 = Math.min(...rects.map((r) => r.x));
+    const y0 = Math.min(...rects.map((r) => r.y));
+    const x1 = Math.max(...rects.map((r) => r.x + r.w));
+    const y1 = Math.max(...rects.map((r) => r.y + r.h));
+    return {
+      end: ends.every((e) => e !== undefined) ? Math.max(...(ends as number[])) : undefined,
+      rect: rects.length ? { x: x0, y: y0, w: x1 - x0, h: y1 - y0 } : undefined,
+    };
+  }
+  const withTag = (r: Rect): Rect => ({ x: r.x, y: r.y + MAT.tagTop - 3, w: r.w, h: r.h - MAT.tagTop + 3 });
+  if (node.type === ProofFrame) {
+    const p = node.props as ProofFrameProps;
+    const cap = findCapture(p.capture);
+    const length = p.dur ?? (cap?.kind === "video" && p.video ? proofVideoFrames(p.at, p.video) : 45);
+    const placed = p.x !== undefined || p.y !== undefined;
+    return { end: p.exit === "none" ? undefined : p.at + length, rect: placed ? withTag(proofRect(p).outer) : undefined };
+  }
+  if (node.type === ProofMat) {
+    const p = node.props as ProofMatProps;
+    const placed = p.x !== undefined || p.y !== undefined;
+    const outer = { x: p.x ?? 0, y: p.y ?? 0, w: p.w + 2 * MAT.pad, h: p.h + 2 * MAT.pad };
+    return { end: p.exit === "none" ? undefined : p.at + (p.dur ?? 45), rect: placed ? withTag(outer) : undefined };
+  }
+  return null;
 }
 
 const warned = new Set<string>();
@@ -256,6 +301,125 @@ export const ProofMat: React.FC<ProofMatProps> = ({ w, h, x, y, at, dur = 45, ta
 };
 
 // ---------------------------------------------------------------------------------------------------------------------
+// The crop guard (round 2, QA K-2): a crop must not cut a line of text (R2 section 9)
+// ---------------------------------------------------------------------------------------------------------------------
+
+const cropChecks = new Set<string>();
+
+/** Share of pixels on an edge that are not background (more than 28 levels from the edge's median luminance). */
+function notBackground(data: Uint8ClampedArray, w: number, pts: [number, number][]): number {
+  const lum = pts.map(([x, y]) => {
+    const i = (y * w + x) * 4;
+    return 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+  });
+  const sorted = [...lum].sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)] ?? 0;
+  return lum.filter((v) => Math.abs(v - median) > 28).length / Math.max(1, lum.length);
+}
+
+/** Check one crop of one source frame (capture px) and warn when its top rows, bottom rows or left columns cut content. */
+function checkCrop(source: CanvasImageSource, label: string, crop: Box) {
+  const [cx, cy, cw, ch] = crop.map((v) => Math.round(v)) as Box;
+  const canvas = document.createElement("canvas");
+  canvas.width = cw;
+  canvas.height = ch;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx || cw < 4 || ch < 4) return;
+  ctx.drawImage(source, cx, cy, cw, ch, 0, 0, cw, ch);
+  const data = ctx.getImageData(0, 0, cw, ch).data;
+  const row = (y: number) => Array.from({ length: cw }, (_, x) => [x, y] as [number, number]);
+  const col = (x: number) => Array.from({ length: ch }, (_, y) => [x, y] as [number, number]);
+  const edges: [string, number][] = [
+    ["top", Math.max(notBackground(data, cw, row(0)), notBackground(data, cw, row(1)))],
+    ["bottom", Math.max(notBackground(data, cw, row(ch - 1)), notBackground(data, cw, row(ch - 2)))],
+    ["left", Math.max(notBackground(data, cw, col(0)), notBackground(data, cw, col(1)))],
+  ];
+  const cut = edges.filter(([, v]) => v > 0.02);
+  if (cut.length) {
+    console.warn(
+      `ProofFrame ${label}: the crop [${crop.join(", ")}] cuts content on its ${cut.map(([n, v]) => `${n} edge (${Math.round(v * 100)}% of its pixels are not background)`).join(", ")}. Move that edge onto whitespace (R2 section 9: never cut a line).`,
+    );
+  }
+}
+
+/**
+ * Runs the crop check once per capture, crop and second (per render tab), holding the frame until it is done so the
+ * warning lands in the render log. Never blocks a render: any load or seek error, or 4 s, releases it.
+ */
+const CropGuard: React.FC<{ capture: string; file: string; kind: "still" | "video"; crops: { crop: Box; src: number }[] }> = ({ capture, file, kind, crops }) => {
+  const todo = crops.filter((c) => !cropChecks.has(`${capture}|${c.crop.join(",")}|${kind === "video" ? c.src.toFixed(2) : ""}`));
+  const [handle] = useState(() => (todo.length ? delayRender(`ProofFrame ${capture}: checking the crop edges`, { timeoutInMilliseconds: 20000 }) : null));
+  useEffect(() => {
+    if (handle === null) return;
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      continueRender(handle);
+    };
+    const timer = setTimeout(finish, 4000);
+    for (const c of todo) cropChecks.add(`${capture}|${c.crop.join(",")}|${kind === "video" ? c.src.toFixed(2) : ""}`);
+    const url = staticFile(file);
+    try {
+      if (kind === "still") {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            for (const c of todo) checkCrop(img, capture, c.crop);
+          } finally {
+            clearTimeout(timer);
+            finish();
+          }
+        };
+        img.onerror = () => {
+          clearTimeout(timer);
+          finish();
+        };
+        img.src = url;
+      } else {
+        const video = document.createElement("video");
+        video.muted = true;
+        video.preload = "auto";
+        let i = 0;
+        const next = () => {
+          if (i >= todo.length) {
+            clearTimeout(timer);
+            video.removeAttribute("src");
+            video.load();
+            finish();
+            return;
+          }
+          video.currentTime = todo[i].src + 0.02;
+        };
+        video.onseeked = () => {
+          try {
+            checkCrop(video, `${capture} at ${todo[i].src.toFixed(2)} s`, todo[i].crop);
+          } catch {
+            // a frame we cannot read is not a reason to fail the render
+          }
+          i++;
+          next();
+        };
+        video.onerror = () => {
+          clearTimeout(timer);
+          finish();
+        };
+        video.onloadeddata = () => next();
+        video.src = url;
+      }
+    } catch {
+      clearTimeout(timer);
+      finish();
+    }
+    return () => {
+      clearTimeout(timer);
+      finish();
+    };
+  }, [handle]);
+  return null;
+};
+
+// ---------------------------------------------------------------------------------------------------------------------
 // The proof
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -277,6 +441,7 @@ export const ProofFrame: React.FC<ProofFrameProps> = ({
   masks = [],
   maskFill,
   clips = true,
+  cropCheck = true,
   icon = "eye",
   style,
 }) => {
@@ -357,6 +522,7 @@ export const ProofFrame: React.FC<ProofFrameProps> = ({
 
   return (
     <ProofMat w={w} h={h} x={x} y={y} at={at} dur={length} tag={tag} note={note} tilt={tilt} enter={enter} exit={exit} icon={icon} style={style}>
+      {cropCheck && ok && cap && file ? <CropGuard capture={capture} file={file} kind={isVideo ? "video" : "still"} crops={segs.map((sg) => ({ crop: sg.crop, src: sg.src }))} /> : null}
       {ok ? (
         <div
           style={{

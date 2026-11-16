@@ -40,8 +40,8 @@ export const World: React.FC = () => {
         </div>
       ) : null}
 
-      <PipelineNode cx={RELAY.cx} lineY={RELAY.lineY} label="Bitbucket relay" icon="merge" inAt={T.recordAt} pulseAt={T.relayAt} outAt={T.timerOut - 8} />
-      <PipelineNode cx={MATCHER.cx} lineY={MATCHER.lineY} label="Doc Drift matcher" icon="rule" inAt={T.recordAt + 6} pulseAt={T.matcherAt} outAt={T.timerOut - 6} />
+      <PipelineNode cx={RELAY.cx} lineY={RELAY.lineY} label="Bitbucket relay" icon="merge" inAt={T.recordAt} pulseAt={T.relayAt} outAt={T.relayOut} />
+      <PipelineNode cx={MATCHER.cx} lineY={MATCHER.lineY} label="Doc Drift matcher" icon="rule" inAt={T.recordAt + 6} pulseAt={T.matcherAt} outAt={T.matcherOut} />
 
       {/* station 3: the runbook, Verified until the record lands; then the Steps band slips and the byline flags */}
       <ContactShadow cx={PAGE.card.x + PAGE.card.w / 2} y={PAGE.card.y + PAGE.card.h} w={PAGE.card.w * 0.86} h={120} strength={0.16} />
@@ -89,7 +89,7 @@ export const RecordLayer: React.FC = () => {
 export const LineLayer: React.FC = () => {
   const frame = useCurrentFrame();
   if (frame < T.recordAt) return null;
-  const trace = interpolate(frame, [T.timerOut - 8, T.timerOut + 4], [1, 0], clamp);
+  const trace = interpolate(frame, [T.lineOut, T.lineOut + 12], [1, 0], clamp);
   if (trace <= 0) return null;
   const mask = "linear-gradient(90deg, transparent 0px, transparent 660px, #000 840px)";
   return (

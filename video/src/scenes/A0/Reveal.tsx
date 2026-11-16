@@ -21,8 +21,7 @@ import {
   TIDE_IN,
   TILE_FRAMES,
   TILE_IN,
-  TITLE_OUT,
-  TITLE_OUT_FRAMES,
+  TITLE_CUT,
   V00,
   V01,
 } from "./timing";
@@ -31,7 +30,7 @@ import {
  * The turn and the reveal (everything after the black), timed from timeline.json (v4), on the kit's Night stage:
  *   f180       TRUE BLACK (a black veil over the Night stage) and digital silence
  *   V00        the narrator's line as a title on the black, each word rising on its cue (KineticLine); it holds until
- *              the last word has ended, then leaves upward as the veil lifts off the Night sweep
+ *              the last word has ended, then cuts on the next beat, and the veil lifts off the Night sweep
  *   TILE_IN    the app's tile lifts in (the kit's Lift, Night ladder: 13 frames, its shadow growing)
  *   R − 11..5  the top, middle and bottom bands land on ticks: the D is whole and in line
  *   R          THE SLIP: the middle band slides out of line in amber, its glow on the tile and its bloom beneath (the
@@ -76,7 +75,7 @@ const TITLE_CUES = (() => {
 })();
 
 export const BridgeTitle: React.FC<{ f: number }> = ({ f }) => {
-  if (f < V00.from - 8 || f >= TITLE_OUT + TITLE_OUT_FRAMES + 2) return null;
+  if (f < V00.from - 8 || f >= TITLE_CUT) return null; // a cut on the beat: it never dissolves over the tile
   return (
     <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
       <KineticLine
@@ -89,7 +88,6 @@ export const BridgeTitle: React.FC<{ f: number }> = ({ f }) => {
         align="center"
         world="night"
         dur={8}
-        exit={{ at: TITLE_OUT, dur: TITLE_OUT_FRAMES, stagger: 0.5 }}
         style={{ whiteSpace: "nowrap" }}
       />
     </AbsoluteFill>

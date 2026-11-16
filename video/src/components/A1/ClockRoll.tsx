@@ -6,8 +6,9 @@ import { FONT, NIGHT } from "../../v4/look";
 /**
  * The huge 3 a.m. clock (A1 V02, again in A4 V24): `03:07` in Spline Sans Mono, each digit an odometer drum.
  *
- * - Roll in (`at` .. `land`): every drum rolls up through a few digits and lands on its value with expo out, staggered
- *   left to right so the last drum lands on `land` (put it 0 to 4 frames before the spoken "3").
+ * - Roll in (`at` .. `land`): every drum rolls up through a few digits and lands on its value (cubic out), staggered
+ *   left to right so the last drum lands on `land`. Use landFor() to put the landing QA sees (within 4 px) 0 to 4 frames
+ *   before the spoken "3".
  * - Tick (`from` + `tick`): the drums count up from `from` ("03:06") to `text` ("03:07"); drums that match do not move.
  *   With both, the clock rolls in to `from` first, then ticks (A4: the same clock as A1, and the minute turns on "3").
  *
@@ -21,7 +22,24 @@ import { FONT, NIGHT } from "../../v4/look";
 const ROW = 1.22; // row pitch and window height, in em
 
 /** How many rows each drum travels when it rolls in, left to right (the colon is skipped). */
-const TRAVEL = [4, 7, 5, 9];
+export const TRAVEL = [4, 7, 5, 9];
+
+/**
+ * The drums land on a cubic ease-out: fast and smeared at first, decisive at the end (an expo-out tail looks settled
+ * long before its last frame, which put the landing 11 frames ahead of its word). With cubic out, the distance left is
+ * D (1 - t)^3, so a drum is within 4 px of rest at t4 = 1 - (4 / D)^(1/3).
+ */
+const cubicOut = (t: number) => 1 - Math.pow(1 - t, 3);
+
+/**
+ * The `land` frame that puts a drum of `rows` rows within 4 px of rest on `settle` (the "lands" frame QA measures),
+ * for a roll starting at `at`, at type size `size`.
+ */
+export function landFor(at: number, settle: number, rows: number, size: number) {
+  const D = Math.max(1, rows * ROW * size);
+  const t4 = 1 - Math.cbrt(4 / D);
+  return at + Math.max(1, Math.round((settle - at) / t4));
+}
 
 type Leg = { start: number; land: number; rows: number };
 
@@ -36,7 +54,7 @@ const DrumDigit: React.FC<{ digit: number; legs: Leg[]; size: number; color: str
     let pos = 0;
     for (const l of legs) {
       if (l.rows <= 0) continue;
-      pos += l.land <= l.start ? (f >= l.start ? l.rows : 0) : interpolate(f, [l.start, l.land], [0, l.rows], { ...clamp, easing: EASE.expoOut });
+      pos += l.land <= l.start ? (f >= l.start ? l.rows : 0) : interpolate(f, [l.start, l.land], [0, l.rows], { ...clamp, easing: cubicOut });
     }
     return pos;
   };

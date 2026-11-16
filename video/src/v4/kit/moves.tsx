@@ -1,10 +1,11 @@
-import React, { useId } from "react";
+import React, { useContext, useId } from "react";
 import { CameraMotionBlur } from "@remotion/motion-blur";
 import { AbsoluteFill, useCurrentFrame } from "remotion";
 import { SLIP_UNIT } from "../../brand/tokens";
 import { EASE, H, W, tween } from "../../lib/time";
-import { DAY, type Rect } from "../look";
-import { MorphRevealContext, ProofFrame, ProofMat } from "./proof";
+import { DAY, sweep, type Rect } from "../look";
+import { MorphRevealContext, ProofFrame, ProofMat, proofInfo } from "./proof";
+import { StageContext } from "./stage";
 
 /**
  * The v4 transitions inside a scene (R3 section 4): T3 MorphToReal, T4 RebuildFromReal, T5 SlipPush, T6 ZoomThrough,
@@ -20,19 +21,34 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 export type MorphProps = {
   at: number;
-  /** Frames (T3 default 9, T4 default 7). */
+  /** Frames (T3 default 9). */
   dur?: number;
-  /** T3: the twin element's rect. T4: the proof element's rect. Film px. */
+  /** The twin element's rect, film px. */
   fromRect: Rect;
-  /** T3: the same element's rect inside the proof at its final place. T4: the twin element's rect. */
+  /** The same element's rect inside the proof at its final place (`proofPoint`). */
   toRect: Rect;
   twin: React.ReactNode;
   proof: React.ReactNode;
-  /** Opacity the twin rests at once the proof is in front (default 0.4, R3 section 3; 0 removes it). T3 only. */
+  /**
+   * The twin while the proof is up (round 2, QA K-1: the twin must not show its own words at a second size around
+   * the proof). Opacity (default 0.18, was 0.4), blur in px (default 7) and drain to grey 0 to 1 (default 1, R2's
+   * modal scrim, which also keeps the twin's own amber out of the shot). `twinRest={1} twinBlur={0} twinDrain={0}`
+   * keeps the twin as it was.
+   */
   twinRest?: number;
+  twinBlur?: number;
+  twinDrain?: number;
+  /** Also hide the twin inside `fromRect` (plus 8 px) while the proof is up (default false). */
+  twinMask?: boolean;
+  /**
+   * The frame the proof starts leaving: the twin returns to itself over 6 frames from here. Default: read from a
+   * ProofFrame or ProofMat `proof` (its `at + dur`, unless `exit="none"`); otherwise the twin rests until the scene
+   * switches to RebuildFromReal.
+   */
+  out?: number;
   /** Corner radius of the growing clip (default 24). */
   radius?: number;
-  /** The proof's full frame rect (the clip grows to it; default the whole stage). */
+  /** The proof's full frame rect (the window grows to it; default the whole stage). */
   frameRect?: Rect;
   /**
    * How the proof is revealed. "inner": the window is handed to the proof's mat (ProofFrame, ProofMat), which clips
@@ -59,15 +75,55 @@ function rectMap(a: Rect, b: Rect) {
   return { s, tx: b.x + b.w / 2 - s * (a.x + a.w / 2), ty: b.y + b.h / 2 - s * (a.y + a.h / 2) };
 }
 
+/** The twin's state: k = 0 is itself, k = 1 is at rest behind a proof. */
+function twinStyle(k: number, rest: { o: number; b: number; d: number }, mask?: Rect): React.CSSProperties | undefined {
+  if (k <= 0.001 && !mask) return undefined;
+  const o = 1 + (rest.o - 1) * k;
+  const b = rest.b * k;
+  const d = rest.d * k;
+  const filters = [b > 0.2 ? `blur(${b.toFixed(2)}px)` : "", d > 0.01 ? `grayscale(${d.toFixed(3)})` : ""].filter(Boolean).join(" ");
+  return {
+    opacity: o < 0.999 ? o : undefined,
+    filter: filters || undefined,
+    clipPath: mask ? `path(evenodd, "M-40 -40 H${W + 40} V${H + 40} H-40 Z M${mask.x} ${mask.y} h${mask.w} v${mask.h} h${-mask.w} Z")` : undefined,
+  };
+}
+
 /**
- * T3, the signature: the proof's element box starts exactly on the twin's element box and the capture grows out of
- * it to its frame (clip from the element rect to the frame rect, expo out), while the twin dims (frames 2 to 8).
- * Before `at` only the twin shows; after the morph the proof sits in front of the twin at `twinRest`.
+ * A ground behind a twin that is dimmed, when no Stage encloses it (a twin that carries its own Stage would otherwise
+ * show the film's black through it). Inside a Stage, that Stage's ground is already there.
  */
-export const MorphToReal: React.FC<MorphProps> = ({ at, dur = 9, fromRect, toRect, twin, proof, twinRest = 0.4, radius = 24, frameRect, clip = "auto" }) => {
+const TwinGround: React.FC<{ on: boolean }> = ({ on }) => {
+  const stage = useContext(StageContext);
+  if (!on || stage) return null;
+  return <AbsoluteFill style={{ background: sweep() }} />;
+};
+
+/**
+ * T3, the signature: the proof's element box starts exactly on the twin's element box and the capture grows out of it
+ * to its frame (expo out) while the twin steps back (dims, blurs and drains over 6 frames); when the proof leaves
+ * (`out`, or a ProofFrame's own `at + dur`) the twin comes back over 6 frames. Before `at` only the twin shows.
+ */
+export const MorphToReal: React.FC<MorphProps> = ({
+  at,
+  dur = 9,
+  fromRect,
+  toRect,
+  twin,
+  proof,
+  twinRest = 0.18,
+  twinBlur = 7,
+  twinDrain = 1,
+  twinMask = false,
+  out,
+  radius = 24,
+  frameRect,
+  clip = "auto",
+}) => {
   const frame = useCurrentFrame();
   const e = tween(frame, at, at + dur, 0, 1, EASE.expoOut);
-  const twinO = lerp(1, twinRest, tween(frame, at + 2, at + Math.max(3, dur - 1), 0, 1, EASE.linear));
+  const outAt = out ?? proofInfo(proof)?.end;
+  const k = tween(frame, at + 1, at + 7, 0, 1, EASE.expoOut) * (outAt !== undefined ? 1 - tween(frame, outAt, outAt + 6, 0, 1, EASE.expoOut) : 1);
   const m = rectMap(toRect, fromRect); // at e = 0 the proof's element sits on the twin's element
   const s = lerp(m.s, 1, e);
   const tx = lerp(m.tx, 0, e);
@@ -81,9 +137,11 @@ export const MorphToReal: React.FC<MorphProps> = ({ at, dur = 9, fromRect, toRec
   };
   const inner = clip === "inner" || (clip === "auto" && isProofNode(proof));
   const win: Rect = { x: box.x, y: box.y, w: box.r - box.x, h: box.b - box.y };
+  const mask = twinMask && k > 0.001 ? { x: fromRect.x - 8, y: fromRect.y - 8, w: fromRect.w + 16, h: fromRect.h + 16 } : undefined;
   return (
     <AbsoluteFill>
-      <AbsoluteFill style={{ opacity: twinO < 1 ? twinO : undefined }}>{twin}</AbsoluteFill>
+      <TwinGround on={k > 0.001} />
+      <AbsoluteFill style={twinStyle(k, { o: twinRest, b: twinBlur, d: twinDrain }, mask)}>{twin}</AbsoluteFill>
       {frame >= at ? (
         <AbsoluteFill
           style={{
@@ -99,31 +157,49 @@ export const MorphToReal: React.FC<MorphProps> = ({ at, dur = 9, fromRect, toRec
   );
 };
 
+export type RebuildProps = {
+  at: number;
+  /** Frames of the wipe (default 4, round 2: was a 7-frame dissolve). */
+  dur?: number;
+  /** The proof element's rect (kept for compatibility; the wipe crosses `frameRect`). */
+  fromRect: Rect;
+  /** The twin element's rect (kept for compatibility). */
+  toRect: Rect;
+  twin: React.ReactNode;
+  proof: React.ReactNode;
+  /** Where the twin rests when the rebuild starts: MorphToReal's `twinRest`, `twinBlur`, `twinDrain` (same defaults). */
+  twinFrom?: number;
+  twinBlurFrom?: number;
+  twinDrainFrom?: number;
+  /** The proof's rect the wipe crosses (default: read from a ProofFrame or ProofMat `proof`, else the whole stage). */
+  frameRect?: Rect;
+};
+
 /**
- * T4, back from a proof when the same object continues: the twin sets in on the same rects (its element starts on the
- * proof's element and settles home, expo out) while the capture goes to 0.98 and fades.
+ * T4, back from a proof when the same object continues (round 2, QA K-1): the proof is wiped off left to right in
+ * `dur` frames (4, expo in-out) with a 16 px slide in the slip's direction, while the twin returns from where it
+ * rested (dim, blurred, grey) to itself over `dur + 2` frames. Each pixel shows the proof or the twin, never both:
+ * no double exposure. Before `at` it shows the proof over the resting twin, so it can follow MorphToReal directly.
  */
-export const RebuildFromReal: React.FC<Omit<MorphProps, "twinRest">> = ({ at, dur = 7, fromRect, toRect, twin, proof }) => {
+export const RebuildFromReal: React.FC<RebuildProps> = ({ at, dur = 4, twin, proof, twinFrom = 0.18, twinBlurFrom = 7, twinDrainFrom = 1, frameRect }) => {
   const frame = useCurrentFrame();
-  const e = tween(frame, at, at + dur, 0, 1, EASE.expoOut);
-  const twinO = tween(frame, at, at + Math.max(2, dur - 2), 0, 1, EASE.linear);
-  const proofO = 1 - tween(frame, at + 1, at + dur, 0, 1, EASE.linear);
-  const m = rectMap(toRect, fromRect); // at e = 0 the twin's element sits on the proof's element
-  const s = lerp(m.s, 1, e);
-  const tx = lerp(m.tx, 0, e);
-  const ty = lerp(m.ty, 0, e);
-  const ps = lerp(1, 0.98, e);
-  const pcx = fromRect.x + fromRect.w / 2;
-  const pcy = fromRect.y + fromRect.h / 2;
+  const e = tween(frame, at, at + dur, 0, 1, EASE.expoInOut);
+  const k = 1 - tween(frame, at, at + dur + 2, 0, 1, EASE.expoOut);
+  const fr = frameRect ?? proofInfo(proof)?.rect ?? { x: 0, y: 0, w: W, h: H };
+  const cutX = fr.x + e * fr.w;
   return (
     <AbsoluteFill>
-      {frame >= at ? (
-        <AbsoluteFill style={{ opacity: twinO < 1 ? twinO : undefined, transformOrigin: "0 0", transform: e < 1 ? `translate(${tx}px, ${ty}px) scale(${s})` : undefined }}>
-          {twin}
+      <TwinGround on={k > 0.001} />
+      <AbsoluteFill style={twinStyle(k, { o: twinFrom, b: twinBlurFrom, d: twinDrainFrom })}>{twin}</AbsoluteFill>
+      {e < 1 ? (
+        <AbsoluteFill
+          style={{
+            clipPath: frame >= at ? `polygon(${cutX}px -200px, ${W + 200}px -200px, ${W + 200}px ${H + 200}px, ${cutX}px ${H + 200}px)` : undefined,
+            transform: frame >= at ? `translateX(${16 * e}px)` : undefined,
+          }}
+        >
+          {proof}
         </AbsoluteFill>
-      ) : null}
-      {proofO > 0 ? (
-        <AbsoluteFill style={{ opacity: proofO < 1 ? proofO : undefined, transformOrigin: `${pcx}px ${pcy}px`, transform: frame >= at ? `scale(${ps})` : undefined }}>{proof}</AbsoluteFill>
       ) : null}
     </AbsoluteFill>
   );

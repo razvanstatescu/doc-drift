@@ -32,8 +32,13 @@ export type BylineSpec =
   | {
       kind: "dds";
       state: DdsState;
-      /** Old state, shown until `at`; then the item swaps to `state`. */
-      from?: DdsState;
+      /**
+       * What the byline read before: a Doc Drift state, or "reviewed" (A1's line, `fromText`, default "Reviewed 34 days
+       * ago"). The swap is a 6-frame slip centred on `at`: the old words are gone at `at`, the new ones fully readable at
+       * at + 3 (STATUS.md, Byline swap timing).
+       */
+      from?: DdsState | "reviewed";
+      fromText?: string;
       at?: number;
       /**
        * Whether the item carries the shot's amber (the bloom and the amber word) while it reads Possibly stale.
@@ -62,8 +67,13 @@ export type PageTwinProps = {
    * out of line, neutral). Without `handoff` the band keeps the amber; pass `amber: false` to slip it neutral.
    */
   slip?: { at: number; back?: number; handoff?: number; amber?: boolean };
-  /** Step 2's code: the original, the fixed form, or the original morphing into the fixed form at `morphAt`. */
-  step2?: "old" | "new" | { morphAt: number; dur?: number };
+  /**
+   * Step 2's code: "old" (as written), "renamed" (after the rename quick fix: `./scripts/rollback-v2.sh --timeout
+   * $ROLLBACK_TIMEOUT`), "new" (after the drafts: `export ROLLBACK_TIMEOUT_SECS=300` / `./scripts/rollback-v2.sh
+   * --timeout $ROLLBACK_TIMEOUT_SECS`), or a slip morph between two of them: `{ morphAt, dur? (8), from? ("old"),
+   * to? ("new") }`. The insertions open and the text after them slides right; nothing fades.
+   */
+  step2?: "old" | "renamed" | "new" | { morphAt: number; dur?: number; from?: "old" | "renamed" | "new"; to?: "old" | "renamed" | "new" };
   /** A hairline scanning down the page from `at` over `dur` frames. */
   scan?: { at: number; dur: number };
   /** A marker on a token: Mist band, Current underline, or amber block (amber only for the drift). */

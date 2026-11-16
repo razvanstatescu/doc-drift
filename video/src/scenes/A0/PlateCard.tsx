@@ -34,7 +34,7 @@ export const PaperPlate: React.FC<{
   const k = width / r.w;
   const height = r.h * k;
   const subject = role === "subject";
-  const soft = blur ?? (subject ? TEXTURE_BLUR * (1 - lit) : TEXTURE_BLUR);
+  const soft = blur ?? (subject ? (TEXTURE_BLUR + 2) * (1 - lit) : TEXTURE_BLUR);
   const at = (bx: Box, pad = 0) => ({ x: (bx.x - r.x) * k - pad, y: (bx.y - r.y) * k - pad * 0.7, w: bx.w * k + 2 * pad, h: bx.h * k + pad * 1.8 });
 
   // the veil: the whole page washed toward white, with holes at the key sentence on the subject
@@ -69,6 +69,7 @@ export const PaperPlate: React.FC<{
         <svg width={width} height={height} style={{ position: "absolute", left: 0, top: 0 }}>
           <path d={`M-10 -10H${width + 10}V${height + 10}H-10Z ${holes}`} fillRule="evenodd" fill={veil} />
           {subject && lit < 1 ? <path d={holes} fill={white(WASH.texture * (1 - lit))} /> : null}
+          {subject && lit < 1 ? <path d={`M-10 -10H${width + 10}V${height + 10}H-10Z`} fill={white(0.45 * (1 - lit))} /> : null}
         </svg>
         {lines.map((l, i) => {
           const a = at(l);

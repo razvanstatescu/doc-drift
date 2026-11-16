@@ -2,31 +2,34 @@ import React, { useId } from "react";
 import { AbsoluteFill, useCurrentFrame } from "remotion";
 import { Sfx } from "../../audio/Sfx";
 import { World } from "../../brand/theme";
-import { AlertStation } from "../../components/A1/AlertStation";
+import { AlertStation, CLOCK_SIZE } from "../../components/A1/AlertStation";
+import { landFor } from "../../components/A1/ClockRoll";
 import { EndCardDay, END } from "../../components/A4/EndCardDay";
 import { SlipToDay } from "../../components/A4/SlipToDay";
+import { AmberWords } from "../../components/A4/AmberWords";
 import { turnTravel } from "../../components/A1/moves";
-import { EASE } from "../../lib/time";
+import { EASE, tween } from "../../lib/time";
 import { getScene } from "../../lib/timeline";
 import { Camera3D, cam3At, DirBlur, Stage, WhipBlur, type Cam3Key } from "../../v4/kit";
-import { AgentPanelTwin, PageTwin, pageRects, textWidth, type PageTwinProps } from "../../v4/twins";
+import { AgentPanelTwin, agentPanelRects, PageTwin, pageRects, textWidth, type AgentPanelTwinProps, type PageTwinProps } from "../../v4/twins";
 
 /**
  * A4 · Close (film 4177 to 4657). V4.md section 6. Local frames, all from the narration cues and the endHit marker:
  *
- *   0          opens composed in Night under P5's slip cut: A1's clock rolls in again (already rolling), on 03:06,
+ *   0          opens composed in Night under P5's slip reveal: A1's clock rolls in again (already rolling), on 03:06,
  *              framed close as in A1; the minute ticks to 03:07 on "3" and the alert card lifts with it, the camera
  *              tilts down to the whole composition and pushes in slowly, as in A1                             (V24)
- *   "runbook"  whip (as in A1) to the runbook, landing on step 2 where A1's travel ended: the Steps band slips one
- *              unit in amber, hands the amber up to the byline on "tells" ("Possibly stale · Doc Drift", the one
- *              amber), and the camera rises with it (the mirror of A1's travel down), landing on "you"
- *   "and"      a whip-travel across the room to the generic assistant: the same question, and the answer is the
- *              caveat instead of the old step; on "before" the camera pulls back so the flagged page (above step 2)
- *              and the answer share the frame at 1:1
+ *   "runbook"  whip (as in A1) to the runbook, framed with the byline above and step 2 below: the Steps band slips
+ *              one unit in amber as it arrives and hands the amber up to the byline, readable 2 frames before
+ *              "tells" ("Possibly stale · Doc Drift", the one amber)
+ *   "and"      a whip-travel across the room to the generic assistant, which lifts in already asked while the page
+ *              racks out behind it; the caveat replaces the old step and holds at the medium framing (1.3x, the
+ *              badge out of frame) until the slip
  *   endHit     the last slip into Day: three bands, the middle band's slip lands on endHit (the score's final hit),
  *              the bands clear, and the end card is behind them: the tile's band slips into place (the one amber),
- *              the name sets before "Doc Drift Sentinel"; the camera pulls back from the lockup as "Catch the slip /
- *              before your agents do." rises word by word with V25, then the credit. Creep to the last frame.   (V25)
+ *              the lockup centres and the name sets before "Doc Drift Sentinel"; the camera pulls back from the lockup
+ *              and is still before "Catch the slip / before your agents do." rises word by word (each word in its
+ *              slot 2 frames before it is spoken), then the credit. Creep to the last frame.                    (V25)
  */
 const sc = getScene("A4");
 
@@ -36,33 +39,38 @@ export const A4_T = {
   /** The clock rolls in again as in A1 (already rolling under P5's slip cut), landing on 03:06. */
   rollAt: -4,
   rollLand: 24,
-  /** The minute drum ticks 6 to 7 and lands 2 frames before "3"; the alert fires at 03:07, so the card lifts with it. */
-  tickAt: sc.wordAt("V24", "3") - 12,
-  tickLand: sc.wordAt("V24", "3") - 2,
+  /**
+   * The minute drum ticks 6 to 7 and is within 4 px of rest 2 frames before "3"; the alert fires at 03:07, so the card
+   * lifts with it.
+   */
+  tickAt: sc.wordAt("V24", "3") - 10,
+  tickLand: landFor(sc.wordAt("V24", "3") - 10, sc.wordAt("V24", "3") - 2, 1, CLOCK_SIZE),
   cardAt: sc.wordAt("V24", "3") - 8,
   /** The whip's seam on the beat at "runbook". */
   whip1: sc.snap(sc.wordAt("V24", "runbook")),
   /**
-   * The whip lands on step 2 (where A1's travel ended): on "runbook" the Steps band slips one unit in amber, on "tells"
-   * it hands the amber up to the byline item ("Possibly stale · Doc Drift"), and the camera rises with it, landing on
-   * the byline on "you".
+   * The whip lands on a medium framing of the page (byline above, step 2 below): the Steps band slips one unit in amber
+   * as it arrives, and hands the amber up to the byline item ("Possibly stale · Doc Drift"), which reads amber 2 frames
+   * before "tells".
    */
-  bandSlip: sc.wordAt("V24", "runbook") + 3,
-  handoff: sc.wordAt("V24", "tells"),
-  rise: sc.wordAt("V24", "runbook") + 5,
-  /** The travel to the assistant: its fastest frame sits just before "and". */
-  travel: sc.wordAt("V24", "and") - 10,
-  /** The question types while the camera travels (so the panel's edge shows no clipped words before); the caveat
-   * streams from "and" at 140 characters a second. */
-  ask: sc.wordAt("V24", "and") - 12,
+  bandSlip: sc.wordAt("V24", "runbook") - 1,
+  handoff: sc.wordAt("V24", "tells") - 4,
+  /** "and your agent": the camera travels to the assistant (landing 2 frames before "agent") as it lifts in, already
+   * asked (N-1), and the page racks out behind it. */
+  travel: sc.wordAt("V24", "and") - 7,
+  panelIn: sc.wordAt("V24", "and") - 6,
+  /** The caveat streams from "and" at 140 characters a second and holds at the medium framing until the slip (N-5). */
   answer: sc.wordAt("V24", "and"),
-  pullBack: sc.wordAt("V24", "before") + 6,
+  /** "Possibly stale" has streamed in about 9 frames later; its amber block wipes in then. */
+  staleAmber: sc.wordAt("V24", "and") + 10,
   endHit,
   /** After the Night bands clear, the tile's band slips into place (amber). */
   markSlip: endHit + 16,
   name: endHit + 22,
-  camOut: sc.wordAt("V25", "sentinel", "to") - 4,
-  words: v25.slice(3).map((w) => w.from - 2),
+  /** The camera pulls back from the lockup during "Sentinel" and is still before "Catch". */
+  camOut: sc.wordAt("V25", "sentinel"),
+  /** Each tagline word starts 7 frames before its word: its 12-frame rise is within 4 px of its slot 1 to 2 frames before. */
+  words: v25.slice(3).map((w) => w.from - 7),
   credit: sc.wordAt("V25", "agents") + 4,
   end: sc.durationInFrames,
 };
@@ -82,30 +90,67 @@ const PAGE: PageTwinProps = {
 };
 const R = pageRects(PAGE);
 /**
- * The assistant stands in front of the page's upper right corner: it overlaps only the empty right side of the header
- * (the title, byline and table text end before it) and stops above step 2, whose slipped line runs further right.
- * So the final pose holds both readers at 1:1: the byline at 27 px, the answer at 34 px.
+ * The assistant lifts in just past the page's right edge. Its caveat is read at the medium framing, 1.3x (the answer at
+ * 44 px), the panel centred, held until the slip (N-5); there the page's badge is out of frame (N-6) and the page is
+ * racked out behind the panel.
  */
-const PANEL = { x: 980, y: 120, width: 840, size: 34 } as const;
+const PANEL = { x: 1150, y: 150, width: 840, size: 34 } as const;
+/** The generic assistant: it lifts in already asked (prefilled, N-1), grows as the caveat streams. */
+const PANEL_PROPS: AgentPanelTwinProps = {
+  world: "night",
+  variant: "generic",
+  question: { text: "How do I roll back payments-api?", at: T.panelIn, prefilled: true },
+  answer: {
+    lines: ["Payments rollback runbook is **Possibly stale**.", "What it describes changed in PR #482, after it was last verified."],
+    at: T.answer,
+    cps: 140,
+  },
+  source: { text: "Payments rollback runbook", at: T.answer + 26 },
+  x: PANEL.x,
+  y: PANEL.y,
+  width: PANEL.width,
+  size: PANEL.size,
+  elev: 4,
+};
+/**
+ * The caveat's own drift words, "Possibly stale", carry the shot's one amber once they have streamed in (the page's badge
+ * is out of frame here, N-6): placed from the twin's layout (its first answer line, after "Payments rollback runbook is ").
+ */
+const CAVEAT_LINE = agentPanelRects(PANEL_PROPS).answerLines[0];
+const STALE_X = CAVEAT_LINE.x + textWidth("Payments rollback runbook is ", { size: PANEL.size, weight: 400 });
+/** The panel's height: padding 34, header 60 + 26, the question 75 + 18, the caveat 1 + 2 lines of 52 + 18, source 22 + 50. */
+const PANEL_H = 34 + 60 + 26 + 75 + 18 + 52 + 18 + 104 + 22 + 50 + 34;
 
 const cx = (r: { x: number; w: number }) => r.x + r.w / 2;
-const cy = (r: { y: number; h: number }) => r.y + r.h / 2;
 
-/** Where A1's travel ended: step 2's command. */
-const STEP2 = { x: cx(R.card), y: cy(R.step2Code), zoom: 1.4 };
-const BYLINE = { x: cx(R.card), y: cy(R.byline) + 50, zoom: 1.3 };
-const AGENT = { x: PANEL.x + PANEL.width / 2, y: PANEL.y + 250, zoom: 1.18 };
-const BOTH = { x: (R.card.x + PANEL.x + PANEL.width) / 2, y: 500, zoom: 1 };
+/** The page beat: the byline above, step 2 below, the whole page width; the bottom band stays out of frame. */
+const PAGE_CAM = { x: cx(R.card), y: 455, zoom: 1.2 };
+/** The caveat: the panel centred at 1.3x; the badge (right edge at R.badge.x + R.badge.w) at least 14 px out of frame. */
+const AGENT_ZOOM = 1.3;
+const AGENT = {
+  x: Math.max(PANEL.x + PANEL.width / 2, R.badgeSlipped.x + R.badgeSlipped.w + 14 + 960 / AGENT_ZOOM),
+  y: PANEL.y + PANEL_H / 2 - 4,
+  zoom: AGENT_ZOOM,
+};
 
 const ROOM_KEYS: Cam3Key[] = [
-  // the mirror of A1: from step 2 the camera rises to the flagged byline (tipping forward on the way)
-  ...turnTravel(T.rise, 18, STEP2, BYLINE, { pitch: -5 }),
-  // a whip-travel across the room to the assistant (turning on the way), smeared by its speed
-  ...turnTravel(T.travel, 14, BYLINE, AGENT, { yaw: 7 }),
-  // the pull back: the page and the answer share the frame
-  { at: T.pullBack, dur: 30, to: BOTH, ease: EASE.expoInOut },
+  // "and your agent": a whip-travel across the room to the assistant (turning on the way), smeared by its speed
+  ...turnTravel(T.travel, 16, PAGE_CAM, AGENT, { yaw: 7 }),
 ];
-const ROOM_OPTS = { base: STEP2, seed: "room" } as const;
+const ROOM_OPTS = { base: PAGE_CAM, seed: "room" } as const;
+
+/** The assistant arrives by lifting (M3) as the camera travels to it: 40 px up, from 97%, its first 3 frames soft. */
+const PanelLift: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const frame = useCurrentFrame();
+  if (frame < T.panelIn) return null;
+  const p = tween(frame, T.panelIn, T.panelIn + 14, 0, 1, EASE.expoOut);
+  const o = tween(frame, T.panelIn, T.panelIn + 3, 0, 1, EASE.linear);
+  return (
+    <div style={{ position: "absolute", inset: 0, opacity: o, transform: `translateY(${((1 - p) * 40).toFixed(2)}px) scale(${(0.97 + 0.03 * p).toFixed(4)})`, transformOrigin: `${PANEL.x + PANEL.width / 2}px ${PANEL.y + PANEL_H}px` }}>
+      {children}
+    </div>
+  );
+};
 
 const Room: React.FC = () => {
   const frame = useCurrentFrame();
@@ -115,28 +160,27 @@ const Room: React.FC = () => {
   const b = cam3At(frame + 0.5, ROOM_KEYS, ROOM_OPTS);
   const speed = Math.abs(b.x - a.x) * b.zoom;
   const blur = Math.min(30, speed * 0.05);
+  // the page racks out as the assistant lifts in front of it (blurred, darker, desaturated toward the Night ground,
+  // never a neutral grey): the panel is the read
+  const rack = tween(frame, T.panelIn, T.panelIn + 14, 0, 1, EASE.expoOut);
   return (
-    <Stage world="night" motif="tide" light={["40%", "34%"]} tide={{ top: 840, bottom: 1110, count: 7 }}>
+    <Stage world="night" motif="tide" light={["58%", "36%"]} tide={{ top: 840, bottom: 1110, count: 7 }}>
       <DirBlur id={id} x={blur} />
       <AbsoluteFill style={{ filter: blur > 0.3 ? `url(#${id})` : undefined }}>
         <Camera3D keys={ROOM_KEYS} {...ROOM_OPTS}>
-          <PageTwin {...PAGE} />
-          <AgentPanelTwin
-            world="night"
-            variant="generic"
-            question={{ text: "How do I roll back payments-api?", at: T.ask, typeDur: 10 }}
-            answer={{
-              lines: ["Payments rollback runbook is **Possibly stale**.", "What it describes changed in PR #482, after it was last verified."],
-              at: T.answer,
-              cps: 140,
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              filter: rack > 0.01 ? `blur(${(7 * rack).toFixed(2)}px) saturate(${(1 - 0.55 * rack).toFixed(3)}) brightness(${(1 - 0.38 * rack).toFixed(3)})` : undefined,
             }}
-            source={{ text: "Payments rollback runbook", at: T.answer + 26 }}
-            x={PANEL.x}
-            y={PANEL.y}
-            width={PANEL.width}
-            size={PANEL.size}
-            elev={4}
-          />
+          >
+            <PageTwin {...PAGE} />
+          </div>
+          <PanelLift>
+            <AgentPanelTwin {...PANEL_PROPS} />
+            <AmberWords text="Possibly stale" x={STALE_X} y={CAVEAT_LINE.y} h={CAVEAT_LINE.h} size={PANEL.size} at={T.staleAmber} />
+          </PanelLift>
         </Camera3D>
       </AbsoluteFill>
     </Stage>
@@ -153,7 +197,8 @@ const TILE_CX = 960 - LOCKUP_W / 2 + END.icon / 2;
 /** On the tile alone while the bands clear; it travels to centre the lockup as the name sets; then out to the card. */
 const END_BASE = { x: TILE_CX, y: END.lockupCy + 6, zoom: 1.32 };
 const END_KEYS: Cam3Key[] = [
-  { at: T.name - 2, dur: 20, to: { x: 960 }, ease: EASE.expoInOut },
+  // centre the lockup as the name sets: under way as the bands clear, within 4 px of rest before "Doc"
+  { at: T.markSlip - 2, dur: 18, to: { x: 960 }, ease: EASE.expoInOut },
   { at: T.camOut, dur: 26, to: { x: 960, y: 520, zoom: 1 }, ease: EASE.expoInOut },
 ];
 
@@ -180,7 +225,7 @@ const A4: React.FC = () => {
       clockTick={{ at: T.tickAt, land: T.tickLand }}
       cardAt={T.cardAt}
       rateAt={T.cardAt - 30}
-      tiltAt={T.cardAt - 4}
+      tiltAt={T.tickLand - 2}
       outAt={T.whip1}
       seed="alert4"
     />

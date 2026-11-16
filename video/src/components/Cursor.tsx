@@ -56,13 +56,16 @@ export function cursorAt(frame: number, points: CursorPoint[]) {
 
 export const Cursor: React.FC<{
   points: CursorPoint[];
-  /** Cursor scale (1 = 32 px CSS cursor). Inside a 2x capture use 2. Default 1.5 (frame px). */
+  /**
+   * Cursor scale (1 = the 32 px CSS cursor, whose arrow is about 13 px tall). Default 2.4 (frame px): an arrow about
+   * 30 px tall, with a soft shadow (v4 round 2, QA K-4: at 1.5 it read as dust). Under a camera zoom z, pass 2.4 / z.
+   */
   scale?: number;
   /** Fade in from this frame / out from this frame (local). */
   showAt?: number;
   hideAt?: number;
   theme?: ThemeName;
-}> = ({ points, scale = 1.5, showAt, hideAt, theme }) => {
+}> = ({ points, scale = 2.4, showAt, hideAt, theme }) => {
   const frame = useCurrentFrame();
   const p = useTheme(theme);
   if (points.length === 0) return null;
@@ -77,6 +80,10 @@ export const Cursor: React.FC<{
   const press = since < 6 ? interpolate(since, [0, 1, 4, 6], [1, 0.88, 0.88, 1], clamp) : 1;
   const ring = since < 16 ? interpolate(since, [0, 16], [0, 1], { ...clamp, easing: EASE.expoOut }) : 1;
   const ringColor = p.name === "night" ? "rgba(242,246,247,0.55)" : "rgba(7,38,48,0.38)";
+  // the ring keeps about its old on-screen size (radius 45 px at the old default) while the arrow grows
+  const rr = 19 * scale;
+  // a soft shadow under the arrow (Fathom-tinted on Day, deeper on Night), so it reads as an object over the page
+  const shadow = p.name === "night" ? "drop-shadow(0 1.5px 2.5px rgba(0, 0, 0, 0.55))" : "drop-shadow(0 1.5px 2.5px rgba(7, 38, 48, 0.32))";
   return (
     <div style={{ position: "absolute", left: 0, top: 0, opacity, pointerEvents: "none" }}>
       {since < 16 && click ? (
@@ -85,19 +92,19 @@ export const Cursor: React.FC<{
             position: "absolute",
             left: click.x,
             top: click.y,
-            width: 2 * 30 * scale,
-            height: 2 * 30 * scale,
-            marginLeft: -30 * scale,
-            marginTop: -30 * scale,
+            width: 2 * rr,
+            height: 2 * rr,
+            marginLeft: -rr,
+            marginTop: -rr,
             borderRadius: "50%",
-            border: `${2 * scale}px solid ${ringColor}`,
+            border: `${1.3 * scale}px solid ${ringColor}`,
             transform: `scale(${0.25 + 0.75 * ring})`,
             opacity: 1 - ring,
             boxSizing: "border-box",
           }}
         />
       ) : null}
-      <MacOSCursor cursor={cursor} style={{ left: x, top: y, scale: `${scale * press}` }} />
+      <MacOSCursor cursor={cursor} style={{ left: x, top: y, scale: `${scale * press}`, filter: shadow }} />
     </div>
   );
 };

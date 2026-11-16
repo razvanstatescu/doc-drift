@@ -3,6 +3,7 @@ import { Composition, registerRoot } from "remotion";
 import { loadBrandFonts } from "../../../brand/fonts";
 import { FPS, H, W } from "../../../lib/time";
 import Gallery from "../Gallery";
+import { CropChecks } from "./checks";
 
 /**
  * A kit-only entry point, so kit renders never depend on the scene files (Root imports every scene; one broken scene
@@ -12,6 +13,11 @@ import Gallery from "../Gallery";
  */
 loadBrandFonts();
 
-const KitRoot: React.FC = () => <Composition id="Kit4" component={Gallery} durationInFrames={1800} fps={FPS} width={W} height={H} />;
+const KitRoot: React.FC = () => (
+  <>
+    <Composition id="Kit4" component={Gallery} durationInFrames={1800} fps={FPS} width={W} height={H} />
+    <Composition id="KitChecks" component={CropChecks} durationInFrames={30} fps={FPS} width={W} height={H} />
+  </>
+);
 
 registerRoot(KitRoot);

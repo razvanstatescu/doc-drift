@@ -1,26 +1,28 @@
 import { getLength } from "@remotion/paths";
-import { toolOutput } from "../../lib/captures";
-import { EASE } from "../../lib/time";
-import { cam3At, pointOnPath, proofRect, stageToScreen, type Cam3Key, type CameraOptions } from "../../v4/kit";
+import { EASE, tween } from "../../lib/time";
+import { cam3At, pointOnPath, proofPoint, stageToScreen, type Cam3Key, type CameraOptions } from "../../v4/kit";
 import type { Rect } from "../../v4/look";
 import { pageRects, TOOLTIPS, type PageTwinProps } from "../../v4/twins";
 import { MATCHER_H, MATCHER_W, matcherRects } from "../../components/P2/MatcherCard";
 import { PR_H, PR_W, prRects } from "../../components/P2/PrTwin";
-import { LIT_SIZE, literalNewNameRect, literalTextRect } from "../../components/P2/RenameLiteral";
+import { literalNewNameRect, literalTextRect } from "../../components/P2/RenameLiteral";
 import { T } from "./timing";
 
 /**
  * P2's world (film px on the stage, before the camera) and the screen placements of everything drawn outside the
- * camera (proofs, type, the literal). One Paper plane with three stations left to right, the slip's direction:
- * the PR card, the record's path through the relay and the matcher, the runbook. The camera tracks about 1.3 frame
- * widths between the first and the last (R3 V13 gap).
+ * camera (proofs, type, the literal, the token). One Paper plane with three stations left to right, the slip's
+ * direction: the PR card, the record's path through the relay and the matcher, the runbook. The camera tracks about
+ * 1.3 frame widths between the first and the last (R3 V13 gap).
  */
+
+type Box = [number, number, number, number];
 
 // ── the stations ────────────────────────────────────────────────────────────────────────────────────────────────────
 export const PR_POS = { x: (1920 - PR_W) / 2, y: (1080 - PR_H) / 2 - 4 };
 export const PR = prRects(PR_POS.x, PR_POS.y);
 
-export const LINE_Y = 820;
+/** The record's track; the stations stand on stems above it, clear of the number's note (F-1). */
+export const LINE_Y = 870;
 export const RELAY = { cx: 1880, lineY: LINE_Y };
 export const MATCHER = { cx: 2580, lineY: LINE_Y };
 
@@ -36,24 +38,28 @@ export const pageProps = (): PageTwinProps => ({
 export const PAGE = pageRects(pageProps());
 
 // ── the camera ──────────────────────────────────────────────────────────────────────────────────────────────────────
-/** Where the camera rests on the page: the page in the right half, the number in the left. */
+/** Where the camera lands on the page: the page in the right half, the number in the left. */
 const PAGE_CAM_X = PAGE.card.x + PAGE.card.w / 2 - 330;
+/** The flag's push: the byline item lands at (1250, 330) at 1.16x, the page's left edge clear of the number. */
+const FLAG_ZOOM = 1.16;
+const badgeC = [PAGE.badge.x + PAGE.badge.w / 2, PAGE.badge.y + PAGE.badge.h / 2];
+const FLAG_CAM = { x: badgeC[0] - (1250 - 960) / FLAG_ZOOM, y: badgeC[1] - (330 - 540) / FLAG_ZOOM, zoom: FLAG_ZOOM };
 
 export const CAM_OPTS: CameraOptions = { creep: 1.5, float: 3, seed: "p2" };
 export const CAM_KEYS: Cam3Key[] = [
   // V13: a slow push toward the Merge button while the cursor travels (R3: 1.0 to 1.06)
   { at: 0, dur: 50, to: { x: 1010, y: 520, zoom: 1.06 } },
-  // the rename row lifts out: ease back to the whole card, square
-  { at: T.renameLift, dur: 20, to: { x: 960, y: 560, zoom: 1.0 } },
-  // behind R6 the world keeps moving: a slow push toward the files the record will leave from
-  { at: T.r6 - 4, dur: 34, to: { x: 1010, y: 590, zoom: 1.045 }, ease: EASE.cubicInOut },
+  // "renames": a decisive push onto the rename row as it lifts out
+  { at: T.renameLift, dur: 18, to: { x: 980, y: 650, zoom: 1.14 } },
+  // behind R6 the world keeps moving
+  { at: T.r6 - 4, dur: 30, to: { x: 1000, y: 610, zoom: 1.08 }, ease: EASE.cubicInOut },
   // the gap: the track with the record, left to right, turning slightly while it travels (M2)
   { at: T.prOut, dur: 52, to: { x: 2150, y: 600, zoom: 0.94, yaw: -2 }, ease: EASE.cubicInOut },
-  { at: T.prOut + 52, dur: 56, to: { x: PAGE_CAM_X, y: 540, zoom: 1.0, yaw: 0 }, ease: EASE.cubicInOut },
-  // the flag: a push toward the byline, landing on "flagged"
-  { at: T.flag - 4, dur: 22, to: { x: PAGE_CAM_X + 40, y: 500, zoom: 1.05 } },
-  // V15: the matcher lifts in front; the world settles back behind it
-  { at: T.matcherIn, dur: 30, to: { x: PAGE_CAM_X + 20, y: 540, zoom: 0.98 } },
+  { at: T.prOut + 52, dur: T.flagPush - T.prOut - 52, to: { x: PAGE_CAM_X, y: 540, zoom: 1.0, yaw: 0 }, ease: EASE.cubicInOut },
+  // "flagged": the decisive push onto the byline, landing on the word
+  { at: T.flagPush, dur: 16, to: FLAG_CAM },
+  // V15: the matcher lifts in front; the world eases back behind it (racked)
+  { at: T.matcherIn, dur: 30, to: { x: FLAG_CAM.x - 40, y: FLAG_CAM.y + 30, zoom: 1.06 } },
 ];
 
 export const camAt = (frame: number) => cam3At(frame, CAM_KEYS, CAM_OPTS);
@@ -72,13 +78,12 @@ export const LIT_RECT = literalTextRect(LIT_POS.x, LIT_POS.y);
 export const LIT_NEW = literalNewNameRect(LIT_POS.x, LIT_POS.y);
 
 /** R6 · the real file header of the rename (p2-pr482-files). Its `rollback-v2.sh` in capture px: 1893-2087 x 1110-1145. */
-export const R6 = { crop: [1404, 1090, 1300, 280] as [number, number, number, number], scale: 0.85 };
+export const R6 = { crop: [1404, 1090, 1300, 280] as Box, scale: 0.85 };
 export const R6_POS = { x: (1920 - (1300 * 0.85 + 28)) / 2, y: 430 };
-const r6i = proofRect({ ...R6, ...R6_POS }).image;
-export const R6_NEWNAME: Rect = { x: r6i.x + (1893 - 1404) * 0.85, y: r6i.y + (1110 - 1090) * 0.85, w: (2087 - 1893) * 0.85, h: 35 * 0.85 };
+export const R6_NEWNAME: Rect = proofPoint({ ...R6, ...R6_POS }, [1893, 1110, 194, 35]);
 
 // ── the record's path (world) ───────────────────────────────────────────────────────────────────────────────────────
-/** The record pops out of the real header's `rollback-v2.sh` (R6) as the proof drops: screen to world at that frame. */
+/** The record pops out of the real header's `rollback-v2.sh` (R6) as the proof goes: screen to world at that frame. */
 const recStart = (() => {
   const cam = camAt(T.recordAt);
   const sx = R6_NEWNAME.x + R6_NEWNAME.w / 2;
@@ -96,7 +101,7 @@ export const RECORD_PATH = [
 ].join(" ");
 
 const LEN = getLength(RECORD_PATH);
-/** Path length at the relay's and the matcher's centres (the line is straight between their ports). */
+/** Path length at the relay's and the matcher's centres (the line is straight between them). */
 const firstLen = getLength(RECORD_PATH.split(" L ")[0]);
 const lenAtX = (x: number) => firstLen + (x - (RELAY.cx - 240));
 const STOPS: [number, number][] = [
@@ -106,7 +111,7 @@ const STOPS: [number, number][] = [
   [T.arrive, 1],
 ];
 
-/** The record's progress along its path (0..1) at a frame: it passes each node on its beat. */
+/** The record's progress along its path (0..1) at a frame: it passes each station on its beat. */
 export function recordProgress(frame: number): number {
   if (frame <= STOPS[0][0]) return 0;
   for (let i = 1; i < STOPS.length; i++) {
@@ -114,7 +119,7 @@ export function recordProgress(frame: number): number {
     const [f1, p1] = STOPS[i];
     if (frame <= f1) {
       const t = (frame - f0) / (f1 - f0);
-      // ease out of the start and into the page; steady through the nodes
+      // ease out of the start and into the page; steady through the stations
       const e = i === 1 ? t * t * (3 - 2 * t) * 0.5 + t * 0.5 : i === STOPS.length - 1 ? 1 - Math.pow(1 - t, 2.2) : t;
       return p0 + (p1 - p0) * e;
     }
@@ -125,46 +130,61 @@ export const recordPoint = (frame: number) => pointOnPath(RECORD_PATH, recordPro
 /** SignalLine easing that keeps the drawn head on the record. */
 export const lineEase = (t: number) => recordProgress(T.recordAt + t * (T.arrive - T.recordAt));
 
-// ── proofs (screen space) ───────────────────────────────────────────────────────────────────────────────────────────
-/** R5 · the Merge dialog (p2-merge-rec 4.88 to 5.38 s), centred. Its Merge button in capture px: 2189-2323 x 895-954. */
-export const R5_DIALOG = { crop: [1320, 120, 1200, 880] as [number, number, number, number], scale: 0.8 };
-export const R5_DIALOG_POS = { x: (1920 - (1200 * 0.8 + 28)) / 2, y: (1080 - (880 * 0.8 + 28)) / 2 + 10 };
-const r5d = proofRect({ ...R5_DIALOG, ...R5_DIALOG_POS }).image;
-const capToR5 = (cx: number, cy: number): [number, number] => [r5d.x + (cx - 1320) * 0.8, r5d.y + (cy - 120) * 0.8];
-export const R5_BUTTON: Rect = (() => {
-  const [x0, y0] = capToR5(2189, 895);
-  const [x1, y1] = capToR5(2323, 954);
-  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
-})();
+// ── R5 · one proof, two framings (screen space) ─────────────────────────────────────────────────────────────────────
+/**
+ * The Merge dialog (4.88 s on) at 0.8, centred, cropped inside the dialog's own white so every edge is whitespace
+ * (the kit's crop guard; the title starts at 1367, the buttons end at 954). Its Merge button: 2189-2323 x 895-954.
+ */
+export const R5_DIALOG = { crop: [1350, 150, 1140, 840] as Box, scale: 0.8 };
+/** Then, on the bar, the Merged banner (13.30 s on) at 0.8: "Merged pull request", the merge line, the commit line. */
+export const R5_BANNER = { crop: [700, 505, 1440, 260] as Box, scale: 0.8 };
+const R5_CENTER = { x: 960, y: 548 };
+const matOf = (c: { crop: Box; scale: number }) => ({ w: c.crop[2] * c.scale + 28, h: c.crop[3] * c.scale + 28 });
+export const R5_DIALOG_POS = { x: R5_CENTER.x - matOf(R5_DIALOG).w / 2, y: R5_CENTER.y - matOf(R5_DIALOG).h / 2 };
+/** The mat's top-left at a frame: it stays centred while the kit reframes it (6 frames, expo out) at the jump. */
+export function r5MatPos(frame: number) {
+  const re = tween(frame, T.r5Jump, T.r5Jump + 6, 0, 1, EASE.expoOut);
+  const a = matOf(R5_DIALOG);
+  const b = matOf(R5_BANNER);
+  const w = a.w + (b.w - a.w) * re;
+  const h = a.h + (b.h - a.h) * re;
+  return { x: R5_CENTER.x - w / 2, y: R5_CENTER.y - h / 2 };
+}
+export const R5_BUTTON: Rect = proofPoint({ ...R5_DIALOG, ...R5_DIALOG_POS }, [2189, 895, 134, 59]);
 /** The recorded confirm click (2256, 925) on screen. */
-export const R5_CLICK = capToR5(2256, 925);
-/** R5 · Merged (13.30 s on): breadcrumbs to the Merged banner, whole lines only. */
-export const R5_MERGED = { crop: [700, 150, 2260, 610] as [number, number, number, number], scale: 0.6 };
-export const R5_MERGED_POS = { x: (1920 - (2260 * 0.6 + 28)) / 2, y: (1080 - (610 * 0.6 + 28)) / 2 - 20 };
+export const R5_CLICK: [number, number] = (() => {
+  const r = proofPoint({ ...R5_DIALOG, ...R5_DIALOG_POS }, [2256, 925, 0, 0]);
+  return [r.x, r.y];
+})();
 
+// ── R7 (screen space) ───────────────────────────────────────────────────────────────────────────────────────────────
 /**
  * R7 · the real byline and tooltip (p2-flagged-tooltip), 0.8. The pill (2271-2774 x 460-508) and the tooltip (to 635)
  * are what the twin's badge and tooltip morph into; the real byline sits at the twin's byline height (R2 section 9).
+ * 340 tall: it ends above the header table (no line cut, no owner row).
  */
-export const R7 = { crop: [1440, 300, 1460, 340] as [number, number, number, number], scale: 0.8 };
+export const R7 = { crop: [1440, 300, 1460, 340] as Box, scale: 0.8 };
 export const r7Pos = (twinBylineCenterY: number) => {
   const outerW = 1460 * 0.8 + 28;
   const x = 1920 - outerW - 56;
   const imageY = twinBylineCenterY - ((460 + 508) / 2 - 300) * 0.8;
   return { x, y: imageY - 14 };
 };
-export const r7Element = (pos: { x: number; y: number }): Rect => {
-  const img = proofRect({ ...R7, ...pos }).image;
-  return { x: img.x + (2271 - 1440) * 0.8, y: img.y + (460 - 300) * 0.8, w: (2774 - 2271) * 0.8, h: (635 - 460) * 0.8 };
-};
+export const r7Element = (pos: { x: number; y: number }): Rect => proofPoint({ ...R7, ...pos }, [2271, 460, 503, 175]);
 /** The hovered pill is #F1F1F2: the logged "(Development)" cover takes the colour of what it covers (R2 section 9). */
-export const R7_PILL_MASK = { box: [2594, 465, 176, 37] as [number, number, number, number], fill: "#F1F1F2", why: "Development install suffix on the hovered pill" };
+export const R7_PILL_MASK = { box: [2594, 465, 176, 37] as Box, fill: "#F1F1F2", why: "Development install suffix on the hovered pill" };
 
 // ── V15 (screen space) ──────────────────────────────────────────────────────────────────────────────────────────────
-export const MATCHER_POS = { x: 1920 - MATCHER_W - 70, y: (1080 - MATCHER_H) / 2 + 6 };
-/** V15's own camera: the statement and the card hold still on their plane while it creeps in and drifts (M1). */
-export const V15_KEYS: Cam3Key[] = [{ at: T.v15, dur: 1, to: { x: 960, y: 540, zoom: 1, yaw: 0, pitch: 0, roll: 0 } }];
-export const V15_OPTS: CameraOptions = { creep: 1.6, drift: [-7, -2], float: 2, seed: "p2-v15" };
+/** The card sits 130 px from the right edge, so the push and the creep never take it past the frame (F-3). */
+export const MATCHER_POS = { x: 1920 - MATCHER_W - 130, y: (1080 - MATCHER_H) / 2 + 6 };
+export const TYPE_X = 132;
+/** V15's own camera: square at the statement's first word, a decisive push landing on "call", then a slow creep. */
+export const V15_KEYS: Cam3Key[] = [
+  { at: T.v15, dur: 1, to: { x: 960, y: 540, zoom: 1, yaw: 0, pitch: 0, roll: 0 } },
+  // x, y = the stage point at the view's centre: chosen so the statement and the card both stay 60 px or more inside
+  { at: T.v15Push, dur: 12, to: { x: 966, y: 556, zoom: 1.05 } },
+];
+export const V15_OPTS: CameraOptions = { creep: 0.5, drift: [0, 0], float: 2, seed: "p2-v15" };
 /** A V15-plane rect on screen at a frame. */
 export function v15ToScreen(r: Rect, frame: number): Rect {
   const cam = cam3At(frame, V15_KEYS, V15_OPTS);
@@ -173,16 +193,16 @@ export function v15ToScreen(r: Rect, frame: number): Rect {
   return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 }
 export const MATCHER_R = matcherRects(MATCHER_POS.x, MATCHER_POS.y);
-export const TYPE_X = 112;
 
-/** R8 · the real why sentence and score (p4-panel), over the card's rules: the same words in the same place. */
-export const R8 = { crop: [1150, 260, 1550, 260] as [number, number, number, number], scale: 0.6 };
-export const R8_POS = { x: MATCHER_POS.x + (MATCHER_W - (1550 * 0.6 + 28)) / 2, y: MATCHER_POS.y + 250 };
-const r8i = proofRect({ ...R8, ...R8_POS }).image;
-/** "Score 1.00 (threshold" in capture px: about 2370-2650 x 372-402. */
-export const R8_SCORE: Rect = { x: r8i.x + (2370 - 1150) * 0.6, y: r8i.y + (372 - 260) * 0.6, w: 280 * 0.6, h: 30 * 0.6 };
+/** Where "PR #482" hovers between leaving the tooltip and docking in the matcher: right of the byline item, on clear
+ *  ground of the byline row (screen px at the flag's push). */
+export const TOKEN_HOVER = { cx: 1645, cy: 300, scale: 1.2 };
 
-/** The two real outputs R9 would compare (kept for a later pass; see README). */
-export const RUNS_OUTPUT = { first: toolOutput("checkFlagged"), replay: toolOutput("checkFlaggedV2") };
-
-export const LIT_SIZE_PX = LIT_SIZE;
+/**
+ * R8 · the real why sentence and score (p4-panel) over the card's rules: the same words in the same place. The crop
+ * starts at 220 (the title whole, below the modal's own header) and ends above "Review (2)".
+ */
+export const R8 = { crop: [1150, 220, 1550, 300] as Box, scale: 0.6 };
+export const R8_POS = { x: MATCHER_POS.x + (MATCHER_W - (1550 * 0.6 + 28)) / 2, y: MATCHER_POS.y + 236 };
+/** "Score 1.00 (threshold" in capture px. */
+export const R8_SCORE_BOX: Box = [2370, 372, 280, 30];

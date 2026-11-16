@@ -50,8 +50,13 @@ export const TrackInJiraTwin: React.FC<{
   busy?: number;
   created?: number;
   badgeGlow?: number;
+  /**
+   * 0..1: the created message steps back (the kit's rest: 18%, 7 px blur, drained) while R22, the real message, is up
+   * over it (QA K-1); the rest of the card, and its one amber badge, stays as it is.
+   */
+  noticeRest?: number;
   style?: React.CSSProperties;
-}> = ({ k = 1.7, press = 0, busy = 0, created = 0, badgeGlow = 1, style }) => {
+}> = ({ k = 1.7, press = 0, busy = 0, created = 0, badgeGlow = 1, noticeRest = 0, style }) => {
   const u = (n: number) => n * k;
   const c = Math.max(0, Math.min(1, created));
   return (
@@ -86,7 +91,17 @@ export const TrackInJiraTwin: React.FC<{
           {TRACK.help}
         </Muted>
       </div>
-      <div style={{ position: "absolute", left: u(28), right: u(28), top: u(196), height: u(120) }}>
+      <div
+        style={{
+          position: "absolute",
+          left: u(28),
+          right: u(28),
+          top: u(196),
+          height: u(120),
+          opacity: noticeRest > 0.001 ? 1 - 0.82 * noticeRest : undefined,
+          filter: noticeRest > 0.001 ? `blur(${(7 * noticeRest).toFixed(2)}px) grayscale(${noticeRest.toFixed(3)})` : undefined,
+        }}
+      >
         {c < 1 ? (
           <div style={{ position: "absolute", left: 0, top: u(18), opacity: 1 - c, transform: `translateY(${-u(8) * c}px)` }}>
             <Button k={k} press={press} busy={busy}>

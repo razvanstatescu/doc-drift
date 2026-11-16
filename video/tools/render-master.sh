@@ -5,7 +5,7 @@
 #
 # What it does: typecheck; render A0 (the cold open: the WebGL barrage needs --gl=angle) and Body (everything after A0,
 # rendered WITHOUT --gl=angle, which changes edge anti-aliasing in DOM scenes); join them frame- and sample-exact
-# (video stream-copied, audio decoded per part); then a true-peak limiter and two-pass loudnorm to -14 LUFS / -1 dBTP,
+# (video stream-copied, audio decoded per part); then a fixed gain and a 4x-oversampled peak limiter to -14 LUFS / -1.5 dBTP,
 # AAC 320k, faststart; then the WCAG 2.3.1 flash screen on the A0 part.
 #
 # Environment:
@@ -42,7 +42,6 @@ A0RAW="$OUTDIR/$NAME-$TAG-a0.mp4"
 BODYRAW="$OUTDIR/$NAME-$TAG-body.mp4"
 LIST="$OUTDIR/$NAME-$TAG-parts.txt"
 VCAT="$OUTDIR/$NAME-$TAG-video.mp4"
-PRE="alimiter=limit=0.82:attack=3:release=60:level=disabled"
 ENTRY="src/index.ts"
 FPS=30
 
@@ -85,23 +84,41 @@ else
   rm -f "$VCAT" "$LIST"
 fi
 
-echo "== master: limiter + two-pass loudnorm to -14 LUFS / -1 dBTP"
-read -r I TP LRA TH OFF < <(ffmpeg -hide_banner -i "$RAW" -af "${PRE},loudnorm=I=-14:TP=-1:LRA=11:print_format=json" -f null - 2>&1 |
-  sed -n '/^{/,/^}/p' | python3 -I -c "import sys,json;d=json.load(sys.stdin);print(d['input_i'],d['input_tp'],d['input_lra'],d['input_thresh'],d['target_offset'])")
-echo "pass 1: I=${I} TP=${TP} LRA=${LRA}"
-if [[ "$I" == "-inf" ]]; then
-  # A silent render (no voice or score yet): loudnorm cannot measure it, so keep the audio as it is.
-  echo "WARNING: the mix is silent; skipping loudnorm"
+echo "== master: linear gain + 4x-oversampled peak limiter to -14 LUFS, true peak at most -1.5 dBTP after AAC"
+# v4 QA (2026-11-16): the old pre-limiter + loudnorm chain could not apply its gain linearly (the limiter's inter-sample
+# overs left too little headroom), so loudnorm fell back to dynamic mode: it rode the gain 3 to 6 dB and the AAC encode
+# overshot to -0.76 dBTP. Now: one fixed gain, then a limiter run at 192 kHz (so it catches inter-sample peaks), at
+# -2.5 dBFS; measured after the AAC encode, with one correction pass if the loudness misses -14 by more than 0.15 LU.
+LIMIT="0.75"
+measure() { ffmpeg -hide_banner -i "$1" -af ebur128=peak=true -f null - 2>&1 | python3 -I -c "
+import sys,re
+t=sys.stdin.read().split('Summary:')[-1]
+i=re.search(r'I:\s+(-?[0-9.]+|-inf) LUFS',t); p=re.search(r'Peak:\s+(-?[0-9.]+|-inf) dBFS',t)
+print(i.group(1) if i else '-inf', p.group(1) if p else '-inf')"; }
+master() { ffmpeg -v error -y -i "$RAW" -c:v copy \
+    -af "volume=${1}dB,aresample=192000,alimiter=limit=${LIMIT}:attack=2:release=80:level=disabled,aresample=48000" \
+    -c:a aac -b:a 320k -movflags +faststart "$OUT"; }
+read -r I0 TP0 < <(measure "$RAW")
+echo "raw mix: I=${I0} LUFS, true peak ${TP0} dBTP"
+if [[ "$I0" == "-inf" ]]; then
+  # A silent render (no voice or score yet): nothing to measure, so keep the audio as it is.
+  echo "WARNING: the mix is silent; skipping the master"
   ffmpeg -v error -y -i "$RAW" -c copy -movflags +faststart "$OUT"
 else
-  ffmpeg -v error -y -i "$RAW" -c:v copy \
-    -af "${PRE},loudnorm=I=-14:TP=-1:LRA=11:measured_I=${I}:measured_TP=${TP}:measured_LRA=${LRA}:measured_thresh=${TH}:offset=${OFF}:linear=true,aresample=48000" \
-    -c:a aac -b:a 320k -movflags +faststart "$OUT"
-  ffmpeg -hide_banner -i "$OUT" -af loudnorm=I=-14:TP=-1:print_format=json -f null - 2>&1 | grep -E '"input_(i|tp)"' || true
+  G=$(python3 -I -c "print(round(-14 - (${I0}) + 0.8, 2))") # +0.8: what the limiter takes back (v4 measure)
+  master "$G"
+  read -r I1 TP1 < <(measure "$OUT")
+  echo "pass 1: gain ${G} dB -> I=${I1} LUFS, true peak ${TP1} dBTP"
+  if python3 -I -c "import sys; sys.exit(0 if abs(-14 - (${I1})) > 0.15 else 1)"; then
+    G=$(python3 -I -c "print(round(${G} + (-14 - (${I1})), 2))")
+    master "$G"
+    read -r I1 TP1 < <(measure "$OUT")
+    echo "pass 2: gain ${G} dB -> I=${I1} LUFS, true peak ${TP1} dBTP"
+  fi
+  python3 -I -c "import sys; sys.exit(0 if (${TP1}) <= -1.0 else 1)" || echo "WARNING: true peak ${TP1} dBTP is above -1 dBTP"
 fi
 
-FLASH_SRC="$A0RAW"
-[[ -n "${SINGLE:-}" ]] && FLASH_SRC="$OUT"
+FLASH_SRC="$OUT" # the whole master (v4 QA: the body has transitions too, not only A0)
 if [[ -f "$FLASH_SRC" ]]; then
   echo "== flash screen (WCAG 2.3.1) on $(basename "$FLASH_SRC")"
   python3 -I "$ROOT/tools/qa/flashcheck.py" "$FLASH_SRC" || echo "WARNING: failed the flash screen (WCAG 2.3.1)"

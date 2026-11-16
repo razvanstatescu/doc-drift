@@ -31,7 +31,7 @@ export const FRESH_ZOOM = 1.15;
 /** Camera creep in the fresh composition, % per second (Camera3D's default). */
 export const FRESH_CREEP = 1.5;
 /** Frames of A2 the fresh composition is on screen before P1 starts (A2's slip push lands it at end - FRESH_LEAD). */
-export const FRESH_LEAD = 10;
+export const FRESH_LEAD = 15;
 
 export const freshRects = pageRects(FRESH_PAGE);
 const badge = freshRects.badge;

@@ -48,6 +48,19 @@ export type AnchorRailProps = {
   title?: boolean;
   /** Frames a connector takes to draw (default 14). */
   drawDur?: number;
+  /** Leave at `at` over `dur` (default 9): the curves retract toward the page while the chips slide right and drop. */
+  leave?: { at: number; dur?: number };
+};
+
+/** How a change line is laid out: "PR #482 · a -> b" stacks the PR over the rename, so the chip grows mostly in height. */
+function changeRows(text: string): { head: string; body: string | null } {
+  const i = text.indexOf(" · ");
+  return i < 0 ? { head: text, body: null } : { head: text.slice(0, i), body: text.slice(i + 3) };
+}
+/** Mono width of a change string where "->" is drawn as the arrow icon (0.95 em plus 0.45 em each side). */
+const arrowedWidth = (t: string, size: number) => {
+  const parts = t.split(/\s*->\s*/);
+  return parts.reduce((w, p) => w + textWidth(p, { size, mono: true, tracking: -0.01 }), 0) + (parts.length - 1) * 1.85 * size;
 };
 
 const labelOf = (a: AnchorSpec) => a.label;
@@ -61,17 +74,24 @@ export function anchorRailRects(p: AnchorRailProps, frame?: number) {
   const n = p.anchors.length;
   const sources: Rect[] = Array.isArray(p.from) ? p.from : p.anchors.map(() => p.from as Rect);
   const srcNodes = sources.map((r) => [r.x + r.w, r.y + r.h / 2] as [number, number]);
-  const chipW = p.anchors.map((a) => {
+  // chips are sized to what they show at this frame: the label, then (as a change docks) the change line
+  const cp = p.change ? (frame === undefined ? 1 : tween(frame, p.change.at, p.change.at + 12, 0, 1, EASE.expoOut)) : 0;
+  const rows = p.change ? changeRows(p.change.text) : null;
+  const chipW = p.anchors.map((a, i) => {
     const labelW = textWidth(labelOf(a), { size: CHIP.size, mono: true, tracking: -0.01 }) + (a.kind === "jira" ? textWidth(" Jira issue", { size: CHIP.sub, weight: 500 }) + 6 : 0);
-    const changeW = p.change && p.anchors[p.change.index] === a ? textWidth(p.change.text.replace(/\s*->\s*/g, " -> "), { size: CHIP.changeSize, mono: true, tracking: -0.01 }) + CHIP.icon + CHIP.gap : 0;
-    return p.width ?? (Math.max(labelW + CHIP.icon + CHIP.gap, changeW) + 2 * CHIP.padX) * k;
+    const base = (labelW + CHIP.icon + CHIP.gap + 2 * CHIP.padX) * k;
+    if (p.width !== undefined) return p.width;
+    if (!p.change || p.change.index !== i || !rows) return base;
+    const headW = arrowedWidth(rows.head, CHIP.changeSize) + CHIP.icon + CHIP.gap;
+    const bodyW = rows.body ? arrowedWidth(rows.body, CHIP.changeSize) + CHIP.icon + CHIP.gap : 0;
+    const full = (Math.max(headW, bodyW) + 2 * CHIP.padX) * k;
+    return base + Math.max(0, full - base) * cp;
   });
   const chipH = (CHIP.lh + 2 * CHIP.padY) * k;
-  const changeH = (CHIP.changeLh + 14) * k;
+  const changeH = ((rows && rows.body ? 2 : 1) * (CHIP.changeLh + 6) + 12) * k;
   const gap = p.gap ?? 34;
   // order by source height (no crossings), then stack
   const order = p.anchors.map((_, i) => i).sort((a, b) => srcNodes[a][1] - srcNodes[b][1] || a - b);
-  const cp = p.change ? (frame === undefined ? 1 : tween(frame, p.change.at, p.change.at + 12, 0, 1, EASE.expoOut)) : 0;
   const heights = p.anchors.map((_, i) => chipH + (p.change && p.change.index === i ? changeH * cp : 0));
   const total = order.reduce((s, i) => s + heights[i], 0) + gap * (n - 1);
   const midY = srcNodes.reduce((s, q) => s + q[1], 0) / Math.max(1, n);
@@ -90,7 +110,7 @@ export function anchorRailRects(p: AnchorRailProps, frame?: number) {
     const mx = x1 + (x2 - x1) * 0.5;
     return `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
   });
-  return { k, chips, chipH, srcNodes, chipNodes, paths, titleAt: { x: left, y: top - 56 } };
+  return { k, chips, chipH, changeH, srcNodes, chipNodes, paths, titleAt: { x: left, y: top - 56 } };
 }
 
 const Arrowed: React.FC<{ text: string; size: number; color: string }> = ({ text, size, color }) => {
@@ -123,7 +143,9 @@ export const AnchorRail: React.FC<AnchorRailProps> = (props) => {
   const fathom = world === "night" ? NIGHT.text : BRAND.fathom;
   const teal = world === "night" ? NIGHT.link : BRAND.current;
   const firstDraw = Math.min(...props.draw);
-  const titleIn = tween(frame, firstDraw, firstDraw + 10, 0, 1, EASE.expoOut);
+  const lv = props.leave ? tween(frame, props.leave.at, props.leave.at + (props.leave.dur ?? 9), 0, 1, EASE.expoIn) : 0;
+  if (lv >= 1) return null;
+  const titleIn = tween(frame, firstDraw, firstDraw + 10, 0, 1, EASE.expoOut) * (1 - lv);
   return (
     <>
       {props.title !== false && frame >= firstDraw ? (
@@ -150,7 +172,7 @@ export const AnchorRail: React.FC<AnchorRailProps> = (props) => {
         <defs>
           {G.paths.map((d, i) => {
             const len = getLength(d);
-            const t = tween(frame, props.draw[i] ?? 0, (props.draw[i] ?? 0) + drawDur, 0, 1, EASE.expoInOut);
+            const t = tween(frame, props.draw[i] ?? 0, (props.draw[i] ?? 0) + drawDur, 0, 1, EASE.expoInOut) * (1 - lv);
             return (
               <mask key={i} id={`rail-${uid}-${i}`} maskUnits="userSpaceOnUse" x={-200} y={-200} width={2320} height={1480}>
                 <path d={d} fill="none" stroke="#fff" strokeWidth={8} strokeDasharray={`${len} ${len}`} strokeDashoffset={len * (1 - t)} />
@@ -165,7 +187,7 @@ export const AnchorRail: React.FC<AnchorRailProps> = (props) => {
           const turned = props.change && props.change.index === i ? tween(frame, props.change.at, props.change.at + 8, 0, 1, EASE.expoOut) : 0;
           const solid = isChanged ? 1 : turned;
           const nodeIn = tween(frame, start, start + 6, 0, 1, EASE.expoOut);
-          const endIn = tween(frame, start + drawDur * 0.8, start + drawDur + 2, 0, 1, EASE.expoOut);
+          const endIn = tween(frame, start + drawDur * 0.8, start + drawDur + 2, 0, 1, EASE.expoOut) * (lv > 0.5 ? 0 : 1);
           const maskId = `url(#rail-${uid}-${i})`;
           const [x1, y1] = G.srcNodes[i];
           const [x2, y2] = G.chipNodes[i];
@@ -176,7 +198,7 @@ export const AnchorRail: React.FC<AnchorRailProps> = (props) => {
                 {solid < 1 ? <path d={d} fill="none" stroke={teal} strokeOpacity={0.85 * (1 - solid)} strokeWidth={2} strokeDasharray="7 7" strokeLinecap="round" /> : null}
                 {solid > 0 ? <path d={d} fill="none" stroke={fathom} strokeOpacity={solid} strokeWidth={2.5} strokeLinecap="round" /> : null}
               </g>
-              <circle cx={x1} cy={y1} r={6 * nodeIn} fill={pal.surface} stroke={nodeStroke} strokeWidth={2.5} />
+              <circle cx={x1} cy={y1} r={6 * nodeIn * (1 - lv)} fill={pal.surface} stroke={nodeStroke} strokeWidth={2.5} />
               <circle cx={x2} cy={y2} r={6 * endIn} fill={pal.surface} stroke={nodeStroke} strokeWidth={2.5} />
             </g>
           );
@@ -215,14 +237,14 @@ export const AnchorRail: React.FC<AnchorRailProps> = (props) => {
             key={i}
             style={{
               position: "absolute",
-              left: c.x,
-              top: c.y + (1 - t) * 12,
+              left: c.x + lv * 80,
+              top: c.y + (1 - t) * 12 + lv * 10,
               width: c.w,
               boxSizing: "border-box",
               borderRadius: u(CHIP.radius),
               background: pal.surface,
-              boxShadow: elev(level, 1, world),
-              opacity: appear,
+              boxShadow: elev(level * (1 - lv) + lv, 1, world),
+              opacity: appear * (lv > 0.7 ? 1 - (lv - 0.7) / 0.3 : 1),
               overflow: "hidden",
             }}
           >
@@ -234,20 +256,32 @@ export const AnchorRail: React.FC<AnchorRailProps> = (props) => {
             {ch && cp > 0 ? (
               <div style={{ height: c.h - G.chipH, overflow: "hidden" }}>
                 <div style={{ margin: `0 ${u(CHIP.padX)}px`, height: 1.5 * k, background: pal.line }} />
-                <div
-                  style={{
-                    height: (CHIP.changeLh + 12) * k,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: u(CHIP.gap),
-                    padding: `0 ${u(CHIP.padX)}px`,
-                    transform: `translateX(${(1 - cp) * 60}px)`,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  <Icon name="merge" size={u(CHIP.icon)} color={pal.textMuted} />
-                  <Arrowed text={ch.text} size={u(CHIP.changeSize)} color={pal.text} />
-                </div>
+                {(() => {
+                  const r = changeRows(ch.text);
+                  const row = (content: React.ReactNode, icon: boolean, key: string) => (
+                    <div
+                      key={key}
+                      style={{
+                        height: (CHIP.changeLh + 6) * k,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: u(CHIP.gap),
+                        padding: `0 ${u(CHIP.padX)}px`,
+                        transform: `translateX(${(1 - cp) * 60}px)`,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {icon ? <Icon name="merge" size={u(CHIP.icon)} color={pal.textMuted} /> : <span style={{ width: u(CHIP.icon), flex: "none" }} />}
+                      {content}
+                    </div>
+                  );
+                  return (
+                    <div style={{ paddingTop: 6 * k }}>
+                      {row(<Arrowed text={r.head} size={u(CHIP.changeSize)} color={pal.text} />, true, "h")}
+                      {r.body ? row(<Arrowed text={r.body} size={u(CHIP.changeSize)} color={pal.text} />, false, "b") : null}
+                    </div>
+                  );
+                })()}
               </div>
             ) : null}
           </div>

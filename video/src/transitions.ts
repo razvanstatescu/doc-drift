@@ -25,7 +25,17 @@ import type { SlipCutOptions } from "./motion/slip";
 /** A cut's sound: the effect's PEAK lands `at` frames into the cut (default: the band's landing, or the middle). */
 export type CutSfx = { id: string; at?: number; gainDb?: number };
 
-export type SlipSceneCut = { kind: "slip"; frames: number; sfx?: CutSfx } & SlipCutOptions;
+export type SlipSceneCut = {
+  kind: "slip";
+  frames: number;
+  sfx?: CutSfx;
+  /**
+   * Open as a REVEAL (the kit's SlipReveal, A2's DaySlipReveal behaviour) instead of holding the bands and cutting:
+   * split on the cut's first frame with the band already landed (`lead` of the 2-frame slip done), then the bands
+   * clear progressively so the next world grows every frame and is fully open on `frames`.
+   */
+  reveal?: { lead?: number; slipFrames?: number };
+} & SlipCutOptions;
 export type SlipPushSceneCut = { kind: "slipPush"; frames: number; direction?: "left" | "right"; maxBlur?: number; sfx?: CutSfx };
 export type WhipSceneCut = { kind: "whip"; frames: number; dir: "left" | "right" | "up" | "down"; maxBlur?: number; sfx?: CutSfx };
 export type PushSceneCut = { kind: "push"; frames: number; flash?: string; sfx?: CutSfx };
@@ -44,15 +54,18 @@ export const CUTS: Record<string, SceneCut> = {
   P2: { kind: "whip", frames: 9, dir: "left", sfx: { id: "whoosh-short", at: 4 } },
   // P3 to P4 (3277): a whip downward (the content travels down; P4 comes in from the top).
   P3: { kind: "whip", frames: 9, dir: "down", sfx: { id: "whoosh-short", at: 4 } },
-  // P5 to A4 (4177, on the bar): the Day frame splits in the mark's three bands, A4's Night is behind; the slip's
-  // latch lands with the band (frame 6). The trace is Night's (it is drawn over A4).
-  P5: { kind: "slip", frames: 8, traceColor: NIGHT.trace, sfx: { id: "slip" } },
+  // P5 to A4 (4177, on the bar): the film's last change of light, as a reveal (QA 2026-11-16: the held bands then a
+  // hard Day-to-Night cut at 4185 read as a cut 8 frames late). The Day frame is split on the bar with the middle band
+  // one unit out (landed: lead 1 of the 2-frame slip) and its Night trace; A4's Night shows in the cuts and grows every
+  // frame as the top and bottom bands slide out left and the middle carries on right; fully open at 4185. The slip's
+  // latch lands on the bar, with the band.
+  P5: { kind: "slip", frames: 8, traceColor: NIGHT.trace, reveal: { lead: 1, slipFrames: 2 }, sfx: { id: "slip", at: 0 } },
 };
 
 /** Frame (into the cut) where a cut's sound peaks. */
 export function cutSfxAt(cut: SceneCut): number {
   if (cut.sfx?.at !== undefined) return cut.sfx.at;
-  if (cut.kind === "slip") return cut.slipFrames ?? 6;
+  if (cut.kind === "slip") return cut.reveal ? 0 : (cut.slipFrames ?? 6);
   return Math.floor(cut.frames / 2);
 }
 

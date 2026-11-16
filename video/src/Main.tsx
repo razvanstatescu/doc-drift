@@ -7,6 +7,7 @@ import { SceneStub } from "./components/SceneStub";
 import { H, W } from "./lib/time";
 import { sceneSpan, TIMELINE, type SceneSpan } from "./lib/timeline";
 import { SlipBands } from "./motion/slip";
+import { SlipReveal } from "./v4/kit/reveal";
 import { SCENES } from "./scenes/registry";
 import { CUTS, cutSfxAt, pushAt, pushFlash, slipPushAt, whipAt, type SceneCut } from "./transitions";
 
@@ -39,6 +40,13 @@ const bandClip = (y0: number, y1: number) => `inset(${y0}px 0px ${H - y1}px 0px)
 const CutOut: React.FC<{ cut: SceneCut; f: number; children: React.ReactNode }> = ({ cut, f, children }) => {
   const base = "cutout" + cleanId(useId());
   if (cut.kind === "slip") {
+    if (cut.reveal) {
+      return (
+        <SlipReveal f={f} lead={cut.reveal.lead} open={cut.frames} slipFrames={cut.reveal.slipFrames} traceColor={cut.traceColor}>
+          {children}
+        </SlipReveal>
+      );
+    }
     return (
       <SlipBands f={f} options={cut}>
         {children}

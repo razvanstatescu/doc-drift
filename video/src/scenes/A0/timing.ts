@@ -26,7 +26,7 @@ import { getScene } from "../../lib/timeline";
  *                                              f172); f173–179 every sheet is drawn to the centre
  *          180      HARD CUT to true black and digital silence (M0, the riser and the suck-in stop dead)
  *          V00      "That's why we built Doc Drift Sentinel." on the black, word by word with the voice; it holds
- *                   until the last word has ended, then leaves upward as the Night ground lifts
+ *                   until the last word has ended, then cuts on the next beat (f262) as the Night ground lifts
  *          R − 13   the tile lifts in on the Night sweep
  *          R − 11, R − 8, R − 5   the top, middle and bottom bands land, each on a tick (the D is whole and aligned)
  *          R        THE SLIP: the middle band slips out of line in amber, with its glow and bloom (the score's first
@@ -98,18 +98,23 @@ export const IMPLODE = { from: 173, to: BLACK };
 
 // ── the turn and the reveal (all from timeline.json) ────────────────────────────────────────────────────────────
 /**
- * The bridge title holds, complete, until V00's last word has ended (its word frames in timeline.json), then leaves
- * upward through its own mask as the Night ground lifts (QA v1 #4: never leave while "Sentinel" is being spoken).
+ * The bridge title holds, complete, until V00's last word has ended (its word frames in timeline.json; QA v1 #4: never
+ * leave while "Sentinel" is being spoken), then CUTS on the next beat of the score's grid (R - 15 today, f262): no
+ * dissolve, so the tile lifts in on clean Night (QA v4 A0-2).
  */
 const V00_LAST = V00.words.length > 0 ? V00.words[V00.words.length - 1].to : V00.end - 4;
 export const TITLE_OUT = V00_LAST;
-export const TITLE_OUT_FRAMES = 4;
-/** The Night ground lifts out of the black as the title leaves. */
-export const GROUND = { from: TITLE_OUT, to: TITLE_OUT + 14 };
+export const TITLE_CUT = (() => {
+  let c = R;
+  while (c - BEAT > TITLE_OUT) c -= BEAT;
+  return c > TITLE_OUT && c < R ? c : TITLE_OUT + 2;
+})();
+/** The Night ground lifts out of the black from the cut. */
+export const GROUND = { from: TITLE_CUT, to: TITLE_CUT + 12 };
 /** The tile lifts in (13 frames, expo out, its shadow growing), then the three bands land on ticks, top to bottom. */
-export const TILE_IN = Math.max(R - 14, TITLE_OUT + 2);
+export const TILE_IN = Math.max(R - 14, TITLE_CUT + 1);
 export const TILE_FRAMES = 13;
-export const BAND_TOP = Math.max(R - 11, TITLE_OUT + 4);
+export const BAND_TOP = Math.max(R - 11, TILE_IN + 3);
 export const BAND_MID = Math.max(R - 8, BAND_TOP + 3);
 export const BAND_BOTTOM = Math.max(R - 5, BAND_MID + 3);
 export const BAND_FRAMES = 6;

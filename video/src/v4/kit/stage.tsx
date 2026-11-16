@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { createContext, useMemo } from "react";
 import { AbsoluteFill, useCurrentFrame } from "remotion";
 import { Icon, type IconName } from "../../brand/icons";
 import { H, W } from "../../lib/time";
@@ -29,6 +29,10 @@ export type StageProps = {
   children?: React.ReactNode;
 };
 
+/** The Stage around a node (its world and light), or null outside one. MorphToReal uses it to know a ground is behind. */
+export type StageInfo = { world: "day" | "night"; light?: [string, string] };
+export const StageContext = createContext<StageInfo | null>(null);
+
 export const Stage: React.FC<StageProps> = ({ world = "day", light, motif = "grid", grid, tide, style, children }) => {
   useCurrentFrame(); // re-render every frame so the slot is reset before the camera inside writes it
   const slot = useMemo<StageSlot>(() => ({ pose: null }), []);
@@ -40,7 +44,9 @@ export const Stage: React.FC<StageProps> = ({ world = "day", light, motif = "gri
     // a parent that layers two Stages (MorphToReal, the cuts), and Mist bands multiply only with this Stage
     <AbsoluteFill style={{ background: night ? NIGHT.ground : DAY.ground, color: night ? NIGHT.text : DAY.text, overflow: "hidden", isolation: "isolate", ...style }}>
       <StageSlotContext.Provider value={slot}>
-        <AbsoluteFill style={{ zIndex: 1 }}>{children}</AbsoluteFill>
+        <StageContext.Provider value={{ world, light }}>
+          <AbsoluteFill style={{ zIndex: 1 }}>{children}</AbsoluteFill>
+        </StageContext.Provider>
       </StageSlotContext.Provider>
       {/* drawn after the children (so a camera inside has published its pose), behind them on screen */}
       <StageGround slot={slot} outer={outer} world={world} light={light} motif={motif} grid={grid} tide={tide} />
@@ -201,7 +207,7 @@ export const TideLines: React.FC<TideProps> = ({
 };
 
 /** A soft contact shadow on the ground under a floating object (centre x, the object's bottom y, its width). */
-export const ContactShadow: React.FC<{ cx: number; y: number; w: number; h?: number; strength?: number }> = ({ cx, y, w, h = 90, strength = 0.2 }) => (
+export const ContactShadow: React.FC<{ cx: number; y: number; w: number; h?: number; strength?: number }> = ({ cx, y, w, h = 90, strength = 0.26 }) => (
   <div
     style={{
       position: "absolute",
@@ -227,7 +233,7 @@ export const Float: React.FC<{
   strength?: number;
   children: React.ReactNode;
   style?: React.CSSProperties;
-}> = ({ x, y, w, lift = 1, strength = 0.16, children, style }) => (
+}> = ({ x, y, w, lift = 1, strength = 0.21, children, style }) => (
   <div style={{ position: "absolute", left: x, top: y, width: w, ...style }}>
     <div
       style={{

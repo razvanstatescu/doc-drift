@@ -78,7 +78,7 @@ export const Lift: React.FC<LiftProps> = ({
   const hgt = Math.max(0, Math.min(1, (level - 1) / 3)); // how high it floats: 0 at rest, 1 at float
   const ty = rise * (1 - up) - rise * 0.25 * dn;
   const scale = 0.975 + 0.025 * up;
-  const strength = typeof contact === "number" ? contact : world === "night" ? 0.5 : 0.16;
+  const strength = typeof contact === "number" ? contact : world === "night" ? 0.5 : 0.21; // round 2: +30% (K-5)
   const placed = x !== undefined || y !== undefined || style?.left !== undefined || style?.top !== undefined;
   const shade = (a: number) => (world === "night" ? `rgba(1, 10, 13, ${a})` : ink(a));
   return (

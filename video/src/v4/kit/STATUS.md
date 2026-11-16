@@ -1,7 +1,21 @@
 # Kit status
 
-**ready** (2026-11-16). Every contract name from V4.md section 5 is implemented, typechecked and shown in `Dev/Kit4`
-(stills and sheets in `out/v4/kit/`). Props listed in the contract are fixed; extra props are additions.
+**round 2 ready** (2026-11-16, after the visual review `out/v4/qa/review.md`, Kit K-1 to K-5). Every prop from round 1
+still works; the changes and the props you may want to touch are in "Round 2" right below. Round 1 notes follow.
+
+## Round 2 (QA K-1 to K-5): what changed
+
+| Item | What changed | What you may need to touch |
+| --- | --- | --- |
+| K-1 twin behind a proof | `MorphToReal`: while the proof is up the twin rests at `twinRest` **0.18** (was 0.4), blurred `twinBlur` **7 px** and drained to grey `twinDrain` **1** (R2's modal scrim; it also keeps the twin's amber out of the shot), over 6 frames. It **comes back over 6 frames** when the proof leaves: `out` (new), read automatically from a ProofFrame or ProofMat `proof` (`at + dur`, unless `exit="none"`). A ground is drawn behind the dimmed twin when no Stage encloses it (no black). New `twinMask` hides the twin inside `fromRect`. | `twinRest={1}` keeps full opacity but now blurs and drains: add `twinBlur={0} twinDrain={0}` only if you really want the twin crisp (the review says it should not be). Custom proof nodes (P1's `R1Node`...) give no `out`: pass `out={...}` or switch to RebuildFromReal as before. |
+| K-1 rebuild | `RebuildFromReal` (T4) is now a **4-frame left-to-right wipe** (expo in-out, 16 px slide) instead of a 7-frame dissolve: each pixel shows the proof or the twin, never both. The twin returns from `twinFrom` 0.18 / `twinBlurFrom` 7 / `twinDrainFrom` 1 (MorphToReal's defaults) over 6 frames. Before `at` it shows the proof over the resting twin, so it follows MorphToReal with no jump. The wipe crosses `frameRect` (new), read from a ProofFrame/ProofMat `proof`, else the whole stage. | If you passed a custom `twinRest` to MorphToReal, pass the same as `twinFrom`. For a custom proof node, pass `frameRect` = its outer rect plus the tag (else the wipe sweeps the whole frame and crosses the proof in about 2 frames). `fromRect`/`toRect` are kept but no longer move anything. |
+| K-3 tag | The tag chip sits **above the mat's top edge** and overlaps only the 14 px mat band (`MAT.tagTop` -37, was -24): it never covers the capture's first line. | Leave about 40 px above a proof. A layer-mode morph's `frameRect` needs 40 px above the mat (P2's `grow(outer, 240)` is fine). |
+| K-2 crop guard | `ProofFrame` checks the crop's top rows, bottom rows and left columns in the capture (the PNG, or the recording's frame at the segment's second) and warns once per crop when more than 2% of an edge is not background: `ProofFrame <id>: the crop [...] cuts content on its bottom edge (19% ...)`. It prints in **`remotion render` logs** and the Studio console (`remotion still` does not forward browser logs). `cropCheck={false}` silences it. | Render your scene once and read the `ProofFrame` lines. Known: R7 as in R3 (h 360) cuts the next table row; **use `[1440, 300, 1460, 346]`** (the tooltip ends on row 635, the table text starts on 650; h 300 cut the tooltip's "Review."). R21 `[720, 280, 3040, 420]` cuts its left edge (48%). R5's dialog crop is borderline (3 to 4%). |
+| K-4 cursor | `src/components/Cursor.tsx`: default `scale` **2.4** (was 1.5): an arrow about 30 px tall, with a soft Fathom drop shadow; the click ring keeps its old size. | A2 and P1 pass `scale={1.45 / cam.zoom}`: change it to `2.4 / cam.zoom` (or leave `scale` out outside a camera). |
+| K-5 Day contrast | `src/v4/look.ts`: the sweep's outer stop is `line` #D6E4E7 (was surface-sunk); `ELEV[3]`/`ELEV[4]` and `elevAt` carry an 11%/12% Fathom ring (was 6%) and contact layers about 30% stronger; `ContactShadow`, `Float` and `Lift`'s contact default about 30% stronger. Measured on f1250, f2900, f3450, f4070 (Main): the frame edges 1 to 6 levels darker, hero edges crisper; the sweep shows no banding beyond 8-bit steps under a 5x contrast stretch; flats stay clean; flashcheck passes on f1920 to 1960 and f3440 to 3480. Before and after: `out/v4/kit/contrast/`. | Nothing (automatic). If you hard-coded your own shadows, use `elevAt()`. |
+
+Also new since round 1: `SlipReveal` (the P5 to A4 cut, as a reveal), `PillSwap`/`LabelSwap`, `proofInfo()`,
+`StageContext`, a kit-only check composition `KitChecks` in `src/v4/kit/dev/entry.tsx` (crop-guard cases).
 
 ```ts
 import { Stage, Camera3D, Layer, useCam3, Lift, KineticLine, lineCues, ProofFrame, proofRect, proofPoint,
@@ -42,11 +56,11 @@ are capture px (3840 x 2160).
 | P1 → P2 | 2077 | `slipPush` 12 f: three bands push left, top first, bottom +2, middle +4 (the slip), blur by speed | `whoosh-short`, peak at +6 |
 | P2 → P3 | 2617 | `whip` left 9 f, seam at +3.5, horizontal blur | `whoosh-short`, peak at +4 |
 | P3 → P4 | 3277 | `whip` down 9 f (P4 comes in from the top), vertical blur | `whoosh-short`, peak at +4 |
-| P5 → A4 | 4177 | `slip` 8 f: P5's Day frame splits in the mark's bands, A4's Night behind, Night trace | `slip`, latch at +6 |
+| P5 → A4 | 4177 | `slip` with `reveal` (QA fix, 2026-11-16): P5's Day frame is split on the bar with the middle band one unit out and its Night trace; the top and bottom bands slide out left, the middle carries on right (ease-in), so A4's Night grows every frame and is fully open at 4185 (luma 239 → 218 → ... → 47, largest step 47, was a 173 one-frame cut). `SlipReveal` in the kit, A2's DaySlipReveal behaviour | `slip`, latch on the bar (+0) |
 
 The cut uses the outgoing scene's FROZEN last frame (its copies are muted by `<Freeze>`) and moves the incoming
 scene's one live instance (it keeps its own sound and is never remounted). Every scene still starts on its timeline
-frame. Kinds available for later: `slip`, `slipPush`, `whip` (`dir`), `push` (T8). Checked on the real timeline
+frame. Kinds available for later: `slip` (optionally `reveal`), `slipPush`, `whip` (`dir`), `push` (T8). Checked on the real timeline
 (`out/v4/kit/cut-p*-sheet.png`); Body renders are pixel-identical to Main (the split render is unaffected).
 
 ## Exports
@@ -66,8 +80,8 @@ frame. Kinds available for later: `slip`, `slipPush`, `whip` (`dir`), `push` (T8
 | `ProofFrame` | `capture`, `crop`, `scale`, `x`, `y` (mat's outer top-left), `at`, `dur` (45, or the video's length), `tag`, `note`, `video: { from, to, jumps?: { at, to, crop?, scale? }[] }` (source seconds; jumps at local frames; a jump may reframe to a new crop: R5, R14, R16), `tilt`, `enter` ("lift"; "none" inside a morph), `exit` ("drop" after `dur`; "none"), `creep`, `masks`, `maskFill`. Warns (console) on scale > 1, on-screen scale > 1.05, and under 24 frames. |
 | `ProofMat` | the same mat, tag and note around any children (`w`, `h` inner size): R9's verbatim MCP output. |
 | `proofRect(p)`, `proofPoint(p, captureBox)` | the mat and image rects; the film rect of a capture box inside a placed proof (MorphToReal's `toRect`). |
-| `MorphToReal` (T3) | `at`, `dur` (9), `fromRect` (the twin's element), `toRect` (the same element inside the placed proof: `proofPoint`), `twin`, `proof` (the proof with `enter="none"`), `twinRest` (0.4), `radius` (24), `frameRect` (where the window grows to; default the whole stage), `clip` ("auto"). **Soft shadow (2026-11-16, director's fix):** when `proof` is a ProofFrame or ProofMat element (or a fragment of them), the growing window is handed to the mat, which clips only its own content and draws its shadow on the open window (level 1 to 4 as it grows); the tag and note land when the mat is fully open. Any other node is clipped as a layer, as before (`clip="layer"` forces that; P2's `grow(outer, 240)` frameRects keep working either way). |
-| `RebuildFromReal` (T4) | `at`, `dur` (7), `fromRect` (proof element), `toRect` (twin element), `twin`, `proof`. |
+| `MorphToReal` (T3) | `at`, `dur` (9), `fromRect` (the twin's element), `toRect` (the same element inside the placed proof: `proofPoint`), `twin`, `proof` (the proof with `enter="none"`), `twinRest` (0.18 since round 2), `twinBlur` (7), `twinDrain` (1), `twinMask`, `out`, `radius` (24), `frameRect` (where the window grows to; default the whole stage), `clip` ("auto"). **Soft shadow (2026-11-16, director's fix):** when `proof` is a ProofFrame or ProofMat element (or a fragment of them), the growing window is handed to the mat, which clips only its own content and draws its shadow on the open window (level 1 to 4 as it grows); the tag and note land when the mat is fully open. Any other node is clipped as a layer, as before (`clip="layer"` forces that; P2's `grow(outer, 240)` frameRects keep working either way). |
+| `RebuildFromReal` (T4) | `at`, `dur` (4 since round 2: a wipe), `fromRect`, `toRect` (kept), `twin`, `proof`, `twinFrom` (0.18), `twinBlurFrom` (7), `twinDrainFrom` (1), `frameRect`. |
 | `SlipPush` (T5) | `at`, `dur` (12), `from`, `to`, `direction` ("left"). |
 | `ZoomThrough` (T6) | `at`, `center: [x, y]`, `from`, `to`, `inDur` (8), `outDur` (4), `peak` (8), `motionBlur` (true: CameraMotionBlur, 5 samples, on the 4 fastest frames, M5; it renders `from` 5 times there). Crafted DOM only. |
 | `PushCut` (T8) | `at`, `dur` (7), `from`, `to`, `outScale`/`inScale` (1.04), `flash`, `flashColor`. |
@@ -76,7 +90,7 @@ frame. Kinds available for later: `slip`, `slipPush`, `whip` (`dir`), `push` (T8
 | `ExplodedStack` (T10) | `explode` (0 to 1), `yaw`, `pitch` (up to 15 while exploded), `layers: { key, z, node }[]`, `perspective` (1350), `width`, `height`, `x`, `y`, `origin`. |
 | `Breakout` | `at`, `dur` (10), `scale` (1.07), `move` ([0, -6]), `back`, `radius` (20), `from` (0). Wrap the row in place. |
 | `KineticDock` | `at`, `dur`, `fromRect`, `toRect`, `arc` (60), `lift` (4), `hideBefore`, `ease`. Lay the token out at toRect's size. |
-| `Press`, `pressAt(frame, at)` | the click ring at `x`, `y`; the matching squash for the pressed control. Use with `src/components/Cursor` (`click: true` on the same frame). |
+| `Press`, `pressAt(frame, at)` | the click ring at `x`, `y`; the matching squash for the pressed control. Use with `src/components/Cursor` (`click: true` on the same frame; default scale 2.4 since round 2). |
 | `PillSwap`, `LabelSwap`, `useFontsReady` | a status pill whose label falls out and the new one rises in (never overlapping) while its width and colour follow: `from`/`to: { label, color, bg? }`, `at`, `size` (30), `dot`, `world`. For a twin's status change (Jira "To Do" to "Done"); the byline badge swaps live in the twins. |
 | `DirectionalBlur`, `smearSigma`, `smearDecay` | Pot's blur grammar for your own moving things (exported from the index; `DirBlur`, the bare SVG filter, stays exported too). |
 
@@ -102,18 +116,18 @@ A proof (R7), on a beat, its masks re-covered in the pill's grey:
 
 ```tsx
 const at = sc.snap(sc.wordAt("V14", "flagged"));                      // a beat (frame % 15 === 7 on the film)
-<ProofFrame capture="p2-flagged-tooltip" crop={[1440, 300, 1460, 300]} scale={0.8} x={362} y={420} at={at} dur={45}
-  tag="Recorded in Confluence" masks={[{ box: [2594, 465, 176, 37], fill: "#F1F1F2" }]} />
+<ProofFrame capture="p2-flagged-tooltip" crop={[1440, 300, 1460, 346]} scale={0.8} x={362} y={420} at={at} dur={45}
+  tag="Recorded in Confluence" />   // the pill's mask fill (#F1F1F2) now comes from captures.json
 ```
 
-Note for R7, R4, R17 (the 1460 x 360 byline crops in R3): the last 60 capture px begin the next table row of the
-runbook, whose cell reads "Dana (Platform on-call lead)" in the capture. Use h 300 (or check the crop) so the name
-never shows.
+Note for R7, R4, R17 (the 1460 x 360 byline crops in R3): the last capture px begin the next table row of the
+runbook, whose cell reads "Dana (Platform on-call lead)" in the capture. For R7 use `[1440, 300, 1460, 346]` (round 2:
+h 300 cut the tooltip's last line); for R4 and R17 let the crop guard check your height.
 
 T3 from a twin rect to a proof rect (the twin owner's `pageRects()` gives the twin's badge):
 
 ```tsx
-const placed = { capture: "p2-flagged-tooltip", crop: [1440, 300, 1460, 300] as Box, scale: 0.8, x: 362, y: 420 };
+const placed = { capture: "p2-flagged-tooltip", crop: [1440, 300, 1460, 346] as Box, scale: 0.8, x: 362, y: 420 };
 const toRect = proofPoint(placed, [2272, 461, 502, 46]);              // the real byline pill, capture px
 const outer = proofRect(placed).outer;
 <MorphToReal at={at} fromRect={pageRects(pageProps).badge} toRect={toRect}

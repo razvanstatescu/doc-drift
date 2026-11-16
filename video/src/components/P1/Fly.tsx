@@ -1,7 +1,7 @@
 import React from "react";
 import { Easing, useCurrentFrame } from "remotion";
 import { EASE, tween } from "../../lib/time";
-import { DAY, elevAt, FONT, type Rect } from "../../v4/look";
+import { DAY, elevAt, FONT, ink, type Rect } from "../../v4/look";
 
 /**
  * Carried objects for P1 (R1 T9, R3 V11/V12): a literal that lifts off the page and flies into its suggestion row, and
@@ -13,9 +13,11 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const FLIGHT = Easing.bezier(0.45, 0, 0.15, 1);
 
 /**
- * A token copy: it lifts off its home on the page (a white chip at elevation 4, rising and growing a little), then flies
- * on an arc to its row chip and settles into it (the chip turns into the row's sunk well as it lands). The page's own
- * word stays where it is: Doc Drift reads it, it does not take it away.
+ * A token copy (S-2): on `liftAt` a white chip with the word pops off its home on the page toward the camera (1.45x,
+ * 22 px up, elevation 4, its contact shadow left on the page below, wide enough to cover its own line), then flies on an
+ * arc above everything to its row and
+ * settles into the row's own chip (the white turns to the row's sunk well and the height goes). The page's own word stays
+ * where it is: Doc Drift reads it, it does not take it away.
  */
 export const FlyToken: React.FC<{
   text: string;
@@ -33,49 +35,65 @@ export const FlyToken: React.FC<{
 }> = ({ text, home, to, font, liftAt, flyAt, land, arc = 90 }) => {
   const frame = useCurrentFrame();
   if (frame < liftAt || frame >= land + 1) return null;
-  const up = tween(frame, liftAt, liftAt + 10, 0, 1, EASE.expoOut);
+  const up = tween(frame, liftAt, liftAt + 12, 0, 1, EASE.expoOut);
   const t = tween(frame, flyAt, land, 0, 1, FLIGHT);
-  // the chip box around the page word: its padding, raised and grown while lifted
-  const padX = font * 0.36;
-  const homeW = home.w + 2 * padX;
-  const homeH = to.h * (home.h / Math.max(1, font * 1.15));
-  const liftedCx = home.x + home.w / 2;
-  const liftedCy = home.y + home.h / 2 - 18 * up;
-  const s0 = (homeW / to.w) * (1 + 0.06 * up);
-  const s = lerp(s0, 1, t);
-  const cx = lerp(liftedCx, to.x + to.w / 2, t);
-  const cy = lerp(liftedCy, to.y + to.h / 2, t) - arc * Math.sin(Math.PI * t);
+  // at rest the chip's text sits exactly on the page's word; lifted, it is 1.2x and 52 px higher
+  const homeScale = home.h / (to.h * 0.82);
+  const liftedScale = homeScale * (1 + 0.45 * up);
+  const s = lerp(liftedScale, 1, t);
+  const hx = home.x + home.w / 2;
+  const hy = home.y + home.h / 2;
+  const cx = lerp(hx, to.x + to.w / 2, t);
+  const cy = lerp(hy - 22 * up, to.y + to.h / 2, t) - arc * Math.sin(Math.PI * t);
   const settle = tween(frame, land - 5, land, 0, 1, EASE.linear);
   const level = (1 + 3 * up) * (1 - settle);
-  const opacity = tween(frame, liftAt, liftAt + 3, 0, 1, EASE.linear);
-  void homeH;
+  const opacity = tween(frame, liftAt, liftAt + 2, 0, 1, EASE.linear);
+  // the contact shadow stays on the page under the lifted chip until it flies
+  const contact = up * (1 - tween(frame, flyAt, flyAt + 8, 0, 1, EASE.linear));
+  const cw = to.w * liftedScale;
   return (
-    <div
-      style={{
-        position: "absolute",
-        left: cx - to.w / 2,
-        top: cy - to.h / 2,
-        width: to.w,
-        height: to.h,
-        transform: `scale(${s})`,
-        transformOrigin: "50% 50%",
-        opacity: opacity < 1 ? opacity : undefined,
-        borderRadius: font * 0.36,
-        background: settle > 0 ? mixHex(DAY.surface, DAY.surfaceSunk, settle) : DAY.surface,
-        boxShadow: level > 0.01 ? elevAt(level) : undefined,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: FONT.mono,
-        fontSize: font,
-        letterSpacing: "-0.01em",
-        color: DAY.text,
-        whiteSpace: "pre",
-        zIndex: 20,
-      }}
-    >
-      {text}
-    </div>
+    <>
+      {contact > 0.01 ? (
+        <div
+          style={{
+            position: "absolute",
+            left: hx - cw * 0.45,
+            top: hy - 4,
+            width: cw * 0.9,
+            height: 26,
+            borderRadius: "50%",
+            background: `radial-gradient(closest-side, ${ink(0.16 * contact)} 0%, ${ink(0.05 * contact)} 60%, transparent 100%)`,
+            zIndex: 39,
+          }}
+        />
+      ) : null}
+      <div
+        style={{
+          position: "absolute",
+          left: cx - to.w / 2,
+          top: cy - to.h / 2,
+          width: to.w,
+          height: to.h,
+          transform: `scale(${s})`,
+          transformOrigin: "50% 50%",
+          opacity: opacity < 1 ? opacity : undefined,
+          borderRadius: font * 0.36,
+          background: settle > 0 ? mixHex(DAY.surface, DAY.surfaceSunk, settle) : DAY.surface,
+          boxShadow: [`0 0 0 1.5px ${ink(0.1 * (1 - settle))}`, level > 0.01 ? elevAt(level) : ""].filter(Boolean).join(", "),
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: FONT.mono,
+          fontSize: font,
+          letterSpacing: "-0.01em",
+          color: DAY.text,
+          whiteSpace: "pre",
+          zIndex: 40,
+        }}
+      >
+        {text}
+      </div>
+    </>
   );
 };
 

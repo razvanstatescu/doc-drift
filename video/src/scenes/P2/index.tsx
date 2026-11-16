@@ -5,7 +5,7 @@ import { clamp } from "../../lib/time";
 import { Stage } from "../../v4/kit";
 import { Overlay } from "./Overlay";
 import { Sound } from "./Sound";
-import { T } from "./timing";
+import { T, WIPE } from "./timing";
 import { LineLayer, RecordLayer, World } from "./World";
 
 /**
@@ -28,19 +28,23 @@ import { LineLayer, RecordLayer, World } from "./World";
  */
 const P2: React.FC = () => {
   const frame = useCurrentFrame();
-  // the world dims to 40% (with a little depth of field) while a proof sits in front of it (P2), recedes behind the
-  // literal's breakout, and racks out behind the matcher (R2 section 10: blur 8 px, grey, 50%)
+  // While a proof sits in front, its twin (the world) dims to 18% and blurs 7 px (QA K-1), and comes back as the proof
+  // wipes away (WIPE frames, no double exposure). It recedes behind the literal's breakout, and racks out behind the
+  // matcher (R2 section 10: blur 8 px, grey, 50%).
+  const up = (a: number, b: number) => interpolate(frame, [a, b], [0, 1], clamp);
+  const down = (a: number) => interpolate(frame, [a, a + WIPE], [1, 0], clamp);
   const proof = Math.max(
-    interpolate(frame, [T.r5 + 2, T.r5 + 8, T.r5Out, T.r5Out + 6], [0, 1, 1, 0], clamp),
-    interpolate(frame, [T.r6 - 6, T.r6, T.r6Out, T.r6Out + 8], [0, 1, 1, 0], clamp),
-    interpolate(frame, [T.r7 + 2, T.r7 + 8, T.r7Out, T.r7Out + 6], [0, 1, 1, 0], clamp),
+    up(T.r5 + 2, T.r5 + 8) * down(T.r5Out),
+    up(T.r6 - 6, T.r6) * down(T.r6Out),
+    up(T.r7 + 2, T.r7 + 8) * down(T.r7Out),
   );
-  // the breakout recession takes over from R5's dim without lifting the world back to full in between
-  const breakout = interpolate(frame, [T.r5Out, T.r5Out + 10], [0, 1], clamp) * (frame < T.r6 ? 1 : 0);
-  const rack = interpolate(frame, [T.matcherIn, T.matcherIn + 12], [0, 1], clamp);
-  const opacity = Math.min(1 - 0.6 * proof, 1 - 0.35 * breakout) * (1 - 0.5 * rack);
-  const blur = Math.max(4 * proof, 2 * breakout, 8 * rack);
-  const filter = blur > 0.05 || rack > 0 ? [blur > 0.05 ? `blur(${blur.toFixed(2)}px)` : "", rack > 0 ? `grayscale(${rack.toFixed(3)})` : ""].join(" ").trim() : undefined;
+  const breakout = up(T.r5Out, T.r5Out + WIPE) * (frame < T.r6 ? 1 : 0);
+  const rack = up(T.matcherIn - 2, T.matcherIn + 6);
+  const opacity = Math.min(1 - 0.82 * proof, 1 - 0.35 * breakout) * (1 - 0.5 * rack);
+  const blur = Math.max(7 * proof, 2 * breakout, 8 * rack);
+  // the kit's scrim (round 2): a twin under a proof is also drained to grey, which keeps its amber out of the shot
+  const grey = Math.max(proof, rack);
+  const filter = blur > 0.05 || grey > 0 ? [blur > 0.05 ? `blur(${blur.toFixed(2)}px)` : "", grey > 0 ? `grayscale(${grey.toFixed(3)})` : ""].join(" ").trim() : undefined;
   return (
     <ThemeProvider theme="day">
       <Stage world="day" motif="grid" light={["58%", "36%"]}>

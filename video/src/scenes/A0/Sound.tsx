@@ -126,7 +126,7 @@ export const buildCues = (): Cue[] => [
   ...first(["paper-slide", "whoosh-short"], WIKI.pull.from + 3, -6),
   ...SLAMS.flatMap((s, i) => first([landOf(s.at, i), "paper-land", "tick-soft"], s.at + 2, s.at === BAR3 || s.at === LAST_SLAM ? -2 : -5)),
   ...fx("hit-soft", BAR3, -3),
-  ...fx("hit-soft", LAST_SLAM, -4), // the last word
+  ...fx("hit-soft", LAST_SLAM, -7.5), // the last word (under Ariel's "no": at least 6 dB below her)
   // ── the stop ─────────────────────────────────────────────────────────────────────────────────────────────────────
   ...fx("suck-in", BLACK - 1, 1, false), // ends on its loudest point on f179; the cut silences everything on f180
 ];

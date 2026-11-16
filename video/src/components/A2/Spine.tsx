@@ -4,11 +4,13 @@ import { SLIP_UNIT } from "../../brand/tokens";
 import { clamp, EASE, tween } from "../../lib/time";
 import { KineticLine, type WordTiming } from "../../v4/kit";
 import { amber, DAY, elevAt, FONT } from "../../v4/look";
+import { textWidth } from "../../v4/twins";
 
 /**
  * V10's spine (R3 section 5, V4.md section 6): "Anchor. Flag. Tell the agents. Then a person decides." The first three
- * phrases land, one per spoken word, on three full-width bands (the mark's bands, drawn as white rails across the frame);
- * on "Flag." its band slips one slip unit right in amber, with its trace at home and its bloom (the shot's one amber).
+ * phrases land, one per spoken word, on three bands (the mark's bands: white rails from the left edge, all ending at one
+ * line); on "Flag." its band slips one slip unit right in amber, so it ends one unit past the others (the mark's own
+ * shape), with its trace at home and its bloom: the shot's one amber, about 10% of the frame (S-7: not full bleed).
  * "Then a person decides." is set below the rails in plain type (the person is not a machine step), and a cursor
  * arrives and rests on the slipped band without moving it (putting it back belongs to V22). The small line "For teams
  * who keep runbooks in Confluence" sets in the pause after "agents" so it holds still for its full reading time.
@@ -34,24 +36,30 @@ export const spineBand = (i: number) => {
 const fourthTop = () => spineBand(2).y + SPINE.bandH + SPINE.fourthGap;
 export const spineSmallTop = () => fourthTop() + SPINE.size + SPINE.smallGap;
 
-const BAND_W = 1920 + 240;
 const BAND_X = -120;
+/** All three bands end on one line, just past the longest phrase ("Tell the agents."). */
+const BAND_END = SPINE.x + textWidth("Tell the agents.", { size: SPINE.size, weight: 600, tracking: -0.028 }) + 84;
+const BAND_W = BAND_END - BAND_X;
+/** One slip unit of a band (11.7% of its length). */
+export const SPINE_SLIP = SLIP_UNIT * BAND_W;
+/** Where the slipped band's right end sits (for aiming a cursor on it). */
+export const SPINE_END = BAND_END;
 
 /** The slipped band's trace at home and its bloom, drawn under all the bands (L4: the amber comes with both). */
 const BandGlow: React.FC<{ i: number; slip: number }> = ({ i, slip }) => {
   if (slip <= 0.001) return null;
   const { y, h } = spineBand(i);
-  const dx = slip * SLIP_UNIT * 1920;
+  const dx = slip * SPINE_SLIP;
   const r = 18;
   return (
     <>
-      <div style={{ position: "absolute", left: BAND_X, top: y, width: dx - BAND_X + r, height: h, borderRadius: `0 ${r}px ${r}px 0`, background: DAY.trace, opacity: Math.min(1, slip / 0.25) }} />
+      <div style={{ position: "absolute", left: BAND_X, top: y, width: dx + r, height: h, borderRadius: `0 ${r}px ${r}px 0`, background: DAY.trace, opacity: Math.min(1, slip / 0.25) }} />
       <div
         style={{
           position: "absolute",
-          left: 120 + dx,
+          left: dx - 40,
           top: y - h * 0.5,
-          width: 1500,
+          width: BAND_END + 160,
           height: h * 2,
           borderRadius: "50%",
           background: `radial-gradient(closest-side, ${amber(0.2 * slip)} 0%, ${amber(0.06 * slip)} 60%, transparent 100%)`,
@@ -67,7 +75,7 @@ const Band: React.FC<{ i: number; slip?: number; arrive: number; children?: Reac
   const { y, h } = spineBand(i);
   // the rails lift in (M3), staggered, already moving on the cut frame
   const up = tween(frame, arrive, arrive + 14, 0, 1, EASE.expoOut);
-  const dx = slip * SLIP_UNIT * 1920;
+  const dx = slip * SPINE_SLIP;
   const r = 18;
   return (
     <div
@@ -89,8 +97,8 @@ const Band: React.FC<{ i: number; slip?: number; arrive: number; children?: Reac
 };
 
 export const Spine: React.FC<{
-  /** Frames the rails lift in (the shot's first frames). */
-  arrive: number;
+  /** Frames each rail lifts in, with its phrase (never an empty band waiting for its word). */
+  arrive: [number, number, number];
   /** Word cues of the four phrases (local frames), and the frame the Flag band slips. */
   words: { anchor: WordTiming[]; flag: WordTiming[]; tell: WordTiming[]; then: WordTiming[] };
   flagSlip: number;
@@ -105,13 +113,13 @@ export const Spine: React.FC<{
   return (
     <>
       <BandGlow i={1} slip={slip} />
-      <Band i={0} arrive={arrive}>
+      <Band i={0} arrive={arrive[0]}>
         {line("Anchor.", words.anchor)}
       </Band>
-      <Band i={1} arrive={arrive + 2} slip={slip}>
+      <Band i={1} arrive={arrive[1]} slip={slip}>
         {line("Flag.", words.flag, DAY.onBeacon)}
       </Band>
-      <Band i={2} arrive={arrive + 4}>
+      <Band i={2} arrive={arrive[2]}>
         {line("Tell the agents.", words.tell)}
       </Band>
       <div style={{ position: "absolute", left: SPINE.x, top: fourthTop(), height: SPINE.size, display: "flex", alignItems: "center" }}>

@@ -50,7 +50,8 @@ export const T = {
     return this.dash + 12;
   },
   drift,
-  rowSlip: drift - 8,
+  /** ADR-015's row slips (6 f) and lands 0 to 2 f before "drift" [4053]. */
+  rowSlip: drift - 6,
   dashboard,
   /** R21 [4057]: by MorphToReal from the KPI row. 40 f. */
   get r21() {

@@ -28,7 +28,8 @@ export const MergeTimer: React.FC<{
   const frame = useCurrentFrame();
   if (frame < at) return null;
   const inP = interpolate(frame, [at, at + 12], [0, 1], { ...clamp, easing: EASE.expoOut });
-  const outP = out === undefined ? 0 : interpolate(frame, [out, out + 9], [0, 1], { ...clamp, easing: EASE.expoIn });
+  // it leaves upward, fast, clearing its place for the statement that rises into it (never both readable at once)
+  const outP = out === undefined ? 0 : interpolate(frame, [out, out + 6], [0, 1], { ...clamp, easing: EASE.cubicInOut });
   if (outP >= 1) return null;
   // a small settle when the count lands with the flag
   const settle = frame >= land ? interpolate(frame, [land, land + 3, land + 10], [1, 1.02, 1], { ...clamp, easing: EASE.quintOut }) : 1;
@@ -41,8 +42,8 @@ export const MergeTimer: React.FC<{
         top: y,
         color: DAY.text,
         fontFamily: FONT.sans,
-        transform: `translateY(${(1 - inP) * 40 - outP * 110}px)`,
-        opacity: Math.min(1, inP * 2.5) * (1 - outP),
+        transform: `translateY(${(1 - inP) * 40 - outP * 260}px)`,
+        opacity: Math.min(1, inP * 2.5) * Math.pow(1 - outP, 2),
         filter: smear > 0.3 ? `blur(${(smear * 0.35).toFixed(2)}px)` : undefined,
       }}
     >

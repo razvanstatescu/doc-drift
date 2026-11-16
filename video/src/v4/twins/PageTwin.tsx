@@ -5,7 +5,7 @@ import { SLIP_UNIT } from "../../brand/tokens";
 import { EASE, tween } from "../../lib/time";
 import { slipProgress } from "../../motion/slip";
 import { FONT, type Rect } from "../look";
-import { BYLINE, BylineItem, bylineItemSize, ReviewedLine, reviewedLineWidth } from "./BylineItem";
+import { BYLINE, BylineItem, bylineItemSize, REVIEWED_TEXT, ReviewedLine, reviewedLineWidth } from "./BylineItem";
 import { CODE_PAD, layoutRuns, MONO_ADVANCE, textWidth, type Line, type Run } from "./metrics";
 import { TOOLTIP, TooltipTwin, tooltipLayout } from "./TooltipTwin";
 import { bloomBg, currentLine, elev, mist, palette, withGlow } from "./twinLook";
@@ -49,12 +49,20 @@ export const AUTHOR = "By Razvan Statescu";
 type BandKey = "top" | "middle" | "bottom";
 
 // ── The two documents (real words only) ─────────────────────────────────────────────────────────────────────────────
-type CodeSeg = { t: string; ins?: boolean; token?: TokenId };
-/** Code lines of step 2, old and new, as segments: shared text plus insertions (the fix adds "-v2" and "_SECS"). */
+/** Step 2's code states: as written ("old"), after the rename quick fix ("renamed"), after the accepted drafts ("new"). */
+export type Step2State = "old" | "renamed" | "new";
+type InsKind = "v2" | "secs";
+type CodeSeg = { t: string; ins?: InsKind; token?: TokenId };
+/**
+ * Code lines of step 2 as segments: shared text plus insertions. The quick fix (PR #482's rename) adds "-v2"; the
+ * accepted drafts add "_SECS" (p4-step2-fixed). "renamed" is the page between the two (version 2).
+ */
 const STEP2_CODE: CodeSeg[][] = [
-  [{ t: "export " }, { t: "ROLLBACK_TIMEOUT", token: "ROLLBACK_TIMEOUT" }, { t: "_SECS", ins: true }, { t: "=300" }],
-  [{ t: "./" }, { t: "scripts/rollback", token: "scripts/rollback.sh" }, { t: "-v2", ins: true }, { t: ".sh", token: "scripts/rollback.sh" }, { t: " --timeout $ROLLBACK_TIMEOUT" }, { t: "_SECS", ins: true }],
+  [{ t: "export " }, { t: "ROLLBACK_TIMEOUT", token: "ROLLBACK_TIMEOUT" }, { t: "_SECS", ins: "secs" }, { t: "=300" }],
+  [{ t: "./" }, { t: "scripts/rollback", token: "scripts/rollback.sh" }, { t: "-v2", ins: "v2" }, { t: ".sh", token: "scripts/rollback.sh" }, { t: " --timeout $ROLLBACK_TIMEOUT" }, { t: "_SECS", ins: "secs" }],
 ];
+/** Whether an insertion shows in a state. */
+const insIn = (state: Step2State, kind: InsKind) => (kind === "v2" ? state !== "old" : state === "new");
 
 type Block =
   | { k: "crumbs"; items: string[] }
@@ -154,9 +162,9 @@ function codeRect(x: number, y: number, w: number) {
 }
 
 /** Width of the step 2 code well's content at a given state (old or new). */
-const codeLineText = (segs: CodeSeg[], fixed: boolean) => segs.filter((s) => fixed || !s.ins).map((s) => s.t).join("");
+const codeLineText = (segs: CodeSeg[], state: Step2State) => segs.filter((s) => !s.ins || insIn(state, s.ins)).map((s) => s.t).join("");
 
-function layoutDoc(doc: "runbook" | "adr015", width: number, byline: BylineSpec, author: boolean, step2Fixed: boolean): PageLayout {
+function layoutDoc(doc: "runbook" | "adr015", width: number, byline: BylineSpec, author: boolean, step2State: Step2State): PageLayout {
   const inner = width - 2 * S.padX;
   const bands = {} as Record<BandKey, BandLayout>;
   const tokens: PageLayout["tokens"] = {};
@@ -240,41 +248,37 @@ function layoutDoc(doc: "runbook" | "adr015", width: number, byline: BylineSpec,
               STEP2_CODE.forEach((segs, li) => {
                 let col = 0;
                 const ly = c.y + S.code.padY + li * S.code.lh;
-                const shown = segs.filter((s) => step2Fixed || !s.ins);
-                shown.forEach((s, si) => {
-                  if (s.token) {
-                    // merge a token split by an insertion (scripts/rollback + .sh) into one box in the old form
-                    const id = s.token;
+                const shown = segs.filter((sg) => !sg.ins || insIn(step2State, sg.ins));
+                let lastTok: TokenId | null = null;
+                shown.forEach((sg) => {
+                  const x = c.x + S.code.padX + col * adv;
+                  const w = sg.t.length * adv;
+                  if (sg.token) {
+                    const id = sg.token;
                     const prevBox = tokens[id];
-                    const x = c.x + S.code.padX + col * adv;
-                    const w = s.t.length * adv;
-                    if (prevBox && prevBox.band === key && Math.abs(prevBox.y - ly) < 0.1 && Math.abs(prevBox.x + prevBox.w - x) < 0.5) {
-                      tokens[id] = { ...prevBox, w: prevBox.w + w, text: prevBox.text + s.t };
-                    } else if (!(prevBox && prevBox.band === key && Math.abs(prevBox.y - ly) < 0.1)) {
-                      tokens[id] = { band: key, x, y: ly, w, h: S.code.lh, text: s.t, size: S.code.size, mono: true };
-                    }
-                    // in the fixed form the insertion sits between the two halves: extend over it
-                    if (step2Fixed && si + 1 < shown.length && shown[si + 1].ins && shown[si + 2]?.token === id) {
-                      const box = tokens[id]!;
-                      tokens[id] = { ...box, w: box.w + shown[si + 1].t.length * adv, text: box.text + shown[si + 1].t };
-                    }
-                  }
-                  col += s.t.length;
+                    const sameLine = !!prevBox && prevBox.band === key && Math.abs(prevBox.y - ly) < 0.1;
+                    if (sameLine && Math.abs(prevBox!.x + prevBox!.w - x) < 0.5) tokens[id] = { ...prevBox!, w: prevBox!.w + w, text: prevBox!.text + sg.t };
+                    else if (!sameLine) tokens[id] = { band: key, x, y: ly, w, h: S.code.lh, text: sg.t, size: S.code.size, mono: true };
+                    lastTok = id;
+                  } else if (sg.ins && lastTok) {
+                    // a shown insertion right after a token belongs to it ("scripts/rollback" + "-v2", "ROLLBACK_TIMEOUT" + "_SECS")
+                    const box = tokens[lastTok]!;
+                    tokens[lastTok] = { ...box, w: box.w + w, text: box.text + sg.t };
+                  } else lastTok = null;
+                  col += sg.t.length;
                 });
                 if (li === 1) {
-                  const text = codeLineText(segs, step2Fixed);
+                  const text = codeLineText(segs, step2State);
                   step2Code = { x: c.x + S.code.padX, y: ly, w: text.length * adv, h: S.code.lh };
-                  // "./scripts/rollback.sh" (with ./) and the timeout token on the command line
+                  // "./scripts/rollback.sh" (with ./) on the command line
                   const cmdTok = text.indexOf("./");
-                  const pathLen = (step2Fixed ? "./scripts/rollback-v2.sh" : "./scripts/rollback.sh").length;
+                  const pathLen = (insIn(step2State, "v2") ? "./scripts/rollback-v2.sh" : "./scripts/rollback.sh").length;
                   tokens["./scripts/rollback.sh"] = { band: key, x: c.x + S.code.padX + cmdTok * adv, y: ly, w: pathLen * adv, h: S.code.lh, text: text.slice(cmdTok, cmdTok + pathLen), size: S.code.size, mono: true };
                 }
               });
-              if (step2Fixed) {
-                // ids of the fixed names point at the same boxes
-                if (tokens["scripts/rollback.sh"]) tokens["scripts/rollback-v2.sh"] = tokens["scripts/rollback.sh"];
-                if (tokens["ROLLBACK_TIMEOUT"]) tokens["ROLLBACK_TIMEOUT_SECS"] = tokens["ROLLBACK_TIMEOUT"];
-              }
+              // ids of the fixed names point at the same boxes
+              if (insIn(step2State, "v2") && tokens["scripts/rollback.sh"]) tokens["scripts/rollback-v2.sh"] = tokens["scripts/rollback.sh"];
+              if (insIn(step2State, "secs") && tokens["ROLLBACK_TIMEOUT"]) tokens["ROLLBACK_TIMEOUT_SECS"] = tokens["ROLLBACK_TIMEOUT"];
               y += c.h;
               step2 = { x: S.padX, y: y0, w: inner, h: y - y0 };
             }
@@ -315,8 +319,9 @@ const defaults = (p: PageTwinProps) => {
   const doc = p.doc ?? "runbook";
   const byline: BylineSpec = p.byline ?? { kind: "dds", state: "verified" };
   const author = p.author ?? true;
-  const fixed = p.step2 === "new";
-  const L = layoutDoc(doc, width, byline, author, fixed);
+  // rects follow the static state, or a morph's `to` state (default "new")
+  const st2: Step2State = typeof p.step2 === "object" ? p.step2.to ?? "new" : p.step2 ?? "old";
+  const L = layoutDoc(doc, width, byline, author, st2);
   const W = width * k;
   const H = L.h * k;
   const x = p.x ?? Math.round((1920 - W) / 2);
@@ -347,7 +352,9 @@ export function pageRects(props: PageTwinProps): PageRects & {
   const itemSize = st ? bylineItemSize(st, k) : { w: reviewedLineWidth(d.byline.kind === "reviewed" ? d.byline.text : "", k), h: BYLINE.h * k };
   const badge: Rect = { x: x + L.bylineItemX * k, y: y + L.byline.y * k, w: itemSize.w, h: itemSize.h };
   const fromState = d.byline.kind === "dds" && d.byline.from ? d.byline.from : null;
-  const badgeFrom = fromState ? { ...badge, w: bylineItemSize(fromState, k).w } : undefined;
+  const badgeFrom = fromState
+    ? { ...badge, w: fromState === "reviewed" ? reviewedLineWidth(d.byline.kind === "dds" ? d.byline.fromText ?? REVIEWED_TEXT : REVIEWED_TEXT, k) : bylineItemSize(fromState, k).w }
+    : undefined;
   const tt = props.tooltip ? tooltipLayout(props.tooltip.text, k) : { w: TOOLTIP.maxW * k, h: (TOOLTIP.lh + 2 * TOOLTIP.padY) * k };
   const tokens: Partial<Record<TokenId, Rect>> = {};
   const lifted: Partial<Record<TokenId, Rect>> = {};
@@ -425,8 +432,8 @@ type RenderCtx = {
   frame: number;
   mark?: PageTwinProps["mark"];
   lift?: PageTwinProps["lift"];
-  /** Step 2 morph progress (0 old .. 1 new). */
-  fix: number;
+  /** How far each step 2 insertion is open (0 closed .. 1 open). */
+  ins: Record<InsKind, number>;
 };
 
 const tokenStyle = (ctx: RenderCtx, id: string | undefined): React.CSSProperties => {
@@ -486,7 +493,7 @@ const LineView: React.FC<{ line: Line; x: number; y: number; ctx: RenderCtx; siz
 
 /** Step 2's code well, old or new, or morphing (the inserted parts open and drop in). */
 const Step2Code: React.FC<{ x: number; y: number; w: number; h: number; ctx: RenderCtx }> = ({ x, y, w, h, ctx }) => {
-  const { k, fix } = ctx;
+  const { k } = ctx;
   const p = palette(ctx.world);
   const adv = (MONO_ADVANCE + S.code.tracking) * S.code.size * k;
   return (
@@ -513,11 +520,14 @@ const Step2Code: React.FC<{ x: number; y: number; w: number; h: number; ctx: Ren
         <div key={li} style={{ display: "flex", height: S.code.lh * k }}>
           {segs.map((s, si) => {
             if (s.ins) {
-              if (fix <= 0.001) return null;
+              // a slip, never a fade: the insertion opens, the text after it slides right, and the inserted characters
+              // are uncovered from their start ("-v", then "-v2"), so no frame shows a wrong-looking fragment
+              const v = ctx.ins[s.ins];
+              if (v <= 0.001) return null;
               const full = s.t.length * adv;
               return (
-                <span key={si} style={{ display: "inline-block", width: full * fix, overflow: "hidden", flex: "none" }}>
-                  <span style={{ display: "inline-block", transform: `translateY(${(1 - fix) * -0.7 * S.code.lh * k}px)`, opacity: fix }}>{s.t}</span>
+                <span key={si} style={{ position: "relative", display: "inline-block", width: full * v, height: S.code.lh * k, overflow: "hidden", flex: "none" }}>
+                  <span style={{ position: "absolute", left: 0, top: 0, width: full, ...tokenStyle(ctx, s.token) }}>{s.t}</span>
                 </span>
               );
             }
@@ -615,7 +625,7 @@ const ItemView: React.FC<{ it: Item; ctx: RenderCtx; byline: BylineSpec; author:
             {byline.kind === "reviewed" ? (
               <ReviewedLine text={byline.text} world={world} k={k} />
             ) : (
-              <BylineItem state={byline.state} from={byline.from} at={byline.at} world={world} k={k} lit={bylineLit} hover={bylineHover} />
+              <BylineItem state={byline.state} from={byline.from} fromText={byline.fromText} at={byline.at} world={world} k={k} lit={bylineLit} hover={bylineHover} />
             )}
           </div>
         </>
@@ -758,7 +768,8 @@ export const PageTwin: React.FC<PageTwinProps> = (props) => {
   const sl = props.slip;
   const s = sl ? slipProgress(frame, sl.at, sl.back) : 0;
   const handoff = sl?.handoff;
-  const hand = handoff !== undefined ? tween(frame, handoff, handoff + 8, 0, 1, EASE.expoOut) : 0;
+  // the amber passes from the band to the byline item over 6 frames (expo out), in step with the byline swap
+  const hand = handoff !== undefined ? tween(frame, handoff, handoff + 6, 0, 1, EASE.expoOut) : 0;
   const itemWants = byline.kind === "dds" && byline.amber !== false;
   let bandAmber = 0;
   let itemLit = itemWants ? 1 : 0;
@@ -770,7 +781,8 @@ export const PageTwin: React.FC<PageTwinProps> = (props) => {
       bandAmber = 0;
     } else {
       bandAmber = s;
-      itemLit = itemWants ? Math.max(0, 1 - s * 4) : 0; // the band holds the amber while it is out
+      // the band holds the amber from its slip on (also while it snaps home), so the item never lights up mid-snap
+      itemLit = itemWants && frame < sl.at ? 1 : 0;
     }
   }
 
@@ -780,9 +792,16 @@ export const PageTwin: React.FC<PageTwinProps> = (props) => {
 
   // step 2 morph
   const st2 = props.step2;
-  const fix = st2 === "new" ? 1 : typeof st2 === "object" ? tween(frame, st2.morphAt, st2.morphAt + (st2.dur ?? 10), 0, 1, EASE.expoOut) : 0;
+  const insOpen = (kind: InsKind): number => {
+    if (typeof st2 !== "object") return insIn(st2 ?? "old", kind) ? 1 : 0;
+    const a = insIn(st2.from ?? "old", kind);
+    const b = insIn(st2.to ?? "new", kind);
+    if (a === b) return a ? 1 : 0;
+    const m = tween(frame, st2.morphAt, st2.morphAt + (st2.dur ?? 8), 0, 1, EASE.expoOut);
+    return b ? m : 1 - m;
+  };
 
-  const ctx: RenderCtx = { k, world, frame, mark: props.mark, lift: props.lift, fix };
+  const ctx: RenderCtx = { k, world, frame, mark: props.mark, lift: props.lift, ins: { v2: insOpen("v2"), secs: insOpen("secs") } };
   const tooltipOpen = props.tooltip ? tween(frame, props.tooltip.at, props.tooltip.at + 6, 0, 1) * (props.tooltip.out !== undefined ? 1 - tween(frame, props.tooltip.out, props.tooltip.out + 5) : 1) : 0;
 
   // band backgrounds (UI px, relative to the card)

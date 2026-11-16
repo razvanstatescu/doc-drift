@@ -5,6 +5,7 @@ import { toolOutput } from "../../lib/captures";
 import { EASE, tween } from "../../lib/time";
 import { amber, BRAND, FONT, NIGHT } from "../look";
 import { MONO_ADVANCE } from "./metrics";
+import { InkLabel } from "../kit";
 import { elevDark } from "./twinLook";
 import type { World } from "./types";
 
@@ -41,6 +42,11 @@ export type TerminalCall = {
   streamAt?: number;
   /** Typing speed, chars per second (default 42). */
   cps?: number;
+  /**
+   * Frames the command takes to type (overrides `cps`). 0: the command is already typed when the call appears (with
+   * `enter`, the slab arrives with its command in place); about 6: a quick type (review G-1).
+   */
+  typeFrames?: number;
   /** Lines per second while streaming (default 45). */
   lps?: number;
   /** Prompt (default "›"; "$" for a shell). */
@@ -65,8 +71,41 @@ export type TerminalTwinProps = {
   fontSize?: number;
   /** Elevation on Day (dark ladder, default 4). */
   elev?: 1 | 2 | 3 | 4;
+  /**
+   * Size guide (review G-1, R2 section 8): the slab's area at zoom 1 stays at or under this share of the 1920 x 1080
+   * frame (default 0.35) by showing fewer rows; the view scrolls. Pass 1 to turn it off. `terminalSize()` reports it.
+   */
+  maxArea?: number;
+  /** The proof tag over the slab's top-left, for example "Real output: doc-drift MCP" (scenes pass the full text). */
+  tag?: string;
+  /** Tag size in film px (default 28, over the 26 px floor). */
+  tagSize?: number;
+  /** Arrive by lifting (V4.md M3): from elevation 1, rising 26 px, at full opacity, from `at` over `dur` (default 14). */
+  enter?: { at: number; dur?: number };
+  /** 0..1: step back behind something in front (blur up to 6 px and scale 0.97), never by opacity (review R-6). */
+  dim?: number;
   style?: React.CSSProperties;
 };
+
+const TITLE_H = 66;
+const BODY_PAD = 26;
+const FRAME_AREA = 1920 * 1080;
+
+/** The slab's film-px size for these props (after the size guide), and its share of the frame's area. */
+export function terminalSize(p: Pick<TerminalTwinProps, "calls" | "width" | "rows" | "fontSize" | "maxArea">) {
+  const width = p.width ?? 920;
+  const fontSize = p.fontSize ?? 26;
+  const lh = Math.round(fontSize * 1.55);
+  const cols = Math.floor((width - 2 * 34) / ((MONO_ADVANCE - 0.01) * fontSize));
+  const screens = buildScreens(p.calls, cols);
+  const tallest = Math.min(22, Math.max(...screens.map((sc) => sc.lines.length)));
+  let rows = p.rows ?? tallest;
+  const cap = (p.maxArea ?? 0.35) * FRAME_AREA;
+  const maxRows = Math.max(3, Math.floor((cap / width - TITLE_H - 1.5 - 2 * BODY_PAD) / lh));
+  rows = Math.min(rows, maxRows);
+  const height = TITLE_H + 1.5 + rows * lh + 2 * BODY_PAD;
+  return { width, height, rows, lh, cols, area: (width * height) / FRAME_AREA };
+}
 
 type C = "key" | "str" | "num" | "punct" | "text" | "focus" | "prompt" | "cmd" | "dim";
 type Tok = { t: string; c: C };
@@ -255,21 +294,20 @@ function buildScreens(calls: TerminalCall[], cols: number) {
       curFrom = call.at;
     } else if (ci === 0) curFrom = call.at;
     if (cur.length) cur.push({ toks: [], indent: 0, shownAt: call.at });
-    const cps = call.cps ?? 42;
     const prompt: Tok = { t: `${call.prompt ?? "›"} `, c: "prompt" };
     const wrapped = wrapToks([prompt, ...cmdToks(call.cmd)], cols);
+    const typeDur = call.typeFrames ?? Math.ceil((call.cmd.length / (call.cps ?? 42)) * 30);
+    const cps = typeDur > 0 ? (call.cmd.length / typeDur) * 30 : Infinity;
+    const typedEnd = call.at + typeDur;
+    const streamAt = call.streamAt ?? typedEnd + 8;
     let typed = 0;
-    const typedEndAt = call.at + Math.ceil((call.cmd.length / cps) * 30);
-    const firstOut = call.streamAt ?? typedEndAt + 8;
     wrapped.forEach((toks, wi) => {
       const total = toks.reduce((sum, t) => sum + t.t.length, 0);
       const lead = wi === 0 ? prompt.t.length : toks[0]?.t.length ?? 0; // the prompt, or the continuation indent
-      const start = call.at + Math.round((typed / cps) * 30);
-      cur.push({ toks, indent: 0, shownAt: start, typing: { start, cps, lead, len: total }, cmdEnd: wi === wrapped.length - 1 ? firstOut : undefined });
+      const start = typeDur > 0 ? call.at + Math.round((typed / call.cmd.length) * typeDur) : call.at;
+      cur.push({ toks, indent: 0, shownAt: start, typing: typeDur > 0 ? { start, cps, lead, len: total } : undefined, cmdEnd: wi === wrapped.length - 1 ? streamAt : undefined });
       typed += total - lead;
     });
-    const typedEnd = call.at + Math.ceil((call.cmd.length / cps) * 30);
-    const streamAt = call.streamAt ?? typedEnd + 8;
     const lps = call.lps ?? 45;
     const res = resolve(call.output);
     const body: TLine[] = res.json !== undefined ? jsonLines(res.json, { collapse: call.collapse, only: call.only, focus: call.focus, cols }) : (res.text ?? "").split("\n").map((l) => ({ indent: 0, toks: [{ t: l, c: "text" as C }] }));
@@ -279,20 +317,26 @@ function buildScreens(calls: TerminalCall[], cols: number) {
   return screens;
 }
 
-export const TerminalTwin: React.FC<TerminalTwinProps> = ({ title, calls, right, world = "day", x, y, width = 920, rows, fontSize = 26, elev = 4, style }) => {
+export const TerminalTwin: React.FC<TerminalTwinProps> = (props) => {
+  const { title, calls, right, world = "day", x, y, fontSize = 26, elev = 4, style } = props;
   const frame = useCurrentFrame();
-  const lh = Math.round(fontSize * 1.55);
+  const enter = props.enter;
+  if (enter && frame < enter.at) return null;
+  const size = terminalSize(props);
+  const { width, lh, cols, rows: visRows } = size;
   const padX = 34;
-  const adv = (MONO_ADVANCE - 0.01) * fontSize;
-  const cols = Math.floor((width - 2 * padX) / adv);
   const screens = buildScreens(calls, cols);
-  const maxRows = Math.min(22, Math.max(...screens.map((s) => s.lines.length)));
-  const visRows = rows ?? maxRows;
-  const screen = [...screens].reverse().find((s) => frame >= s.from) ?? screens[0];
+  const screen = [...screens].reverse().find((sc) => frame >= sc.from) ?? screens[0];
   const shown = screen.lines.filter((l) => frame >= l.shownAt);
+  // scroll by whole rows: the rows above the view are not drawn, so nothing is ever cut under the title bar
   const scrollRows = Math.max(0, shown.length - visRows);
   const night = world === "night";
   const blinkOn = Math.floor(frame / 15) % 2 === 0;
+  const t = enter ? tween(frame, enter.at, enter.at + (enter.dur ?? 14), 0, 1, EASE.expoOut) : 1;
+  const level = 1 + (elev - 1) * t;
+  const dim = Math.max(0, Math.min(1, props.dim ?? 0));
+  const tagSize = props.tagSize ?? 28;
+  const transform = [t < 1 ? `translateY(${(1 - t) * 26}px) scale(${0.985 + 0.015 * t})` : "", dim > 0 ? `scale(${1 - 0.03 * dim})` : ""].filter(Boolean).join(" ");
   return (
     <div
       style={{
@@ -300,78 +344,98 @@ export const TerminalTwin: React.FC<TerminalTwinProps> = ({ title, calls, right,
         left: x,
         top: y,
         width,
-        borderRadius: 28,
-        background: night ? NIGHT.surfaceSunk : NIGHT.ground,
-        boxShadow: night ? `0 0 0 1.5px ${NIGHT.line}, inset 0 1px 0 rgba(255,255,255,0.06), 0 24px 60px rgba(1,10,13,0.5)` : elevDark(elev),
-        overflow: "hidden",
+        transform: transform || undefined,
+        transformOrigin: "50% 50%",
+        filter: dim > 0 ? `blur(${(6 * dim).toFixed(2)}px)` : undefined,
         ...style,
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          height: 66,
-          padding: "0 30px",
-          borderBottom: `1.5px solid ${NIGHT.line}`,
-          fontFamily: FONT.sans,
-          fontSize: 26,
-          fontWeight: 500,
-          color: NIGHT.textMuted,
-          whiteSpace: "nowrap",
-        }}
-      >
-        <Icon name="terminal" size={28} color={NIGHT.textMuted} />
-        {title}
-        <span style={{ flex: 1 }} />
-        {right ? <span style={{ fontFamily: FONT.mono, fontSize: 24, color: NIGHT.link }}>{right}</span> : null}
-      </div>
+      {props.tag ? (
+        <div style={{ position: "absolute", left: 0, top: -(tagSize * 1.8 + 14) }}>
+          <InkLabel icon="eye" size={tagSize}>
+            {props.tag}
+          </InkLabel>
+        </div>
+      ) : null}
       <div
         style={{
           position: "relative",
-          height: visRows * lh + 52,
+          width,
+          borderRadius: 28,
+          background: night ? NIGHT.surfaceSunk : NIGHT.ground,
+          boxShadow: night ? `0 0 0 1.5px ${NIGHT.line}, inset 0 1px 0 rgba(255,255,255,0.06), 0 24px 60px rgba(1,10,13,0.5)` : elevDarkAt(level),
           overflow: "hidden",
-          WebkitMaskImage: scrollRows > 0 ? "linear-gradient(180deg, transparent 0px, #000 30px)" : undefined,
-          maskImage: scrollRows > 0 ? "linear-gradient(180deg, transparent 0px, #000 30px)" : undefined,
         }}
       >
-        <div style={{ position: "absolute", left: padX, top: 26 - scrollRows * lh, fontFamily: FONT.mono, fontSize, lineHeight: `${lh}px`, letterSpacing: "-0.01em", whiteSpace: "pre" }}>
-          {shown.map((l, i) => {
-            let toks = l.toks;
-            let cursor = false;
-            if (l.typing) {
-              const n = Math.min(l.typing.len, l.typing.lead + Math.max(0, Math.floor(((frame - l.typing.start) / 30) * l.typing.cps)));
-              let left = n;
-              toks = [];
-              for (const t of l.toks) {
-                if (left <= 0) break;
-                toks.push({ ...t, t: t.t.slice(0, left) });
-                left -= t.t.length;
-              }
-              // the cursor sits on the line being typed, and waits at the end of the command until output streams
-              cursor = n < l.typing.len ? true : l.cmdEnd !== undefined && frame < l.cmdEnd && i === shown.length - 1;
-            }
-            const isFocusLine = l.toks.some((t) => t.c === "focus");
-            return (
-              <div key={i} style={{ position: "relative", height: lh, paddingLeft: `${l.indent * 2 * (MONO_ADVANCE - 0.01)}em` }}>
-                {isFocusLine ? <FocusBloom toks={l.toks} indent={l.indent} fontSize={fontSize} lh={lh} at={l.shownAt} frame={frame} /> : null}
-                {toks.map((t, j) => (
-                  <span key={j} style={{ position: "relative", color: COLORS[t.c], fontWeight: t.c === "cmd" ? 500 : 400 }}>
-                    {t.t}
-                  </span>
-                ))}
-                {cursor && (blinkOn || (l.typing && frame < l.typing.start + (l.typing.len / l.typing.cps) * 30)) ? (
-                  <span style={{ display: "inline-block", width: "0.6em", height: lh * 0.62, transform: `translateY(${lh * 0.1}px)`, background: NIGHT.text, opacity: 0.85 }} />
-                ) : null}
-              </div>
-            );
-          })}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            height: TITLE_H,
+            padding: "0 30px",
+            borderBottom: `1.5px solid ${NIGHT.line}`,
+            fontFamily: FONT.sans,
+            fontSize: 26,
+            fontWeight: 500,
+            color: NIGHT.textMuted,
+            whiteSpace: "nowrap",
+          }}
+        >
+          <Icon name="terminal" size={28} color={NIGHT.textMuted} />
+          {title}
+          <span style={{ flex: 1 }} />
+          {right ? <span style={{ fontFamily: FONT.mono, fontSize: 24, color: NIGHT.link }}>{right}</span> : null}
+        </div>
+        <div style={{ position: "relative", height: visRows * lh + 2 * BODY_PAD }}>
+          <div style={{ position: "absolute", left: padX, right: padX, top: BODY_PAD, height: visRows * lh, overflow: "hidden" }}>
+            <div style={{ position: "absolute", left: 0, top: 0, fontFamily: FONT.mono, fontSize, lineHeight: `${lh}px`, letterSpacing: "-0.01em", whiteSpace: "pre" }}>
+              {shown.map((l, i) => {
+                if (i < scrollRows) return null;
+                let toks = l.toks;
+                let cursor = false;
+                if (l.typing) {
+                  const n = Math.min(l.typing.len, l.typing.lead + Math.max(0, Math.floor(((frame - l.typing.start) / 30) * l.typing.cps)));
+                  let left = n;
+                  toks = [];
+                  for (const tk of l.toks) {
+                    if (left <= 0) break;
+                    toks.push({ ...tk, t: tk.t.slice(0, left) });
+                    left -= tk.t.length;
+                  }
+                  cursor = n < l.typing.len ? true : l.cmdEnd !== undefined && frame < l.cmdEnd && i === shown.length - 1;
+                } else if (l.cmdEnd !== undefined && frame < l.cmdEnd && i === shown.length - 1) cursor = true;
+                const isFocusLine = l.toks.some((tk) => tk.c === "focus");
+                return (
+                  <div key={i} style={{ position: "absolute", left: 0, top: (i - scrollRows) * lh, height: lh, paddingLeft: `${l.indent * 2 * (MONO_ADVANCE - 0.01)}em`, whiteSpace: "pre" }}>
+                    {isFocusLine ? <FocusBloom toks={l.toks} indent={l.indent} fontSize={fontSize} lh={lh} at={l.shownAt} frame={frame} /> : null}
+                    {toks.map((tk, j) => (
+                      <span key={j} style={{ position: "relative", color: COLORS[tk.c], fontWeight: tk.c === "cmd" ? 500 : 400 }}>
+                        {tk.t}
+                      </span>
+                    ))}
+                    {cursor && blinkOn ? (
+                      <span style={{ display: "inline-block", width: "0.6em", height: lh * 0.62, transform: `translateY(${lh * 0.1}px)`, background: NIGHT.text, opacity: 0.85 }} />
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 };
+
+/** The dark elevation at a fractional level (the two levels around it cross-fade). */
+function elevDarkAt(level: number) {
+  const lv = Math.max(1, Math.min(4, level));
+  const lo = Math.floor(lv);
+  const f = lv - lo;
+  if (f > 0.01 && lo < 4) return `${elevDark(lo, 1 - f)}, ${elevDark(lo + 1, f)}`;
+  return elevDark(Math.round(lv));
+}
 
 /** The focus value's soft amber bloom (the shot's one amber, with its glow). */
 const FocusBloom: React.FC<{ toks: Tok[]; indent: number; fontSize: number; lh: number; at: number; frame: number }> = ({ toks, indent, fontSize, lh, at, frame }) => {

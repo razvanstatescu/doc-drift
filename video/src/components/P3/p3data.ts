@@ -76,6 +76,16 @@ if (!RUNBOOK_ROW || RUNBOOK_ROW.title !== ANSWER_TITLE || RUNBOOK_ROW.status !==
 }
 if (CHECK.output.status !== "possibly_stale" || CHECK.output.title !== ANSWER_TITLE) fail("checkFlaggedV2 status");
 
+/**
+ * How many pages find-docs-for-path found, in the tool's own words (the opening of its `guidance`, which goes on to
+ * name the QA pages, so only this clause is shown: QA G-8).
+ */
+export const PAGES_PHRASE = "3 pages document this path";
+if (!FIND.output.guidance.startsWith(`${PAGES_PHRASE}:`)) fail("findDocsFlaggedV2 guidance opening");
+
+/** V18's focal statement: the guidance's own clause, verbatim (QA G-2). */
+export const DO_NOT_PRESENT = "Do not present steps from this page as current.";
+
 /** The guidance value of check-page-freshness, verbatim (D38 wording), split at its sentences for the terminal. */
 export const GUIDANCE = CHECK.output.guidance;
 export const GUIDANCE_SENTENCES = [
@@ -85,6 +95,7 @@ export const GUIDANCE_SENTENCES = [
   'Affected: "Steps".',
 ] as const;
 if (GUIDANCE_SENTENCES.join(" ") !== GUIDANCE) fail("checkFlaggedV2 guidance");
+if (!GUIDANCE.includes(DO_NOT_PRESENT) || !ANSWER_LINES.includes(DO_NOT_PRESENT as (typeof ANSWER_LINES)[number])) fail("the 'Do not present' clause");
 
 /** The proof tag of the terminal (R3 V18). The calls were made at 19:01:40 local on Nov 13, as Razvan Statescu. */
 export const MCP_TAG = "Real output: doc-drift MCP, called as Razvan Statescu, Nov 13";

@@ -3,7 +3,7 @@ import { AbsoluteFill, Sequence, useCurrentFrame } from "remotion";
 import { Sfx } from "../../audio/Sfx";
 import { Cursor, type CursorPoint } from "../../components/Cursor";
 import { DASH, DASH_UI, DashboardTwin, dashRect } from "../../components/P5/DashboardTwin";
-import { JIRA_UI, JiraEpicTwin } from "../../components/P5/JiraEpicTwin";
+import { JIRA_UI, JiraEpicTwin, jiraRect } from "../../components/P5/JiraEpicTwin";
 import { TRACK_UI, TrackInJiraTwin, trackRect } from "../../components/P5/TrackInJiraTwin";
 import { EASE, tween } from "../../lib/time";
 import { slipProgress } from "../../motion/slip";
@@ -11,7 +11,9 @@ import {
   Camera3D,
   DAY,
   InkLabel,
+  KineticLine,
   Lift,
+  lineCues,
   MorphToReal,
   Press,
   ProofFrame,
@@ -21,26 +23,32 @@ import {
   Stage,
   type Cam3Key,
   type CameraOptions,
-  type Rect,
 } from "../../v4/kit";
 import { PageTwin, pageRects, textWidth, type PageTwinProps } from "../../v4/twins";
 import { P4FinalPose } from "../P4";
 import { sc as sc4 } from "../P4/timing";
 import { inProof, screenAt } from "../P4/geom";
-import { T } from "./timing";
+import { sc, T } from "./timing";
 
 /**
- * P5 · Scale (film 3937 to 4177, R3 V23). Day, grid. Opens on P4's last pose (R19) pushed out by a slip push (T5).
+ * P5 · Scale (film 3937 to 4177, R3 V23). Day, grid. Opens on P4's last pose (R19, "Safe to cite.") pushed out by a
+ * slip push (T5). Round 2 (QA R-2, R-10, R-13, R-14, metrics' amber gap): one statement per half of the line in the
+ * empty side; the ADR's slipped band (the one amber) stays in shot through R20; R21 shows the four real KPI cards.
  *
  *   J · Jira and ADR-015 (0 .. dash)
- *   "Jira"     the epic PAY-18 as a plain card that names Jira in words, joined by its anchor to ADR-015 (Verified)
+ *   "Jira"     "Jira changes count too." in the empty lower left; the epic PAY-18 as a plain card that names Jira in
+ *              words, joined by its anchor to ADR-015 (Verified)
  *   "changes"  To Do -> Done; the change runs along the anchor (the connector turns solid)
- *   "count"    ADR-015's table band slips amber and hands the amber to its byline item: "Possibly stale · Doc Drift"
- *   R20        the Jira strip above the ADR byline and tooltip, joined by a drawn line (two proofs, one claim)
+ *   "count"    the decisive push toward ADR-015 as its table band slips amber and hands the amber to its byline item,
+ *              "Possibly stale · Doc Drift" (the shot's one amber, in shot to the end of the world)
+ *   R20        R2's proof composition: the Jira strip across the top, the real ADR byline and tooltip on the left with
+ *              its byline row at the height of the twin's lit item (claim and receipt rhyme); the Jira card steps back
  *   D · the dashboard (dash .. track)
- *   "space"    "Drift in PLAT" and its lead (always labelled "Sample data from the demo space"); the KPI cards drop
- *              flat and roll to 18 of 24, 6, 0, Under 3 hours; the six rows set in; ADR-015's row slips on "drift"
- *   R21        by MorphToReal from the KPI row
+ *   "space"    "Every space gets a drift dashboard." in the empty top left; the dashboard on the right ("Sample data
+ *              from the demo space"); the KPI cards drop flat and count up from 0 to 18 of 24, 6, 0 (Under 3 hours is
+ *              not a count) and stop; the six rows set in; ADR-015's row slips on "drift"
+ *   R21        grows out of the KPI row: the four real KPI cards at 0.6, under the dashboard; the twin's KPI row steps
+ *              back, its amber row stays
  *   T · Track in Jira (track .. end)
  *   click      Create Jira task; "Jira task created", "PAY-24 tracks this change. When the page is up to date, open it
  *              and click Mark verified." (the real form between the two clicks is shortened; R22 proves the result)
@@ -50,49 +58,67 @@ import { T } from "./timing";
 
 const Iso: React.FC<{ children: React.ReactNode }> = ({ children }) => <AbsoluteFill style={{ isolation: "isolate" }}>{children}</AbsoluteFill>;
 
-const dimAt = (frame: number, at: number, end: number) => tween(frame, at + 2, at + 8) * (1 - tween(frame, end, end + 8));
+/** The kit's resting twin under a proof (MorphToReal's defaults: 18%, 7 px blur, drained), for plain proofs. */
+const restStyle = (k: number): React.CSSProperties | undefined => {
+  if (k <= 0.001) return undefined;
+  return { opacity: 1 - 0.82 * k, filter: `blur(${(7 * k).toFixed(2)}px) grayscale(${k.toFixed(3)})` };
+};
+const restAt = (frame: number, at: number, end: number) => tween(frame, at + 1, at + 7, 0, 1, EASE.expoOut) * (1 - tween(frame, end, end + 6, 0, 1, EASE.expoOut));
 
 // =====================================================================================================================
 // World J · PAY-18 and ADR-015
 // =====================================================================================================================
 
 const K_JIRA = 1.42;
-const JIRA_POS = { x: 70, y: 372 };
+const JIRA_POS = { x: 150, y: 330 };
 const JIRA_W = JIRA_UI.width * K_JIRA;
 const JIRA_NODE: [number, number] = [JIRA_POS.x + JIRA_W, JIRA_POS.y + JIRA_UI.node.y * K_JIRA];
 
 const ADR: PageTwinProps = {
   world: "day",
   doc: "adr015",
-  k: 1.45,
-  x: 1050,
-  y: 150,
+  k: 1.25,
+  x: 1040,
+  y: 250,
+  // the table band slips amber on "count" and hands the amber to the byline item with its swap (handoff = byline.at):
+  // the lit item is the shot's one amber, and it stays in shot through R20, which rhymes with it from the left
   byline: { kind: "dds", state: "possibly_stale", from: "verified", at: T.count - 1 },
-  slip: { at: T.slip, handoff: T.handoff },
+  slip: { at: T.slip, handoff: T.count - 1 },
 };
 const RADR = pageRects(ADR);
-const PAY18 = RADR.tokens["PAY-18"] ?? { x: RADR.card.x + 200, y: RADR.bands.middle.y + 160, w: 80, h: 32 };
+const PAY18 = RADR.tokens["PAY-18"] ?? { x: RADR.card.x + 160, y: RADR.bands.middle.y + 130, w: 64, h: 28 };
 const ADR_NODE: [number, number] = [RADR.card.x - 2, PAY18.y + PAY18.h / 2];
-const ANCHOR_D = `M ${JIRA_NODE[0] + 2} ${JIRA_NODE[1]} C ${JIRA_NODE[0] + 90} ${JIRA_NODE[1]}, ${ADR_NODE[0] - 90} ${ADR_NODE[1]}, ${ADR_NODE[0]} ${ADR_NODE[1]}`;
+const ANCHOR_D = `M ${JIRA_NODE[0] + 2} ${JIRA_NODE[1]} C ${JIRA_NODE[0] + 70} ${JIRA_NODE[1]}, ${ADR_NODE[0] - 70} ${ADR_NODE[1]}, ${ADR_NODE[0]} ${ADR_NODE[1]}`;
 
-const J_OPTS: CameraOptions = { base: { x: 900, y: 520, zoom: 0.96 }, seed: "p5-jira" };
+const J_OPTS: CameraOptions = { base: { x: 870, y: 540, zoom: 1.0 }, seed: "p5-jira" };
 const J_KEYS: Cam3Key[] = [
   // the slip push lands (content still travelling left)
-  { at: 0, dur: 20, to: { x: 980, y: 520, zoom: 0.98 } },
-  // a slow push toward the ADR as it flags
-  { at: T.done, dur: 30, to: { x: 1010, y: 505, zoom: 1.02 }, ease: EASE.standard },
+  { at: 0, dur: 20, to: { x: 1000, y: 540, zoom: 1.0 } },
+  // the one decisive push of the line: toward ADR-015 on "count", as its band slips (its slipped band stays in frame)
+  { at: T.count - 6, dur: 14, to: { x: 1012, y: 540, zoom: 1.05 } },
 ];
 
-// R20: two proofs, one claim. The Jira strip (Done) above the ADR's byline and tooltip.
-const R20A_CROP: [number, number, number, number] = [700, 150, 2260, 160];
+const JIRA_TITLE_AT_R20 = screenAt(jiraRect("title", JIRA_POS.x, JIRA_POS.y, K_JIRA), T.r20, J_KEYS, J_OPTS);
+
+// R20: two proofs, one claim (R2's proof composition). The Jira strip (Done) across the top; the ADR's real byline and
+// tooltip on the left, its byline row at the height of the twin's lit byline (the claim and its receipt rhyme), over the
+// Jira card, which steps back. The Jira crop stops above the breadcrumb's row (152) and the buttons (from 300) (R-10).
+const R20A_CROP: [number, number, number, number] = [700, 136, 2260, 161];
 const R20A_SCALE = 0.6;
-const R20A_POS = { x: 116, y: 236 };
+const R20A_POS = { x: 70, y: 80 };
+/** R20a's title row with the Done button (capture px), and the twin card's title row it grows out of. */
+const R20A_TITLE = inProof(proofRect({ crop: R20A_CROP, scale: R20A_SCALE, ...R20A_POS }).image, R20A_CROP, R20A_SCALE, [714, 228, 2156, 66]);
+// ADR byline and tooltip: the two-line tooltip ends on capture row 603 and the table starts on 620, so h 312 shows the
+// whole tooltip and nothing of the row below.
 const R20B_CROP: [number, number, number, number] = [1440, 300, 1460, 312];
-const R20B_SCALE = 0.65;
-const R20B_POS = { x: 820, y: 560 };
-const R20A_DONE = inProof(proofRect({ crop: R20A_CROP, scale: R20A_SCALE, ...R20A_POS }).image, R20A_CROP, R20A_SCALE, [2711, 231, 159, 61]);
-const R20B_ITEM = inProof(proofRect({ crop: R20B_CROP, scale: R20B_SCALE, ...R20B_POS }).image, R20B_CROP, R20B_SCALE, [2268, 462, 320, 44]);
-const R20_LINE = `M ${R20A_DONE.x + R20A_DONE.w / 2} ${R20A_DONE.y + R20A_DONE.h + 4} C ${R20A_DONE.x + R20A_DONE.w / 2} ${R20A_DONE.y + 200}, ${R20B_ITEM.x + R20B_ITEM.w / 2} ${R20B_ITEM.y - 160}, ${R20B_ITEM.x + R20B_ITEM.w / 2} ${R20B_ITEM.y - 4}`;
+const R20B_SCALE = 0.6;
+/** The real byline row (capture px): the item and its pill. */
+const R20B_ROW_CAP: [number, number, number, number] = [1440, 462, 1460, 44];
+const TWIN_BYLINE_AT_R20 = screenAt(RADR.byline, T.r20, J_KEYS, J_OPTS);
+const R20B_POS = {
+  x: 52,
+  y: Math.round(TWIN_BYLINE_AT_R20.y + TWIN_BYLINE_AT_R20.h / 2 - 14 - (R20B_ROW_CAP[1] - R20B_CROP[1] + R20B_ROW_CAP[3] / 2) * R20B_SCALE),
+};
 /** The hovered pill's grey under the logged cover. */
 const ADR_PILL_MASK = {
   box: [2589, 465, 176, 37] as [number, number, number, number],
@@ -100,15 +126,25 @@ const ADR_PILL_MASK = {
   why: "Development install suffix (logged), on the hovered pill",
 };
 
+/** V23's first statement (screen space: the push does not move it). */
+const J_TEXT = "Jira changes\ncount too.";
+const StatementJ: React.FC = () => (
+  <div style={{ position: "absolute", left: 76, top: 790 }}>
+    <KineticLine text={J_TEXT} at={T.jira - 6} words={lineCues(sc.line("V23"), J_TEXT)} size={120} />
+  </div>
+);
+
 const WorldJ: React.FC = () => {
   const frame = useCurrentFrame();
   const done = tween(frame, T.done, T.done + 8, 0, 1, EASE.expoOut);
-  const dim = 1 - 0.6 * dimAt(frame, T.r20, T.r20End);
+  // R20a grows out of the Jira card, which goes (blur, then gone) under it with its connector; ADR-015 and its lit
+  // byline stay as they are (QA K-1: the element the proof stands for leaves; R-10: no stray twin words beside it)
+  const gone = tween(frame, T.r20 + 1, T.r20 + 7, 0, 1, EASE.expoOut);
   return (
-    <Stage world="day" motif="grid" light={["56%", "30%"]}>
+    <Stage world="day" motif="grid" light={["62%", "34%"]}>
       <Camera3D keys={J_KEYS} {...J_OPTS}>
-        <div style={{ position: "absolute", inset: 0, opacity: dim < 1 ? dim : undefined }}>
-          <PageTwin {...ADR} />
+        <PageTwin {...ADR} />
+        <div style={{ position: "absolute", inset: 0, opacity: gone > 0.001 ? 1 - gone : undefined, filter: gone > 0.001 ? `blur(${(8 * gone).toFixed(2)}px)` : undefined }}>
           {/* the anchor: watched (dashed Current), then the change runs along it and it turns solid */}
           <SignalLine d={ANCHOR_D} at={-40} dur={1} pulse={false} dashed />
           <SignalLine d={ANCHOR_D} at={T.changes} dur={T.slip + 4 - T.changes} pulse trail />
@@ -125,12 +161,28 @@ const ShotJ: React.FC = () => {
   const frame = useCurrentFrame();
   return (
     <AbsoluteFill>
-      <Iso>
-        <WorldJ />
-      </Iso>
-      {frame >= T.r20 ? (
+      <MorphToReal
+        at={T.r20}
+        fromRect={JIRA_TITLE_AT_R20}
+        toRect={R20A_TITLE}
+        // the rest of the world stays as it is: only the Jira card goes (WorldJ), and the lit ADR byline stays in shot
+        twinRest={1}
+        twinBlur={0}
+        twinDrain={0}
+        twin={
+          <AbsoluteFill>
+            <Iso>
+              <WorldJ />
+            </Iso>
+            <StatementJ />
+          </AbsoluteFill>
+        }
+        proof={
+          <ProofFrame capture="p5-jira-done" crop={R20A_CROP} scale={R20A_SCALE} {...R20A_POS} at={T.r20} dur={T.r20End - T.r20} enter="none" tag="Recorded in Jira" />
+        }
+      />
+      {frame >= T.r20 + 3 ? (
         <>
-          <ProofFrame capture="p5-jira-done" crop={R20A_CROP} scale={R20A_SCALE} {...R20A_POS} at={T.r20} dur={T.r20End - T.r20} tag="Recorded in Jira" />
           <ProofFrame
             capture="p5-adr-tooltip"
             crop={R20B_CROP}
@@ -141,7 +193,6 @@ const ShotJ: React.FC = () => {
             masks={[ADR_PILL_MASK]}
             tag="Recorded in Confluence"
           />
-          {frame < T.r20End ? <SignalLine d={R20_LINE} at={T.r20 + 8} dur={12} pulse={false} /> : null}
         </>
       ) : null}
     </AbsoluteFill>
@@ -152,45 +203,47 @@ const ShotJ: React.FC = () => {
 // World D · the dashboard
 // =====================================================================================================================
 
-const K_DASH = 1.42;
-const DASH_POS = { x: Math.round(960 - (DASH_UI.width * K_DASH) / 2), y: 118 };
-const D_OPTS: CameraOptions = { base: { x: 1010, y: 520, zoom: 0.98 }, seed: "p5-dash" };
+const K_DASH = 1.15;
+const DASH_POS = { x: Math.round(1920 - 82 - DASH_UI.width * K_DASH), y: 96 };
+const D_OPTS: CameraOptions = { base: { x: 820, y: 540, zoom: 1.0 }, seed: "p5-dash" };
 const D_KEYS: Cam3Key[] = [
-  { at: T.dash, dur: 22, to: { x: 960, y: 470, zoom: 1.0 } },
-  // pull back a little as the rows set in
-  { at: T.kpi + 8, dur: 30, to: { x: 960, y: 520, zoom: 0.97 }, ease: EASE.standard },
+  // the slip push lands
+  { at: T.dash, dur: 22, to: { x: 960, y: 540, zoom: 1.0 } },
 ];
 
-// R21: the KPI row.
-const R21_CROP: [number, number, number, number] = [720, 280, 3040, 420];
-const R21_SCALE = 0.5;
-const R21_POS = { x: Math.round(960 - (3040 * R21_SCALE + 28) / 2), y: 250 };
-const R21_KPI = inProof(proofRect({ crop: R21_CROP, scale: R21_SCALE, ...R21_POS }).image, R21_CROP, R21_SCALE, [720, 459, 3040, 228]);
+// R21: the four real KPI cards (columns 720 to 3759, rows 460 to 687), at 0.6 (QA R-2, R-13), under the dashboard.
+const R21_CROP: [number, number, number, number] = [704, 448, 3072, 252];
+const R21_SCALE = 0.6;
+const R21_W = Math.round(3072 * R21_SCALE + 28);
+const R21_POS = { x: Math.round(960 - R21_W / 2), y: 1080 - 30 - Math.round(252 * R21_SCALE + 28) };
+const R21_KPI = inProof(proofRect({ crop: R21_CROP, scale: R21_SCALE, ...R21_POS }).image, R21_CROP, R21_SCALE, [720, 460, 3039, 227]);
 const R21_TWIN = screenAt(dashRect("kpiRow", DASH_POS.x, DASH_POS.y, K_DASH), T.r21, D_KEYS, D_OPTS);
+
+/** V23's second statement, in the empty top left of the dashboard shot. */
+const D_TEXT = "Every space\ngets a drift\ndashboard.";
+const StatementD: React.FC = () => (
+  <div style={{ position: "absolute", left: 76, top: 120 }}>
+    <KineticLine text={D_TEXT} at={T.space - 9} words={lineCues(sc.line("V23"), D_TEXT)} size={110} />
+  </div>
+);
 
 const WorldD: React.FC = () => {
   const frame = useCurrentFrame();
   const kpiDrop = [0, 1, 2, 3].map((i) => tween(frame, T.kpi + 3 * i, T.kpi + 3 * i + 12, 0, 1, EASE.linear));
+  // the counts run up from 0 to the real values and stop there (QA R-14)
   const kpiRoll = [0, 1, 2, 3].map((i) => tween(frame, T.kpi + 2 + 3 * i, T.kpi + 22 + 3 * i, 0, 1, EASE.linear));
-  const rows = tween(frame, T.kpi + 6, T.kpi + 20, 0, 6, EASE.linear);
+  // the six rows set in quickly, so ADR-015's row is in before it slips on "drift"
+  const rows = tween(frame, T.kpi + 4, T.kpi + 12, 0, 6, EASE.linear);
   const slip = slipProgress(frame, T.rowSlip);
-  const dim = 1 - 0.6 * dimAt(frame, T.r21, T.r21End);
+  const kpiRest = restAt(frame, T.r21, T.r21End);
   return (
-    <Stage world="day" motif="grid" light={["50%", "26%"]}>
+    <Stage world="day" motif="grid" light={["62%", "30%"]}>
       <Camera3D keys={D_KEYS} {...D_OPTS}>
-        <div style={{ position: "absolute", left: DASH_POS.x, top: DASH_POS.y, opacity: dim < 1 ? dim : undefined }}>
-          <DashboardTwin k={K_DASH} kpiDrop={kpiDrop} kpiRoll={kpiRoll} rows={rows} slip={slip} label={false} />
+        <div style={{ position: "absolute", left: DASH_POS.x, top: DASH_POS.y }}>
+          <DashboardTwin k={K_DASH} kpiDrop={kpiDrop} kpiRoll={kpiRoll} rows={rows} slip={slip} label={false} kpiRest={kpiRest} />
         </div>
         {/* R3 risk 8: the numbers are the demo space's, always labelled (at a must-read size) */}
-        <div
-          style={{
-            position: "absolute",
-            left: DASH_POS.x + DASH_UI.width * K_DASH - 18,
-            top: DASH_POS.y - 58,
-            transform: "translateX(-100%)",
-            opacity: dim < 1 ? dim : undefined,
-          }}
-        >
+        <div style={{ position: "absolute", left: DASH_POS.x + DASH_UI.width * K_DASH - 4, top: DASH_POS.y - 56, transform: "translateX(-100%)" }}>
           <InkLabel icon="info" size={28}>
             {DASH.label}
           </InkLabel>
@@ -201,29 +254,35 @@ const WorldD: React.FC = () => {
 };
 
 const ShotD: React.FC = () => (
-  <MorphToReal
-    at={T.r21}
-    fromRect={R21_TWIN}
-    toRect={R21_KPI}
-    twinRest={1}
-    twin={
-      <Iso>
-        <WorldD />
-      </Iso>
-    }
-    proof={
-      <ProofFrame
-        capture="p5-dashboard"
-        crop={R21_CROP}
-        scale={R21_SCALE}
-        {...R21_POS}
-        at={T.r21}
-        dur={T.r21End - T.r21}
-        enter="none"
-        tag="Recorded in Confluence, sample data from the demo space"
-      />
-    }
-  />
+  <AbsoluteFill>
+    <MorphToReal
+      at={T.r21}
+      fromRect={R21_TWIN}
+      toRect={R21_KPI}
+      // only the twin's KPI row steps back (WorldD's kpiRest): its rows and the one amber row stay as they are
+      twinRest={1}
+      twinBlur={0}
+      twinDrain={0}
+      twin={
+        <Iso>
+          <WorldD />
+        </Iso>
+      }
+      proof={
+        <ProofFrame
+          capture="p5-dashboard"
+          crop={R21_CROP}
+          scale={R21_SCALE}
+          {...R21_POS}
+          at={T.r21}
+          dur={T.r21End - T.r21}
+          enter="none"
+          tag="Recorded in Confluence, sample data from the demo space"
+        />
+      }
+    />
+    <StatementD />
+  </AbsoluteFill>
 );
 
 // =====================================================================================================================
@@ -246,12 +305,16 @@ const BUTTON = (() => {
 const BUTTON_ON_CLICK = screenAt(BUTTON, T.click, T_KEYS, T_OPTS);
 const CLICK_PT: [number, number] = [BUTTON_ON_CLICK.x + BUTTON_ON_CLICK.w * 0.55, BUTTON_ON_CLICK.y + BUTTON_ON_CLICK.h * 0.55];
 
-// R22: the created message.
+// R22: the created message, placed over the twin's own message (which steps back under it).
 const R22_CROP: [number, number, number, number] = [1150, 1610, 1550, 190];
 const R22_SCALE = 0.85;
-const R22_POS = { x: Math.round(960 - (1550 * R22_SCALE + 28) / 2), y: 470 };
-const R22_MSG = inProof(proofRect({ crop: R22_CROP, scale: R22_SCALE, ...R22_POS }).image, R22_CROP, R22_SCALE, [1168, 1626, 1504, 160]);
+const R22_MSG_CAP: [number, number, number, number] = [1168, 1626, 1504, 160];
 const R22_TWIN = screenAt(trackRect("notice", TRACK_POS.x, TRACK_POS.y, K_TRACK), T.r22, T_KEYS, T_OPTS);
+const R22_POS = {
+  x: Math.round(R22_TWIN.x + R22_TWIN.w / 2 - 14 - (R22_MSG_CAP[0] - R22_CROP[0] + R22_MSG_CAP[2] / 2) * R22_SCALE),
+  y: Math.round(R22_TWIN.y + R22_TWIN.h / 2 - 14 - (R22_MSG_CAP[1] - R22_CROP[1] + R22_MSG_CAP[3] / 2) * R22_SCALE),
+};
+const R22_MSG = inProof(proofRect({ crop: R22_CROP, scale: R22_SCALE, ...R22_POS }).image, R22_CROP, R22_SCALE, R22_MSG_CAP);
 
 const WorldT: React.FC = () => {
   const frame = useCurrentFrame();
@@ -262,12 +325,12 @@ const WorldT: React.FC = () => {
   })();
   const busy = tween(frame, T.click + 2, T.click + 4) * (1 - tween(frame, T.created - 1, T.created + 1));
   const created = tween(frame, T.created, T.created + 10, 0, 1, EASE.expoOut);
-  const dim = 1 - 0.6 * dimAt(frame, T.r22, T.r22End);
+  const noticeRest = restAt(frame, T.r22, T.r22End);
   return (
     <Stage world="day" motif="grid" light={["50%", "30%"]}>
       <Camera3D keys={T_KEYS} {...T_OPTS}>
-        <div style={{ position: "absolute", left: TRACK_POS.x, top: TRACK_POS.y, opacity: dim < 1 ? dim : undefined }}>
-          <TrackInJiraTwin k={K_TRACK} press={press} busy={busy} created={created} badgeGlow={1} />
+        <div style={{ position: "absolute", left: TRACK_POS.x, top: TRACK_POS.y }}>
+          <TrackInJiraTwin k={K_TRACK} press={press} busy={busy} created={created} badgeGlow={1} noticeRest={noticeRest} />
         </div>
       </Camera3D>
     </Stage>
@@ -284,7 +347,10 @@ const ShotT: React.FC = () => {
       at={T.r22}
       fromRect={R22_TWIN}
       toRect={R22_MSG}
+      // only the twin's message steps back (noticeRest): the card around it, and its one amber badge, stay
       twinRest={1}
+      twinBlur={0}
+      twinDrain={0}
       twin={
         <AbsoluteFill>
           <Iso>

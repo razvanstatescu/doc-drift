@@ -629,10 +629,19 @@ export const ProposedFixCard: React.FC<{
   /** Which drafts are drawn in their slots (the scene flies them in, then sets these). */
   draft1?: boolean;
   draft2?: boolean;
+  /**
+   * 0..1 each: how far each draft's slot has opened (QA: the card never grows empty). The card grows only as a draft
+   * docks into it: slot 1 opens the first draft's height, slot 2 the second's. Without it the height follows `draftsIn`.
+   */
+  slots?: [number, number];
   style?: React.CSSProperties;
-}> = ({ k, press = 0, busy = 0, draftsIn = 0, draft1, draft2, style }) => {
+}> = ({ k, press = 0, busy = 0, draftsIn = 0, draft1, draft2, slots, style }) => {
   const s = proposedSlots(k);
-  const h = (PROPOSED_UI.h - (1 - draftsIn) * (PROPOSED_UI.h - PROPOSED_H0)) * k;
+  const h1 = 96 + DRAFT_UI.h1 + 20;
+  const hUi = slots
+    ? PROPOSED_H0 + Math.max(0, Math.min(1, slots[0])) * (h1 - PROPOSED_H0) + Math.max(0, Math.min(1, slots[1])) * (PROPOSED_UI.h - h1)
+    : PROPOSED_UI.h - (1 - draftsIn) * (PROPOSED_UI.h - PROPOSED_H0);
+  const h = hUi * k;
   return (
     <div
       style={{

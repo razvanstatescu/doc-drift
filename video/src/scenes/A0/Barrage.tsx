@@ -274,20 +274,26 @@ export const SLAMS: Slam[] = [
   { at: 135, len: 6, id: "staleFiles" },
   { at: 141, len: 5, id: "copilot" },
   { at: 146, len: 6, id: "rovo730", punch: 2, z1: 2.0 }, // the second Rovo item, apart from the first
-  { at: LAST_SLAM, len: BLACK - LAST_SLAM, id: "atlassian", punch: 4, z1: 2.3, wide: true, crop: b(716, 40, 2040, 340) }, // Atlassian's own line
+  // Atlassian's own line: the sentence alone (the page's title would start on a cut word at this width)
+  { at: LAST_SLAM, len: BLACK - LAST_SLAM, id: "atlassian", punch: 4, z1: 2.3, wide: true, crop: b(700, 222, 2030, 173) },
 ];
 export const slamOn = (f: number): Slam | undefined => SLAMS.find((s) => f >= s.at && f < s.at + s.len);
 export const panelOf = (s: Slam) => (s.wide ? PANEL_WIDE : PANEL);
 
-/** The pile's pose for a landing: dropped from the air, a little larger and turned, tossed from alternate sides. */
+/** Frames a landing takes; a sheet's marks start only once it has landed (square: M2, read within 2°). */
+export const LAND_FRAMES = 2;
+/**
+ * The pile's pose for a landing: dropped from the air, a little larger and turned, tossed from alternate sides; it
+ * lands in 2 frames within 0.6° of square (the turn is only in the drop).
+ */
 export const slamPose = (s: Slam, f: number) => {
   const t = f - s.at;
   const side = SLAMS.indexOf(s) % 2 ? 1 : -1;
-  const land = interpolate(t, [0, 3], [0, 1], { ...clamp, easing: Easing.out(Easing.cubic) });
+  const land = interpolate(t, [0, LAND_FRAMES], [0, 1], { ...clamp, easing: Easing.out(Easing.cubic) });
   const last = s.at === LAST_SLAM;
   return {
-    k: lerp(1.085, 1, land) * (1 + 0.0028 * Math.max(0, t - 3)),
-    rot: last ? lerp(side * 1.6, 0.25, land) : lerp(side * 2.6, side * 0.85, land),
+    k: lerp(1.085, 1, land) * (1 + 0.0028 * Math.max(0, t - LAND_FRAMES)),
+    rot: last ? lerp(side * 1.2, 0.2, land) : lerp(side * 2.2, side * 0.6, land),
     dx: lerp(side * -60, 0, land),
     dy: lerp(-26, 0, land),
     elev: lerp(5, 4, land),
@@ -356,7 +362,7 @@ const SlamSheet: React.FC<{ s: Slam; f: number; top: boolean; coveredAt?: number
           }}
         >
           <div style={{ position: "absolute", left: fit.left0, top: fit.top0 }}>
-            <PaperPlate plate={fit.plate} crop={s.crop} width={fit.fw} role="subject" elev={0} radius={0} markAt={s.at + (s.punch ?? 0) + 1} markDur={5} lit={lit} />
+            <PaperPlate plate={fit.plate} crop={s.crop} width={fit.fw} role="subject" elev={0} radius={0} markAt={s.at + Math.max(LAND_FRAMES, (s.punch ?? 0) + 1)} markDur={5} lit={lit} />
           </div>
         </div>
       </div>

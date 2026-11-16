@@ -16,6 +16,7 @@ const beatAtOrAfter = (f: number) => {
 
 // V19 · "The page owner gets one comment, and opens the review."  [3292..3386]
 const owner = w("V19", "owner");
+const one = w("V19", "one");
 const comment = w("V19", "comment");
 const opens = w("V19", "opens");
 const review = w("V19", "review");
@@ -47,6 +48,7 @@ export const T = {
   /** The mention pops on "owner". */
   pop: owner - 3,
   owner,
+  one,
   comment,
   /** R13 [3322]: a beat before "comment", by MorphToReal from the comment's body. 27 f (whip at its end). */
   r13: beatAtOrAfter(comment - 13),
@@ -69,8 +71,8 @@ export const T = {
   },
   /** The camera travels down the panel to Quick fix, the stack opening a little while it moves. */
   travel: rename - 22,
-  /** The Quick fix card breaks out and turns flat to camera, landing on "rename" [3432]. */
-  breakout: rename - 13,
+  /** The Quick fix card breaks out and turns flat to camera, landing 0 to 4 f before "rename" [3432] (QA: was 5 early). */
+  breakout: rename - 9,
   rename,
   /** The cursor travels to Replace in 1 place (the click itself is the real one, in R14). */
   cursorIn: rename + 6,
@@ -86,11 +88,12 @@ export const T = {
   get r14Cut() {
     return this.r14 + 15;
   },
+  /** 25 f: the proof is gone (its 8 f drop) before "No AI used." lifts out of the card. */
   get r14End() {
-    return this.r14 + 30;
+    return this.r14 + 25;
   },
-  /** "No AI used." lifts out of the card and lands as big type on "no" [3500]. */
-  noAiLift: no - 11,
+  /** A copy of "No AI used." lifts out of the card (6 f, expo out) and lands as big type on "no" [3500]. */
+  noAiLift: no - 7,
   noAiLand: no - 1,
   no,
   ai,
@@ -116,16 +119,19 @@ export const T = {
   draft2: drafts - 6,
   drafts,
   edit,
-  /** R15 [3637]: by MorphToReal from draft 2. 40 f. */
+  /** R15 [3637]: by MorphToReal from draft 2; it ends as the whip to the side view starts (31 f). */
   r15: beatAtOrAfter(drafts + 6),
   get r15End() {
-    return this.r15 + 40;
+    return this.side - 5;
   },
-  /** The whip into the exploded side view (seam). */
+  /** The whip into the exploded side view (seam) on "Nothing": the V21 statement starts with it. */
   get side() {
-    return this.r15End + 3;
+    return nothing;
   },
   nothing,
+  changes: w("V21", "changes"),
+  until: w("V21", "until"),
+  a21: w("V21", "a", "from", 1),
   /** The footer card (Accept fix) lifts in, square, as the side view lands; the cursor travels to it. */
   get footerIn() {
     return this.side + 2;
@@ -152,23 +158,29 @@ export const T = {
   },
 
   // ---- V22: the snap back, Safe to cite, the tail --------------------------------------------------------------
-  /** snapBack [3757]: the drafts drop into the page, the band snaps home over 8 f, the byline turns Verified. */
+  /** snapBack [3757]: the drafts land as solid blocks, the band snaps home over 8 f (the score's hit), Verified. */
   back,
   verified,
+  /** The byline's slip swap: readable by +3, so "Verified · Doc Drift" reads 2 f before "Verified." [3760]. */
+  bylineAt: verified - 5,
+  /** The "Accepted." toast (the empty lower right, never over the page) after R16, until the terminal needs the corner. */
+  get toastIn() {
+    return this.r16End + 5;
+  },
+  get toastOut() {
+    return this.term - 12;
+  },
   /** R17 [3772]: by MorphToReal from the byline item. 30 f. */
   r17: beatAtOrAfter(verified + 10),
   get r17End() {
     return this.r17 + 30;
   },
   now,
-  /** The terminal lifts in on "Now the agent" and prints checkVerified; "Safe to cite." lands on "cite". */
+  /** The terminal lifts in on "Now the agent", its command already typed; "Safe to cite." lands on "cite". */
   term: now + 1,
-  get cmdAt() {
-    return this.term + 6;
-  },
-  /** The output streams once the command is typed (130 chars/s), done a few frames before "cite". */
+  /** The output streams from here (60 lines/s), done well before "cite". */
   get outAt() {
-    return this.term + 20;
+    return this.term + 5;
   },
   cite,
   /** The tail (no voice): R18 the page history, then R19 step 2 as it now reads. */
@@ -176,7 +188,7 @@ export const T = {
     return beatAtOrAfter(cite + 50);
   },
   get r18End() {
-    return this.r18 + 30;
+    return this.r18 + 24;
   },
   get r19() {
     return this.r18 + 30;

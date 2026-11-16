@@ -14,9 +14,11 @@ import { monoW } from "./geom";
  *   "The page mentions ROLLBACK_TIMEOUT and rollback.sh, which PR #482 removed.";
  *   "Section "Steps" names it.";
  *   "Score 1.00 (threshold 0.5)." and the page's state, Possibly stale (the shot's one amber, with trace and bloom).
- * The record ("PR #482", the change) docks into its input. `runs` replays the same change: each run's score lands on the
- * same point and its result lands exactly on the last one, with no offset. "Deterministic matcher" is our label for
- * the core app's matcher (architecture, not UI); no AI is involved in detection (CLAUDE.md non-negotiables).
+ * The card arrives with its content: the rules pending, the result's slot as a trace, the input waiting for the record.
+ * The record ("PR #482", the change) docks into the input; the rules tick, the score crosses the threshold, the result
+ * lands. `runs` replays the same change: the score lands on the same point and a full copy of the result drops exactly
+ * onto the first, with no offset. "Deterministic matcher" is our label for the core app's matcher (architecture, not
+ * UI); no AI is involved in detection (CLAUDE.md non-negotiables).
  */
 export const MATCHER_W = 1000;
 export const MATCHER_H = 760;
@@ -47,59 +49,51 @@ const Lit: React.FC<{ children: string; size?: number }> = ({ children, size = 2
   <span style={{ fontFamily: FONT.mono, fontSize: size, letterSpacing: 0, whiteSpace: "pre" }}>{children}</span>
 );
 
-/** A row: its check pops in, then its words set (they rise 10 px from a 6-frame smear). */
+/** A rule: present (pending, muted, an empty ring) from the card's arrival; at `at` its check pops and it reads full. */
 const Row: React.FC<{ y: number; at: number; again?: number[]; children: React.ReactNode }> = ({ y, at, again = [], children }) => {
   const frame = useCurrentFrame();
-  const set = interpolate(frame, [at + 1, at + 9], [0, 1], { ...clamp, easing: EASE.expoOut });
-  const pop = interpolate(frame, [at, at + 6], [0.4, 1], { ...clamp, easing: EASE.expoOut });
+  const done = interpolate(frame, [at, at + 6], [0, 1], { ...clamp, easing: EASE.expoOut });
   // a re-run ticks the same check again: a short pulse, the words do not move
   const re = again.reduce((m, a) => Math.max(m, frame >= a && frame < a + 8 ? interpolate(frame, [a, a + 2, a + 8], [0, 1, 0], clamp) : 0), 0);
-  if (frame < at) return null;
   return (
     <div style={{ position: "absolute", left: PAD, top: y, right: PAD, display: "flex", gap: 20, alignItems: "flex-start" }}>
-      <span
-        style={{
-          flexShrink: 0,
-          display: "grid",
-          placeItems: "center",
-          width: 40,
-          height: 40,
-          borderRadius: "50%",
-          background: DAY.text,
-          transform: `scale(${pop * (1 + 0.12 * re)})`,
-          boxShadow: re > 0 ? `0 0 0 ${6 * re}px ${ink(0.08)}` : undefined,
-        }}
-      >
-        <Icon name="check" size={26} color={DAY.ground} stroke={2.4} />
+      <span style={{ position: "relative", flexShrink: 0, width: 40, height: 40 }}>
+        <span style={{ position: "absolute", inset: 0, borderRadius: "50%", boxShadow: `inset 0 0 0 2.5px ${DAY.lineStrong}`, opacity: 1 - done }} />
+        <span
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "grid",
+            placeItems: "center",
+            borderRadius: "50%",
+            background: DAY.text,
+            transform: `scale(${(0.4 + 0.6 * done) * (1 + 0.12 * re)})`,
+            opacity: done > 0 ? 1 : 0,
+            boxShadow: re > 0 ? `0 0 0 ${6 * re}px ${ink(0.08)}` : undefined,
+          }}
+        >
+          <Icon name="check" size={26} color={DAY.ground} stroke={2.4} />
+        </span>
       </span>
-      <div
-        style={{
-          fontSize: 29,
-          lineHeight: "38px",
-          fontWeight: 500,
-          color: DAY.text,
-          transform: `translateY(${(1 - set) * 10}px)`,
-          opacity: set,
-          filter: set < 0.8 ? `blur(${(1 - set) * 3}px)` : undefined,
-        }}
-      >
-        {children}
-      </div>
+      <div style={{ fontSize: 29, lineHeight: "38px", fontWeight: 500, color: DAY.text, opacity: 0.42 + 0.58 * done }}>{children}</div>
     </div>
   );
 };
 
+/** The result pill at rest (no slip), for the trace and the run copies. */
+const pillSize = () => ({ h: 28 * BADGE_K, r: 8 * BADGE_K });
+
 export const MatcherCard: React.FC<{
   x: number;
   y: number;
-  /** The card lifts in (from elevation 1, 14 frames). */
+  /** The card lifts in (from elevation 1, 14 frames), with its content. */
   inAt: number;
   /** The record docks into the input here. */
   dockAt: number;
   rows: readonly [number, number, number];
   score: number;
   result: number;
-  /** Later runs of the same change: the record re-enters at `at`, the result lands on the last at `result`. */
+  /** Later runs of the same change: the record re-enters at `at`, a copy of the result lands on the first at `result`. */
   runs?: { at: number; result: number }[];
   style?: React.CSSProperties;
 }> = ({ x, y, inAt, dockAt, rows, score, result, runs = [], style }) => {
@@ -107,23 +101,28 @@ export const MatcherCard: React.FC<{
   if (frame < inAt) return null;
   const lift = interpolate(frame, [inAt, inAt + 14], [0, 1], { ...clamp, easing: EASE.expoOut });
   const docked = frame >= dockAt;
+  const dockIn = interpolate(frame, [dockAt, dockAt + 6], [0, 1], { ...clamp, easing: EASE.expoOut });
   // the current run (0 = the first)
   const runIdx = runs.reduce((n, r, i) => (frame >= r.at ? i + 1 : n), 0);
-  const run = runIdx === 0 ? { at: dockAt, result, score } : { at: runs[runIdx - 1].at, result: runs[runIdx - 1].result, score: runs[runIdx - 1].result - 6 };
+  const runAt = runIdx === 0 ? dockAt : runs[runIdx - 1].at;
+  const runScore = runIdx === 0 ? score : runs[runIdx - 1].at + 8;
   // the input: a re-run slides the same record out right and in again from the left
-  const reIn = runIdx === 0 ? 1 : interpolate(frame, [run.at, run.at + 7], [0, 1], { ...clamp, easing: EASE.expoOut });
+  const reIn = runIdx === 0 ? 1 : interpolate(frame, [runAt, runAt + 7], [0, 1], { ...clamp, easing: EASE.expoOut });
   const chipX = (1 - reIn) * -60;
   const chipO = runIdx === 0 ? 1 : reIn;
   // the score dot travels 0 to 1.00 on each run
-  const dot = interpolate(frame, [run.score, run.score + 8], [0, 1], { ...clamp, easing: EASE.expoOut });
-  const scoreSet = interpolate(frame, [score, score + 8], [0, 1], { ...clamp, easing: EASE.expoOut });
-  // the result: slips in amber (6 f) with its trace, glow and bloom
+  const dot = interpolate(frame, [runScore, runScore + 8], [0, 1], { ...clamp, easing: EASE.expoOut });
+  const scoreDone = interpolate(frame, [score, score + 8], [0, 1], { ...clamp, easing: EASE.expoOut });
+  // the result: slips in amber (6 f) from its slot, with its trace, glow and bloom
   const landed = interpolate(frame, [result, result + 6], [0, 1], { ...clamp, easing: EASE.expoOut });
   const reruns = runs.map((r) => r.result);
-  const twinDrop = runs
-    .map((r) => (frame >= r.result - 7 && frame < r.result + 10 ? { p: interpolate(frame, [r.result - 7, r.result], [0, 1], { ...clamp, easing: EASE.expoIn }), since: frame - r.result } : null))
+  // a run's copy of the pill: drops from 40 px above (overlapping the first, so it reads as one result) and lands on it
+  const copy = runs
+    .map((r) => (frame >= r.result - 7 && frame < r.result + 2 ? { p: interpolate(frame, [r.result - 7, r.result], [0, 1], { ...clamp, easing: EASE.expoIn }) } : null))
     .find((v) => v !== null);
-  const badgeH = 28 * BADGE_K;
+  // the registration: the pill's glow brightens for a moment as a copy lands exactly on it
+  const reg = reruns.reduce((m, a) => Math.max(m, frame >= a && frame < a + 10 ? interpolate(frame, [a, a + 1, a + 10], [0, 1, 0], clamp) : 0), 0);
+  const ps = pillSize();
   return (
     <div
       style={{
@@ -136,6 +135,7 @@ export const MatcherCard: React.FC<{
         background: DAY.surface,
         boxShadow: lift < 0.5 ? ELEV[2] : ELEV[4],
         transform: `translateY(${(1 - lift) * 36}px) scale(${0.97 + 0.03 * lift})`,
+        opacity: interpolate(frame, [inAt, inAt + 1], [0.6, 1], clamp),
         fontFamily: FONT.sans,
         color: DAY.text,
         ...style,
@@ -162,6 +162,7 @@ export const MatcherCard: React.FC<{
           overflow: "hidden",
         }}
       >
+        {!docked ? <div style={{ position: "absolute", left: 18, top: (INPUT_H - 44) / 2, width: monoW("PR #482", 26) + 28, height: 44, borderRadius: 12, background: DAY.trace }} /> : null}
         {docked ? (
           <div style={{ position: "absolute", left: 18, top: 0, height: INPUT_H, display: "flex", alignItems: "center", gap: 18, transform: `translateX(${chipX}px)`, opacity: chipO }}>
             <span
@@ -180,7 +181,7 @@ export const MatcherCard: React.FC<{
             >
               PR #482
             </span>
-            <span style={{ display: "inline-flex", alignItems: "center", color: DAY.text }}>
+            <span style={{ display: "inline-flex", alignItems: "center", color: DAY.text, opacity: dockIn, transform: `translateX(${(1 - dockIn) * -14}px)` }}>
               <Lit>scripts/rollback.sh</Lit>
               <span style={{ margin: "0 12px" }}>
                 <Icon name="arrow" size={26} color={DAY.textMuted} />
@@ -188,9 +189,7 @@ export const MatcherCard: React.FC<{
               <Lit>scripts/rollback-v2.sh</Lit>
             </span>
           </div>
-        ) : (
-          <div style={{ position: "absolute", left: 18, top: (INPUT_H - 44) / 2, width: monoW("PR #482", 26) + 28, height: 44, borderRadius: 12, background: DAY.trace }} />
-        )}
+        ) : null}
       </div>
       {/* the rules, from the real why sentence */}
       <Row y={ROW_Y[0]} at={rows[0]} again={runs.map((r) => r.at + 2)}>
@@ -204,24 +203,12 @@ export const MatcherCard: React.FC<{
       <Row y={ROW_Y[2]} at={rows[2]} again={runs.map((r) => r.at + 6)}>
         Section &ldquo;Steps&rdquo; names it.
       </Row>
-      <div style={{ position: "absolute", left: PAD, right: PAD, top: DIV_Y, height: 2, background: DAY.line, opacity: scoreSet }} />
+      <div style={{ position: "absolute", left: PAD, right: PAD, top: DIV_Y, height: 2, background: DAY.line }} />
       {/* the score against the threshold */}
-      <div
-        style={{
-          position: "absolute",
-          left: PAD,
-          top: SCORE_Y,
-          fontSize: 32,
-          lineHeight: "42px",
-          fontWeight: 500,
-          opacity: scoreSet,
-          transform: `translateY(${(1 - scoreSet) * 10}px)`,
-          fontVariantNumeric: "tabular-nums",
-        }}
-      >
+      <div style={{ position: "absolute", left: PAD, top: SCORE_Y, fontSize: 32, lineHeight: "42px", fontWeight: 500, fontVariantNumeric: "tabular-nums", opacity: 0.42 + 0.58 * scoreDone }}>
         Score <span style={{ fontWeight: 600 }}>1.00</span> <span style={{ color: DAY.textMuted }}>(threshold 0.5)</span>
       </div>
-      <div style={{ position: "absolute", left: TRACK_X0, top: TRACK_Y, width: TRACK_X1 - TRACK_X0, height: 4, borderRadius: 2, background: DAY.line, opacity: scoreSet }}>
+      <div style={{ position: "absolute", left: TRACK_X0, top: TRACK_Y, width: TRACK_X1 - TRACK_X0, height: 4, borderRadius: 2, background: DAY.line }}>
         <div style={{ position: "absolute", left: 0, top: 0, height: 4, borderRadius: 2, width: `${dot * 100}%`, background: DAY.text }} />
         <div style={{ position: "absolute", left: "50%", top: -12, width: 3, height: 28, marginLeft: -1.5, borderRadius: 2, background: DAY.lineStrong }} />
         <div
@@ -235,60 +222,57 @@ export const MatcherCard: React.FC<{
             borderRadius: "50%",
             background: DAY.text,
             boxShadow: `0 0 0 5px ${DAY.surface}`,
+            opacity: frame >= runScore ? 1 : 0,
           }}
         />
       </div>
-      {/* the result: the page's state, Possibly stale, slipped one unit with its trace, glow and bloom */}
-      {frame >= result ? (
-        <div style={{ position: "absolute", left: PAD, top: RESULT_Y, height: badgeH, display: "flex", alignItems: "center" }}>
-          <span style={{ position: "relative", display: "inline-grid" }}>
-            <span style={{ gridArea: "1 / 1", borderRadius: 8 * BADGE_K, background: DAY.trace, opacity: landed }} />
-            <span style={{ gridArea: "1 / 1", position: "relative", transform: `translateX(${landed * SLIP_UNIT * 100}%)` }}>
-              <span
-                style={{
-                  position: "absolute",
-                  left: "-40%",
-                  right: "-40%",
-                  top: "-110%",
-                  bottom: "-110%",
-                  borderRadius: "50%",
-                  background: `radial-gradient(closest-side, ${amber(0.28 * landed)} 0%, ${amber(0.09 * landed)} 60%, transparent 100%)`,
-                }}
-              />
-              <Badge state="possibly_stale" size={BADGE_K} theme="day" glow={landed} style={{ position: "relative" }} />
-              {/* a re-run's result drops onto this one and registers exactly: an outline that lands with no offset */}
-              {twinDrop ? (
-                <span
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    borderRadius: 8 * BADGE_K,
-                    boxShadow: `0 0 0 3px ${DAY.text}`,
-                    transform: `translateY(${(1 - twinDrop.p) * -70}px)`,
-                    opacity: twinDrop.since < 0 ? 0.9 : interpolate(twinDrop.since, [0, 10], [0.9, 0], clamp),
-                  }}
+      {/* the result: its slot (a trace) from the start; then Possibly stale slips in, one unit right, glow and bloom */}
+      <div style={{ position: "absolute", left: PAD, top: RESULT_Y, height: ps.h, display: "flex", alignItems: "center" }}>
+        <span style={{ position: "relative", display: "inline-grid" }}>
+          <span style={{ gridArea: "1 / 1", borderRadius: ps.r, background: DAY.trace }} />
+          <span style={{ gridArea: "1 / 1", position: "relative", transform: `translateX(${landed * SLIP_UNIT * 100}%)`, visibility: frame >= result ? "visible" : "hidden" }}>
+            <span
+              style={{
+                position: "absolute",
+                left: "-40%",
+                right: "-40%",
+                top: "-110%",
+                bottom: "-110%",
+                borderRadius: "50%",
+                background: `radial-gradient(closest-side, ${amber((0.28 + 0.12 * reg) * landed)} 0%, ${amber(0.09 * landed)} 60%, transparent 100%)`,
+              }}
+            />
+            <Badge state="possibly_stale" size={BADGE_K} theme="day" glow={Math.min(1, landed * (1 + 0.6 * reg))} style={{ position: "relative" }} />
+            {/* a run's full copy of the pill, dropping exactly onto the first (no offset), with its own small shadow */}
+            {copy ? (
+              <span style={{ position: "absolute", left: 0, top: 0, transform: `translateY(${(1 - copy.p) * -40}px)` }}>
+                <Badge
+                  state="possibly_stale"
+                  size={BADGE_K}
+                  theme="day"
+                  style={{ position: "relative", boxShadow: `0 ${4 + 10 * (1 - copy.p)}px ${10 + 16 * (1 - copy.p)}px ${ink(0.18 * (1 - copy.p) + 0.06)}` }}
                 />
-              ) : null}
-            </span>
+              </span>
+            ) : null}
           </span>
-          {/* one dot per run: each fills as that run lands on the same result */}
-          <span style={{ marginLeft: 76, display: "inline-flex", gap: 12, opacity: landed }}>
-            {[result, ...reruns].map((at, i) => (
-              <span
-                key={i}
-                style={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: "50%",
-                  boxShadow: `inset 0 0 0 2.5px ${DAY.text}`,
-                  background: frame >= at ? DAY.text : "transparent",
-                  transform: `scale(${frame >= at && frame < at + 6 ? 1.25 : 1})`,
-                }}
-              />
-            ))}
-          </span>
-        </div>
-      ) : null}
+        </span>
+        {/* one dot per run: each fills as that run lands on the same result */}
+        <span style={{ marginLeft: 76, display: "inline-flex", gap: 12, opacity: landed }}>
+          {[result, ...reruns].map((at, i) => (
+            <span
+              key={i}
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: "50%",
+                boxShadow: `inset 0 0 0 2.5px ${DAY.text}`,
+                background: frame >= at + (i === 0 ? 6 : 0) ? DAY.text : "transparent",
+                transform: `scale(${frame >= at && frame < at + 6 ? 1.25 : 1})`,
+              }}
+            />
+          ))}
+        </span>
+      </div>
     </div>
   );
 };

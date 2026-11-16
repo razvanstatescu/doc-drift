@@ -1,4 +1,5 @@
 import React from "react";
+import { useCurrentFrame } from "remotion";
 import { Badge, type BadgeState } from "../../brand/Badge";
 import { Icon, type IconName } from "../../brand/icons";
 import { Mark } from "../../brand/Mark";
@@ -96,7 +97,8 @@ export const Severity: React.FC<{ k: number; level: "High" | "Medium" }> = ({ k,
 /**
  * A button at UI size times k. `primary` fills with the text colour (the brand rule); `default` is a white button
  * with a hairline edge; `subtle` and `link` have no body. `press` 0..1 sinks it (scale 0.97, a darker body);
- * `busy` 0..1 dims the label and shows three dots (the real button's loading state).
+ * `busy` 0..1 is the real LoadingButton's state: the label is hidden (its width kept) and a spinner turns in its
+ * place, as UI Kit draws it. Never a dimmed label with dots over it (QA R-1).
  */
 export const Button: React.FC<{
   k: number;
@@ -139,17 +141,22 @@ export const Button: React.FC<{
         ...style,
       }}
     >
-      <span style={{ opacity: 1 - 0.75 * busy }}>{children}</span>
-      {busy > 0 ? (
-        <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 * k, opacity: busy }}>
-          {[0, 1, 2].map((i) => (
-            <span
-              key={i}
-              style={{ width: 5 * k, height: 5 * k, borderRadius: "50%", background: primary ? DAY.ground : DAY.textMuted, opacity: 0.4 + 0.2 * i }}
-            />
-          ))}
-        </span>
-      ) : null}
+      <span style={{ visibility: busy > 0.5 ? "hidden" : undefined, opacity: busy > 0 ? 1 - 2 * Math.min(0.5, busy) : undefined }}>{children}</span>
+      {busy > 0 ? <Spinner k={k} color={primary ? DAY.ground : DAY.textMuted} opacity={busy} /> : null}
+    </span>
+  );
+};
+
+/** The loading spinner of a busy button: a three-quarter ring turning once a second, centred in the button. */
+const Spinner: React.FC<{ k: number; color: string; opacity: number }> = ({ k, color, opacity }) => {
+  const frame = useCurrentFrame();
+  const r = 6.5 * k;
+  const c = 2 * Math.PI * r;
+  return (
+    <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", opacity }}>
+      <svg width={18 * k} height={18 * k} viewBox={`0 0 ${18 * k} ${18 * k}`} style={{ transform: `rotate(${frame * 12}deg)` }}>
+        <circle cx={9 * k} cy={9 * k} r={r} fill="none" stroke={color} strokeWidth={2 * k} strokeLinecap="round" strokeDasharray={`${c * 0.72} ${c}`} />
+      </svg>
     </span>
   );
 };

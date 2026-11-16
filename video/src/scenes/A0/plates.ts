@@ -50,6 +50,8 @@ type Opts = {
   focusSentence?: boolean;
   /** An explicit punch focus (plate px): where a punch's frame edges must fall between words. */
   focus?: Box;
+  /** The chip's text when plates.json's label breaks the chips' one date style ("Source, Mon YYYY"). */
+  label?: string;
 };
 
 const box = (a: number[]): Box => ({ x: a[0], y: a[1], w: a[2], h: a[3] });
@@ -86,7 +88,7 @@ const plate = (id: string, phrase: string | string[], o: Opts = {}): A0Plate => 
     key: o.focus ?? (o.focusSentence && o.sentence ? union(o.sentence) : key),
     lines,
     spot: o.sentence ?? lines,
-    label: p.label,
+    label: o.label ?? p.label,
   };
 };
 
@@ -106,7 +108,9 @@ export const PLATES = {
   willison: plate("D1-12", "easy for them"),
   // ── bar 2 · "The docs didn't." ──────────────────────────────────────────────────────────────────────────────────
   wikimedia: plate("D1-06", "Documentation was outdated", { sentence: [b(78, 565, 1242, 65)], focusSentence: true }), // the hero (CC BY-SA)
-  mojRunbook: plate("D2-03", "might mean", { sentence: [b(490, 186, 1050, 70)] }),
+  // its banner depends on when the page was read, so its chip keeps "read", in the chips' one date style
+  // (plates.json: "UK Ministry of Justice runbook, read 13 Nov 2026"; read 2026-11-13)
+  mojRunbook: plate("D2-03", "might mean", { sentence: [b(490, 186, 1050, 70)], label: "UK Ministry of Justice runbook, read Nov 2026" }),
   register: plate("D1-03", "outdated documentation", {
     region: { x: 0, y: 530, w: 3600, h: 460 }, // headline and standfirst (no masthead, no kicker)
     sentence: [b(36, 560, 3462, 127), b(37, 709, 2036, 129)],

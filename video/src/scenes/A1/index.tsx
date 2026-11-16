@@ -2,40 +2,48 @@ import React from "react";
 import { AbsoluteFill, useCurrentFrame } from "remotion";
 import { Sfx } from "../../audio/Sfx";
 import { World } from "../../brand/theme";
-import { AlertStation } from "../../components/A1/AlertStation";
+import { AlertStation, CLOCK_SIZE } from "../../components/A1/AlertStation";
+import { landFor, TRAVEL } from "../../components/A1/ClockRoll";
 import { DIFF, GhostDiff } from "../../components/A1/GhostDiff";
 import { ROLLBACK_CMD, ZSH_ERROR } from "../../components/A1/runbook";
+import { CopyBlock } from "../../components/A1/CopyBlock";
 import { turnTravel } from "../../components/A1/moves";
 import { SHELL, ShellTerminal } from "../../components/A1/ShellTerminal";
 import { EASE, tween } from "../../lib/time";
 import { getScene } from "../../lib/timeline";
 import { Camera3D, KineticLine, NIGHT, Stage, WhipBlur, type Cam3Key } from "../../v4/kit";
-import { AgentPanelTwin, PageTwin, pageRects, textWidth, type AgentPanelTwinProps, type PageTwinProps } from "../../v4/twins";
+import { AgentPanelTwin, agentPanelHeightAt, agentPanelRects, PageTwin, pageRects, textWidth, type AgentPanelTwinProps, type PageTwinProps } from "../../v4/twins";
 
 /**
  * A1 · 3 a.m. (Night, film 397 to 1057). V4.md section 6. Local frames, all from the narration cues in timeline.json:
  *
  *   0          (hard cut from A0 on the bar) the huge 03:07 is already rolling in; the last drum lands on "3"   (V02)
- *   "Payments" the alert card has lifted from the ground; on "down" the error rate rolls to 14%; a slow push
+ *   "Payments" the alert card has lifted from the ground, its error rate rolling to 14%; the camera tilts down
+ *              from the clock to the whole composition, then pushes in slowly
  *   V03        whip with blur to the runbook (Night page twin, "Reviewed 34 days ago"); on "says" the camera
- *              travels down to step 2 and the Mist band marks ./scripts/rollback.sh on "rollback.sh"        (V03)
+ *              travels down to step 2 and the Mist band, with its Current underline, marks ./scripts/rollback.sh
+ *              on "rollback.sh"                                                                              (V03)
  *   V04 - 40   the shell lifts over the page (the page racks out); step 2's command types; the zsh error
- *              lands on V04; on "script" the ghost diff ghosts in; on "renamed" the new path slips one unit
- *              in amber, the shot's one amber                                                             (V04)
+ *              lands on V04; on "script" the ghost diff ghosts in under it; on "renamed" one decisive push onto
+ *              the red error line, and the new path slips one unit in amber, the shot's one amber          (V04)
  *   V05        the shell and the diff drop away, the page racks back in, the camera travels up to the byline;
  *              on "fine" a Current underline draws under the date; after "fine." the type rises beside the page
  *              in three lines: A date / can't see / a merge.                                               (V05)
- *   V06        whip to the generic assistant: the question types, the answer streams and repeats the old
- *              step on "same step", the source chip lands on "confidence"; the camera keeps moving to the end   (V06)
+ *   V06        whip to the generic assistant, already asked; the answer streams and repeats the old step; on
+ *              "step" the command lands as a copyable block; on "with confidence" one decisive push onto it,
+ *              and the source chip lands with a tick on "confidence"; the camera keeps moving to the end    (V06)
  *   end        A2 opens by slipping this frame apart (A1AssistantShot, frozen at A1_T.end - 1)
  */
 const sc = getScene("A1");
 
 const error = sc.snap(sc.cue("V04"));
 export const A1_T = {
-  /** The clock is rolling on frame 0 (it started 6 frames before the cut); the last drum lands 2 frames before "3". */
+  /**
+   * The clock is rolling on frame 0 (it started 6 frames before the cut); its last drum is within 4 px of rest (the
+   * landing QA measures) 2 frames before "3".
+   */
   clockAt: -6,
-  clockLand: sc.wordAt("V02", "3") - 2,
+  clockLand: landFor(-6, sc.wordAt("V02", "3") - 2, TRAVEL[3], CLOCK_SIZE),
   /** The card lifts for 14 frames and lands on "Payments". */
   cardAt: sc.wordAt("V02", "payments") - 14,
   /** The error rate rolls as the card lands (done before "down"), so "Error rate 14%" holds its reading time. */
@@ -49,6 +57,8 @@ export const A1_T = {
   error,
   diff: sc.wordAt("V04", "script") - 4,
   slip: sc.wordAt("V04", "renamed") - 6,
+  /** The push onto the error line: a 14-frame expo out, within 4 px of rest 3 frames before "renamed" (creep aside). */
+  push: sc.wordAt("V04", "renamed") - 14,
   /** V05: the shell and the diff drop and the camera travels up 4 frames after the beat (the zsh error holds 104). */
   back: sc.snap(sc.cue("V05")) + 4,
   check: sc.wordAt("V05", "fine") - 4,
@@ -65,7 +75,12 @@ export const A1_T = {
    */
   answer: sc.wordAt("V06", "and") - 8,
   step: sc.wordAt("V06", "same") - 2,
-  source: sc.wordAt("V06", "confidence") - 2,
+  /** The command block lands as the command finishes streaming, on "step". */
+  block: sc.wordAt("V06", "step") - 4,
+  /** The decisive push onto the command block: within 4 px of rest 3 frames before "with" (creep aside). */
+  push2: sc.wordAt("V06", "with") - 12,
+  /** The source chip lands with a tick on "confidence": its rise and fade read at full opacity about 4 frames after `at`. */
+  source: sc.wordAt("V06", "confidence") - 5,
   end: sc.durationInFrames,
 };
 const T = A1_T;
@@ -82,6 +97,8 @@ const PAGE: PageTwinProps = {
   mark: { token: "./scripts/rollback.sh", kind: "mist", at: T.mark },
 };
 const R = pageRects(PAGE);
+/** The marked command word on the page (V03). */
+const TOKEN = R.tokens["./scripts/rollback.sh"];
 const cx = (r: { x: number; w: number }) => r.x + r.w / 2;
 const cy = (r: { y: number; h: number }) => r.y + r.h / 2;
 
@@ -92,8 +109,18 @@ const STEP2 = { x: cx(R.card), y: cy(R.step2Code), zoom: 1.42 };
 const V04_CAM = { x: 960, y: cy(R.step2Code) + 60, zoom: 1 };
 /** Screen-space layout of V04 at zoom 1, converted to stage px. */
 const toStage = (sx: number, sy: number) => ({ x: V04_CAM.x + (sx - 960), y: V04_CAM.y + (sy - 540) });
-const SHELL_AT = toStage(150, 238);
-const DIFF_AT = toStage(1920 - 150 - DIFF.w, 238 + SHELL.titleH + SHELL.padY * 2 + SHELL.line * 2 + 46);
+/** The shell (1380 x 260 at 1:1): its command line sits at y 316 to 376 and the red error line at 376 to 436. */
+const SHELL_SX = 170;
+const SHELL_SY = 210;
+const SHELL_AT = toStage(SHELL_SX, SHELL_SY);
+/** The ghost diff right under the error line, overlapping only the shell's empty bottom padding (18 px). */
+const DIFF_AT = toStage(640, SHELL_SY + SHELL.titleH + SHELL.padY * 2 + SHELL.line * 2 - 18);
+/**
+ * The decisive push on "renamed" (N-2): 1.3x onto the red error line, with the diff's slipped path under it. The pushed
+ * frame holds the command line (316) to the diff's bottom (782) and the error text (226 to 1498) to the diff's right
+ * edge (1520), all whole, with the creep to the end of the line.
+ */
+const PUSH = { ...toStage((SHELL_SX + 56 + 640 + DIFF.w) / 2, (316 + SHELL_SY + SHELL.titleH + SHELL.padY * 2 + SHELL.line * 2 - 18 + DIFF.h) / 2), zoom: 1.3 };
 /**
  * V05: the page's head on the left at 1:1 (the byline reads 27 px), the type zone on the right, in three lines that
  * are measured so the longest fits the zone: "A date / can't see / a merge.".
@@ -112,8 +139,10 @@ const RUNBOOK_KEYS: Cam3Key[] = [
   ...turnTravel(T.travel, 20, HEAD, STEP2, { pitch: 6 }),
   // V04: pull back to frame the shell and the diff over the page
   { at: T.termAt - 2, dur: 22, to: V04_CAM, ease: EASE.expoOut },
+  // V04: one decisive push onto the red error line, landing (within 4 px) 3 frames before "renamed", with the slip
+  { at: T.push, dur: 14, to: PUSH, ease: EASE.expoOut },
   // V05: travel up to the byline (tipping forward on the way), the page on the left, room for the type on the right
-  ...turnTravel(T.back, 24, V04_CAM, V05_CAM, { pitch: -5 }),
+  ...turnTravel(T.back, 24, PUSH, V05_CAM, { pitch: -5 }),
 ];
 
 const RunbookStation: React.FC = () => {
@@ -127,6 +156,21 @@ const RunbookStation: React.FC = () => {
       <Camera3D keys={RUNBOOK_KEYS} base={HEAD} seed="runbook">
         <div style={{ position: "absolute", inset: 0, filter: rackOut > 0.01 ? `blur(${(7 * rackOut).toFixed(2)}px) brightness(${(1 - 0.45 * rackOut).toFixed(3)})` : undefined }}>
           <PageTwin {...PAGE} />
+          {/* N-4: the Mist band on ./scripts/rollback.sh gets the Current underline too, as on Day (inside the rack, so it
+              blurs with the page in V04) */}
+          {frame >= T.mark + 2 && TOKEN ? (
+            <div
+              style={{
+                position: "absolute",
+                left: TOKEN.x,
+                top: TOKEN.y + TOKEN.h + 1,
+                width: TOKEN.w * tween(frame, T.mark + 2, T.mark + 12, 0, 1, EASE.expoOut),
+                height: 4,
+                borderRadius: 2,
+                background: NIGHT.link,
+              }}
+            />
+          ) : null}
         </div>
         {frame >= T.termAt && drop < 1 ? (
           <div style={{ position: "absolute", inset: 0, transform: drop > 0 ? `translateY(${(drop * 900).toFixed(1)}px)` : undefined }}>
@@ -164,76 +208,55 @@ const RunbookStation: React.FC = () => {
 // The assistant (V06), A1's final pose.
 // ---------------------------------------------------------------------------------------------------------------------
 
-/** The generic assistant, centred: 1240 px wide, the answer at 40 px (the old command at 35 px mono, on one line). */
+/**
+ * The generic assistant, centred: 1360 px wide (room for the Copy button after the command), the answer at 40 px (the
+ * old command at 35 px mono, on one line). It arrives already asked (the twin's `prefilled`, N-1: never an empty card)
+ * and is content-sized: it grows as the answer streams, and the camera keeps it centred.
+ */
 const PANEL: AgentPanelTwinProps = {
   world: "night",
   variant: "generic",
-  question: { text: "How do I roll back payments-api?", at: T.ask, typeDur: 22 },
-  answer: { lines: ["Run the rollback script from the root of the `payments-api` repo.", `\`${ROLLBACK_CMD}\``], at: T.answer, cps: 90 },
+  question: { text: "How do I roll back payments-api?", at: T.ask, prefilled: true },
+  answer: { lines: ["Run the rollback script from the root of the `payments-api` repo.", ROLLBACK_CMD], at: T.answer, cps: 90 },
   source: { text: "Payments rollback runbook", at: T.source },
-  x: (1920 - 1240) / 2,
+  x: (1920 - 1360) / 2,
   y: 250,
-  width: 1240,
+  width: 1360,
   size: 40,
   elev: 4,
 };
+const PR = agentPanelRects(PANEL);
+/** The old command's line in the panel (stage px), from the twin's own layout. */
+const CMD = PR.answerLines[PR.answerLines.length - 1];
 /**
- * The old command's line in the panel (stage px), from AgentPanelTwin's layout (padding 34, header 60 + 26, the
- * question block 83 + 18, the first answer line 61 + 18). agentPanelRects() would give it, but it is not exported from
- * src/v4/twins yet; checked on stills.
+ * N-2: one decisive push on "with confidence": 1.32x onto the command block, landing (within 4 px) 3 frames before
+ * "with"; the whole card stays in frame (1360 px wide: 1795 at the push, 1870 after the creep).
  */
-const CMD = {
-  x: (PANEL.x ?? 0) + 34,
-  y: (PANEL.y ?? 0) + 300,
-  h: 61,
-  w: textWidth(ROLLBACK_CMD, { size: 40 * 0.88, mono: true }) + 2 * 0.28 * 40 * 0.88,
-};
-
-/**
- * On "same step" the old command gets the same Night Mist band that marked it on the page in V03 (the twins' Night
- * mist, rgba(214, 228, 231, 0.17)): the rhyme says it is the same step. Not amber: nothing in this shot is the drift.
- */
-const CommandMist: React.FC = () => {
-  const frame = useCurrentFrame();
-  const p = tween(frame, T.step, T.step + 10, 0, 1, EASE.expoOut);
-  if (p <= 0) return null;
-  return (
-    <div
-      style={{
-        position: "absolute",
-        left: CMD.x - 6,
-        top: CMD.y + 6,
-        width: CMD.w + 12,
-        height: CMD.h - 12,
-        borderRadius: 10,
-        background: "rgba(214, 228, 231, 0.17)",
-        clipPath: `inset(0 ${((1 - p) * 100).toFixed(2)}% 0 0 round 10px)`,
-      }}
-    />
-  );
-};
+const CMD_PUSH = { x: 960, y: CMD.y + CMD.h / 2 + 10, zoom: 1.32 };
 
 /**
  * The assistant shot (V06), the scene's final pose. Exported so A2 can open by slipping A1's last frame apart:
  * A2 renders it inside <Freeze frame={A1_T.end - 1}> (visual only; the sound stays in A1).
  */
-export const A1AssistantShot: React.FC = () => (
-  <Stage world="night" motif="tide" light={["50%", "36%"]} tide={{ top: 850, bottom: 1110, count: 7 }}>
-    <Camera3D
-      keys={[{ at: T.step - 8, dur: 34, to: { x: 960, y: CMD.y + CMD.h / 2 - 20, zoom: 1.06 }, ease: EASE.expoOut }]}
-      base={{ x: 960, y: (PANEL.y ?? 0) + 250, zoom: 0.97 }}
-      seed="assistant"
-    >
-      <AgentPanelTwin {...PANEL} />
-      <CommandMist />
-    </Camera3D>
-  </Stage>
-);
+export const A1AssistantShot: React.FC = () => {
+  const frame = useCurrentFrame();
+  // the camera keeps the growing card centred (N-1: it arrives as its header and grows with the question and answer)
+  const cardCy = PR.panel.y + agentPanelHeightAt(PANEL, frame) / 2;
+  return (
+    <Stage world="night" motif="tide" light={["50%", "36%"]} tide={{ top: 850, bottom: 1110, count: 7 }}>
+      <Camera3D keys={[{ at: T.push2, dur: 14, to: CMD_PUSH, ease: EASE.expoOut }]} base={{ x: 960, y: cardCy, zoom: 0.97 }} seed="assistant">
+        <AgentPanelTwin {...PANEL} />
+        {/* N-3: the confidence beat: the old command, set as a copyable block, lands as it finishes streaming */}
+        <CopyBlock line={CMD} right={PR.panel.x + PR.panel.w - 34 + 12} at={T.block} size={PANEL.size ?? 40} />
+      </Camera3D>
+    </Stage>
+  );
+};
 
 const A1: React.FC = () => {
   const frame = useCurrentFrame();
   const alert = (
-    <AlertStation clockAt={T.clockAt} clockLand={T.clockLand} cardAt={T.cardAt} rateAt={T.rateAt} tiltAt={T.cardAt - 4} outAt={T.whip1} />
+    <AlertStation clockAt={T.clockAt} clockLand={T.clockLand} cardAt={T.cardAt} rateAt={T.rateAt} tiltAt={T.cardAt} outAt={T.whip1} />
   );
   let shot: React.ReactNode;
   if (frame < T.whip2 - 6) shot = <WhipBlur at={T.whip1} dur={10} dir="left" from={alert} to={<RunbookStation />} />;
@@ -255,13 +278,11 @@ const A1: React.FC = () => {
       <Sfx id="whoosh-short" at={T.back + 6} gainDb={-7} />
       <Sfx id="tick" at={T.check + 4} gainDb={-2} />
       <Sfx id="whoosh-short" at={T.whip2} />
-      {[0, 4, 9, 13, 18].map((d) => (
-        <Sfx key={`q-${d}`} id="type-key" at={T.ask + 2 + d} gainDb={-8} />
-      ))}
       {[0, 4, 9, 13, 18, 24, 28].map((d) => (
         <Sfx key={`key-${d}`} id="type-key" at={T.answer + d} gainDb={-7} />
       ))}
-      <Sfx id="tick-soft" at={T.source + 2} gainDb={-2} />
+      <Sfx id="pop" at={T.block + 4} gainDb={-6} />
+      <Sfx id="tick" at={T.source + 3} gainDb={-1} />
     </World>
   );
 };

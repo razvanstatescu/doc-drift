@@ -94,7 +94,7 @@ const desc = `Doc Drift Sentinel: docs that know when the code moved.
 
 A Forge app for Confluence, built for Codegeist 2026. It anchors Confluence pages to the code paths and Jira work they describe, flags a page Possibly stale when a merged pull request or a Jira change touches those anchors, and tells Rovo and coding agents (over MCP) not to trust the page until a person re-verifies it. Detection is deterministic: no AI decides what is stale. Agents never edit a page.
 
-Everything in the product part of this video is real footage from our demo site (development install), including the real merge of PR #482.
+In the product part, animated recreations of our own interface explain each step, using the product's real wording and data, and short recordings from our demo site (development install) show each step working, including the real merge of PR #482.
 
 Website: https://razvanstatescu.github.io/doc-drift/
 Source: https://github.com/razvanstatescu/doc-drift

@@ -73,3 +73,77 @@ export type Rect = { x: number; y: number; w: number; h: number };
  */
 export const nightSweep = (cx = "50%", cy = "38%") =>
   `radial-gradient(130% 95% at ${cx} ${cy}, ${NIGHT.surface} 0%, #0B3540 24%, ${NIGHT.ground} 56%, ${NIGHT.surfaceSunk} 100%)`;
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Interpolable elevation (kit): the ELEV and ELEV_DARK ladders as numbers, so a lift can grow its shadow smoothly.
+// elevAt(2) equals ELEV[2] (and elevAt(2, true) equals ELEV_DARK[2]) up to rounding; elevAt(2.5) is half way.
+// ---------------------------------------------------------------------------------------------------------------------
+
+type ShadowLayer = [y: number, blur: number, alpha: number];
+/** Day: [ring alpha, contact, ambient 1, ambient 2] per level (the 1.5 px Fathom ring is the edge). */
+const DAY_LADDER: { ring: number; layers: ShadowLayer[] }[] = [
+  { ring: 0, layers: [[0, 0, 0], [0, 0, 0], [0, 0, 0]] },
+  { ring: 0.07, layers: [[1, 2, 0.06], [4, 12, 0.05], [16, 32, 0]] },
+  { ring: 0.065, layers: [[2, 4, 0.06], [12, 28, 0.07], [32, 64, 0.06]] },
+  { ring: 0.06, layers: [[3, 6, 0.06], [18, 40, 0.08], [56, 112, 0.11]] },
+  { ring: 0.06, layers: [[6, 12, 0.08], [28, 56, 0.12], [72, 144, 0.15]] },
+];
+/** Dark objects: [top-edge light alpha, contact, ambient 1, ambient 2] per level. */
+const DARK_LADDER: { top: number; layers: ShadowLayer[] }[] = [
+  { top: 0, layers: [[0, 0, 0], [0, 0, 0], [0, 0, 0]] },
+  { top: 0.08, layers: [[1, 2, 0.18], [6, 16, 0.14], [20, 40, 0]] },
+  { top: 0.08, layers: [[2, 4, 0.16], [14, 32, 0.16], [36, 72, 0.12]] },
+  { top: 0.08, layers: [[4, 8, 0.16], [22, 48, 0.18], [64, 128, 0.18]] },
+  { top: 0.09, layers: [[6, 12, 0.18], [32, 64, 0.22], [80, 160, 0.22]] },
+];
+
+const r2 = (v: number) => Math.round(v * 100) / 100;
+const r3 = (v: number) => Math.round(v * 1000) / 1000;
+
+/** Night: objects on the Fathom ground. A Fathom-tinted shadow vanishes there, so these are near-black (Night sunk,
+ *  deepened) with a top-edge light, the way NIGHT.shadowRaise is built. */
+const NIGHT_LADDER: { top: number; layers: ShadowLayer[] }[] = [
+  { top: 0, layers: [[0, 0, 0], [0, 0, 0], [0, 0, 0]] },
+  { top: 0.05, layers: [[1, 2, 0.3], [4, 12, 0.28], [16, 32, 0]] },
+  { top: 0.06, layers: [[2, 4, 0.32], [12, 28, 0.34], [32, 64, 0.26]] },
+  { top: 0.06, layers: [[3, 6, 0.34], [18, 40, 0.4], [56, 112, 0.34]] },
+  { top: 0.07, layers: [[6, 12, 0.36], [28, 56, 0.46], [72, 144, 0.4]] },
+];
+const nightShade = (a: number) => `rgba(1, 10, 13, ${a})`;
+
+/**
+ * The box-shadow at a fractional elevation (0 to 4). `dark` for Fathom objects on Day (one step higher by rule);
+ * `world: "night"` for anything on the Night ground (near-black shadows and a top-edge light).
+ */
+export function elevAt(level: number, dark = false, world: "day" | "night" = "day"): string {
+  const l = Math.max(0, Math.min(4, level));
+  if (l <= 0.001) return "none";
+  const i = Math.min(3, Math.floor(l));
+  const t = l - i;
+  const mix = (a: number, b: number) => a + (b - a) * t;
+  if (world === "night") {
+    const a = NIGHT_LADDER[i];
+    const b = NIGHT_LADDER[i + 1];
+    const layers = a.layers.map((la, k) => {
+      const lb = b.layers[k];
+      return `0 ${r2(mix(la[0], lb[0]))}px ${r2(mix(la[1], lb[1]))}px ${nightShade(r3(mix(la[2], lb[2])))}`;
+    });
+    return [`inset 0 1px 0 ${white(r3(mix(a.top, b.top)))}`, ...layers].join(", ");
+  }
+  if (dark) {
+    const a = DARK_LADDER[i];
+    const b = DARK_LADDER[i + 1];
+    const layers = a.layers.map((la, k) => {
+      const lb = b.layers[k];
+      return `0 ${r2(mix(la[0], lb[0]))}px ${r2(mix(la[1], lb[1]))}px ${ink(r3(mix(la[2], lb[2])))}`;
+    });
+    return [`inset 0 1px 0 ${white(r3(mix(a.top, b.top)))}`, ...layers].join(", ");
+  }
+  const a = DAY_LADDER[i];
+  const b = DAY_LADDER[i + 1];
+  const layers = a.layers.map((la, k) => {
+    const lb = b.layers[k];
+    return `0 ${r2(mix(la[0], lb[0]))}px ${r2(mix(la[1], lb[1]))}px ${ink(r3(mix(la[2], lb[2])))}`;
+  });
+  return [`0 0 0 1.5px ${ink(r3(mix(a.ring, b.ring)))}`, ...layers].join(", ");
+}

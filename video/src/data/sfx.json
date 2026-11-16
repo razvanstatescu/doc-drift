@@ -459,5 +459,45 @@
     "peakSec": 0.025,
     "durationSec": 1,
     "take": "eleven_text_to_sound_v3 take 0"
+  },
+  "paper-slide": {
+    "file": "sfx/paper-slide.wav",
+    "durationInFrames": 14,
+    "peakFrame": 5,
+    "gainDb": -16,
+    "desc": "A sheet of paper sliding fast across a desk: one soft swish that swells to its peak and falls away. Place the peak on the whip's fastest frame (A0's whips across the desk).",
+    "peakSec": 0.165,
+    "durationSec": 0.44,
+    "take": "eleven_text_to_sound_v3 take 1 (A0 paper set, cold open owner, 2026-11-16)"
+  },
+  "paper-land": {
+    "file": "sfx/paper-land.wav",
+    "durationInFrames": 5,
+    "peakFrame": 0,
+    "gainDb": -1,
+    "desc": "One sheet of paper slapped down flat onto a stack: a crisp short slap. Place the peak on the frame the sheet lands (A0's pile).",
+    "peakSec": 0.005,
+    "durationSec": 0.16,
+    "take": "eleven_text_to_sound_v3 take 2 (A0 paper set, cold open owner, 2026-11-16)"
+  },
+  "paper-land-2": {
+    "file": "sfx/paper-land-2.wav",
+    "durationInFrames": 6,
+    "peakFrame": 1,
+    "gainDb": -0.5,
+    "desc": "Variant of paper-land: a slightly brighter slap (use them in turn so landings never repeat exactly).",
+    "peakSec": 0.035,
+    "durationSec": 0.18,
+    "take": "eleven_text_to_sound_v3 take 3 (A0 paper set, cold open owner, 2026-11-16)"
+  },
+  "paper-land-3": {
+    "file": "sfx/paper-land-3.wav",
+    "durationInFrames": 4,
+    "peakFrame": 1,
+    "gainDb": 1.5,
+    "desc": "Variant of paper-land with a soft low thud under the slap (the heavier landings: a bar line, the last word).",
+    "peakSec": 0.025,
+    "durationSec": 0.115,
+    "take": "eleven_text_to_sound_v3 take 1 (A0 paper set, cold open owner, 2026-11-16)"
   }
 }

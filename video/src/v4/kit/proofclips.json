@@ -1,0 +1,117 @@
+{
+ "note": "Written by tools/v4/proofclips.mjs. Pre-cut regions of the recordings (public/clips/v4/, git-ignored). ProofFrame plays one only when it holds the whole region and time a proof shows; otherwise the 4K capture.",
+ "clips": [
+  {
+   "id": "R1",
+   "capture": "p1-anchor-rec",
+   "file": "clips/v4/p1-anchor-rec__930_60_2482_840__2467_6500.mp4",
+   "region": [
+    930,
+    60,
+    2482,
+    840
+   ],
+   "t0": 2.466666666666667,
+   "t1": 6.5,
+   "fps": 30
+  },
+  {
+   "id": "R5a",
+   "capture": "p2-merge-rec",
+   "file": "clips/v4/p2-merge-rec__900_0_2040_1308__3367_6900.mp4",
+   "region": [
+    900,
+    0,
+    2040,
+    1308
+   ],
+   "t0": 3.3666666666666667,
+   "t1": 6.9,
+   "fps": 30
+  },
+  {
+   "id": "R5b",
+   "capture": "p2-merge-rec",
+   "file": "clips/v4/p2-merge-rec__0_0_3752_1468__11800_15800.mp4",
+   "region": [
+    0,
+    0,
+    3752,
+    1468
+   ],
+   "t0": 11.8,
+   "t1": 15.8,
+   "fps": 30
+  },
+  {
+   "id": "R11",
+   "capture": "p3-rovo-v2-rec",
+   "file": "clips/v4/p3-rovo-v2-rec__2696_0_1144_1040__22500_26500.mp4",
+   "region": [
+    2696,
+    0,
+    1144,
+    1040
+   ],
+   "t0": 22.5,
+   "t1": 26.5,
+   "fps": 30
+  },
+  {
+   "id": "R14a",
+   "capture": "p4-review-rec",
+   "file": "clips/v4/p4-review-rec__646_1090_2550_770__36500_40000.mp4",
+   "region": [
+    646,
+    1090,
+    2550,
+    770
+   ],
+   "t0": 36.5,
+   "t1": 40,
+   "fps": 30
+  },
+  {
+   "id": "R14b",
+   "capture": "p4-review-rec",
+   "file": "clips/v4/p4-review-rec__646_1396_2550_764__40100_43600.mp4",
+   "region": [
+    646,
+    1396,
+    2550,
+    764
+   ],
+   "t0": 40.1,
+   "t1": 43.6,
+   "fps": 30
+  },
+  {
+   "id": "R16a",
+   "capture": "p4-accept-rec",
+   "file": "clips/v4/p4-accept-rec__560_1580_2720_580__10500_14000.mp4",
+   "region": [
+    560,
+    1580,
+    2720,
+    580
+   ],
+   "t0": 10.5,
+   "t1": 14,
+   "fps": 30
+  },
+  {
+   "id": "R16b",
+   "capture": "p4-accept-rec",
+   "file": "clips/v4/p4-accept-rec__560_230_2720_760__16100_19600.mp4",
+   "region": [
+    560,
+    230,
+    2720,
+    760
+   ],
+   "t0": 16.1,
+   "t1": 19.6,
+   "fps": 30
+  }
+ ]
+}

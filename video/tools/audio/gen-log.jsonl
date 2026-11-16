@@ -177,3 +177,10 @@
 {"at":"2026-11-13T14:14:39.335Z","kind":"sfx","model":"eleven_text_to_sound_v3","format":"wav_48000","sec":0.5,"characterCost":3,"phase":"sfx","id":"whoosh-short","take":1,"retake":true}
 {"at":"2026-11-13T14:14:40.741Z","kind":"sfx","model":"eleven_text_to_sound_v3","format":"wav_48000","sec":0.5,"characterCost":3,"phase":"sfx","id":"clock-tick","take":1,"retake":true}
 {"at":"2026-11-13T14:17:26.795Z","kind":"stt","model":"scribe_v3","sec":155.233,"phase":"qa","what":"full narration"}
+{"at":"2026-11-16T12:02:43.201Z","kind":"sfx","model":"eleven_text_to_sound_v3","format":"wav_48000","sec":0.6,"characterCost":3,"phase":"sfx-a0","id":"paper-slide","take":0}
+{"at":"2026-11-16T12:02:44.093Z","kind":"sfx","model":"eleven_text_to_sound_v3","format":"wav_48000","sec":0.6,"characterCost":3,"phase":"sfx-a0","id":"paper-slide","take":1}
+{"at":"2026-11-16T12:02:44.757Z","kind":"sfx","model":"eleven_text_to_sound_v3","format":"wav_48000","sec":0.6,"characterCost":3,"phase":"sfx-a0","id":"paper-slide","take":2}
+{"at":"2026-11-16T12:02:46.154Z","kind":"sfx","model":"eleven_text_to_sound_v3","format":"wav_48000","sec":0.5,"characterCost":3,"phase":"sfx-a0","id":"paper-land","take":0}
+{"at":"2026-11-16T12:02:46.851Z","kind":"sfx","model":"eleven_text_to_sound_v3","format":"wav_48000","sec":0.5,"characterCost":3,"phase":"sfx-a0","id":"paper-land","take":1}
+{"at":"2026-11-16T12:02:47.581Z","kind":"sfx","model":"eleven_text_to_sound_v3","format":"wav_48000","sec":0.5,"characterCost":3,"phase":"sfx-a0","id":"paper-land","take":2}
+{"at":"2026-11-16T12:02:48.251Z","kind":"sfx","model":"eleven_text_to_sound_v3","format":"wav_48000","sec":0.5,"characterCost":3,"phase":"sfx-a0","id":"paper-land","take":3}

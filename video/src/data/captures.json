@@ -1103,7 +1103,8 @@
             176,
             37
           ],
-          "why": "Development install suffix (BRIEF decision 7)"
+          "why": "Development install suffix (BRIEF decision 7)",
+          "fill": "#F1F1F2"
         }
       ]
     },
@@ -1399,12 +1400,13 @@
         },
         {
           "box": [
-            2672,
-            408,
-            176,
-            37
+            2721,
+            410,
+            127,
+            34
           ],
-          "why": "Development install suffix (BRIEF decision 7)"
+          "why": "Development install suffix (BRIEF decision 7); only its part right of the modal edge (x 2720) shows, on the dimmed backdrop",
+          "fill": "#8B8D96"
         }
       ],
       "notes": "Doc Drift Close Modal Payments rollback runbook Possibly stale PR #482 renamed scripts/rollback.sh to scripts/rollback-v2.sh, an anchor of this page. The page mentions ROLLBACK_TIMEOUT and rollback.sh, which PR #482 removed. Section \"Steps\" names it. Score 1.00 (threshold 0.5). Agents are told not to trust this page until someone reviews it. Review (2) Anchors (3) What changed PR #482 merged by Razvan Statescu · 6 minutes ago High PR #482 renamed scripts/rollback.sh to scripts/rollback-v2.sh, an anchor of this page. The page mentions ROLLBACK_TIMEOUT and rollback.sh, which PR #482 removed. Section \"Steps\" names it. Score 1.00 (threshold 0.5). Rename rollback script and timeout variable scripts/rollback.sh → scripts/rollback-v2.sh · +3 −3 Anchor payments-api: scripts/rollback.sh Show diff View PR #482 in Bitbucket PR #482 merged by Razvan Statescu · 6 minutes ago Medium PR #482 changed deploy/helm/values.yaml (2 lines), an anchor of this page. The page mentions ROLLBACK_TIMEOUT and rollback.sh, which PR #482 removed. Section \"Steps\" names it. Score 0.73 (threshold 0.5). Rename rollback script and timeout variable deploy/helm/values.yaml · +1 −1 Anchor payments-api: deploy/helm/value"

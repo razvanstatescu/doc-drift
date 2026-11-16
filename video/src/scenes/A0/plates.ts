@@ -3,17 +3,18 @@ import platesJson from "../../data/plates.json";
 /**
  * The cold open's third-party material: 20 of the evidence agent's 27 processed plates (public/plates/, real captures
  * with private people blurred, words unchanged; src/data/plates.json; credits in CREDITS.md). Key-phrase boxes come
- * straight from plates.json, so a re-made plate keeps its punch-ins. Coordinates are plate pixels (captured at 3x).
+ * straight from plates.json, so a re-made plate keeps its marks and punch-ins. Coordinates are plate pixels (3x).
+ * tools/publish.mjs credits a plate when its id appears quoted in src/scenes/A0, so every id below stays quoted.
  *
  * Selection (BRIEF decision 1, plates.json `balance`):
  *   - Rovo appears twice (A1-06 first in bar 3, A4-02 just before the end, apart); A1-07 is out.
- *   - One Wikimedia item (D1-06, the hero; D1-07 is out). Microsoft once (A1-01; D1-05 and A1-03 are out).
+ *   - One Wikimedia item (D1-06; D1-07 is out). Microsoft once (A1-01; D1-05 and A1-03 are out).
  *   - Out as well: D2-04 and A1-05 (time), A2-02 (a third arXiv title), the two optional title companions.
  *   - The last word is Atlassian's own (A4-01).
- * Grade: one for every plate. Each is graded down to LIGHT_GRADE before the pass (all 20 are light pages), and the
- * pass drains warm hues and desaturates about 25% (fx/looks.ts gradeLook). Crops keep away from the amber-ish bits
- * anyway: Hacker News' orange bar (D1-21), The Register's masthead and kicker (D1-03), a blurred orange avatar
- * (A1-06), the survey's header art (A3-01), the arXiv bar on a slam (A1-13).
+ * v4 (Day): pages are white paper, never graded (R2). No plate is recoloured; inside every region used here there is
+ * no orange or amber pixel (measured 2026-11-16), so nothing on the desk can read as the film's amber before the
+ * reveal. Crops still keep away from colour: Hacker News' orange bar (D1-21), The Register's masthead (D1-03), the
+ * blurred avatar row (A1-06), the survey's header art (A3-01), arXiv's header bar, and Atlassian's blue button (A4-01).
  * Attribution: every plate carries its `label` (source and date, verbatim from plates.json) while it is on screen.
  */
 export type Box = { x: number; y: number; w: number; h: number };
@@ -88,13 +89,6 @@ const plate = (id: string, phrase: string | string[], o: Opts = {}): A0Plate => 
     label: p.label,
   };
 };
-
-/** Brightness of every plate (a grade, words untouched): page white lands near 0.32 relative luminance. */
-export const LIGHT_GRADE = 0.6;
-/** The tunnel's plates sit further back in the dark. */
-export const TUNNEL_GRADE = 0.42;
-/** Page white at LIGHT_GRADE: the slam panel's ground, so every light page keeps one footprint. */
-export const PAGE_GRADED = "#999999";
 
 export const PLATES = {
   // ── bar 1 · "The code moved." (the wall) ─────────────────────────────────────────────────────────────────────────

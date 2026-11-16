@@ -201,6 +201,12 @@ for (const [id, xs] of byId) {
 // keep catalog order = specs order (winner, then alternates)
 const ordered = {};
 for (const s of SPECS) for (const k of Object.keys(catalog).filter((k) => k === s.id || k.startsWith(`${s.id}-alt`)).sort()) ordered[k] = catalog[k];
+// keep entries this script does not make (v4's paper set for A0, added 2026-11-16) instead of dropping them
+if (existsSync(CATALOG)) {
+  const prev = JSON.parse(readFileSync(CATALOG, 'utf8'));
+  const ours = (k) => SPECS.some((s) => k === s.id || k.startsWith(`${s.id}-alt`));
+  for (const [k, v] of Object.entries(prev)) if (!(k in ordered) && !ours(k)) ordered[k] = v;
+}
 if (!qaOnly) writeFileSync(CATALOG, JSON.stringify(ordered, null, 2) + '\n');
 writeJson(REPORT, report, 1);
 console.table(report.map(({ features, ...r }) => r));

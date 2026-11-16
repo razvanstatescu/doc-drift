@@ -13,7 +13,7 @@ their amber block, drawn over a twin's own words with one sweep clip), `p3data.t
 
 | Local | Event |
 | --- | --- |
-| 0 | Opens composed and moving under the kit's whip from P2: the runbook twin low on the left, its byline item "Possibly stale · Doc Drift" the amber |
+| 0 | Opens composed and moving under the kit's whip from P2: the runbook twin low on the left (y 760: its title and byline item in the wide shots, entirely below the frame in the close-up, round 3 G-4), its byline item "Possibly stale · Doc Drift" the amber |
 | 12 to 44 | "Ask Drift / Reviewer." (130 px, Fathom) sets top left on its words; the panel twin slides in on the right, content-sized (its header), landing on "Drift" |
 | 45 to 90 | **R10** grows out of the panel's heading on the beat inside "Reviewer"; the twin blurs and drains under it (kit) |
 | 88 to 94 | The statement leaves; **push** into the panel (1.25), landing on "roll" (103); the byline item leaves the frame whole by 99 |
@@ -21,16 +21,16 @@ their amber block, drawn over a twin's own words with one sweep clip), `p3data.t
 | 135 to 165 | **R11** (1.0): the real steps; "Invoking tool: Check page freshness" appears at 146 |
 | 167 to 203 | A signal from that step to the byline item (ring on 183) and back; then the page leaves by moving |
 | 213 to 274 | A1's old step (`./scripts/rollback.sh --timeout $ROLLBACK_TIMEOUT`) appears whole and dimmed (no typing, G-6), slips one unit right in amber on "old" (242), falls on "step." (256) |
-| 268 to 360 | "It says / why." (116 px) sets left on "It says"; the answer streams (v2, D38, verbatim); "Possibly stale" on its amber block from 283 |
+| 268 to 360 | "It says / why." (116 px) sets whole on "says" (round 3 G-10); the answer streams (v2, D38, verbatim); "Possibly stale" on its amber block from 283 |
 | 300 to 345 | **R12** from the answer's first line, landing on "Possibly", push to 1.0 on "Possibly stale"; cropped between blocks (G-7) |
 | 345 to 352 | **Push** onto the reason, landing on "why" with the statement's last word |
 | 405 | Whip (T9) to the terminal on "Coding" |
-| 403 | The slab (30 px mono, 1000 x 683: 33% of the frame, G-1) lifts in with `find-docs-for-path {...}` already typed and its tag (28 px, G-9) |
-| 432 to 451 | The output streams; the runbook row's status on its amber block (439, "same"); **push** onto it, landing on "signal" (451); back out after "MCP" |
+| 403 | The slab (30 px mono, 980 x 731, 51 columns: 34.5% of the frame, G-1) lifts in with `find-docs-for-path {...}` already typed (wrapped before `"path"`) and its tag (28 px, G-9); its output prints from 406 (round 3) |
+| 406 to 451 | The output prints at a reading pace; the runbook row's status lands on its amber block at 437 ("same" 440); **push** onto it, landing on "signal" (451); back out after "MCP" |
 | 492 | "Agents read as you. They never edit a page." sets above the slab |
-| 504 to 540 | "which pages cover a file": the path underlined, a connector to the runbook's card (tucked under the slab), "3 pages document this path" (the tool's own words, G-8) |
-| 548 to 576 | The screen clears; `check-page-freshness {"pageId": "2720100"}` types (6 f) and returns `"status": "possibly_stale"` on its amber block; "Do not present steps from this page as current." (96 px) rises beside the slab and lands on "trust" (G-2) |
-| 576 to 660 | Final pose, still but for the creep; the kit's downward whip into P4 |
+| 504 to 535 | "which pages cover a file": the path underlined (its own line: the anchor value wraps at 51 columns), a connector to the runbook's card (tucked under the slab), "3 pages document this path" (the tool's own words, G-8); pops at 516 and 522 |
+| 532 to 566 | The old output dims under a veil (round 3 G-11); at 542 the screen clears to `check-page-freshness {"pageId": "2720100"}`, already typed, and its output prints at once: `"status": "possibly_stale"` on its amber block; "Do not present steps from this page as current." (96 px) rises beside the slab from 548 and is still by 566 (G-2) |
+| 566 to 660 | Final pose, still but for the creep (the clause holds 94 frames to the cut); the kit's downward whip into P4 |
 
 ## Proofs
 
@@ -59,8 +59,8 @@ Reading time (30 x max(0.8 + 0.25 x words, chars / 15) frames, from still):
 | Text | Needs | Still on screen |
 | --- | --- | --- |
 | "Ask Drift Reviewer." | 47 | 46 |
-| "It says why." | 47 | about 45 |
-| "Do not present steps from this page as current." | 94 | 84, plus the 9-frame cut |
+| "It says why." | 47 | about 119 |
+| "Do not present steps from this page as current." | 94 | 94, plus the 9-frame cut |
 | "3 pages document this path" | 62 | 148 |
 | "Agents read as you. They never edit a page." | 92 | 158 |
 | Answer, first sentence | 88 | 129 (twin or R12) |

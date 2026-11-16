@@ -31,8 +31,9 @@ export const ELEV: Record<Elev, string> = {
   2: [`0 0 0 1.5px ${ink(0.065)}`, `0 2px 4px ${ink(0.06)}`, `0 12px 28px ${ink(0.07)}`, `0 32px 64px ${ink(0.06)}`].join(", "),
   // Round 2 (QA K-5, 2026-11-16): hero and float objects carry a 11 to 12% Fathom ring and a contact layer about 30%
   // stronger, so white cards hold their edge on the Paper sweep at 1080p and after YouTube's encode.
-  3: [`0 0 0 1.5px ${ink(0.11)}`, `0 3px 6px ${ink(0.08)}`, `0 18px 40px ${ink(0.1)}`, `0 56px 112px ${ink(0.12)}`].join(", "),
-  4: [`0 0 0 1.5px ${ink(0.12)}`, `0 6px 12px ${ink(0.105)}`, `0 28px 56px ${ink(0.15)}`, `0 72px 144px ${ink(0.16)}`].join(", "),
+  // Round 3 (QA K-5 again): one more step of the same size.
+  3: [`0 0 0 1.5px ${ink(0.15)}`, `0 3px 6px ${ink(0.105)}`, `0 18px 40px ${ink(0.125)}`, `0 56px 112px ${ink(0.14)}`].join(", "),
+  4: [`0 0 0 1.5px ${ink(0.165)}`, `0 6px 12px ${ink(0.135)}`, `0 28px 56px ${ink(0.18)}`, `0 72px 144px ${ink(0.18)}`].join(", "),
 };
 
 /** Dark objects on Day (the terminal, ink labels): the same light, a little deeper, plus a top-edge highlight. */
@@ -48,9 +49,9 @@ export const ELEV_DARK: Record<Exclude<Elev, 0>, string> = {
  * surface-sunk at the corners. Only token colours, so it stays in the brand.
  */
 export const sweep = (cx = "50%", cy = "34%") =>
-  // Round 2 (QA K-5): the outer stop is `line` (#D6E4E7), one step darker than surface-sunk, so the frame's edges sit a
-  // step below Paper and white objects read as figures (the corners land near #E2EBED, the light stays white).
-  `radial-gradient(130% 95% at ${cx} ${cy}, ${DAY.surface} 0%, #F7FAFA 26%, ${DAY.ground} 52%, ${DAY.line} 100%)`;
+  // Round 2 and 3 (QA K-5): the outer stop is `line` (#D6E4E7), and the stops sit further in (surface-sunk at 62%,
+  // line at 90%), so the darker tones reach toward the subject and white objects read as figures; the light stays white.
+  `radial-gradient(130% 95% at ${cx} ${cy}, ${DAY.surface} 0%, #F7FAFA 18%, ${DAY.ground} 38%, ${DAY.surfaceSunk} 62%, ${DAY.line} 90%)`;
 
 /** Hairlines at film size: dividers inside white objects, and the trace fill. */
 export const HAIR = { line: DAY.line, strong: DAY.lineStrong, width: 2 } as const;
@@ -89,8 +90,8 @@ const DAY_LADDER: { ring: number; layers: ShadowLayer[] }[] = [
   { ring: 0, layers: [[0, 0, 0], [0, 0, 0], [0, 0, 0]] },
   { ring: 0.07, layers: [[1, 2, 0.06], [4, 12, 0.05], [16, 32, 0]] },
   { ring: 0.065, layers: [[2, 4, 0.06], [12, 28, 0.07], [32, 64, 0.06]] },
-  { ring: 0.11, layers: [[3, 6, 0.08], [18, 40, 0.1], [56, 112, 0.12]] },
-  { ring: 0.12, layers: [[6, 12, 0.105], [28, 56, 0.15], [72, 144, 0.16]] },
+  { ring: 0.15, layers: [[3, 6, 0.105], [18, 40, 0.125], [56, 112, 0.14]] },
+  { ring: 0.165, layers: [[6, 12, 0.135], [28, 56, 0.18], [72, 144, 0.18]] },
 ];
 /** Dark objects: [top-edge light alpha, contact, ambient 1, ambient 2] per level. */
 const DARK_LADDER: { top: number; layers: ShadowLayer[] }[] = [

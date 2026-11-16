@@ -11,6 +11,7 @@ import {
   KineticLine,
   lineCues,
   MorphToReal,
+  NIGHT,
   Press,
   ProofFrame,
   proofRect,
@@ -96,9 +97,10 @@ import { sc, T } from "./timing";
 const PAGE: PageTwinProps = {
   world: "day",
   doc: "runbook",
-  // low on the left: its head (title, the amber byline item, the table) under the V16 statement
+  // low on the left: its head (title, the amber byline item) in the wide shots; entirely below the frame during the
+  // push into the panel, so no blank card corner stays at the edge (QA round 2 G-4)
   x: 40,
-  y: 430,
+  y: 760,
   k: 1.6,
   byline: { kind: "dds", state: "possibly_stale" },
   // the band slipped in P2 and stays out of line, neutral; the byline item carries the amber (R3 section 3)
@@ -378,24 +380,36 @@ const RovoShot: React.FC = () => {
 // ---------------------------------------------------------------------------------------------------------------------
 
 const json1 = (o: Record<string, string>) => `{${Object.entries(o).map(([k, v]) => `"${k}": "${v}"`).join(", ")}}`;
+
+/**
+ * The slab: Spline Sans Mono 30 px, 980 wide (51 columns: the command wraps before `"path"`, never between a key and
+ * its colon, QA round 2 G-1), capped at 35% of the frame by the twin's size guide (13 rows).
+ */
+const SLAB = { x: 80, y: 250, width: 980, fontSize: 30 };
+const COLS = Math.floor((SLAB.width - 2 * 34) / ((0.6 - 0.01) * SLAB.fontSize));
+const FIND_OPTS = { collapse: [...QA_IDS, "pages.1.url"], only: ["path", "pages"], focus: RUNBOOK_ROW.pageId };
+/** The find-docs output streams from the slab's arrival, paced so the runbook row's status lands by `statusBy`. */
+const FIND_STATUS_I = jsonLines(FIND.output, { ...FIND_OPTS, cols: COLS }).findIndex((l) => l.toks.some((t) => t.c === "focus"));
+const FIND_LPS = (FIND_STATUS_I * 30) / (T.statusBy - T.out1);
+
 const CALLS: TerminalCall[] = [
   {
     cmd: `find-docs-for-path ${json1(FIND.input)}`,
-    // the slab arrives with the command in place (QA G-1)
+    // the slab arrives with the command in place and its output already printing (QA G-1)
     at: T.cmd1,
     typeFrames: 0,
     output: "findDocsFlaggedV2",
     // the QA pages in the test space are collapsed (never named on screen), the url is elided; "…" lines stand for
     // the omitted top-level keys (ok, repo, and the guidance, which names the QA pages)
-    collapse: [...QA_IDS, "pages.1.url"],
-    only: ["path", "pages"],
-    focus: RUNBOOK_ROW.pageId,
+    ...FIND_OPTS,
     streamAt: T.out1,
+    lps: FIND_LPS,
   },
   {
     cmd: `check-page-freshness ${json1(CHECK.input)}`,
+    // appears already typed as the screen clears (the old output stayed until now, dimmed: QA round 2 G-11)
     at: T.cmd2,
-    typeFrames: 6,
+    typeFrames: 0,
     clear: true,
     output: "checkFlaggedV2",
     // the status and the guidance; "…" lines stand for the rest (the title is in the guidance)
@@ -405,24 +419,23 @@ const CALLS: TerminalCall[] = [
   },
 ];
 
-/** The slab: Spline Sans Mono 30 px, 1000 wide, capped at 35% of the frame (G-1): 12 rows. */
 const TERM_PROPS: TerminalTwinProps = {
   title: "Coding agent · MCP",
   calls: CALLS,
-  x: 80,
-  y: 250,
-  width: 1000,
-  fontSize: 30,
+  ...SLAB,
   tag: MCP_TAG,
   tagSize: 28,
   enter: { at: T.cmd1, dur: 12 },
 };
 const TS = terminalSize(TERM_PROPS);
-const TX = TERM_PROPS.x!;
-const TY = TERM_PROPS.y!;
-const ADV = (0.6 - 0.01) * TERM_PROPS.fontSize!;
+if (TS.cols !== COLS || TS.area > 0.35) throw new Error(`P3: the slab is ${TS.cols} columns, ${(TS.area * 100).toFixed(1)}% of the frame`);
+const TX = SLAB.x;
+const TY = SLAB.y;
+const ADV = (0.6 - 0.01) * SLAB.fontSize;
 /** Top of body row r (after the 66 px title bar, its 1.5 px divider and 26 px of padding). */
 const rowTop = (r: number) => TY + 66 + 1.5 + 26 + r * TS.lh;
+/** The slab's body (where the rows print). */
+const BODY: Rect = { x: TX, y: TY + 67.5, w: TS.width, h: TS.rows * TS.lh + 52 };
 
 /** Command rows of a call (the prompt and the command, wrapped at the slab's columns). */
 const cmdRows = (cmd: string) => Math.ceil((cmd.length + 2) / TS.cols);
@@ -439,17 +452,17 @@ const CALL_LINES = CALLS.map((c) => {
   return { lines, focus: { index: fi, col, text: l.toks.find((t) => t.c === "focus")!.t } };
 });
 
-/** The screen row of a call's focus token at a frame (the view follows the newest line, by whole rows). */
-function focusRow(ci: number, frame: number) {
+/** Rows a call has scrolled by at a frame (the view follows the newest line, by whole rows). */
+function scrollAt(ci: number, frame: number) {
   const c = CALLS[ci];
   const lps = c.lps ?? 45;
   const body = CALL_LINES[ci].lines.length;
   let shownBody = 0;
   for (let i = 0; i < body; i++) if (frame >= (c.streamAt ?? 0) + Math.floor((i / lps) * 30)) shownBody = i + 1;
-  const head = cmdRows(c.cmd);
-  const scroll = Math.max(0, head + shownBody - TS.rows);
-  return head + CALL_LINES[ci].focus.index - scroll;
+  return Math.max(0, cmdRows(c.cmd) + shownBody - TS.rows);
 }
+/** The screen row of an output line of a call at a frame. */
+const lineRow = (ci: number, i: number, frame: number) => cmdRows(CALLS[ci].cmd) + i - scrollAt(ci, frame);
 /** The frame a call's focus line appears. */
 const focusAt = (ci: number) => (CALLS[ci].streamAt ?? 0) + Math.floor((CALL_LINES[ci].focus.index / (CALLS[ci].lps ?? 45)) * 30);
 
@@ -460,26 +473,43 @@ const TermAmber: React.FC<{ ci: number; until?: number }> = ({ ci, until }) => {
   if (frame < at || (until !== undefined && frame >= until)) return null;
   const f = CALL_LINES[ci].focus;
   return (
-    <div style={{ position: "absolute", left: TX + 34 + f.col * ADV, top: rowTop(focusRow(ci, frame)), height: TS.lh, display: "flex", alignItems: "center" }}>
-      <AmberToken at={at} font={{ fontFamily: FONT.mono, fontSize: TERM_PROPS.fontSize, letterSpacing: "-0.01em" }}>
+    <div style={{ position: "absolute", left: TX + 34 + f.col * ADV, top: rowTop(lineRow(ci, f.index, frame)), height: TS.lh, display: "flex", alignItems: "center" }}>
+      <AmberToken at={at} font={{ fontFamily: FONT.mono, fontSize: SLAB.fontSize, letterSpacing: "-0.01em" }}>
         {f.text}
       </AmberToken>
     </div>
   );
 };
 
+/** The previous output steps back under a veil of the slab's own colour until the next command appears (G-11). */
+const OldOutputVeil: React.FC = () => {
+  const frame = useCurrentFrame();
+  if (frame < T.dimOld || frame >= T.cmd2) return null;
+  const v = tween(frame, T.dimOld, T.dimOld + 8, 0, 0.62, EASE.standard);
+  return <div style={{ position: "absolute", left: BODY.x + 2, top: BODY.y, width: BODY.w - 4, height: BODY.h - 26, background: NIGHT.ground, opacity: v }} />;
+};
+
 /**
- * The find-docs screen once streamed: the command rows and the output scrolled in a 12-row view. The runbook's
- * "anchor" row holds the path, scripts/rollback.sh, after a 3-level indent, `"anchor": ` and `"payments-api: `.
+ * The runbook row's path in the find-docs screen once streamed. At 51 columns the anchor's value wraps at its space,
+ * so `scripts/rollback.sh",` sits on its own continuation line; the underline finds whichever line carries it.
  */
 const FIND_LINES = CALL_LINES[0].lines;
-const ANCHOR_I = FIND_LINES.findIndex((l) => l.toks.some((t) => t.t.includes("payments-api: scripts/rollback.sh")));
-const FIND_SCROLL = Math.max(0, cmdRows(CALLS[0].cmd) + FIND_LINES.length - TS.rows);
-const ANCHOR_ROW = cmdRows(CALLS[0].cmd) + ANCHOR_I - FIND_SCROLL;
-const PATH_COL = FIND_LINES[ANCHOR_I].indent * 2 + `"anchor": "payments-api: `.length;
+const ANCHOR_KEY_I = FIND_LINES.findIndex((l) => l.toks.some((t) => t.c === "key" && t.t === '"anchor"'));
+const PATH_I = [ANCHOR_KEY_I, ANCHOR_KEY_I + 1].find((i) => FIND_LINES[i]?.toks.some((t) => t.t.includes("scripts/rollback.sh")))!;
+const PATH_COL = (() => {
+  const l = FIND_LINES[PATH_I];
+  let col = l.indent * 2;
+  for (const t of l.toks) {
+    const k = t.t.indexOf("scripts/rollback.sh");
+    if (k >= 0) return col + k;
+    col += t.t.length;
+  }
+  throw new Error("P3: the path is not in the anchor row");
+})();
+const FIND_DONE = (CALLS[0].streamAt ?? 0) + Math.ceil((FIND_LINES.length / FIND_LPS) * 30);
 const PATH_X0 = TX + 34 + PATH_COL * ADV;
 const PATH_X1 = PATH_X0 + "scripts/rollback.sh".length * ADV;
-const PATH_Y = rowTop(ANCHOR_ROW) + TS.lh - 8;
+const PATH_Y = rowTop(lineRow(0, PATH_I, FIND_DONE)) + TS.lh - 8;
 
 /** The page it answers: the runbook's card, its left edge tucked under the slab's right edge. */
 const CARD: Rect = { x: TX + TS.width - 40, y: 96, w: 560, h: 236 };
@@ -488,16 +518,16 @@ const CARD_NODE: [number, number] = [CARD.x + 150, CARD.y + CARD.h];
 const CLAUSE = { x: TX + TS.width + 44, y: 452, size: 96 };
 
 const TERM_OPTS = { base: { x: 720, y: 560, zoom: 0.98, yaw: -6 }, seed: "p3-term" };
-const STATUS_C = { x: TX + 34 + CALL_LINES[0].focus.col * ADV + 160, y: rowTop(focusRow(0, T.out1 + 40)) + TS.lh / 2 };
+const STATUS_C = { x: TX + 34 + CALL_LINES[0].focus.col * ADV + 160, y: rowTop(lineRow(0, CALL_LINES[0].focus.index, T.signal)) + TS.lh / 2 };
 const TERM_KEYS: Cam3Key[] = [
   // the whip lands: the content still travels left and turns square (M2: tilt only while travelling)
-  { at: T.whip - 4, dur: 22, to: { x: 960, y: 540, zoom: 1, yaw: 0 } },
+  { at: T.whip - 4, dur: 22, to: { x: 960, y: 560, zoom: 1, yaw: 0 } },
   // V18's push, landing on "signal": onto the runbook row's status
   { at: T.push18, dur: 10, to: { x: STATUS_C.x + 60, y: STATUS_C.y, zoom: 1.28 } },
   // back out after "MCP" for the pages
-  { at: T.pull18, dur: 18, to: { x: 960, y: 540, zoom: 1 } },
+  { at: T.pull18, dur: 18, to: { x: 960, y: 555, zoom: 1 } },
   // the final pose: the slab, the page it answers, the clause; the creep takes it to about 1.03 by the last frame
-  { at: T.cmd2, dur: 24, to: { x: 972, y: 545, zoom: 0.98 } },
+  { at: T.cmd2, dur: 24, to: { x: 962, y: 560, zoom: 0.98 } },
 ];
 
 const TerminalWorld: React.FC = () => {
@@ -512,6 +542,7 @@ const TerminalWorld: React.FC = () => {
       ) : null}
       <TerminalTwin {...TERM_PROPS} right={frame < T.cmd2 ? FIND.tool : CHECK.tool} />
       <TermAmber ci={0} until={T.cmd2} />
+      <OldOutputVeil />
       <TermAmber ci={1} />
       <PathLink path={{ x0: PATH_X0, x1: PATH_X1, y: PATH_Y, stubFrom: PATH_X1 + 2 * ADV + 10 }} origin={[TX + TS.width, PATH_Y]} node={CARD_NODE} at={T.pathAt} linkAt={T.linkAt} out={T.unlink} />
       <CountChip text={PAGES_PHRASE} x={CARD.x + 200} y={CARD.y + CARD.h + 18} at={T.chipAt} />
@@ -555,9 +586,10 @@ const P3: React.FC = () => (
     <Sfx id="whoosh-short" at={T.whip} />
     <Sfx id="tick-soft" at={T.whip + 10} />
     <Sfx id="tick-soft" at={T.out1 + 7} />
-    <Sfx id="pop" at={T.linkAt + 12} gainDb={-6} />
-    <Sfx id="pop" at={T.chipAt + 6} gainDb={-8} />
-    <Sfx id="type-burst" at={T.cmd2} gainDb={-10} />
+    {/* QA (metrics r2, f3135): the two pops were on one frame; 6 frames apart now */}
+    <Sfx id="pop" at={T.linkAt + 10} gainDb={-6} />
+    <Sfx id="pop" at={T.chipAt + 10} gainDb={-8} />
+    <Sfx id="tick-soft" at={T.cmd2} />
     {/* QA (metrics, f3189): this tick sat borderline loud against "to"; 3 dB lower */}
     <Sfx id="tick" at={T.stream2 + 1} gainDb={-6} />
     <Sfx id="tick-soft" at={T.clause + 12} />

@@ -1,6 +1,7 @@
 import React from "react";
 import { Easing, useCurrentFrame } from "remotion";
 import { EASE, tween } from "../../lib/time";
+import { DirectionalBlur } from "../../v4/kit/blur";
 import { DAY, elevAt, FONT, ink, type Rect } from "../../v4/look";
 
 /**
@@ -168,6 +169,133 @@ export const FlyWord: React.FC<{
       >
         {text}
       </div>
+    </div>
+  );
+};
+
+/** The level glide: leaves briskly, decelerates long so the word is readable as it reaches its slot. */
+const GLIDE = Easing.bezier(0.55, 0, 0.18, 1);
+
+/**
+ * Round 3 (QA S-6): a copy of a word that travels clear of all text. On `at` it lifts straight up out of its sentence
+ * (the copy sits exactly on the word, so the sentence stays whole; one frame later it is above the line), glides level
+ * along `lane` (a free line of space: on P1's page, between the title and the byline, and above the notice), waits
+ * over its slot while the slot's old words leave beneath it, and seats on `land` = at + rise + glide + hover + drop,
+ * as the new words start to uncover, so no frame shows it beside the old words or over the new ones. It is laid out
+ * at the slot's size and weight and scaled from the source's, on a slim white plate (its glyphs plus 5 px a side and
+ * 0.04 em top and bottom, with a low shadow, so it covers nothing it passes), and hands over to the drawn word over
+ * `hold` frames.
+ */
+export const SlotWord: React.FC<{
+  text: string;
+  from: Rect;
+  to: Rect;
+  fromFont: number;
+  toFont: number;
+  weight?: number;
+  toWeight?: number;
+  /** The y the copy glides along (stage px, its centre). */
+  lane: number;
+  at: number;
+  rise?: number;
+  glide?: number;
+  /** Frames it waits over its slot, in the lane, while the slot's old words leave beneath it. */
+  hover?: number;
+  /** Frames of the drop into the slot (1: it seats as the new words start to uncover, so it is never beside old ones). */
+  drop?: number;
+  hold?: number;
+  /** Width of the copy's text at `toFont` (stage px), for its plate. */
+  textW: number;
+}> = ({ text, from, to, fromFont, toFont, weight = 600, toWeight = 500, lane, at, rise = 2, glide = 7, hover = 2, drop = 1, hold = 4, textW }) => {
+  const frame = useCurrentFrame();
+  const g0 = at + rise;
+  const h0 = g0 + glide;
+  const d0 = h0 + hover;
+  const land = d0 + drop;
+  if (frame < at || frame >= land + hold) return null;
+  const fx = from.x + from.w / 2;
+  const fy = from.y + from.h / 2;
+  const tx = to.x + to.w / 2;
+  const ty = to.y + to.h / 2;
+  const pr = tween(frame, at, g0, 0, 1, EASE.expoOut);
+  const pg = tween(frame, g0, h0, 0, 1, GLIDE);
+  const pd = tween(frame, d0, land, 0, 1, EASE.expoOut);
+  const x = lerp(fx, tx, pg);
+  const y = frame < g0 ? lerp(fy, lane, pr) : frame < d0 ? lane : lerp(lane, ty, pd);
+  // the source size shrinks to the slot's over the rise; the slot's weight is taken mid-glide (under the motion blur)
+  const s = lerp(fromFont / toFont, 1, pr);
+  const w = frame >= g0 + glide / 2 ? toWeight : weight;
+  // elevation: up over the rise, level through the glide, down onto the page as it drops; the plate shows only once
+  // the copy has left its line, and goes with the hand-over
+  const level = 1.5 * pr * (1 - pd);
+  const plate = tween(frame, at + 1, at + 2, 0, 1, EASE.linear) * (1 - tween(frame, land, land + hold, 0, 1, EASE.linear));
+  const out = tween(frame, land + 1, land + hold, 0, 1, EASE.linear);
+  // horizontal motion blur from the glide's speed, on the whole chip (plate and word), kept light so it reads
+  const speed = Math.abs(tx - fx) * (tween(frame + 1, g0, h0, 0, 1, GLIDE) - pg);
+  const blurX = frame >= g0 && frame < h0 ? Math.min(9, speed * 0.05) : 0;
+  const boxW = to.w;
+  const boxH = to.h;
+  const padX = 5;
+  const plateH = toFont * 1.04;
+  const word = (
+    <div
+      style={{
+        position: "relative",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        fontFamily: FONT.sans,
+        fontWeight: w,
+        fontSize: toFont,
+        lineHeight: 1,
+        color: DAY.text,
+        whiteSpace: "pre",
+      }}
+    >
+      {text}
+    </div>
+  );
+  const chip = (
+    <>
+      {plate > 0.01 ? (
+        <div
+          style={{
+            position: "absolute",
+            left: (boxW - textW) / 2 - padX,
+            top: (boxH - plateH) / 2,
+            width: textW + 2 * padX,
+            height: plateH,
+            borderRadius: plateH * 0.28,
+            background: DAY.surface,
+            boxShadow: level > 0.05 ? elevAt(level) : undefined,
+            opacity: plate,
+          }}
+        />
+      ) : null}
+      {word}
+    </>
+  );
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: x - boxW / 2,
+        top: y - boxH / 2,
+        width: boxW,
+        height: boxH,
+        transform: `scale(${s})`,
+        transformOrigin: "50% 50%",
+        opacity: out > 0 ? 1 - out : undefined,
+        zIndex: 30,
+      }}
+    >
+      {blurX > 0.5 ? (
+        <DirectionalBlur x={blurX} region={0.4}>
+          {chip}
+        </DirectionalBlur>
+      ) : (
+        chip
+      )}
     </div>
   );
 };

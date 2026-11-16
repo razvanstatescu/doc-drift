@@ -1,9 +1,17 @@
 # Kit status
 
-**round 2 ready** (2026-11-16, after the visual review `out/v4/qa/review.md`, Kit K-1 to K-5). Every prop from round 1
-still works; the changes and the props you may want to touch are in "Round 2" right below. Round 1 notes follow.
+**round 3 ready** (2026-11-16, after `out/v4/qa/review-r2.md`: K-5 once more, K-6). Every prop from rounds 1 and 2
+still works. Round 3 changes are right below, then round 2's, then the round 1 notes.
 
-## Round 2 (QA K-1 to K-5): what changed
+## Round 3: what changed
+
+| Item | What changed | What you may need to touch |
+| --- | --- | --- |
+| K-5 Day contrast, one more step | `sweep()`: the stops sit further in (`#FFFFFF 0%, #F7FAFA 18%, ground 38%, surface-sunk 62%, line 90%`), so the darker tones reach toward the subject. `ELEV[3]`/`ELEV[4]` (and `elevAt`) rings 15% / 16.5%, contact and ambient layers about 30% stronger again. Measured on f1090, f3395, f4140 (Main): corners 4 to 5 levels darker, the bottom band up to 5; the ground grades in 1 to 2 level steps (no banding under a 5x stretch); flats clean; flashcheck passes on f1060 to 1125. Before and after: `out/v4/kit/contrast-r3/`. | Nothing. |
+| K-6 rebuild splice | `RebuildFromReal`: the twin stays at rest (dim, blurred, grey: unreadable) while the wipe crosses the proof, so the proof's words never sit beside readable twin words; it also starts matched to the proof's scale and place (`toRect` on `fromRect`), then sharpens and grows back over `grow` frames (default 4) from the wipe's last frames: with `dur` 4, frames at+2 to at+6, done before P1 (7-frame window) or P3 (8) swap back to their world. Checked on R12's exit (f2961 to 2972, `out/v4/kit/strip-rebuild-r12-r3.png`): the splice at f2963 to 2964 is gone; flashcheck passes. New props `match` (true), `grow` (4). | For the scale match to help, pass `fromRect`/`toRect` that cover the SAME words in the proof and in the twin (P3's R12 rects are one line each, but the twin wraps fewer words per line, so the match is about 0.97 there; the rest-during-wipe fix covers it anyway). |
+
+
+## Round 2 (QA K-1 to K-5): what changed (round 2 ready, kept for reference)
 
 | Item | What changed | What you may need to touch |
 | --- | --- | --- |
@@ -81,7 +89,7 @@ frame. Kinds available for later: `slip` (optionally `reveal`), `slipPush`, `whi
 | `ProofMat` | the same mat, tag and note around any children (`w`, `h` inner size): R9's verbatim MCP output. |
 | `proofRect(p)`, `proofPoint(p, captureBox)` | the mat and image rects; the film rect of a capture box inside a placed proof (MorphToReal's `toRect`). |
 | `MorphToReal` (T3) | `at`, `dur` (9), `fromRect` (the twin's element), `toRect` (the same element inside the placed proof: `proofPoint`), `twin`, `proof` (the proof with `enter="none"`), `twinRest` (0.18 since round 2), `twinBlur` (7), `twinDrain` (1), `twinMask`, `out`, `radius` (24), `frameRect` (where the window grows to; default the whole stage), `clip` ("auto"). **Soft shadow (2026-11-16, director's fix):** when `proof` is a ProofFrame or ProofMat element (or a fragment of them), the growing window is handed to the mat, which clips only its own content and draws its shadow on the open window (level 1 to 4 as it grows); the tag and note land when the mat is fully open. Any other node is clipped as a layer, as before (`clip="layer"` forces that; P2's `grow(outer, 240)` frameRects keep working either way). |
-| `RebuildFromReal` (T4) | `at`, `dur` (4 since round 2: a wipe), `fromRect`, `toRect` (kept), `twin`, `proof`, `twinFrom` (0.18), `twinBlurFrom` (7), `twinDrainFrom` (1), `frameRect`. |
+| `RebuildFromReal` (T4) | `at`, `dur` (4 since round 2: a wipe), `fromRect` (proof element), `toRect` (twin element; the twin starts matched onto `fromRect`, round 3), `twin`, `proof`, `twinFrom` (0.18), `twinBlurFrom` (7), `twinDrainFrom` (1), `frameRect`, `match` (true), `grow` (4). |
 | `SlipPush` (T5) | `at`, `dur` (12), `from`, `to`, `direction` ("left"). |
 | `ZoomThrough` (T6) | `at`, `center: [x, y]`, `from`, `to`, `inDur` (8), `outDur` (4), `peak` (8), `motionBlur` (true: CameraMotionBlur, 5 samples, on the 4 fastest frames, M5; it renders `from` 5 times there). Crafted DOM only. |
 | `PushCut` (T8) | `at`, `dur` (7), `from`, `to`, `outScale`/`inScale` (1.04), `flash`, `flashColor`. |

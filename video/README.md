@@ -6,6 +6,22 @@ first; it wins over everything else. Research: [../docs/video/research.md](../do
 
 Remotion 4.0.543 (every `remotion` and `@remotion/*` package pinned to exactly that version), React 19.3.1.
 
+## v4 (2026-11-16, D39)
+
+v4 is a Day redesign of the picture; narration, music and timeline are unchanged. Direction: [V4.md](V4.md) (rules,
+gates, owners, results). Research: [../docs/video/v4/](../docs/video/v4/). The shared pieces:
+
+- `src/v4/look.ts`: Day and Night grounds (`sweep`, `nightSweep`), the elevation scale, film type.
+- `src/v4/kit/`: `Stage`, `Camera3D` (never fully still), `Lift`, `KineticLine` and marks, `NumberRoll`, `ProofFrame`
+  (real captures in a mat, masks drawn, a crop guard), the transitions (morph to real, wipe back, slip push, whip,
+  zoom-through, signal lines, exploded stacks), and the scene cuts in `src/transitions.ts` and `src/Main.tsx`. Its
+  `STATUS.md` documents every prop.
+- `src/v4/twins/`: crafted twins of our UI built only from real strings and data (`PageTwin` with `pageRects`,
+  `BylineItem`, `AnchorRail`, `AgentPanelTwin`, `TerminalTwin`). Scene-specific twins live in `src/components/<scene>/`.
+- QA: `tools/qa/motion.py` (moving frames, frozen holds), `tools/qa/amber.py` (amber seconds), `tools/qa/flashcheck.py`;
+  `tools/v4/proofclips.mjs` pre-cuts the recorded proof segments into `public/clips/v4/` (git-ignored) for faster renders.
+- Dev compositions: `Dev/Kit4`, `Dev/Twins`, `Dev/StyleFrames`.
+
 ## Run it
 
 Node 24 only. Start every shell command with `source ~/.nvm/nvm.sh && nvm use 24 >/dev/null && ...`, from `video/`.

@@ -134,8 +134,12 @@ const WIK = worldBox("wikimedia", PLATES.wikimedia.spot);
 
 const C_DIFF: Frame = { x: DIFF_AT.x, y: DIFF_AT.y + 6, s: 1.0 };
 const C_DIFF_P: Frame = { x: DIFF_ROWS.x, y: DIFF_ROWS.y, s: 1.13 };
-/** Screen y the arXiv key line sits on (below the anchor), so the paper's title stays clear of the caption band. */
-const ARX_Y = 740;
+/**
+ * Screen y the arXiv key line sits on (below the anchor): the paper's title clears the caption band, and the sheet's
+ * bottom edge and its contact shadow fall below y 896, so no window holds both the key line and that dark edge
+ * (flashcheck: each whip's luminance swing stays under 0.1 there).
+ */
+const ARX_Y = 790;
 const C_ARX: Frame = { x: ARX.cx - 30, y: ARX.cy - (ARX_Y - ANCHOR.y) / 1.45, s: 1.45 };
 const C_ARX_P: Frame = { x: ARX.cx - 130 / 2.2, y: ARX.cy - (ARX_Y - ANCHOR.y) / 2.2, s: 2.2 };
 const C_HN: Frame = { x: HNB.cx + 30, y: HNB.cy - 12, s: 1.25 };

@@ -5,6 +5,7 @@ import { Cursor, type CursorPoint } from "../../components/Cursor";
 import { DASH, DASH_UI, DashboardTwin, dashRect } from "../../components/P5/DashboardTwin";
 import { JIRA_UI, JiraEpicTwin, jiraRect } from "../../components/P5/JiraEpicTwin";
 import { TRACK_UI, TrackInJiraTwin, trackRect } from "../../components/P5/TrackInJiraTwin";
+import { WholeLine } from "../../components/P4/WholeLine";
 import { EASE, tween } from "../../lib/time";
 import { slipProgress } from "../../motion/slip";
 import {
@@ -126,11 +127,14 @@ const ADR_PILL_MASK = {
   why: "Development install suffix (logged), on the hovered pill",
 };
 
-/** V23's first statement (screen space: the push does not move it). */
+/**
+ * V23's first statement (screen space: the push does not move it), set whole on the beat as the line starts, with a
+ * push (QA K-7, P-1: it holds 71 f, to the slip push out).
+ */
 const J_TEXT = "Jira changes\ncount too.";
 const StatementJ: React.FC = () => (
   <div style={{ position: "absolute", left: 76, top: 790 }}>
-    <KineticLine text={J_TEXT} at={T.jira - 6} words={lineCues(sc.line("V23"), J_TEXT)} size={120} />
+    <WholeLine text={J_TEXT} at={T.jiraAt} size={120} />
   </div>
 );
 
@@ -165,22 +169,17 @@ const ShotJ: React.FC = () => {
         at={T.r20}
         fromRect={JIRA_TITLE_AT_R20}
         toRect={R20A_TITLE}
-        // the rest of the world stays as it is: only the Jira card goes (WorldJ), and the lit ADR byline stays in shot
-        twinRest={1}
-        twinBlur={0}
-        twinDrain={0}
+        // QA P-6: the world steps back under R20 like under every other proof (the Jira card itself goes)
         twin={
-          <AbsoluteFill>
-            <Iso>
-              <WorldJ />
-            </Iso>
-            <StatementJ />
-          </AbsoluteFill>
+          <Iso>
+            <WorldJ />
+          </Iso>
         }
         proof={
           <ProofFrame capture="p5-jira-done" crop={R20A_CROP} scale={R20A_SCALE} {...R20A_POS} at={T.r20} dur={T.r20End - T.r20} enter="none" tag="Recorded in Jira" />
         }
       />
+      <StatementJ />
       {frame >= T.r20 + 3 ? (
         <>
           <ProofFrame
@@ -219,11 +218,19 @@ const R21_POS = { x: Math.round(960 - R21_W / 2), y: 1080 - 30 - Math.round(252 
 const R21_KPI = inProof(proofRect({ crop: R21_CROP, scale: R21_SCALE, ...R21_POS }).image, R21_CROP, R21_SCALE, [720, 460, 3039, 227]);
 const R21_TWIN = screenAt(dashRect("kpiRow", DASH_POS.x, DASH_POS.y, K_DASH), T.r21, D_KEYS, D_OPTS);
 
-/** V23's second statement, in the empty top left of the dashboard shot. */
+/**
+ * V23's second statement, in the empty top left of the dashboard shot: "Every space" on its words, then "gets a drift
+ * dashboard." whole on "gets" (QA P-1: the last word lands a beat and a half earlier), held to the push out (52 f).
+ */
 const D_TEXT = "Every space\ngets a drift\ndashboard.";
+const D_CUES = (() => {
+  const cues = lineCues(sc.line("V23"), D_TEXT);
+  const g = cues[2]?.from ?? T.gets;
+  return cues.map((c, i) => (i >= 3 ? { from: g + (i - 2) } : c));
+})();
 const StatementD: React.FC = () => (
   <div style={{ position: "absolute", left: 76, top: 120 }}>
-    <KineticLine text={D_TEXT} at={T.space - 9} words={lineCues(sc.line("V23"), D_TEXT)} size={110} />
+    <KineticLine text={D_TEXT} at={T.space - 9} words={D_CUES} size={110} />
   </div>
 );
 
@@ -291,11 +298,17 @@ const ShotD: React.FC = () => (
 
 const K_TRACK = 1.75;
 const TRACK_POS = { x: Math.round(960 - (TRACK_UI.width * K_TRACK) / 2), y: 196 };
+/** The created message's centre (stage px), where the tail's push lands. */
+const NOTICE_C: [number, number] = (() => {
+  const n = trackRect("notice", TRACK_POS.x, TRACK_POS.y, K_TRACK);
+  return [n.x + n.w / 2, n.y + n.h / 2];
+})();
 const T_OPTS: CameraOptions = { base: { x: 1000, y: 540, zoom: 0.98 }, seed: "p5-track" };
 const T_KEYS: Cam3Key[] = [
   { at: T.track, dur: 22, to: { x: 960, y: 540, zoom: 1.0 } },
-  // a slow push toward the result
-  { at: T.created, dur: 50, to: { x: 960, y: 560, zoom: 1.04 }, ease: EASE.standard },
+  // P-4: one push onto "Jira task created" and "PAY-24 tracks this change." (the tail's focal element), then held
+  // (1.22x, the card whole: its header and the one amber badge stay in, nothing is cut by the frame)
+  { at: T.noticePush, dur: 12, to: { x: NOTICE_C[0], y: NOTICE_C[1] - 44, zoom: 1.22 } },
 ];
 const BUTTON = (() => {
   const b = trackRect("button", TRACK_POS.x, TRACK_POS.y, K_TRACK);
@@ -403,7 +416,7 @@ const P5: React.FC = () => {
       <Sfx id="whoosh-short" at={T.push + 6} gainDb={-3} />
       <Sfx id="tick" at={T.done + 4} gainDb={-2} />
       {/* the ADR's flag: the brand's slip, its latch on "count" */}
-      <Sfx id="slip" at={T.slip + 6} />
+      <Sfx id="slip" at={T.slip + 6} gainDb={-2} />
       <Sfx id="tick-soft" at={T.r20 + 4} />
       <Sfx id="whoosh-short" at={T.dash + 6} gainDb={-4} />
       {[0, 1, 2, 3].map((i) => (

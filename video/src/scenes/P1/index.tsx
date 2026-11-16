@@ -3,18 +3,18 @@ import { AbsoluteFill, useCurrentFrame } from "remotion";
 import { Sfx } from "../../audio/Sfx";
 import { Icon } from "../../brand/icons";
 import { Cursor, type CursorPoint } from "../../components/Cursor";
-import { FlyToken, FlyWord } from "../../components/P1/Fly";
+import { FlyToken, SlotWord } from "../../components/P1/Fly";
 import { CURSOR_FROM, FRESH_LEAD, FRESH_PAGE, freshCursor, freshRects, P1_BASE, toScreen } from "../../components/P1/fresh";
-import { SuggestionsTwin, suggestionsLayout } from "../../components/P1/SuggestionsTwin";
+import { savedRects, SuggestionsTwin, suggestionsLayout } from "../../components/P1/SuggestionsTwin";
 import type { Box } from "../../lib/captures";
 import { EASE, tween } from "../../lib/time";
 import { getScene } from "../../lib/timeline";
 import { Camera3D, cam3At, KineticLine, lineCues, MorphToReal, ProofFrame, proofPoint, PushCut, RebuildFromReal, Stage, useCam3, type Cam3, type Cam3Key } from "../../v4/kit";
-import { DAY, elevAt, type Rect } from "../../v4/look";
+import { DAY, elevAt, FONT, type Rect } from "../../v4/look";
 import { BYLINE, PageTwin, pageRects, textWidth, TOOLTIPS, type PageTwinProps } from "../../v4/twins";
 
 /**
- * P1 · Anchor (Day), V11 and V12 (R3 section 5; round 2 after the QA review S-2, S-5, S-6 and the director's notes).
+ * P1 · Anchor (Day), V11 and V12 (R3 section 5; rounds 2 and 3 after the QA reviews S-2, S-5, S-6 and K-7).
  * Explain with twins, prove with real captures (R1, R2, R3, R4). Frames are local, from the narration cues:
  *
  *   0       the fresh runbook twin from A2's last shot ("Unanchored · Doc Drift"); the cursor rests on the byline item
@@ -25,15 +25,18 @@ import { BYLINE, PageTwin, pageRects, textWidth, TOOLTIPS, type PageTwinProps } 
  *   70      the whole page; a scan line reads it ("Doc Drift reads ...")
  *   paths   one decisive push into step 2's code; `scripts/rollback.sh` lifts off it as a chip at elevation 4
  *   Jira    `PAY-6` lifts off the header table as the camera travels right (turned while it travels, square on landing)
- *   136     the suggestions panel lifts in (its card ends under the field: no empty space); the page racks out of focus
- *   suggests  the card grows, the two chips dock into their rows (PAY-6 checked; scripts/rollback.sh "Needs a
- *           repository", Weak, unchecked), and the line's statement rises in the empty side: "Suggests anchors."
+ *   136     the suggestions panel lifts in under the two flying chips, its card already holding room for both rows
+ *   158     the chips dock into their own rows (PAY-6 checked; scripts/rollback.sh "Needs a repository", Weak, unchecked),
+ *           never on the Save button or the card's border (S-2)
+ *   suggests  the line's statement rises word by word in the empty side: "Suggests anchors."
  *   180     R2 (T3 from the card): the real card; 225: the wipe back; the statement leaves by moving
  *   227     "payments-api" types into "Repository for suggested paths"; row 2 rolls to "in payments-api", is ticked
- *   255     the click on "Save and mark verified": R3 by a push-cut, the real notice; behind it the panel saves and the
- *           camera widens so the notice and the byline are both in frame
- *   288     a copy of "Verified" lifts out of the notice (the sentence stays whole) and flies into the byline; the panel
- *           leaves by moving; on "Verified" one decisive push onto the byline, then it settles; "Verified." rises
+ *   255     the click on "Save and mark verified": R3 by a push-cut, the real notice; behind it the panel saves and
+ *           re-centres lower, and the camera widens so the notice and the byline are both in frame
+ *   283     a copy of "Verified" lifts out of the notice (the sentence stays whole), glides level between the page's title
+ *           and byline, waits over its slot while the old words leave, and seats as the new ones uncover (S-6); the
+ *           panel leaves by moving; one decisive push onto the byline, then it settles; "✓ Verified." is set whole
+ *           with a push, after the copy, on the word (K-7)
  *   315     R4 (T3 from the byline item, a tight crop at 1:1): the real Verified byline and tooltip; 345: the wipe back
  *   360     the final pose, carried off by the kit's slipPush scene cut
  *
@@ -61,9 +64,13 @@ export const P1_T = {
   travel: w11("paths") + 8,
   panel: 136,
   rack: 138,
-  rowsGrow: w11("suggests") - 13,
-  dockB: w11("suggests") - 4,
-  dockA: w11("suggests") - 2,
+  /**
+   * S-2 (round 3): the card already has room for both rows when the panel lifts in (the flying tokens are over it by
+   * then), so each token docks into its own row and never on the Save button or the card's border.
+   */
+  rowsGrow: 128,
+  dockB: w11("suggests") - 20,
+  dockA: w11("suggests") - 16,
   r2: 180,
   r2Out: 225,
   /** "Suggests anchors." leaves by moving once read (from about f200, it holds 40 frames). */
@@ -74,15 +81,24 @@ export const P1_T = {
   save: 255,
   r3: 255,
   saved: 263,
-  r3Out: 282,
-  verifiedLift: 288,
-  panelOut: 287,
-  land: w12("verified") - 2,
-  /** The byline's slip swap: the old words gone at `swap`, "Verified · Doc Drift" readable at swap + 3, on the word. */
-  swap: w12("verified") - 3,
-  /** The decisive push of V12 on "Verified", then it settles for R4. */
-  push2: w12("verified") - 3,
-  settle: w12("verified") + 7,
+  r3Out: 277,
+  /**
+   * S-6 (round 3): the copy of "Verified" lifts out of the notice (2 frames up, clear of its sentence), glides level
+   * between the page's title and byline (7 frames), waits over its slot (2) while the old words leave beneath it, and
+   * seats (1) as the new words uncover; the panel leaves as it glides.
+   */
+  verifiedLift: 283,
+  flight: { rise: 2, glide: 7, hover: 2, drop: 1 },
+  panelOut: 286,
+  /** The byline's slip swap: the old words gone at `swap`, "Verified · Doc Drift" readable at swap + 3 (2 frames early). */
+  swap: w12("verified") - 5,
+  /** The copy seats one frame after `swap`, over the new word as it uncovers: the byline reads Verified 4 frames early. */
+  land: w12("verified") - 4,
+  /** The decisive push of V12 onto the byline as the copy seats, then it settles for R4. */
+  push2: w12("verified") - 5,
+  settle: w12("verified") + 5,
+  /** V12's statement, set whole with a push (K-7) once the copy has seated (S-6), readable on "Verified". */
+  say2: w12("verified") - 2,
   r4: 315,
   r4Out: 345,
   end: sc.durationInFrames,
@@ -92,6 +108,12 @@ const T = P1_T;
 // ---- the world (stage px) ----
 const PANEL = { x: 1010, y: 168 };
 const L = suggestionsLayout(PANEL);
+/**
+ * When it saves, the panel re-centres on its shorter content (behind R3), 130 px down: the notice's top edge then
+ * sits below the free line between the page's title and byline, the lane the copy of "Verified" travels (S-6).
+ */
+const SAVED_SHIFT = 130;
+const SAVED = savedRects(L, SAVED_SHIFT);
 const card = freshRects.card;
 const k = freshRects.k;
 const tokens = freshRects.tokens;
@@ -118,16 +140,25 @@ const bylineWordRect: Rect = {
   w: textWidth("Verified", { size: BYLINE.size, weight: BYLINE.weight }) * k,
   h: verifiedBadge.h,
 };
+/**
+ * The copy's lane: the free line between the title's baseline and the byline's capitals (title 27 UI px on a 33 px
+ * line, byline 15 UI px centred in its 28 px item), about 50 px of clear paper at k 1.8.
+ */
+const TITLE_BASELINE = freshRects.title.y + (freshRects.title.h - 1.2 * 27 * k) / 2 + 0.96 * 27 * k;
+const BYLINE_CAPS = cy(verifiedBadge) + (0.36 - 0.7) * BYLINE.size * k;
+const LANE = (TITLE_BASELINE + BYLINE_CAPS) / 2;
 
 // ---- camera ----
 /** On the panel, its left edge at 700 px so the line's statement has the left side. */
 const PANEL_CAM: Partial<Cam3> = { x: L.panel.x + 260, y: L.panel.y + L.panel.h / 2, zoom: 1, yaw: 0, pitch: 0 };
-/** Wide: the page's title and byline and the panel's notice, both whole (S-6), for the flight of "Verified". */
+/** Wide: the page's title and byline and the re-centred notice, all whole (S-6), for the flight of "Verified". */
 const WIDE = (() => {
-  const x0 = card.x + 10;
-  const x1 = L.notice.x + L.notice.w + 30;
-  const zoom = Math.min(1, 1920 / (x1 - x0));
-  return { x: (x0 + x1) / 2, y: (cy(verifiedBadge) + cy(L.notice)) / 2 + 60, zoom };
+  const x0 = card.x - 40;
+  const x1 = SAVED.notice.x + SAVED.notice.w + 40;
+  const y0 = freshRects.title.y - 120;
+  const y1 = SAVED.notice.y + SAVED.notice.h + 120;
+  const zoom = Math.min(1.1, 1920 / (x1 - x0), 1080 / (y1 - y0));
+  return { x: (x0 + x1) / 2, y: (y0 + y1) / 2, zoom };
 })();
 /** The end framing: the Verified item at screen (625, 520), zoom 1 (R4 lands on it; the statement has the right side). */
 const END_AT: [number, number] = [625, 520];
@@ -268,11 +299,27 @@ const TwinWorld: React.FC = () => {
         savePress={T.save}
         saved={T.saved}
         verifiedLift={T.verifiedLift}
+        savedShift={SAVED_SHIFT}
         leave={T.panelOut}
       />
       <FlyToken text="scripts/rollback.sh" home={rollbackHome} to={L.chip2} font={L.chipFont} liftAt={T.liftA} flyAt={T.flyA} land={T.dockA} arc={130} />
-      <FlyToken text="PAY-6" home={payHome} to={L.chip1} font={L.chipFont} liftAt={T.liftB} flyAt={T.flyB} land={T.dockB} arc={80} />
-      <FlyWord text="Verified" from={L.verifiedWord} to={bylineWordRect} fromFont={L.noticeFont} toFont={BYLINE.size * k} weight={600} toWeight={500} at={T.verifiedLift} land={T.land} hold={6} arc={70} />
+      {/* PAY-6 comes in level with its row (a slight dip, no arc over the repository field) */}
+      <FlyToken text="PAY-6" home={payHome} to={L.chip1} font={L.chipFont} liftAt={T.liftB} flyAt={T.flyB} land={T.dockB} arc={-15} />
+      <SlotWord
+        text="Verified"
+        from={SAVED.verifiedWord}
+        to={bylineWordRect}
+        fromFont={L.noticeFont}
+        toFont={BYLINE.size * k}
+        textW={bylineWordRect.w}
+        lane={LANE}
+        at={T.verifiedLift}
+        rise={T.flight.rise}
+        glide={T.flight.glide}
+        hover={T.flight.hover}
+        drop={T.flight.drop}
+        hold={4}
+      />
       <WorldCursor points={CURSOR_V11} show={-FRESH_LEAD + 2} hide={T.unhover + 6} />
       <WorldCursor points={CURSOR_V12} show={T.field - 12} hide={T.save + 4} />
     </Camera3D>
@@ -294,33 +341,51 @@ const SuggestsLine: React.FC = () => {
   );
 };
 
-/** V12's statement: the Verified icon and "Verified." on the byline's row, in the right side. */
+/**
+ * V12's statement: the Verified icon and "Verified." on the byline's row, in the right side. Set whole on the beat with
+ * a push (round 3, K-7: "Suggests anchors." builds word by word, this one does not): icon and word arrive together,
+ * pushed in from 0.9x with a 3-frame focus pull, 2 frames after the copy of "Verified" has seated in the byline (S-6),
+ * so it reads on the word.
+ */
 const VerifiedLine: React.FC = () => {
   const frame = useCurrentFrame();
-  const words = lineCues(sc.line("V12"), "Verified.");
-  const start = (words[0]?.from ?? T.land) - 6;
-  if (frame < start) return null;
-  const up = tween(frame, start, start + 12, 0, 1, EASE.expoOut);
+  const at = T.say2;
+  if (frame < at) return null;
+  const push = tween(frame, at, at + 10, 0, 1, EASE.expoOut);
+  const o = tween(frame, at, at + 2, 0, 1, EASE.linear);
+  const focus = 1 - tween(frame, at, at + 3, 0, 1, EASE.linear);
   const icon = 104;
   return (
-    <div style={{ position: "absolute", left: 1214, top: END_AT[1] - 64, height: 128, display: "flex", alignItems: "center", gap: 26 }}>
+    <div
+      style={{
+        position: "absolute",
+        left: 1214,
+        top: END_AT[1] - 64,
+        height: 128,
+        display: "flex",
+        alignItems: "center",
+        gap: 26,
+        opacity: o < 1 ? o : undefined,
+        transform: push < 1 ? `scale(${0.9 + 0.1 * push})` : undefined,
+        transformOrigin: "12% 50%",
+        filter: focus > 0.02 ? `blur(${(5 * focus).toFixed(2)}px)` : undefined,
+      }}
+    >
       <span
         style={{
           width: icon,
           height: icon,
           borderRadius: "50%",
           background: DAY.verifiedTint,
-          boxShadow: elevAt(1 + 1.5 * up),
+          boxShadow: elevAt(1 + 1.5 * push),
           display: "grid",
           placeItems: "center",
-          opacity: Math.min(1, up * 3),
-          transform: `translateY(${(1 - up) * 24}px) scale(${0.9 + 0.1 * up})`,
           flex: "none",
         }}
       >
         <Icon name="check" size={icon * 0.62} color={DAY.verified} stroke={2.4} />
       </span>
-      <KineticLine text="Verified." at={start} words={words} size={120} />
+      <span style={{ fontFamily: FONT.sans, fontWeight: 600, fontSize: 120, lineHeight: 1.05, letterSpacing: "-0.028em", color: DAY.text, whiteSpace: "nowrap" }}>Verified.</span>
     </div>
   );
 };
@@ -342,7 +407,7 @@ const P1: React.FC = () => {
     const behind = <MorphToReal at={T.r3} dur={4} fromRect={R3_NOTICE} toRect={R3_NOTICE} twin={world} proof={R3_EL} />;
     picture = frame < T.r3 + 8 ? <PushCut at={T.r3} from={world} to={behind} /> : behind;
   } else if (frame >= T.r3Out && frame < T.r3Out + 7) {
-    picture = <RebuildFromReal at={T.r3Out} fromRect={R3_NOTICE} toRect={screenOf(T.r3Out, L.notice)} twin={world} proof={R3_EL} />;
+    picture = <RebuildFromReal at={T.r3Out} fromRect={R3_NOTICE} toRect={screenOf(T.r3Out, SAVED.notice)} twin={world} proof={R3_EL} />;
   } else if (frame >= T.r4 && frame < T.r4Out) {
     picture = <MorphToReal at={T.r4} fromRect={twinBadgeR4} toRect={proofPoint(R4_PLACED, PILL_VER)} twin={world} proof={R4_EL} />;
   } else if (frame >= T.r4Out && frame < T.r4Out + 7) {
@@ -359,7 +424,8 @@ const P1: React.FC = () => {
       {/* sound: effects sit well under the voice (V4.md section 3) */}
       <Sfx id="tick-soft" at={T.r1 + 4} gainDb={-4} />
       <Sfx id="whoosh-short" at={T.push + 6} gainDb={-12} />
-      <Sfx id="pop" at={T.liftA + 2} gainDb={-6} />
+      {/* metrics r2: this pop sat 5.3 dB under the voice on "the"; 3.5 dB lower */}
+      <Sfx id="pop" at={T.liftA + 2} gainDb={-9.5} />
       <Sfx id="pop" at={T.liftB + 2} gainDb={-6} />
       <Sfx id="tick-soft" at={T.dockB} gainDb={-2} />
       <Sfx id="tick-soft" at={T.dockA} gainDb={-2} />

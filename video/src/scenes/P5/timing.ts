@@ -26,6 +26,8 @@ export const T = {
   /** The slip push out of P4's last pose (T5), 12 f. */
   push: 0,
   jira,
+  /** "Jira changes count too." set whole on the beat as the line starts, with a push (QA K-7, P-1: 71 f). */
+  jiraAt: sc.snap(jira),
   /** PAY-18 flips To Do -> Done on "changes" [3965]; the change runs along the anchor to ADR-015. */
   done: changes - 4,
   changes,
@@ -53,6 +55,8 @@ export const T = {
   /** ADR-015's row slips (6 f) and lands 0 to 2 f before "drift" [4053]. */
   rowSlip: drift - 6,
   dashboard,
+  /** "gets a drift dashboard." lands whole on "gets" (P-1: the line completes a beat earlier). */
+  gets: w("gets"),
   /** R21 [4057]: by MorphToReal from the KPI row. 40 f. */
   get r21() {
     return beatAtOrAfter(this.kpi + 18);
@@ -60,15 +64,20 @@ export const T = {
   get r21End() {
     return this.r21 + 40;
   },
-  /** Track in Jira (no voice): the push, the click, "Jira task created". */
+  /** Track in Jira (no voice): the push, the click, "Jira task created". It starts 6 f after R21 so the dashboard's
+   *  statement holds (P-1), and keeps R22 on the 195 beat. */
   get track() {
-    return this.r21End - 2;
+    return this.r21End + 6;
   },
   get click() {
-    return this.track + 19;
+    return this.track + 15;
   },
   get created() {
     return this.click + 6;
+  },
+  /** P-4: one push onto "Jira task created" and "PAY-24 tracks this change." */
+  get noticePush() {
+    return this.created + 2;
   },
   /** R22 [4132]: by MorphToReal from the created message. 30 f. */
   get r22() {

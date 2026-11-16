@@ -161,9 +161,9 @@ export type RebuildProps = {
   at: number;
   /** Frames of the wipe (default 4, round 2: was a 7-frame dissolve). */
   dur?: number;
-  /** The proof element's rect (kept for compatibility; the wipe crosses `frameRect`). */
+  /** The proof element's rect (the twin starts matched onto it, round 3). */
   fromRect: Rect;
-  /** The twin element's rect (kept for compatibility). */
+  /** The twin element's rect (where the twin's element grows back to). */
   toRect: Rect;
   twin: React.ReactNode;
   proof: React.ReactNode;
@@ -173,24 +173,57 @@ export type RebuildProps = {
   twinDrainFrom?: number;
   /** The proof's rect the wipe crosses (default: read from a ProofFrame or ProofMat `proof`, else the whole stage). */
   frameRect?: Rect;
+  /**
+   * Round 3 (QA K-6): the twin stays at rest (unreadable) while the wipe crosses, and starts at the proof's scale and
+   * place (its `toRect` element on the proof's `fromRect` element; pass rects that cover the SAME words for this to
+   * help); it sharpens and grows back to its own geometry over `grow` frames (default 4, expo out) from the wipe's last
+   * frames. `match={false}` keeps the twin in place.
+   */
+  match?: boolean;
+  grow?: number;
 };
 
 /**
- * T4, back from a proof when the same object continues (round 2, QA K-1): the proof is wiped off left to right in
- * `dur` frames (4, expo in-out) with a 16 px slide in the slip's direction, while the twin returns from where it
- * rested (dim, blurred, grey) to itself over `dur + 2` frames. Each pixel shows the proof or the twin, never both:
- * no double exposure. Before `at` it shows the proof over the resting twin, so it can follow MorphToReal directly.
+ * T4, back from a proof when the same object continues (round 2 and 3, QA K-1 and K-6): the proof is wiped off left to
+ * right in `dur` frames (4, expo in-out) with a 16 px slide in the slip's direction over the twin still at rest (dim,
+ * blurred, grey, and matched to the proof's scale and place), so no frame shows the proof's words beside readable twin
+ * words; then the twin sharpens and grows back to its own geometry. Each pixel shows the proof or the twin, never both.
+ * Before `at` it shows the proof over the resting twin, so it can follow MorphToReal directly.
  */
-export const RebuildFromReal: React.FC<RebuildProps> = ({ at, dur = 4, twin, proof, twinFrom = 0.18, twinBlurFrom = 7, twinDrainFrom = 1, frameRect }) => {
+export const RebuildFromReal: React.FC<RebuildProps> = ({
+  at,
+  dur = 4,
+  fromRect,
+  toRect,
+  twin,
+  proof,
+  twinFrom = 0.18,
+  twinBlurFrom = 7,
+  twinDrainFrom = 1,
+  frameRect,
+  match = true,
+  grow = 4,
+}) => {
   const frame = useCurrentFrame();
   const e = tween(frame, at, at + dur, 0, 1, EASE.expoInOut);
-  const k = 1 - tween(frame, at, at + dur + 2, 0, 1, EASE.expoOut);
+  // The twin stays at rest (dim, blurred, grey: unreadable) while the wipe crosses the proof, so the proof's words are
+  // never beside readable twin words; it sharpens and grows back over `grow` frames from the wipe's last frames (with
+  // dur 4: frames at+2 to at+6, done before a scene that renders the rebuild for 7 frames swaps back to its world).
+  const backFrom = at + Math.max(1, dur - 2);
+  const back = tween(frame, backFrom, backFrom + grow, 0, 1, EASE.expoOut);
+  const k = 1 - back;
   const fr = frameRect ?? proofInfo(proof)?.rect ?? { x: 0, y: 0, w: W, h: H };
   const cutX = fr.x + e * fr.w;
+  // the twin's element sits on the proof's element (when the rects name the same words) until it grows back
+  const m = rectMap(toRect, fromRect);
+  const g = back;
+  const matched = match && frame >= at && g < 1;
+  const tf = matched ? `translate(${lerp(m.tx, 0, g)}px, ${lerp(m.ty, 0, g)}px) scale(${lerp(m.s, 1, g)})` : undefined;
+  const style = twinStyle(k, { o: twinFrom, b: twinBlurFrom, d: twinDrainFrom });
   return (
     <AbsoluteFill>
-      <TwinGround on={k > 0.001} />
-      <AbsoluteFill style={twinStyle(k, { o: twinFrom, b: twinBlurFrom, d: twinDrainFrom })}>{twin}</AbsoluteFill>
+      <TwinGround on={k > 0.001 || matched} />
+      <AbsoluteFill style={{ ...style, transformOrigin: "0 0", transform: tf }}>{twin}</AbsoluteFill>
       {e < 1 ? (
         <AbsoluteFill
           style={{

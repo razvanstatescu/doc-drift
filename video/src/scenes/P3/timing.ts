@@ -102,8 +102,11 @@ export const T = {
   ghostAt: doesnt - 4,
   slipAt: old - 2,
   fallAt: stepEnd - 4,
-  /** "It says why.": "It says" on its words, "why." on "why" (the line's key word). Screen space, left. */
-  stmt17: [it2, says, why],
+  /**
+   * "It says why." sets whole on "says" (QA round 2, G-10: "It says" no longer hangs alone), so it holds to the whip;
+   * the line's decisive push still lands on "why". Screen space, left.
+   */
+  stmt17: [it2, says, says + 3],
   /** The real answer streams in line by line [2887..2902]; "Possibly stale" gets its amber block once streamed. */
   answerAt: says - 6,
   get answerAmber() {
@@ -127,10 +130,14 @@ export const T = {
   whip: sc.snap(v18),
   // V18
   v18,
-  /** find-docs-for-path is typed in 6 frames as the slab lands (QA G-1: never arrive empty). */
+  /** The slab lands with find-docs-for-path already typed (QA G-1: never arrive empty). */
   cmd1: sc.snap(v18) - 2,
-  /** Its output streams so the runbook row's status, the amber, lands just before "same" (row 11 at 45 lines/s). */
-  out1: same - 8,
+  /**
+   * Its output starts streaming as the slab lands (QA round 2, G-1: no empty body), paced so the runbook row's status,
+   * the amber, lands just before "same" (the scene derives the line rate from that row's index).
+   */
+  out1: sc.snap(v18) + 1,
+  statusBy: same - 3,
   same,
   /** V18's decisive push: onto the runbook row's status, landing on "signal"; back out after "MCP". */
   push18: signal - 10,
@@ -145,14 +152,22 @@ export const T = {
   pathAt: which - 4,
   linkAt: which - 2,
   chipAt: pages - 3,
-  /** The connector goes before the screen clears for the next call. */
-  unlink: file,
-  /** check-page-freshness types in 6 frames, so its output streams on "and"; the status (amber) follows. */
-  cmd2: and - 10,
-  stream2: and - 2,
+  /** The connector goes before the old output dims for the next call. */
+  unlink: file - 12,
+  /** The find-docs output dims under a veil until the next command appears (QA round 2, G-11: never blank). */
+  dimOld: and - 26,
+  /**
+   * check-page-freshness appears already typed as the screen clears, and its output streams at once; the clause must
+   * be still 94 frames before the scene cut (QA round 2 metrics), so this runs a little ahead of "and".
+   */
+  cmd2: and - 16,
+  stream2: and - 14,
   and,
-  /** "Do not present steps from this page as current." rises out of the streamed guidance and lands on "trust". */
-  clause: and,
+  /**
+   * "Do not present steps from this page as current." rises out of the streamed guidance word by word and is still
+   * by "which" (564), holding 94 frames to the scene cut.
+   */
+  clause: and - 10,
   trust,
   end: sc.durationInFrames,
 };

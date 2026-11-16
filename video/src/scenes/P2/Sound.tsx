@@ -15,7 +15,7 @@ export const Sound: React.FC = () => (
     <Sfx id="merge" at={T.r5Jump} />
     {/* the rename: the row lifts, -v2 drops in */}
     <Sfx id="swish-up" at={T.renameLift + 8} gainDb={-4} />
-    <Sfx id="tick" at={T.renameDrop + 3} gainDb={-2} />
+    <Sfx id="tick" at={T.renameDrop + 3} gainDb={-4.5} />
     <Sfx id="tick-soft" at={T.r6 + 2} gainDb={-5} />
     {/* the gap: the clock under the record's journey, a pop as it passes each node */}
     {[T.recordAt + 15, T.recordAt + 30, T.recordAt + 45].map((f) => (

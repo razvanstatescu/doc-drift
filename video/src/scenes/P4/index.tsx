@@ -2,6 +2,7 @@ import React from "react";
 import { noise2D } from "@remotion/noise";
 import { AbsoluteFill, useCurrentFrame } from "remotion";
 import { Sfx } from "../../audio/Sfx";
+import { Icon } from "../../brand/icons";
 import { Cursor, type CursorPoint } from "../../components/Cursor";
 import { COMMENT_UI, CommentTwin, commentRect } from "../../components/P4/CommentTwin";
 import {
@@ -19,6 +20,7 @@ import {
   STR,
   SuccessNotice,
 } from "../../components/P4/ReviewPanelTwin";
+import { WholeLine } from "../../components/P4/WholeLine";
 import { toolOutput } from "../../lib/captures";
 import { EASE, tween } from "../../lib/time";
 import {
@@ -167,13 +169,20 @@ const WorldA: React.FC<{ pose: "comment" | "byline" }> = ({ pose }) => {
   );
 };
 
-/** V19's focal statement, in the empty top left (it whips away with the comment world). */
+/**
+ * V19's focal statement, in the empty top left: set whole on the beat before "one" with a push (QA K-7), held in
+ * screen space while the world whips under it, thrown off on the whip (P-1: 46 f complete).
+ */
 const V19_TEXT = "One\ncomment.";
-const StatementV19: React.FC = () => (
-  <div style={{ position: "absolute", left: 84, top: 150 }}>
-    <KineticLine text={V19_TEXT} at={T.one - 6} words={lineCues(sc.line("V19"), V19_TEXT)} size={130} thesis={[1]} />
-  </div>
-);
+const StatementV19: React.FC = () => {
+  const frame = useCurrentFrame();
+  if (frame > T.oneOut + 8) return null;
+  return (
+    <div style={{ position: "absolute", left: 84, top: 150 }}>
+      <WholeLine text={V19_TEXT} at={T.oneAt} size={130} exit={{ at: T.oneOut, stagger: 1, dur: 4 }} />
+    </div>
+  );
+};
 
 /** World A at the comment, with R13 growing out of the twin's body (the twin steps back under it), and the statement. */
 const CommentShot: React.FC = () => (
@@ -200,7 +209,6 @@ const CommentShot: React.FC = () => (
         />
       }
     />
-    <StatementV19 />
   </AbsoluteFill>
 );
 
@@ -244,6 +252,8 @@ const B_OPTS: CameraOptions = { base: { x: 960, y: 470, zoom: 0.95 }, seed: "p4-
 const B_KEYS: Cam3Key[] = [
   // the zoom-through lands: settle on the header, the why and the tabs
   { at: ARRIVE, dur: 26, to: { x: 960, y: 420, zoom: 1.0 } },
+  // P-5: one push onto the why sentence while the panel holds flat ("PR #482 renamed ..., an anchor of this page.")
+  { at: T.flatPush, dur: 20, to: { x: 960, y: 330, zoom: 1.12 } },
   // travel to Quick fix (pulled back so the header and its Possibly stale badge stay in frame, racked: the one amber)
   { at: T.travel, dur: 18, to: { x: QF_STAGE.x + QF_STAGE.w / 2 - 20, y: 690, zoom: 0.88 }, ease: EASE.expoInOut },
   // pan as "No AI used." flies in: the card moves left and the ground opens on the right for the type
@@ -303,6 +313,27 @@ const K_AGENT = 1.8;
 const AGENT_POS = { x: 1330, y: 226 };
 const agentConfirm: [number, number] = [AGENT_POS.x + (16 + 11 + (buttonW("Confirm selected") * 0.82) / 2) * K_AGENT, AGENT_POS.y + 147.8 * K_AGENT];
 const AGENT_ROWS: Rect = { x: AGENT_POS.x + 27 * K_AGENT, y: AGENT_POS.y + 85 * K_AGENT, w: 250 * K_AGENT, h: 38 * K_AGENT };
+/**
+ * P-2: for one beat the card lifts to hero size (1.75x, its rows and "Confirm selected" at about 40 px) while its
+ * review rows tick and a person confirms (the human step the voice promises), then it returns as the drafts leave it.
+ */
+const HERO_S = 1.75;
+const HERO_POS = { x: 900, y: 214 };
+const heroAt = (f: number) => tween(f, T.heroUp, T.heroUp + 8, 0, 1, EASE.expoOut) * (1 - tween(f, T.heroBack, T.heroBack + 9, 0, 1, EASE.expoInOut));
+/** A point of the agent card (screen) where the card is at a frame (home, hero, or between). */
+const agentPt = (p: [number, number], f: number): [number, number] => {
+  const h = heroAt(f);
+  const s = 1 + (HERO_S - 1) * h;
+  const ox = AGENT_POS.x + (HERO_POS.x - AGENT_POS.x) * h;
+  const oy = AGENT_POS.y + (HERO_POS.y - AGENT_POS.y) * h;
+  return [ox + (p[0] - AGENT_POS.x) * s, oy + (p[1] - AGENT_POS.y) * s];
+};
+const agentRect = (r: Rect, f: number): Rect => {
+  const a = agentPt([r.x, r.y], f);
+  const b = agentPt([r.x + r.w, r.y + r.h], f);
+  return { x: a[0], y: a[1], w: b[0] - a[0], h: b[1] - a[1] };
+};
+const HERO_CONFIRM = agentPt(agentConfirm, T.confirm);
 
 const K_FLY = K_PROP * PROP_END;
 const slotAt = (r: Rect): Rect => ({ x: PROP_TO.x + r.x * PROP_END, y: PROP_TO.y + r.y * PROP_END, w: r.w * PROP_END, h: r.h * PROP_END });
@@ -403,6 +434,7 @@ const FloatsB: React.FC = () => {
   const rows = (frame >= T.rows[0] ? 1 : 0) + (frame >= T.rows[1] ? 1 : 0);
   const confirmPress = pressCurve(frame, T.confirm);
   const agentMid: [number, number] = [AGENT_POS.x - 4, AGENT_POS.y + 28 * K_AGENT];
+  const hero = heroAt(frame);
   const sigD = `M ${PROP_EDGE[0] + 6} ${PROP_EDGE[1]} C ${PROP_EDGE[0] + 90} ${PROP_EDGE[1]}, ${agentMid[0] - 90} ${agentMid[1]}, ${agentMid[0]} ${agentMid[1]}`;
   return (
     <AbsoluteFill>
@@ -459,24 +491,33 @@ const FloatsB: React.FC = () => {
       ) : null}
       {frame >= T.proposeClick && frame < T.r15 ? <SignalLine d={sigD} at={T.proposeClick + 1} dur={10} pulse trail /> : null}
       {frame >= T.agentIn && frame < T.r15 + 8 ? (
-        <Lift at={T.agentIn} from={1} to={3} radius={18 * K_AGENT} x={AGENT_POS.x} y={AGENT_POS.y}>
-          <AgentCard
-            k={K_AGENT}
-            rows={rows}
-            confirmPress={confirmPress}
-            confirmed={tween(frame, T.confirm + 4, T.confirm + 10)}
-            style={{ boxShadow: "none" }}
-          />
-        </Lift>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            transformOrigin: `${AGENT_POS.x}px ${AGENT_POS.y}px`,
+            transform: hero > 0.001 ? `translate(${(HERO_POS.x - AGENT_POS.x) * hero}px, ${(HERO_POS.y - AGENT_POS.y) * hero}px) scale(${1 + (HERO_S - 1) * hero})` : undefined,
+          }}
+        >
+          <Lift at={T.agentIn} from={1} to={3} radius={18 * K_AGENT} x={AGENT_POS.x} y={AGENT_POS.y}>
+            <AgentCard
+              k={K_AGENT}
+              rows={rows}
+              confirmPress={confirmPress}
+              confirmed={tween(frame, T.confirm + 4, T.confirm + 10)}
+              style={{ boxShadow: hero > 0.001 ? elevAt(3 + hero) : "none" }}
+            />
+          </Lift>
+        </div>
       ) : null}
       {/* the drafts fly from the agent's review rows to their slots in Proposed fix (never to the page) */}
       {frame >= T.draft1 && frame < T.draft1 + 10 ? (
-        <Dock at={T.draft1} dur={10} fromRect={AGENT_ROWS} toRect={DRAFT1_TO}>
+        <Dock at={T.draft1} dur={10} fromRect={agentRect(AGENT_ROWS, T.draft1)} toRect={DRAFT1_TO}>
           <DraftCard k={K_FLY} which={1} elevated />
         </Dock>
       ) : null}
       {frame >= T.draft2 && frame < T.draft2 + 10 ? (
-        <Dock at={T.draft2} dur={10} fromRect={AGENT_ROWS} toRect={DRAFT2_TO}>
+        <Dock at={T.draft2} dur={10} fromRect={agentRect(AGENT_ROWS, T.draft2)} toRect={DRAFT2_TO}>
           <DraftCard k={K_FLY} which={2} elevated />
         </Dock>
       ) : null}
@@ -551,7 +592,7 @@ const ShotB: React.FC = () => {
   const cursor2: CursorPoint[] = [
     { frame: T.proposeIn + 10, x: propBtn[0] + 260, y: propBtn[1] + 230 },
     { frame: T.proposeClick, x: propBtn[0], y: propBtn[1], click: true, cursor: "pointer", travel: 14 },
-    { frame: T.confirm, x: agentConfirm[0], y: agentConfirm[1], click: true, cursor: "pointer", travel: 18 },
+    { frame: T.confirm, x: HERO_CONFIRM[0], y: HERO_CONFIRM[1], click: true, cursor: "pointer", travel: 18 },
   ];
   return (
     <AbsoluteFill>
@@ -563,7 +604,7 @@ const ShotB: React.FC = () => {
         <Cursor points={cursor} showAt={T.cursorIn} hideAt={T.r14} />
         <Cursor points={cursor2} showAt={T.proposeIn + 10} hideAt={T.confirm + 8} />
         <Press at={T.proposeClick} x={propBtn[0]} y={propBtn[1]} />
-        <Press at={T.confirm} x={agentConfirm[0]} y={agentConfirm[1]} />
+        <Press at={T.confirm} x={HERO_CONFIRM[0]} y={HERO_CONFIRM[1]} />
       </FloatHold>
     </AbsoluteFill>
   );
@@ -635,8 +676,9 @@ const PAGE_C: PageTwinProps = {
   ...PAGE_BASE,
   // the slip swap: old words gone at bylineAt, "Verified · Doc Drift" readable 3 f later (2 f before "Verified.")
   byline: { kind: "dds", state: "verified", from: "possibly_stale", at: T.bylineAt },
-  // the Steps band stays out of line (neutral) until the snap back; the byline item is the one amber until it turns Verified
-  slip: { at: -100, back: T.back, amber: false },
+  // the Steps band stays out of line and carries the shot's one amber (its edge, glow and bloom; the byline item is not
+  // lit) until the snap back, where it latches into line and its glow fades with the slip (QA P-3)
+  slip: { at: -100, back: T.back },
   // the page as the quick fix left it (version 2), then the accepted drafts slip in their insertions at the snap back
   step2: { morphAt: T.back, dur: 8, from: "renamed", to: "new" },
 };
@@ -663,15 +705,21 @@ const STACK_O: [number, number] = [RC.card.x + RC.card.w / 2, RC.step2.y];
 
 /** Side view: the page on the left half, room on the right for the statement, the footer card and R16. */
 const SIDE = { x: 1610, y: 610, zoom: 0.72 };
-/** The payoff and terminal pose: the page on the left, square; the right column empty for the toast, terminal, line. */
-const PAYOFF = { x: 1325, y: 640, zoom: 0.95 };
+/**
+ * The payoff pose, P1's V12 framing (QA P-3, the rhyme): the Verified item at screen (560, 520), zoom 1, the page on
+ * the left with its Steps band in shot below the byline, so "✓ Verified." sits on the byline's row at exactly P1's
+ * place (left 1214) and the right column is empty for the terminal. The frame's bottom falls between the code well
+ * and the band's edge (no line is cut).
+ */
+const PAYOFF_AT: [number, number] = [560, 520];
+const PAYOFF = { x: RC.badge.x + RC.badge.w / 2 - (PAYOFF_AT[0] - 960), y: RC.badge.y + RC.badge.h / 2 - (PAYOFF_AT[1] - 540), zoom: 1.0 };
 const STEP2C = center(RC.step2Code);
 const C_OPTS: CameraOptions = { base: { x: SIDE.x - 170, y: SIDE.y, zoom: SIDE.zoom }, seed: "p4-drafts" };
 const C_KEYS: Cam3Key[] = [
   // the whip lands: the side view (content still travelling left), a slow orbit while the drafts hover
   { at: T.side - 4, dur: 30, to: { ...SIDE } },
-  // the payoff: one decisive push as the page squares up and snaps back (on "Verified")
-  { at: T.back - 2, dur: 20, to: { ...PAYOFF } },
+  // the payoff: one decisive push (0.72 to 1, 1.39x) onto the byline as the page squares up and snaps back
+  { at: T.push, dur: 10, to: { ...PAYOFF } },
   // behind R18, to step 2 (R19 grows out of it where A1 punched in on the old step 2)
   { at: T.r18 + 4, dur: 22, to: { x: STEP2C[0], y: STEP2C[1], zoom: 1.24 } },
 ];
@@ -697,20 +745,19 @@ const R16_IMG_A = proofRect({ crop: R16_CROP_A, scale: R16_SCALE, ...R16_POS }).
 const R16_FOOT = inProof(R16_IMG_A, R16_CROP_A, R16_SCALE, [1168, 1862, 853, 123]);
 const R16_CLICK = inProof(R16_IMG_A, R16_CROP_A, R16_SCALE, [1929, 1894, 0, 0]);
 
-// The "Accepted." toast: the lower right, after R16, never over the page (QA R-4).
-const K_TOAST = 1.75;
-const TOAST_TITLE = "Accepted. A new page version names PR #482.";
-const TOAST_UI_W = 16 + 20 + 12 + Math.max(textW(TOAST_TITLE, 15, 600), textW(STR.reloadPage, 14)) + 18;
-const TOAST_POS = { x: Math.round(1920 - 62 - TOAST_UI_W * K_TOAST), y: 820 };
-
-// R17: p4-verified-tooltip, the byline item and its one-line tooltip. Height 300: the tooltip ends on capture row 571,
-// the page's table starts on 620, so the crop shows the whole tooltip and nothing of the row below.
-const R17_CROP: [number, number, number, number] = [1440, 300, 1460, 300];
-const R17_SCALE = 0.75;
-const R17_ITEM_CAP: [number, number, number, number] = [2352, 462, 250, 44];
+// R17: p4-verified-tooltip, P1's R4 grammar (the rhyme): a tight crop at 0.92 (room to creep, M1) of "Add a reaction",
+// the real Verified item (its hovered pill, 2322 to 2805) and its tooltip (rows 524 to 571), landing on the twin's item.
+// Every edge is on whitespace: the column at 2115 lies between the reactions "2" (to 2104) and "Add a reaction" (from
+// 2129); the bottom (586) is above the page's table (620).
+const R17_CROP: [number, number, number, number] = [2115, 446, 705, 140];
+const R17_SCALE = 0.92;
+const R17_PILL_CAP: [number, number, number, number] = [2322, 460, 483, 48];
 const R17_TWIN = screenAt(RC.badge, T.r17, C_KEYS, C_OPTS);
-const R17_POS = { x: 60, y: 80 };
-const R17_ITEM = inProof(proofRect({ crop: R17_CROP, scale: R17_SCALE, ...R17_POS }).image, R17_CROP, R17_SCALE, R17_ITEM_CAP);
+const R17_POS = {
+  x: Math.round(R17_TWIN.x + R17_TWIN.w / 2 - 14 - (R17_PILL_CAP[0] + R17_PILL_CAP[2] / 2 - R17_CROP[0]) * R17_SCALE),
+  y: Math.round(R17_TWIN.y + R17_TWIN.h / 2 - 14 - (R17_PILL_CAP[1] + R17_PILL_CAP[3] / 2 - R17_CROP[1]) * R17_SCALE),
+};
+const R17_ITEM = inProof(proofRect({ crop: R17_CROP, scale: R17_SCALE, ...R17_POS }).image, R17_CROP, R17_SCALE, R17_PILL_CAP);
 /** The hovered pill's grey under the logged cover (the white default would show on the pill). */
 const PILL_MASK = {
   box: [2605, 465, 176, 37] as [number, number, number, number],
@@ -742,8 +789,10 @@ const VERIFIED = toolOutput("checkVerified") as Out;
 if (String(VERIFIED?.output?.guidance) !== '"Payments rollback runbook" is Verified. Safe to cite.' || VERIFIED.output.status !== "verified") {
   throw new Error("P4: captures.json toolOutput.checkVerified changed; check the terminal against the new real output");
 }
-const TERM_W = 700;
-const TERM_FONT = 27;
+const TERM_W = 680;
+const TERM_FONT = 26;
+/** Eight rows: from "status" to the closing brace; the command scrolls up as the output streams. */
+const TERM_ROWS = 8;
 const TERM_CALLS: TerminalCall[] = [
   {
     cmd: `check-page-freshness {"pageId": "${VERIFIED.input.pageId}"}`,
@@ -755,8 +804,8 @@ const TERM_CALLS: TerminalCall[] = [
     lps: 60,
   },
 ];
-const TERM_SIZE = terminalSize({ calls: TERM_CALLS, width: TERM_W, fontSize: TERM_FONT });
-const TERM_POS = { x: 1920 - 56 - TERM_W, y: Math.round(1040 - TERM_SIZE.height) };
+const TERM_SIZE = terminalSize({ calls: TERM_CALLS, width: TERM_W, fontSize: TERM_FONT, rows: TERM_ROWS });
+const TERM_POS = { x: 1920 - 40 - TERM_W, y: Math.round(1040 - TERM_SIZE.height) };
 
 /** The stack's turn at a frame: the side view orbits slowly, then squares up on the snap back. */
 const viewC = (frame: number) => {
@@ -858,8 +907,6 @@ const WorldC: React.FC = () => {
 const ShotC: React.FC = () => {
   const frame = useCurrentFrame();
   const footIn = frame >= T.footerIn && frame < T.r16 + 8;
-  const toastIn = frame >= T.toastIn;
-  const toastOut = tween(frame, T.toastOut, T.toastOut + 8, 0, 1, EASE.expoIn);
   const cursor: CursorPoint[] = [
     { frame: T.footerIn + 6, x: ACCEPT_PT[0] + 220, y: ACCEPT_PT[1] + 170 },
     { frame: T.r16 - 2, x: ACCEPT_PT[0] + 4, y: ACCEPT_PT[1] + 2, cursor: "pointer", travel: 18 },
@@ -877,13 +924,6 @@ const ShotC: React.FC = () => {
             <Lift at={T.footerIn} from={1} to={4} radius={18 * K_FOOT} x={FOOT_POS.x} y={FOOT_POS.y}>
               <FooterCard k={K_FOOT} style={{ boxShadow: "none" }} />
             </Lift>
-          ) : null}
-          {toastIn && toastOut < 1 ? (
-            <div style={{ position: "absolute", left: TOAST_POS.x + toastOut * 900, top: TOAST_POS.y }}>
-              <Lift at={T.toastIn} from={1} to={4} radius={12 * K_TOAST}>
-                <SuccessNotice k={K_TOAST} title={TOAST_TITLE} body={STR.reloadPage} style={{ boxShadow: "none", width: TOAST_UI_W * K_TOAST }} />
-              </Lift>
-            </div>
           ) : null}
           <Cursor points={cursor} showAt={T.footerIn + 6} hideAt={T.r16} />
         </FloatHold>
@@ -969,15 +1009,20 @@ const ShotCWithProofs: React.FC = () => {
   );
 };
 
-/** The terminal: lifts into the empty lower right at full opacity, already typed; leaves to the right before R18. */
+/**
+ * The terminal: rises into the empty lower right from below the frame's edge at full opacity (never a one-frame pop,
+ * metrics r2), its command already typed, its tag "Real output: doc-drift MCP"; it leaves to the right before R18.
+ */
 const TerminalFloat: React.FC = () => {
   const frame = useCurrentFrame();
   if (frame < T.term) return null;
+  const rise = tween(frame, T.term, T.term + 12, 0, 1, EASE.expoOut);
   const out = tween(frame, T.r18 - 8, T.r18 + 2, 0, 1, EASE.expoIn);
   if (out >= 1) return null;
+  const dy = (1 - rise) * (1080 - TERM_POS.y + 90);
   return (
     <FloatHold seed="p4-term">
-      <div style={{ position: "absolute", inset: 0, transform: out > 0 ? `translateX(${out * (1920 - TERM_POS.x + 80)}px)` : undefined }}>
+      <div style={{ position: "absolute", inset: 0, transform: `translate(${out * (1920 - TERM_POS.x + 80)}px, ${dy}px)` }}>
         <TerminalTwin
           title="Coding agent · MCP"
           right="doc-drift"
@@ -985,8 +1030,9 @@ const TerminalFloat: React.FC = () => {
           y={TERM_POS.y}
           width={TERM_W}
           fontSize={TERM_FONT}
+          rows={TERM_ROWS}
           calls={TERM_CALLS}
-          enter={{ at: T.term, dur: 14 }}
+          enter={{ at: T.term, dur: 12 }}
           tag="Real output: doc-drift MCP"
         />
       </div>
@@ -994,35 +1040,73 @@ const TerminalFloat: React.FC = () => {
   );
 };
 
-/** V21's focal statement in the right column; it spans the whip into the side view and leaves before the payoff. */
-const V21_TEXT = "Nothing changes\nuntil a person\naccepts.";
+/**
+ * V21's focal statement in the right column, aligned with P1's "✓ Verified." below it (left 1214). It builds on
+ * "Nothing" and "changes", completes whole on "until" (QA P-1: complete earlier), and rides into the payoff: at the hit
+ * "✓ Verified." lands under its last line, then it leaves (72 f complete).
+ */
+const V21_TEXT = "Nothing\nchanges\nuntil a person\naccepts.";
+const V21_CUES = (() => {
+  const cues = lineCues(sc.line("V21"), V21_TEXT);
+  const u = cues[2]?.from ?? 422;
+  return cues.map((c, i) => (i >= 3 ? { from: u + (i - 2) } : c));
+})();
 const StatementV21: React.FC = () => {
   const frame = useCurrentFrame();
-  if (frame < T.nothing - 8 || frame > T.back + 8) return null;
+  if (frame < T.nothing - 8 || frame > T.v21Out + 12) return null;
   return (
-    <div style={{ position: "absolute", left: 1010, top: 104 }}>
-      <KineticLine text={V21_TEXT} at={T.nothing - 6} words={lineCues(sc.line("V21"), V21_TEXT)} size={110} exit={{ at: T.back - 8, stagger: 1, dur: 4 }} />
+    <div style={{ position: "absolute", left: 1214, top: 50 }}>
+      <KineticLine text={V21_TEXT} at={T.nothing - 6} words={V21_CUES} size={106} lineHeight={100} exit={{ at: T.v21Out, stagger: 1, dur: 4 }} />
     </div>
   );
 };
 
-/** V22's resolution line: a still bar in the empty top right, from "cite" to the end of the scene (QA R-15). */
-const CITE_TEXT = "Safe to cite.";
-const StatementV22: React.FC = () => {
+/**
+ * P1's V12 statement brought back at the payoff (QA P-3, the rhyme): the Verified icon and "Verified." at the same
+ * size and the same place (left 1214, on the byline's row at y 520), rising on "Verified." [3760]; it holds 44 f and
+ * leaves before the terminal rises under it.
+ */
+const VerifiedLine: React.FC = () => {
   const frame = useCurrentFrame();
-  if (frame < T.cite - 14) return null;
+  const words = lineCues(sc.line("V22"), "Verified.");
+  const start = (words[0]?.from ?? T.verified) - 6;
+  if (frame < start || frame > T.verifiedOut + 10) return null;
+  const up = tween(frame, start, start + 12, 0, 1, EASE.expoOut);
+  const out = tween(frame, T.verifiedOut, T.verifiedOut + 5, 0, 1, EASE.expoIn);
+  const icon = 104;
   return (
-    <div style={{ position: "absolute", left: 1152, top: 132 }}>
-      <KineticLine
-        text={CITE_TEXT}
-        at={T.cite - 12}
-        words={lineCues(sc.line("V22"), CITE_TEXT)}
-        size={140}
-        mark={{ words: [0, 2], kind: "current", at: sc.wordAt("V22", "cite", "to") }}
-      />
+    <div style={{ position: "absolute", left: 1214, top: PAYOFF_AT[1] - 64, height: 128, display: "flex", alignItems: "center", gap: 26 }}>
+      <span
+        style={{
+          width: icon,
+          height: icon,
+          borderRadius: "50%",
+          background: DAY.verifiedTint,
+          boxShadow: elevAt(1 + 1.5 * up),
+          display: "grid",
+          placeItems: "center",
+          opacity: Math.min(1, up * 3) * (1 - out),
+          transform: `translateY(${(1 - up) * 24 - out * 40}px) scale(${0.9 + 0.1 * up})`,
+          flex: "none",
+        }}
+      >
+        <Icon name="check" size={icon * 0.62} color={DAY.verified} stroke={2.4} />
+      </span>
+      <KineticLine text="Verified." at={start} words={words} size={120} exit={{ at: T.verifiedOut, dur: 5 }} />
     </div>
   );
 };
+
+/**
+ * V22's resolution line: set whole on the beat before "cite" with a push (QA K-7), then a still bar in the empty top
+ * right to the end of the scene (R-15), its Current underline on "cite".
+ */
+const CITE_TEXT = "Safe to cite.";
+const StatementV22: React.FC = () => (
+  <div style={{ position: "absolute", left: 1146, top: 132 }}>
+    <WholeLine text={CITE_TEXT} at={T.citeAt} size={140} push={1.08} mark={{ words: [0, 2], kind: "current", at: sc.wordAt("V22", "cite", "to") }} />
+  </div>
+);
 
 /** World C with everything in front of it: the proofs, the terminal, "Safe to cite.". */
 const ShotCFull: React.FC = () => (
@@ -1044,12 +1128,16 @@ const P4: React.FC = () => {
   const frame = useCurrentFrame();
   let picture: React.ReactNode;
   if (frame < T.zoom) picture = <WhipBlur at={T.whip} dir="down" from={<CommentShot />} to={<BylineShot />} />;
-  else if (frame < T.side - 6) picture = <ZoomThrough at={T.zoom} center={CLICK_PT} from={<BylineShot />} to={<ShotBWithProofs />} />;
+  // the zoom-through's directional blur instead of the 5-sample camera blur: the sampled frame dipped the local
+  // luminance for one frame (flashcheck, round 3: 2.5 flashes in that window against the 2.0 target)
+  else if (frame < T.side - 6) picture = <ZoomThrough at={T.zoom} center={CLICK_PT} from={<BylineShot />} to={<ShotBWithProofs />} motionBlur={false} />;
   else picture = <WhipBlur at={T.side} dir="left" from={<ShotBWithProofs />} to={<ShotCFull />} />;
   return (
     <AbsoluteFill style={{ background: DAY.ground }}>
       {picture}
+      <StatementV19 />
       <StatementV21 />
+      <VerifiedLine />
       {/* V19 */}
       <Sfx id="pop" at={T.pop + 3} gainDb={-5} />
       <Sfx id="tick-soft" at={T.r13 + 6} />

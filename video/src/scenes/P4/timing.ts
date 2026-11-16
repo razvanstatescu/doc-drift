@@ -50,6 +50,15 @@ export const T = {
   owner,
   one,
   comment,
+  /** "One comment." set whole on the beat before "one" with a push (QA K-7, P-1: it holds to the whip, 46 f). */
+  oneAt: sc.snap(owner),
+  get oneOut() {
+    return this.whip;
+  },
+  /** P-5: one push onto the why sentence while the panel holds flat, before the travel to Quick fix. */
+  get flatPush() {
+    return this.flat - 4;
+  },
   /** R13 [3322]: a beat before "comment", by MorphToReal from the comment's body. 27 f (whip at its end). */
   r13: beatAtOrAfter(comment - 13),
   get r13End() {
@@ -114,6 +123,13 @@ export const T = {
     return [drift - 2, drift + 3];
   },
   confirm: drift + 10,
+  /** P-2: Drift Reviewer's card lifts to hero size for one beat while its rows tick and a person confirms. */
+  get heroUp() {
+    return this.rows[0] - 8;
+  },
+  get heroBack() {
+    return this.confirm + 2;
+  },
   /** The drafts fly back and land in the panel as diffs on "drafts the edit" [3605..3645]. */
   draft1: drafts - 10,
   draft2: drafts - 6,
@@ -163,12 +179,15 @@ export const T = {
   verified,
   /** The byline's slip swap: readable by +3, so "Verified · Doc Drift" reads 2 f before "Verified." [3760]. */
   bylineAt: verified - 5,
-  /** The "Accepted." toast (the empty lower right, never over the page) after R16, until the terminal needs the corner. */
-  get toastIn() {
-    return this.r16End + 5;
+  /** P-3: one decisive push (0.72 to 1.0, 1.39x) onto the byline as it swaps on the hit, the Steps band in shot. */
+  push: back - 4,
+  /** V21's statement completes on "until" (the rest of the line set whole) and rides into the payoff (P-1). */
+  get v21Out() {
+    return verified + 24;
   },
-  get toastOut() {
-    return this.term - 12;
+  /** P1's "✓ Verified." (same size and place, the rhyme with V12) lands on "Verified." and holds 47 f. */
+  get verifiedOut() {
+    return verified + 51;
   },
   /** R17 [3772]: by MorphToReal from the byline item. 30 f. */
   r17: beatAtOrAfter(verified + 10),
@@ -176,13 +195,15 @@ export const T = {
     return this.r17 + 30;
   },
   now,
-  /** The terminal lifts in on "Now the agent", its command already typed; "Safe to cite." lands on "cite". */
-  term: now + 1,
+  /** The terminal rises in from below on "agent" [3806], its command already typed (its tag clears "✓ Verified."). */
+  term: w("V22", "agent") + 3,
   /** The output streams from here (60 lines/s), done well before "cite". */
   get outAt() {
-    return this.term + 5;
+    return this.term + 4;
   },
   cite,
+  /** "Safe to cite." set whole on the beat before "cite" with a push (QA K-7). */
+  citeAt: sc.snap(cite),
   /** The tail (no voice): R18 the page history, then R19 step 2 as it now reads. */
   get r18() {
     return beatAtOrAfter(cite + 50);

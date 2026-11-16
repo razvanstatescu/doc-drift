@@ -83,6 +83,12 @@ export type SuggestionsTwinProps = {
   saved?: number;
   /** The word "Verified" is lifted as a copy at this frame (the scene flies it; the sentence here stays whole). */
   verifiedLift?: number;
+  /**
+   * From `saved` the panel re-centres as its content shrinks, moving down this many px with the saved state's ease
+   * (round 3, S-6: the notice then sits below the page's title line, so the copy of "Verified" can leave it upward and
+   * travel level between the title and the byline). `savedRects()` gives the shifted notice and word.
+   */
+  savedShift?: number;
   /** Dims the whole panel (0..1 multiplier of opacity), for when a proof sits in front. */
   dim?: number;
   /** The panel leaves by moving (M3): it slides out to the right from this frame (9 frames, cubic in). */
@@ -180,6 +186,12 @@ export function suggestionsLayout(p: Pick<SuggestionsTwinProps, "x" | "y" | "k" 
   const savedBottom = notice.y + notice.h + u(18) + u(22) + u(10) + u(22) + u(16) + u(22) + u(PAD);
   const panelSaved: Rect = { x: p.x, y: p.y, w: W, h: savedBottom - p.y };
   return { panel, card, field, row1, row2, chip1, chip2, check2, save, notice, verifiedWord, panelSaved, chipFont: u(S.row.chip), noticeFont: nTitle, rowsH };
+}
+
+/** The saved state's rects after the panel has re-centred by `shift` (see `savedShift`). */
+export function savedRects(L: SuggestionsRects, shift: number) {
+  const down = (r: Rect): Rect => ({ ...r, y: r.y + shift });
+  return { notice: down(L.notice), verifiedWord: down(L.verifiedWord), panelSaved: down(L.panelSaved) };
 }
 
 // ---- pieces ----
@@ -477,7 +489,7 @@ export const SuggestionsTwin: React.FC<SuggestionsTwinProps> = (props) => {
         width: L.panel.w,
         height: panelH,
         opacity: fadeIn * dim < 1 ? fadeIn * dim : undefined,
-        transform: `translate(${away * 1500}px, ${(1 - up) * 30}px) scale(${0.975 + 0.025 * up})`,
+        transform: `translate(${away * 1500}px, ${(1 - up) * 30 + (props.savedShift ?? 0) * savedIn}px) scale(${0.975 + 0.025 * up})`,
         transformOrigin: "50% 100%",
       }}
     >

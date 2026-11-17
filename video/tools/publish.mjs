@@ -17,7 +17,9 @@ function files(dir) {
     return statSync(p).isDirectory() ? files(p) : /\.tsx?$/.test(n) ? [p] : [];
   });
 }
-const a0src = files(join(root, 'src/scenes/A0')).map((f) => readFileSync(f, 'utf8')).join('\n');
+// v5 (D41) has no cold open: no plates and no quoted voice unless the timeline still has A0
+const hasA0 = t.scenes.some((s) => s.id === 'A0');
+const a0src = hasA0 ? files(join(root, 'src/scenes/A0')).map((f) => readFileSync(f, 'utf8')).join('\n') : '';
 const used = plates.filter((p) => new RegExp(`['"]${p.id.replace(/[-]/g, '\\-')}['"]`).test(a0src));
 
 // --- captions ---
@@ -55,7 +57,7 @@ const wrap = (s) => {
 const cues = [];
 // The real voice in the cold open (placed by the A0 scene at f30; speech about f39-f172).
 const clipText = 'Bad documentation or outdated documentation is worse than no documentation.';
-cues.push({ text: `[Mikey Ariel, foss-north 2019] ${clipText}`, from: 38, to: 174 });
+if (hasA0) cues.push({ text: `[Mikey Ariel, foss-north 2019] ${clipText}`, from: 38, to: 174 });
 for (const v of t.vo) {
   for (const c of chunks(v.words, v.text, v.from, v.from + v.durationInFrames)) cues.push(c);
 }
@@ -69,13 +71,20 @@ writeFileSync(join(root, `out/doc-drift-${tag}.srt`), srt);
 const chapterNames = {
   A0: 'Docs that know when the code moved',
   A1: 'The problem: a runbook the code left behind',
-  A2: 'How Doc Drift Sentinel works',
+  A2: 'How Doc Drift works',
   P1: 'Anchor a page',
   P2: 'A merge flags the page',
   P3: 'Agents are told: Rovo and MCP',
   P4: 'Review and fix, by a person',
   P5: 'Jira changes and the space dashboard',
   A4: 'Catch the slip',
+  PROBLEM: 'The problem: a runbook the code left behind',
+  PROMISE: 'What Doc Drift does',
+  LOOP: 'Link, merge, flagged in 19 seconds',
+  AGENTS: 'AI agents are told: Rovo and MCP',
+  FIX: 'A person fixes it',
+  JIRA: 'Jira changes and the dashboard',
+  CLOSE: 'Get it',
 };
 const mmss = (frame) => {
   const s = Math.floor(frame / fps);
@@ -90,9 +99,9 @@ const credits = used
     return `- ${p.source}${p.date ? `, ${p.date}` : ''}: ${p.url}${lic ? ` (${lic})` : ''}`;
   })
   .join('\n');
-const desc = `Doc Drift Sentinel: docs that know when the code moved.
+const desc = `Doc Drift: docs that know when the code moved.
 
-A Forge app for Confluence, built for Codegeist 2026. It anchors Confluence pages to the code paths and Jira work they describe, flags a page Possibly stale when a merged pull request or a Jira change touches those anchors, and tells Rovo and coding agents (over MCP) not to trust the page until a person re-verifies it. Detection is deterministic: no AI decides what is stale. Agents never edit a page.
+For teams with docs in Confluence, Doc Drift flags a page when the code or Jira work behind it changes, so people and AI agents stop trusting it until someone checks. It links each page to the files and Jira issues it names; when a merged pull request in Bitbucket or a Jira change touches them, the page is marked Possibly stale within seconds, and Rovo agents and coding assistants (over MCP) are told not to present it as current. No AI decides what is stale, and agents never edit a page: a person fixes it, with a one-click fix for renames or an AI-drafted edit they accept. A Forge app for Confluence, with Jira and Bitbucket, built for Codegeist 2026.
 
 In the product part, animated recreations of our own interface explain each step, using the product's real wording and data, and short recordings from our demo site (development install) show each step working, including the real merge of PR #482.
 
@@ -103,15 +112,9 @@ Made by Nano Soft (Nano-Soft Technology SRL), https://nano-soft.tech/
 Chapters
 ${chapters}
 
-Credits
-Voice in the opening: Mikey Ariel, "Docs or it didn't happen!", foss-north 2019, https://www.youtube.com/watch?v=Rq98-audaEc, licensed CC BY. Audio trimmed; use does not imply endorsement.
+${hasA0 ? `Credits\nVoice in the opening: Mikey Ariel, "Docs or it didn't happen!", foss-north 2019, https://www.youtube.com/watch?v=Rq98-audaEc, licensed CC BY. Audio trimmed; use does not imply endorsement.\n\nPages shown briefly in the opening, as commentary (words unchanged, private names blurred; no endorsement implied):\n${credits}\n\n` : ''}Narration, music and sound effects were generated with AI tools (ElevenLabs) on our own paid account.
 
-Pages shown briefly in the opening, as commentary (words unchanged, private names blurred; no endorsement implied):
-${credits}
-
-Narration, music and sound effects were generated with AI tools (ElevenLabs) on our own paid account.
-
-Atlassian, Confluence, Jira, Bitbucket and Rovo are trademarks of Atlassian. Doc Drift Sentinel is an independent app built on Atlassian Forge, not made or endorsed by Atlassian.
+Atlassian, Confluence, Jira, Bitbucket and Rovo are trademarks of Atlassian. Doc Drift is an independent app built on Atlassian Forge, not made or endorsed by Atlassian.
 `;
 writeFileSync(join(root, `out/doc-drift-${tag}-description.md`), desc);
 console.log(`captions: ${cues.length} cues -> out/doc-drift-${tag}.srt`);

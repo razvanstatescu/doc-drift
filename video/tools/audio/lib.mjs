@@ -110,7 +110,7 @@ export function scaleInPlace(x, g) { for (let i = 0; i < x.length; i++) x[i] *= 
  * Normalise for script comparison: lower case, numbers in words to digits for the few we use, "a.m." -> "am",
  * no punctuation, single spaces.
  */
-const NUMS = { zero: '0', one: '1', two: '2', three: '3', four: '4', five: '5', six: '6', seven: '7', eight: '8', nine: '9', ten: '10' };
+const NUMS = { zero: '0', one: '1', two: '2', three: '3', four: '4', five: '5', six: '6', seven: '7', eight: '8', nine: '9', ten: '10', nineteen: '19' };
 export function norm(s) {
   return s
     .toLowerCase()
@@ -121,9 +121,11 @@ export function norm(s) {
     .replace(/\.(sh)\b/g, ' dot $1')
     .replace(/[^a-z0-9]+/g, ' ')
     .trim()
+    .replace(/\bfour eighty two\b/g, '482') // v5: "pull request 482" is voiced "four eighty-two"
     .split(' ')
     .map((w) => NUMS[w] ?? w)
     .join(' ')
+    .replace(/\b4 82\b/g, '482')
     .replace(/\bs h\b/g, 'sh')
     .replace(/\bdock\b/g, 'doc') // homophone: Scribe writes "Dock Drift" for a correct "Doc Drift"
     .replace(/\bm c p\b/g, 'mcp')

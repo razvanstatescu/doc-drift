@@ -1,40 +1,55 @@
 #!/usr/bin/env node
-// Narration V00-V25 (BRIEF section 2): one eleven_v4 request per line with previous_text / next_text from the script
-// neighbours, /with-timestamps, 48 kHz WAV -> trim + loudness-match (vo-core.mjs) -> Scribe (scribe_v3, no keyterms)
-// against the script -> retake on any word mismatch (up to 3 takes) -> forced alignment on the shipped file.
-//   node tools/audio/vo.mjs [--only V03,V10] [--retake V10]
-// Shipped: public/vo/Vxx.wav (48 kHz 16-bit mono, -20 LUFS integrated, sample peak <= -3 dBFS).
-// Working files: tools/audio/cache/vo/ (raw takes, masters, transcripts, per-line state). Manifest: cache/vo/vo.json.
+// Narration (v4: V00-V25, BRIEF section 2; v5: S01-S22, V5.md section 2): one eleven_v4 request per line with
+// previous_text / next_text from the script neighbours, /with-timestamps, 48 kHz WAV -> trim + loudness-match
+// (vo-core.mjs) -> Scribe (scribe_v3, no keyterms) against the script -> retake on any word mismatch (up to 3 takes)
+// -> forced alignment on the shipped file.
+//   node tools/audio/vo.mjs [--film v4|v5] [--only S03,S10] [--retake S10]      (default --film v5)
+//   --pick S21=1        ship take 1 of S21 (a choice made by measurement; remembered in the line's state as `pick`)
+//   --variant plain     with --only: voice those lines WITHOUT their direction tag into cache/vo/alt/<id>.plain.*
+//                       (state, takes and Scribe QA; never shipped, never aligned), as v4 kept V00/V01's plain reads
+// Shipped: public/vo/<id>.wav (48 kHz 16-bit mono, -20 LUFS integrated, sample peak <= -3 dBFS).
+// Working files: tools/audio/cache/vo/ (raw takes, masters, transcripts, per-line state). Manifest: cache/vo/vo.json
+// (v4) or cache/vo/vo-v5.json (v5). Line ids differ between films, so their takes never share a cache entry.
 import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { BUDGET, LINES, PATHS, VOICE } from './config.mjs';
+import { BUDGET, PATHS, VOICE, filmOf, sayWord } from './config.mjs';
 import { argv, compareText, creditsUsed, ensureDir, guardCredits, hash, norm, probe, r3, readJson, writeJson } from './lib.mjs';
 import { align, eleven, stt, tts } from './paid.mjs';
 import { masterTake, pace, pitchStats } from './vo-core.mjs';
 
 const CACHE = ensureDir(resolve(PATHS.cache, 'vo'));
 const a = argv();
+const FILM = filmOf(a.film ?? 'v5');
+const LINES = FILM.lines;
 const only = a.only ? new Set(String(a.only).split(',')) : null;
 const retake = a.retake ? new Set(String(a.retake).split(',')) : new Set();
-// V00 follows the barrage captions; give the model that context (it is not spoken).
-const BEFORE_V00 = "The code moved. The docs didn't. The agents can't tell.";
+const picks = Object.fromEntries((a.pick ? String(a.pick).split(',') : []).map((x) => x.split('=')).map(([id, n]) => [id, Number(n)]));
+const variant = a.variant ? String(a.variant) : null;
+if (variant && variant !== 'plain') throw new Error(`unknown --variant ${variant} (have: plain)`);
+if (variant && !only) throw new Error('--variant needs --only <ids>');
+// The first line's previous_text: v4's V00 followed the barrage captions (given as context, not spoken); v5 opens cold.
+const BEFORE_FIRST = FILM.before;
 
-/** Map aligned (spoken) words onto script words by matching normalised letters (e.g. rollback dot S H -> rollback.sh.). */
-export function mapWords(scriptText, aligned) {
+/**
+ * Map aligned (spoken) words onto script words by matching normalised letters (e.g. rollback dot S H -> rollback.sh.,
+ * four eighty-two -> 482.). `spoken(w)` turns a script word into what the voice was sent (the film's spellings).
+ */
+export function mapWords(scriptText, aligned, spoken = (w) => w) {
   const key = (w) => norm(w).replace(/ /g, '');
   const sw = scriptText.split(/\s+/);
   const out = [];
   let j = 0;
   for (const w of sw) {
-    const target = key(w);
-    let acc = '', start = null, end = null;
-    while (j < aligned.length && acc.length < target.length) {
-      const k = key(aligned[j].text);
-      if (start === null) start = aligned[j].start;
-      acc += k; end = aligned[j].end; j++;
+    const target = key(spoken(w));
+    // the shortest run of aligned words whose JOINED text normalises to the spoken word (norm sees the whole phrase,
+    // so multi-word rules such as "four eighty two" -> 482 or "s h" -> sh apply the same way on both sides)
+    let n = 0;
+    for (let k = 1; k <= Math.min(8, aligned.length - j); k++) {
+      if (key(aligned.slice(j, j + k).map((x) => x.text).join(' ')) === target) { n = k; break; }
     }
-    if (acc !== target) return { ok: false, words: null, why: `"${w}" vs "${acc}"` };
-    out.push({ text: w, start: r3(start), end: r3(end) });
+    if (!n) return { ok: false, words: null, why: `"${w}" vs "${aligned.slice(j, j + 3).map((x) => x.text).join(' ')}"` };
+    out.push({ text: w, start: r3(aligned[j].start), end: r3(aligned[j + n - 1].end) });
+    j += n;
   }
   return { ok: j === aligned.length, words: out, why: j === aligned.length ? null : 'left-over aligned words' };
 }
@@ -48,28 +63,33 @@ function flagsOf(m, p) {
   return f;
 }
 
-async function voiceLine(line, i) {
-  const prev = i === 0 ? BEFORE_V00 : LINES[i - 1].say;
+async function voiceLine(line0, i) {
+  // --variant plain: the same line without its direction tag, kept aside in cache/vo/alt/ (never shipped)
+  const line = variant === 'plain' ? { ...line0, direction: undefined } : line0;
+  const dir = variant ? ensureDir(resolve(CACHE, 'alt')) : CACHE;
+  const stem = variant ? `${line.id}.${variant}` : line.id;
+  const prev = i === 0 ? BEFORE_FIRST : LINES[i - 1].say;
   const next = LINES[i + 1]?.say;
   const base = { voice: VOICE.id, model: VOICE.model, settings: VOICE.settings, say: line.say, prev, next, format: 'wav_48000', ...(line.direction ? { direction: line.direction } : {}) };
   const key = hash(base);
-  const statePath = resolve(CACHE, `${line.id}.json`);
+  const statePath = resolve(dir, `${stem}.json`);
   const state = readJson(statePath);
-  if (state?.key === key && state.final && !retake.has(line.id)) return state;
+  const pick = picks[line.id] ?? (state?.key === key ? state.pick : undefined);
+  if (state?.key === key && state.final && !retake.has(line.id) && (pick === undefined || state.final.qa.chosen === pick)) return state;
 
   const takes = state?.key === key ? state.takes ?? [] : [];
   const start = retake.has(line.id) ? takes.length : 0;
   for (let attempt = start; attempt <= start + BUDGET.retakesPerLine; attempt++) {
     if (takes.some((t) => t.qa.ok && !t.flags.length) && !retake.has(line.id)) break;
     await guardCredits(eleven, 200);
-    const seed = 3000 + i * 10 + attempt;
+    const seed = FILM.seedBase + i * 10 + attempt + (variant ? 100 : 0);
     const r = await tts(line.direction ? `${line.direction} ${line.say}` : line.say, {
       voiceId: VOICE.id, modelId: VOICE.model, outputFormat: 'wav_48000', voiceSettings: VOICE.settings, withTimestamps: true,
       previousText: prev, nextText: next, seed, languageCode: 'en',
     }, { phase: 'vo', line: line.id, attempt });
-    const raw = resolve(CACHE, `${line.id}.t${attempt}.raw.wav`);
+    const raw = resolve(dir, `${stem}.t${attempt}.raw.wav`);
     writeFileSync(raw, r.audio);
-    const mastered = resolve(CACHE, `${line.id}.t${attempt}.wav`);
+    const mastered = resolve(dir, `${stem}.t${attempt}.wav`);
     const m = masterTake(raw, mastered);
     const s = await stt(mastered, { languageCode: 'en' }, { phase: 'vo', line: line.id, attempt });
     const words = s.words.filter((w) => w.type === 'word');
@@ -82,7 +102,15 @@ async function voiceLine(line, i) {
     if (qa.ok && !retake.has(line.id)) break; // a word-perfect take ends the loop; other flags are reported, not retaken
     if (qa.ok && retake.has(line.id)) break;
   }
-  const chosen = takes.findLast((t) => t.qa.ok && !t.flags.length && (!retake.has(line.id) || t.attempt >= start))
+  if (variant) {
+    // kept aside for a listen and for measurement; the shipped file and the timeline are untouched
+    const st = { key, ...base, variant, takes, final: null };
+    writeJson(statePath, st);
+    return { ...st, final: readJson(resolve(CACHE, `${line.id}.json`))?.final };
+  }
+  if (pick !== undefined && !takes.some((t) => t.attempt === pick && t.qa.ok)) throw new Error(`${line.id}: --pick ${pick} is not a word-perfect take`);
+  const chosen = (pick !== undefined ? takes.find((t) => t.attempt === pick) : null)
+    ?? takes.findLast((t) => t.qa.ok && !t.flags.length && (!retake.has(line.id) || t.attempt >= start))
     ?? takes.find((t) => t.qa.ok) ?? takes.at(-1);
   const out = resolve(PATHS.voDir, `${line.id}.wav`);
   ensureDir(PATHS.voDir);
@@ -91,7 +119,7 @@ async function voiceLine(line, i) {
   // forced alignment on the shipped file, with the spoken text; mapped back onto the script words
   const al = await align(out, line.say, { phase: 'vo', line: line.id });
   const aligned = al.words.filter((w) => w.text.trim() !== '').map((w) => ({ text: w.text.trim(), start: w.start, end: w.end, loss: w.loss }));
-  const mapped = mapWords(line.text, aligned);
+  const mapped = mapWords(line.text, aligned, (w) => sayWord(FILM, w));
   if (!mapped.ok) throw new Error(`${line.id}: aligned words do not map onto the script (${mapped.why})`);
   const final = {
     id: line.id, scene: line.scene, text: line.text, say: line.say, file: `vo/${line.id}.wav`,
@@ -100,7 +128,7 @@ async function voiceLine(line, i) {
     droppedEdges: chosen.master.droppedEdges, pace: chosen.pace, pitch: pitchStats(out), flags: chosen.flags,
     qa: { chosen: chosen.attempt, takes: takes.map((t) => ({ attempt: t.attempt, ok: t.qa.ok, heard: t.heard, flags: t.flags })) },
   };
-  const st = { key, ...base, takes, final };
+  const st = { key, ...base, takes, ...(pick !== undefined ? { pick } : {}), final };
   writeJson(statePath, st);
   return st;
 }
@@ -117,7 +145,7 @@ for (let i = 0; i < LINES.length; i++) {
   const st = await voiceLine(line, i);
   manifest.push(st.final);
 }
-writeJson(resolve(CACHE, 'vo.json'), { voice: VOICE, lines: manifest });
+writeJson(resolve(CACHE, FILM.manifest), { film: FILM.name, voice: VOICE, lines: manifest });
 const after = await creditsUsed(eleven);
 const tot = manifest.reduce((s, l) => s + l.duration, 0);
 const Is = manifest.map((l) => l.loudness.I);

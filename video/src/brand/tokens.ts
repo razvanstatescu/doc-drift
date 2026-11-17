@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 
 /**
- * Doc Drift Sentinel brand tokens for the film, from brand/tokens.json (copied verbatim; if that file changes, change
+ * Doc Drift brand tokens for the film, from brand/tokens.json (copied verbatim; if that file changes, change
  * this one). Two worlds: NIGHT (Night shift: the cold open, the reveal and act A1) and DAY (from A2 on).
  * Hard rules (BRIEF section 6): one beacon (amber) element per shot; amber as text on Day uses beaconText (#8A5300);
  * primary buttons fill with `text`; Spline Sans for reading, Spline Sans Mono only for literals.

@@ -1,14 +1,19 @@
 #!/usr/bin/env node
 // One command for the narration side of the audio pipeline (see tools/audio/AUDIO.md):
-//   node tools/audio/run.mjs            vo.mjs (cached per line; a changed voice, model or text re-voices) -> timeline -> QA
-//   node tools/audio/run.mjs --scribe   ...and the paid full-narration Scribe check in QA
-// To swap the narrator: edit VOICE in tools/audio/config.mjs and re-run. If the scene grid moves, timeline.mjs marks the
-// score entry `pending` and says so: re-edit tools/audio/arrangements/score.json, then
-//   python3 -I tools/audio/arrange.py tools/audio/arrangements/score.json && node tools/audio/timeline.mjs
-// Music (paid): node tools/audio/music.mjs --score [--seed N]; effects: node tools/sfx/generate.mjs && node tools/sfx/process.mjs
+//   node tools/audio/run.mjs [--film v4|v5]            vo.mjs (cached per line; a changed voice, model or text re-voices)
+//                                                      -> timeline -> QA                      (default --film v5)
+//   node tools/audio/run.mjs [--film v4|v5] --scribe   ...and the paid full-narration Scribe check (with WER) in QA
+// v5 writes src/data/timeline.json (the film the picture code reads); v4 writes src/data/timeline-v4.json.
+// To swap the narrator: edit VOICE in tools/audio/config.mjs and re-run. If the scene grid moves, the timeline builder
+// marks the score entry `pending` and says so: re-edit the film's edit list, then
+//   v5: python3 -I tools/audio/arrange.py tools/audio/arrangements/score-v5.json && node tools/audio/timeline-v5.mjs
+//   v4: python3 -I tools/audio/arrange.py tools/audio/arrangements/score.json && node tools/audio/timeline.mjs
+// Music (paid, v4's take): node tools/audio/music.mjs --score [--seed N]; effects: node tools/sfx/generate.mjs && node tools/sfx/process.mjs
 import { spawnSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { filmOf } from './config.mjs';
+import { argv } from './lib.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const step = (file, args = []) => {
@@ -16,7 +21,10 @@ const step = (file, args = []) => {
   const r = spawnSync('node', [resolve(here, file), ...args], { stdio: 'inherit' });
   if (r.status !== 0) process.exit(r.status ?? 1);
 };
-const pass = process.argv.slice(2).filter((x) => x !== '--scribe');
-step('vo.mjs', pass);
-step('timeline.mjs');
-step('qa.mjs', process.argv.includes('--scribe') ? [] : ['--no-scribe']);
+const film = filmOf(argv().film ?? 'v5');
+const rest = process.argv.slice(2).filter((x, i, all) => x !== '--scribe' && x !== '--film' && all[i - 1] !== '--film');
+step('vo.mjs', ['--film', film.name, ...rest]);
+step(film.timelineScript);
+step('qa.mjs', ['--film', film.name, ...(process.argv.includes('--scribe') ? [] : ['--no-scribe'])]);
+// QA measures the score (BPM, first beat, loudness); the timeline's music entry carries those, so rebuild it once more
+step(film.timelineScript);

@@ -53,7 +53,12 @@ if [[ -n "${FRAMES:-}" ]]; then RENDER_FLAGS+=(--frames="$FRAMES"); fi
 echo "== typecheck"
 npx tsc --noEmit
 
-if [[ -n "${SINGLE:-}" ]]; then
+# v5 (D41) has no A0 and no WebGL: render Main in one pass, without --gl=angle (DOM anti-aliasing throughout).
+if ! grep -q '"id": "A0"' src/data/timeline.json; then NOGL=1; fi
+if [[ -n "${NOGL:-}" ]]; then
+  echo "== render Main in one pass (no --gl=angle)"
+  npx remotion render "$ENTRY" Main "$RAW" "${RENDER_FLAGS[@]}"
+elif [[ -n "${SINGLE:-}" ]]; then
   echo "== render Main in one pass"
   npx remotion render "$ENTRY" Main "$RAW" "${RENDER_FLAGS[@]}" --gl=angle
 else

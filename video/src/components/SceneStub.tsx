@@ -7,7 +7,7 @@ import { FPS } from "../lib/time";
 import { Caption } from "./Caption";
 
 /** Which world a scene lives in (BRIEF decision 2): Night for the cold open and act A1, Day from A2 on. */
-export const worldOf = (sceneId: string): ThemeName => (sceneId === "A0" || sceneId === "A1" ? "night" : "day");
+export const worldOf = (sceneId: string): ThemeName => (sceneId === "A0" || sceneId === "A1" || sceneId === "PROBLEM" ? "night" : "day");
 
 export const SCENE_NAMES: Record<string, string> = {
   A0: "Cold open",
@@ -19,6 +19,13 @@ export const SCENE_NAMES: Record<string, string> = {
   P4: "Review",
   P5: "Scale",
   A4: "Close",
+  PROBLEM: "The problem",
+  PROMISE: "What it is",
+  LOOP: "The real loop",
+  AGENTS: "Agents are told",
+  FIX: "A person fixes it",
+  JIRA: "Jira and the dashboard",
+  CLOSE: "Close",
 };
 
 /**

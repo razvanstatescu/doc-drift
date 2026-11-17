@@ -1,6 +1,8 @@
 #!/usr/bin/env node
-// Film timeline (BRIEF sections 3 and 5): frames absolute on the film clock, 30 fps, 120 BPM (beat 15 f, bar 60 f).
-// Reads tools/audio/cache/vo/vo.json (the voiced lines), writes src/data/timeline.json and tools/audio/cache/timeline.md.
+// Film timeline for v1-v4 (BRIEF sections 3 and 5): frames absolute on the film clock, 30 fps, 120 BPM (beat 15 f, bar 60 f).
+// Reads tools/audio/cache/vo/vo.json (the voiced lines V00-V25), writes src/data/timeline-v4.json and
+// tools/audio/cache/timeline.md. Since v5 (D41), src/data/timeline.json is v5's (tools/audio/timeline-v5.mjs); this
+// builder is kept so v4 stays reproducible.
 //   node tools/audio/timeline.mjs
 // Rules:
 //   A0: black from f180, V00 at f195; R (reveal, score start) = V00's speech end + 15 f; V01 at R + 15; A0 ends R + 120.
@@ -10,7 +12,7 @@
 //   Spare time in a scene goes to the gaps marked `spare` (whole beats, in turn), the rest to the scene's tail.
 //   duck: each VO span padded 5 f before and 10 f after, merged.
 import { resolve } from 'node:path';
-import { PATHS, VO_MASTER, VOICE } from './config.mjs';
+import { FILMS, PATHS, VO_MASTER, VOICE } from './config.mjs';
 import { BAR_F, BEAT_F, FPS, readJson, writeJson } from './lib.mjs';
 import { existsSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -170,7 +172,7 @@ export function build() {
 }
 
 export function writeTimeline({ timeline, scenes }) {
-  const p = resolve(PATHS.dataDir, 'timeline.json');
+  const p = resolve(PATHS.dataDir, FILMS.v4.timeline);
   const prev = readJson(p);
   writeJson(p, timeline, 1);
   const s = (f) => (f / FPS).toFixed(2);

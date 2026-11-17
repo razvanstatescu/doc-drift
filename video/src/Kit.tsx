@@ -306,7 +306,7 @@ const SlipCutPage: React.FC = () => (
     to={
       <World theme="day">
         <PageLabel>Kit · after the slip cut</PageLabel>
-        <Caption center size="headline" lines={["Doc Drift Sentinel anchors", "each Confluence page to the code", "and Jira work it describes."]} />
+        <Caption center size="headline" lines={["Doc Drift anchors", "each Confluence page to the code", "and Jira work it describes."]} />
       </World>
     }
   />

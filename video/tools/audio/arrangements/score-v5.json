@@ -1,0 +1,196 @@
+{
+ "_comment": "The v5 score (D41): a bar-line edit of the SAME Eleven Music take as v4 (music_v2_5, seed 7101, 152 s, 120.004 BPM, beats at 0.0065 + k/2 s), no new generation. Film clock = grid clock: film frame 0 = grid 0 (the score starts on the film's first frame); 105.0 s = 3150 f. The take's 8-bar phrases run from its lift at source 32 (32, 48, 64, ... 144), each ending on a fill bar (62-64 is a kick drop-out, 94-96 a hats fill). Night (+4 dB, so it is heard under the voice): the last 15.5 s of the take's Night (source 16-31.5: its 2 loud / 2 quiet bars and the rise), cut dead one beat before daySlip, so S05 is followed by 0.5 s of silence and the take's own lift (source 32) lands on daySlip. One 16-bar splice at film 46 (source 62 -> 94) skips the drop-out bar and two phrases, so the take's final hit (source 144) lands on endHit (film 96); it sits 0.4 s after the flag hit, under its tail. The 19 s roll (from the beat after S10 to the word 'Possibly') strips to bass and ticks, then the band returns with a sub hit on the sixteenth that meets 'Possibly'. FIX is low-passed and opens over the 2 beats before S18 (on a bar line), full band and a small sub hit there (snapBack). JIRA's last 2 bars build (riser, then a 1-bar high-pass) into endHit, where a sub hit doubles the take's hit; its C major ring-out is time-stretched 2.5x so it rings under S21 and S22 to the film's last frame.",
+ "source": "tools/audio/cache/music/score-music_v2_5-s7101.wav",
+ "out": "public/music/score-v5.wav",
+ "beatOffset": 0.0065,
+ "durationSec": 105.0,
+ "startFadeMs": 20,
+ "endFadeMs": 50,
+ "peakDb": -3,
+ "segments": [
+  {
+   "t0": 0,
+   "t1": 15.5,
+   "s0": 16,
+   "why": "Night: source bars 8-15 of the take's Night (16-31.5), its rise over the last 3 bars, cut one beat early"
+  },
+  {
+   "t0": 15.5,
+   "t1": 16,
+   "silence": true,
+   "why": "the hard stop: one beat of silence before daySlip (S05 ends at 15.42)"
+  },
+  {
+   "t0": 16,
+   "t1": 46,
+   "s0": 32,
+   "why": "the take's lift on daySlip (source 32), its first phrase and 7 bars of the second (the drop-out bar 62-64 is skipped)"
+  },
+  {
+   "t0": 46,
+   "t1": 96.25,
+   "s0": 94,
+   "why": "from the hats-fill bar that ends the take's 4th phrase (94-96), its phrases 5-7, the final hit at film 96 = source 144 and its first quarter second"
+  },
+  {
+   "t0": 96.25,
+   "t1": 105,
+   "s0": 144.25,
+   "stretch": 2.5,
+   "why": "the ring-out (a C major chord) 2.5x slower, so it lasts to the film's end (source 144.25-147.75)"
+  }
+ ],
+ "sweeps": [
+  {
+   "type": "strip",
+   "t0": 42.5,
+   "t1": 45.625,
+   "bassHz": 250,
+   "tickHz": 6000,
+   "tickGain": 0.3,
+   "rampIn": 0.25,
+   "rampOut": 0.02,
+   "why": "the 19 s roll: bass and ticks only from the beat after S10, released on the sixteenth of 'Possibly'"
+  },
+  {
+   "type": "lowpass",
+   "points": [
+    [
+     70,
+     14000
+    ],
+    [
+     71,
+     900
+    ],
+    [
+     81,
+     900
+    ],
+    [
+     82,
+     14000
+    ]
+   ],
+   "why": "FIX: a person fixes the page under a muffled groove (900 Hz), opening over the 2 beats before S18"
+  },
+  {
+   "type": "highpass",
+   "t0": 94,
+   "t1": 96,
+   "fromHz": 30,
+   "toHz": 600,
+   "why": "the last bar before endHit thins upward; full band on the hit"
+  }
+ ],
+ "gain": [
+  {
+   "t0": 0,
+   "t1": 15.5,
+   "db": 4,
+   "why": "the Night bed +4 dB: at the take's level it sat about 21 dB under the voice (Day scenes about 15 dB); now about 17 dB, still under the Day"
+  },
+  {
+   "t0": 104.0,
+   "t1": 105.0,
+   "db": -60,
+   "ramp": true,
+   "curve": "db",
+   "why": "the ring-out fades to silence on the film's last frame"
+  }
+ ],
+ "synth": [
+  {
+   "type": "riser",
+   "t0": 92,
+   "t1": 96,
+   "db": -16,
+   "fromHz": 180,
+   "toHz": 2400,
+   "why": "a 2-bar riser into endHit, at its top on the hit"
+  }
+ ],
+ "subHits": [
+  {
+   "t": 45.625,
+   "db": -12,
+   "why": "flag: the page flips to Possibly stale (the sixteenth nearest the word, f1368.75; the word at f1368.6)"
+  },
+  {
+   "t": 82.0,
+   "db": -16,
+   "why": "snapBack: S18 on its bar line, 'Verified' 2 f later; the low-pass is fully open"
+  },
+  {
+   "t": 96.0,
+   "db": -8,
+   "why": "endHit: the end card lands; doubles the take's own final hit"
+  }
+ ],
+ "cues": [
+  {
+   "id": "N1",
+   "from": 0,
+   "to": 15.5,
+   "what": "Night: sub pulse on the beat, ticking hats, dark pad; mid band 2 loud / 2 quiet bars, rising over the last 3 bars"
+  },
+  {
+   "id": "N2",
+   "from": 15.5,
+   "to": 16,
+   "what": "hard stop: one beat of silence before daySlip"
+  },
+  {
+   "id": "D1",
+   "from": 16,
+   "to": 42.5,
+   "what": "the Day lift on daySlip (kick, backbeat, bright synths), then a steady drive"
+  },
+  {
+   "id": "D2",
+   "from": 42.5,
+   "to": 45.625,
+   "what": "the 19 s roll: the band strips to bass and ticks"
+  },
+  {
+   "id": "D3",
+   "from": 45.625,
+   "to": 70,
+   "what": "flag: full band back on 'Possibly' with a sub hit; a hats-fill bar, then a new 8-bar phrase at 48 (S12 at 48.5); steady drive under AGENTS"
+  },
+  {
+   "id": "F1",
+   "from": 70,
+   "to": 82,
+   "what": "FIX: low-pass 900 Hz (2-beat sweep down), opening over the 2 beats before S18"
+  },
+  {
+   "id": "F2",
+   "from": 82,
+   "to": 92,
+   "what": "snapBack: full band and a small sub hit on S18's bar line; steady drive under JIRA"
+  },
+  {
+   "id": "E1",
+   "from": 92,
+   "to": 96,
+   "what": "build: a 2-bar riser, a 1-bar high-pass into endHit"
+  },
+  {
+   "id": "E2",
+   "from": 96,
+   "to": 105,
+   "what": "endHit: the take's final hit plus a sub hit; its C major ring-out (2.5x stretched) under S21 and S22, fading to silence on the last frame"
+  }
+ ],
+ "expect": {
+  "_why": "timeline-v5.mjs checks these against src/data/timeline.json (seconds from frame 0); a mismatch marks the score pending",
+  "daySlip": 16,
+  "S11": 43,
+  "flag": 45.625,
+  "FIX": 70,
+  "snapBackBar": 82,
+  "endHit": 96,
+  "durationSec": 105
+ }
+}

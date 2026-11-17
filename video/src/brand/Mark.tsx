@@ -3,7 +3,7 @@ import { interpolateColors, useCurrentFrame } from "remotion";
 import { EASE, tween } from "../lib/time";
 
 /**
- * The Doc Drift Sentinel mark, built from the EXACT paths of public/brand/doc-drift-icon.svg (and the light and flat
+ * The Doc Drift mark, built from the EXACT paths of public/brand/doc-drift-icon.svg (and the light and flat
  * files, which share them). Never redraw it. On the 512 grid: tile, top band, bottom band, trace, slipped band.
  *
  * Only the slipped band may move (brand/logo.md): `slip` slides it from the trace position (0, in line with the D) to
@@ -149,7 +149,7 @@ export const Mark: React.FC<MarkProps> = ({ size, variant = "icon", slip = 1, am
   const trace = look.trace;
 
   return (
-    <svg width={size} height={size} viewBox="0 0 512 512" style={{ display: "block", overflow: "visible", ...style }} aria-label="Doc Drift Sentinel logo">
+    <svg width={size} height={size} viewBox="0 0 512 512" style={{ display: "block", overflow: "visible", ...style }} aria-label="Doc Drift logo">
       {defs}
       {look.kind === "icon" && tile > 0 ? (
         <g opacity={tile}>

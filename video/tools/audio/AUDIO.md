@@ -155,3 +155,113 @@ python3 -I tools/audio/arrange.py tools/audio/arrangements/m0-3bar.json  # and m
 node tools/sfx/process.mjs               # re-trim and re-catalog the effects (no spend)
 node tools/audio/music.mjs --score --seed 7102   # a second score take (paid, about 1,100 credits), then a new edit list
 ```
+
+## v5 (2026-11-17)
+
+Made by the audio agent for launch film v5 (D41, [V5.md](../../V5.md)): narration S01-S22, a new `src/data/timeline.json` and `public/music/score-v5.wav`. **No new music was generated**: the score is a new edit of v4's take. Nobody has listened yet; every judgement below is measured. v4 stays reproducible: V00-V25, `score.wav` and `m0*.wav` are untouched; v4's timeline is now `src/data/timeline-v4.json` (`timeline.mjs` writes it and reproduces the committed v4 file byte for byte; the extended `arrange.py` re-renders `score.wav` byte for byte).
+
+### Listen first
+
+| # | File | What to judge |
+| --- | --- | --- |
+| 1 | `tools/audio/cache/qa/preview-mix-v5.wav` (local) | The whole film without effects. The hard stop and the Day lift at **0:15.5-0:16.0**; the roll (bass and ticks) and the flag hit at **0:42.5-0:45.6**; the FIX low-pass from 1:10 opening into the snap back at **1:22.0**; the build and end hit at **1:36.0**; the stretched ring-out to **1:45.0**. Balance (score -12 dB, duck -8 dB, Night +4 dB) is a measured guess |
+| 2 | `public/vo/S21.wav`, `S22.wav`; alternates `cache/vo/S21.t0.wav`, `cache/vo/alt/S22.plain.t0.wav` | The close. S21 is the highest line (median 203 Hz, rising on "Get it here") and sits right before S22, the lowest (115 Hz, tagged `[warm, measured]` like v4's V01). A second S21 take reads the same way. The untagged S22 is 158 Hz but 19 chars/s, v4's reason to tag this line |
+| 3 | `public/vo/S12.wav`, `S16.wav` | The slowest reads (12.5, 12.4 chars/s): pauses at "change. / No AI" and "agents: / the rename" |
+| 4 | `public/vo/S10.wav`, `S11.wav` | "four eighty-two" and "Nineteen seconds" (Scribe hears "482" and "Nineteen") |
+| 5 | `public/music/score-v5.wav` 1:36-1:45 | The 2.5x phase-vocoder stretch of the final C major chord: phasiness or warble |
+
+### Narration
+
+- **Settings as v4**: Eric `cjVigY5qzO86Huf0OWal`, `eleven_v4`, stability 0.5, similarity 0.8, `wav_48000`, `/with-timestamps`, `previous_text`/`next_text` from the script neighbours (S01 opens cold, so none), seeds 5000 + 10 x line + take, mastering by `vo-core.mjs` (-20 LUFS, -3 dBFS sample peak, 40 ms lead, 60 ms tail). Lines and spellings: `LINES_V5` and `SAY_V5` in `config.mjs`; `--film v5` is the default of `vo.mjs`, `qa.mjs` and `run.mjs`.
+- **Spellings**: "482" is sent as "four eighty-two", "19" as "Nineteen"; "3 a.m.", "Rovo" and "MCP" go as written (v4 measured them). Captions keep the script; `mapWords` maps the aligned spoken words back ("four eighty-two." becomes the word `482.`).
+- **Takes**: all 22 lines word-perfect on the first take. One retake of S21 (a pitch outlier; it read the same, and take 1 ships: 0.18 s shorter, 1.6 dB less limiting). One untagged S22 is kept aside (`vo.mjs --variant plain`). `vo.mjs --pick S21=0` ships another take.
+- **V02/V04 not reused**, by measurement against the v5 lines (median F0 165.6 Hz):
+
+| Candidate | F0 vs v5 median | Spectrum distance to v5 lines | Chars/s |
+| --- | --- | --- | --- |
+| S01 (new) / V02 (v4) | +1.0 / **+3.6 semitones** (V02's urgent "3") | 2.6 / 2.0 dB | 15.4 / 15.8 |
+| S03 (new) / V04 (v4) | -1.0 / -1.6 semitones | 1.7 / 1.6 dB | 17.2 / 18.3 |
+
+  The v5 lines' own spectrum distances are 1.7 dB median, 3.5 dB max, so both pairs are within the normal spread on timbre; pitch decides S01, S03 is a tie, and the default (new takes, read in the v5 context) holds.
+
+| Line | From (f) | File (s) | Chars/s | F0 (Hz) | Line | From (f) | File (s) | Chars/s | F0 (Hz) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| S01 | 45 | 2.15 | 15.4 | 176 | S12 | 1455 | 3.98 | 12.5 | 136 |
+| S02 | 120 | 2.69 | 16.9 | 157 | S13 | 1590 | 5.52 | 13.6 | 154 |
+| S03 | 210 | 2.20 | 17.2 | 157 | S14 | 1770 | 4.20 | 17.4 | 169 |
+| S04 | 285 | 2.68 | 19.0 | 169 | S15 | 1920 | 5.46 | 14.5 | 151 |
+| S05 | 375 | 3.06 | 17.0 | 163 | S16 | 2100 | 5.50 | 12.4 | 158 |
+| S06 | 495 | 4.99 | 15.6 | 174 | S17 | 2280 | 5.05 | 15.3 | 180 |
+| S07 | 660 | 7.75 | 15.3 | 167 | S18 | 2460 | 2.86 | 14.4 | 184 |
+| S08 | 900 | 5.19 | 15.7 | 162 | S19 | 2550 | 5.85 | 17.5 | 168 |
+| S09 | 1065 | 2.21 | 15.5 | 188 | S20 | 2730 | 4.96 | 15.5 | 145 |
+| S10 | 1140 | 4.40 | 13.4 | 164 | S21 | 2895 | 4.59 | 14.5 | 203 |
+| S11 | 1290 | 5.20 | 14.0 | 174 | S22 | 3045 | 2.27 | 16.7 | 115 |
+
+92.76 s of narration. Every line -20.0 LUFS, true peak -3.6 to -2.9 dBTP.
+
+### Timeline (`src/data/timeline.json`, built by `timeline-v5.mjs`)
+
+**Total 3150 f = 105.00 s.** 30 fps, 120 BPM, the beat grid from frame 0 (`scoreStart` 0).
+
+| Scene | From | To | Frames | Bars | Lines |
+| --- | --- | --- | --- | --- | --- |
+| PROBLEM | 0 | 480 | 480 | 8 | S01-S05 |
+| PROMISE | 480 | 900 | 420 | 7 | S06, S07 |
+| LOOP | 900 | 1575 | 675 | 11.25 | S08-S12 |
+| AGENTS | 1575 | 2100 | 525 | 8.75 | S13-S15 |
+| FIX | 2100 | 2550 | 450 | 7.5 | S16-S18 |
+| JIRA | 2550 | 2880 | 330 | 5.5 | S19, S20 |
+| CLOSE | 2880 | 3150 | 270 | 4.5 | S21, S22 |
+
+- **Markers**: `daySlip` 480, `merge` 1174 ("merged"), `flag` 1369 ("Possibly"), `snapBack` 2462 ("Verified"; S18 starts on the bar line 2460), `endHit` 2880, `filmEnd` 3150, plus one per scene start.
+- **Rules**: every line on a beat, S18 on a bar line; at least 0.3 s between one line's last word and the next line's first; a 0.4 s breath added before S11 (the 19 s roll) and S18 (the snap back). Silences between words run 0.32-0.92 s (median 0.62). The two over 1 s are the chosen beats: 1.14 s at the Day turn and 1.16 s before S18. Beat quantisation sets the gaps: a 0.2 or 0.25 s minimum gives the same layout. Extra air: S01 starts at 1.5 s (the clock and alert land), and there is one extra beat before S15 (the whip to the terminal).
+- **Bar lines**: PROMISE and CLOSE must start on bar lines (the score's lift and final hit are downbeats). LOOP and FIX start on bar lines at no cost. AGENTS (f1575) and JIRA (f2550) start on beats, because a bar line there would add over 1 s of silence. In those two scenes `sc.bar(n)` is off the film's bar lines; use `sc.snap(f, BAR)`. CLOSE ends 1.3 s after "moved." on a beat.
+- **For the picture team**: the v4 scene modules call `getScene("A0")` and the like when imported, so they throw against this timeline until the scene registry is replaced. `timeline-v5.md` in the cache has the full line table.
+
+### Music (`public/music/score-v5.wav`, `arrangements/score-v5.json`)
+
+The edit: 105.000 s, 48 kHz 16-bit stereo, -15.8 LUFS, true peak -3.0 dBTP, 120.003 BPM (grid RMS 5.6 ms, first beat 4.8 ms in). The source is v4's take (seed 7101). Its 8-bar phrases run from its lift at source 32 s, and each phrase ends on a fill bar.
+
+| Cue | Frames | What |
+| --- | --- | --- |
+| N1 | 0-465 | Night: source 16-31.5 s at +4 dB (sub pulse, ticks, dark pad; 2 loud / 2 quiet bars, rising) |
+| N2 | 465-480 | Hard stop: one beat of silence before `daySlip` (S05 ends at f463) |
+| D1 | 480-1275 | The take's own lift (source 32) on `daySlip`, then the drive |
+| D2 | 1275-1369 | The 19 s roll: the band strips to bass and ticks |
+| D3 | 1369-2100 | Full band back with a sub hit on the sixteenth of "Possibly". One 16-bar splice at f1380 (source 62 to 94) skips a kick drop-out bar and 2 phrases |
+| F1 | 2100-2460 | FIX: low-pass 900 Hz, opening over the 2 beats before S18 |
+| F2 | 2460-2760 | `snapBack`: full band and a small sub hit on S18's bar line |
+| E1 | 2760-2880 | Build: a 2-bar riser, then a 1-bar high-pass |
+| E2 | 2880-3150 | `endHit`: the take's final hit (source 144) and a sub hit. Its C major ring-out is stretched 2.5x, so it rings under S21 and S22 to the last frame |
+
+Measured: 0.5 s of silence (-96 dB) before the lift's kick on f480. The strip takes mids down 10 dB and highs down 15 dB, with the sub kept. FIX highs fall to -69 dB by 71 s and recover over 81-82 s. The ring decays about 2 dB/s. The seams jump no more than an ordinary kick does.
+
+`arrange.py` gained four options, all of which leave the v4 edits unchanged:
+- `stretch` segments (phase vocoder with identity phase locking, stereo coherent);
+- `points` cutoff curves for sweeps (adjacent sweeps used to leave about 21 ms unfiltered at their boundary);
+- `rampIn`/`rampOut` for the strip;
+- `startFadeMs`.
+
+**Mix** (timeline `music[0]`, `duck` and `mix`): score `gainDb` -12, `duckDb` -8, attack 6 f, release 12 f, as v4. The duck follows v4's rule (lines padded 5 f before, 10 f after), with `DUCK_RULES` around the hits:
+- S06 and S18 duck from their first word, so the lift and the resolution land first;
+- S17 releases at its last word, so the score opens in the breath;
+- S20 releases 12 f before `endHit`, so the build swells under "dashboard" and the hit lands at full;
+- CLOSE does not duck, so the hit rings under S21 and S22.
+
+Measured music level under the voice: -35 to -37 LUFS in every scene (15-17 dB under the voice), against -40.8 for the Night before the +4 dB.
+
+### QA (`tools/audio/qa-report-v5.json`)
+
+- **WER** (Scribe on the 105 s narration bed, normalised, Levenshtein): **2.37% raw** (6 of 253 words), all from Scribe writing "DocDrift" as one word 3 times. **0.00%** with that spelling split. Every line is heard inside its own span.
+- **Loudness**: 22 lines at -20.0 LUFS (spread 0.0 LU), true peak at most -2.9 dBTP. Preview mix -20.0 LUFS, true peak -5.1 dBTP.
+- **Files**: 107 WAVs decode at 48 kHz.
+- **Credits**: 390 (`character_count` 17,861 to 18,251). 73 paid calls (24 TTS, 25 Scribe, 24 alignments), all in `gen-log.jsonl`, with line ids S01-S22.
+
+### Re-run (v5)
+
+```bash
+node tools/audio/run.mjs                    # vo (cached) -> timeline-v5 -> QA -> timeline-v5   (--scribe: paid WER)
+python3 -I tools/audio/arrange.py tools/audio/arrangements/score-v5.json && node tools/audio/timeline-v5.mjs
+node tools/audio/run.mjs --film v4          # v4, from its caches, into src/data/timeline-v4.json and qa-report.json
+```

@@ -6,7 +6,7 @@ import { useTheme } from "./theme";
 import { FONT, type ThemeName } from "./tokens";
 
 /**
- * The horizontal lockup (brand/logo.md): the icon, then "Doc Drift Sentinel" in Spline Sans 600 at 42% of the icon
+ * The horizontal lockup (brand/logo.md): the icon, then "Doc Drift" in Spline Sans 600 at 42% of the icon
  * height, a gap of 28% of the icon height, vertically centred. 120 px wide minimum. Never the name without the mark.
  *
  * Static by default. With `at`, it animates: the mark reveals (tile, bands land, the slip at at + 24), then the name
@@ -61,7 +61,7 @@ export const Lockup: React.FC<{
             transform: nameP < 1 ? `translateY(${(1 - nameP) * 105}%)` : undefined,
           }}
         >
-          Doc Drift Sentinel
+          Doc Drift
         </div>
       </div>
     </div>

@@ -7,6 +7,14 @@ Copied from the Satchel film (tools/audio-v3/arrange.py) and adapted: 48 kHz, 16
 relative to video/, optional peak target. Needs numpy + ffmpeg only. Splice seams sit 5 ms before the beat with a
 30 ms equal-power crossfade, so downbeat transients are never smeared. Times in the edit list are on the grid clock:
 dest file time = grid time + beatOffset (the source's first-beat offset), so beats in the file sit where the take's did.
+
+Added for film v5 (all optional, so the v4 edit lists render exactly as before):
+- a segment with "stretch": r plays its source r times slower (phase vocoder with identity phase locking, stereo
+  coherent), e.g. to let a final chord ring out for longer than the take does;
+- a "lowpass"/"highpass" sweep may give "points": [[t, Hz], ...] (cutoff log-interpolated between points) instead of
+  fromHz/toHz, so a dip and its opening are ONE sweep with no unprocessed frames at an internal boundary;
+- a "strip" sweep may give "rampIn"/"rampOut" (seconds) instead of one "ramp", e.g. a slow drop and a sharp release;
+- "startFadeMs": a fade-in at the very start of the file (a score that starts mid-take on the film's first frame).
 """
 import json, os, subprocess, sys
 import numpy as np
@@ -44,7 +52,21 @@ def splice(x, segs, off, dur, xf=0.030, pre=0.005):
         a = 0 if first else seam(s['t0']) - k
         b = n if last else seam(s['t1'])
         seg = np.zeros((b - a, 2))
-        if not s.get('silence'):
+        if s.get('stretch'):
+            # dest time t0 <-> source time s0; the source then plays `stretch` times slower. The vocoder's first frame
+            # is centred on s0 and keeps its analysed phase, so at the seam the output is the take itself.
+            r, N = float(s['stretch']), 4096
+            S0, D0 = int(round((s['s0'] + off) * SR)), int(round((s['t0'] + off) * SR))
+            n_in = int((b - D0 + 2 * N) / r) + 2 * N
+            src = np.zeros((n_in, 2))
+            lo = S0 - N // 2
+            got = x[max(0, lo):min(len(x), lo + n_in)]
+            src[max(0, -lo):max(0, -lo) + len(got)] = got
+            z = pv_stretch(src, r, N=N)
+            v0 = a - D0 + N // 2  # z index of dest index a
+            take = z[max(0, v0):max(0, v0) + (b - a)]
+            seg[max(0, -v0):max(0, -v0) + len(take)] = take
+        elif not s.get('silence'):
             shift = int(round((s['s0'] - s['t0']) * SR))  # source index = dest index + shift
             lo, hi = max(0, a + shift), min(len(x), b + shift)
             if hi > lo:
@@ -81,6 +103,8 @@ def sweeps(y, sws, off, N=2048, H=512):
     freqs = np.fft.rfftfreq(N, 1 / SR)
     out = y.copy()
     for sw in sws:
+        if 'points' in sw:
+            sw = {**sw, 't0': sw['points'][0][0], 't1': sw['points'][-1][0]}
         a = max(0, int((sw['t0'] + off - 0.2) * SR))  # a sweep at the very start must not wrap to the end
         b = min(len(y), int((sw['t1'] + off + 0.2) * SR))
         seg = out[a:b]  # read the running result, so adjacent sweeps compose (the Satchel copy re-read y here)
@@ -98,12 +122,16 @@ def sweeps(y, sws, off, N=2048, H=512):
                 if sw['type'] == 'strip':
                     # "the band drops to bass and tick": low-pass + a quiet high band, faded in/out over `ramp` s
                     m = 1 / np.sqrt(1 + (f1 / sw['bassHz']) ** 4) + sw.get('tickGain', 0.3) / np.sqrt(1 + (sw['tickHz'] / f1) ** 4)
-                    ramp = sw.get('ramp', 0.15)
-                    w = min(1.0, (tc - sw['t0']) / ramp, (sw['t1'] - tc) / ramp)
+                    rin, rout = sw.get('rampIn', sw.get('ramp', 0.15)), sw.get('rampOut', sw.get('ramp', 0.15))
+                    w = min(1.0, (tc - sw['t0']) / rin, (sw['t1'] - tc) / rout)
                     m = (1 - w) + w * np.minimum(1.0, m)
                 else:
-                    p = (tc - sw['t0']) / (sw['t1'] - sw['t0'])
-                    fc = sw['fromHz'] * (sw['toHz'] / sw['fromHz']) ** p
+                    if 'points' in sw:
+                        pts = sw['points']
+                        fc = float(np.exp(np.interp(tc, [q[0] for q in pts], [np.log(q[1]) for q in pts])))
+                    else:
+                        p = (tc - sw['t0']) / (sw['t1'] - sw['t0'])
+                        fc = sw['fromHz'] * (sw['toHz'] / sw['fromHz']) ** p
                     r = f1 / fc
                     m = 1 / np.sqrt(1 + r ** 4) if sw['type'] == 'lowpass' else 1 / np.sqrt(1 + (1 / r) ** 4)
                 F *= m[:, None]
@@ -113,6 +141,44 @@ def sweeps(y, sws, off, N=2048, H=512):
         # crossfade the processed region back in over 20 ms at both ends (it is identical there anyway)
         out[a:b] = rec
     return out
+
+
+def pv_stretch(x, r, N=4096, Ha=512):
+    """Time-stretch x (n, 2) by r (> 1 = longer) with a phase vocoder: identity phase locking (Laroche and Dolson 1999,
+    each bin keeps its phase offset from the nearest spectral peak), stereo coherent (channel 0's synthesis phase
+    drives both; channel 1 keeps its analysed phase difference). Frame 0 keeps its analysed phase. Output sample
+    v <-> input sample N/2 + (v - N/2) / r."""
+    Hs = int(round(Ha * r))
+    win = np.hanning(N + 1)[:N]
+    nfr = max(1, 1 + (len(x) - N) // Ha)
+    y = np.zeros(((nfr - 1) * Hs + N, x.shape[1]))
+    wsum = np.zeros(len(y))
+    bins = N // 2 + 1
+    omega = 2 * np.pi * np.arange(bins) * Ha / N  # expected phase advance per analysis hop
+    prev_ph0 = syn0 = None
+    for m in range(nfr):
+        X = np.fft.rfft(x[m * Ha:m * Ha + N] * win[:, None], axis=0)
+        mag, ph = np.abs(X), np.angle(X)
+        if m == 0:
+            syn = ph.copy()
+        else:
+            ref = mag.sum(axis=1)
+            pk = np.where((ref[1:-1] > ref[:-2]) & (ref[1:-1] >= ref[2:]))[0] + 1
+            if len(pk) == 0:
+                pk = np.array([int(np.argmax(ref))])
+            dphi = ph[pk, 0] - prev_ph0[pk] - omega[pk]
+            dphi = (dphi + np.pi) % (2 * np.pi) - np.pi
+            syn_pk = syn0[pk] + (omega[pk] + dphi) * Hs / Ha
+            # region of influence: every bin follows its nearest peak
+            edges = (pk[:-1] + pk[1:]) / 2
+            owner = np.searchsorted(edges, np.arange(bins))
+            syn_c0 = syn_pk[owner] + (ph[:, 0] - ph[pk[owner], 0])
+            syn = syn_c0[:, None] + (ph - ph[:, :1])
+        frame = np.fft.irfft(mag * np.exp(1j * syn), n=N, axis=0) * win[:, None]
+        y[m * Hs:m * Hs + N] += frame
+        wsum[m * Hs:m * Hs + N] += win ** 2
+        prev_ph0, syn0 = ph[:, 0], syn[:, 0]
+    return y / np.maximum(wsum, 1e-3)[:, None]
 
 
 def thud(level_db, dur=0.6):
@@ -222,6 +288,10 @@ def main():
         a = int(round((h['t'] + off - 0.004) * SR))
         b = min(len(y), a + len(s))
         y[a:b] += s[:b - a, None]
+    # start: optional fade-in (a score that starts mid-take on the film's first frame must not click)
+    ks = int(cfg.get('startFadeMs', 0) / 1000 * SR)
+    if ks > 0:
+        y[:ks] *= np.linspace(0, 1, ks)[:, None]
     # end: make sure the last endFadeMs (default 50 ms) ramp to zero (a hard stop uses a few ms: no click, still a stop)
     k = max(1, int(cfg.get('endFadeMs', 50) / 1000 * SR))
     y[-k:] *= np.linspace(1, 0, k)[:, None]

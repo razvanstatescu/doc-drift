@@ -2,7 +2,8 @@
 // Music for the Doc Drift film: the model test, the cold-open bed (M0) and the score. Eleven Music, 48 kHz.
 //   node tools/audio/music.mjs --test             one short take per model (music_v1, music_v2_5) from the same intents
 //   node tools/audio/music.mjs --m0               the cold-open bed source take (dark pulse, D minor, 20 s)
-//   node tools/audio/music.mjs --score [--dry]    the score source take, sections from src/data/timeline.json
+//   node tools/audio/music.mjs --score [--dry]    the v4 score source take, sections from src/data/timeline-v4.json
+//   (v5's score-v5.wav is an edit of that same take: tools/audio/arrangements/score-v5.json, no new generation)
 //   node tools/audio/music.mjs --analyze <file>   beat grid + per-bar profile (no spend)
 // Raw takes and analyses: tools/audio/cache/music/. Edits are rendered by tools/audio/arrange.py.
 import { writeFileSync } from 'node:fs';
@@ -133,7 +134,7 @@ export function scoreSections(tl, { slackEndSec = 6 } = {}) {
 }
 
 async function score() {
-  const tl = readJson(resolve(PATHS.dataDir, 'timeline.json'));
+  const tl = readJson(resolve(PATHS.dataDir, 'timeline-v4.json'));
   const model = a.model || readJson(resolve(DIR, 'choice.json'))?.model;
   if (!model) throw new Error('run --test and write tools/audio/cache/music/choice.json first (or pass --model)');
   const secs = scoreSections(tl);

@@ -27,7 +27,7 @@ import { agentPanelRects, PageTwin, pageRects, textWidth, type PageTwinProps } f
 import { PANEL } from "../PROBLEM";
 import { FIXED_CMD, PAYOFF_SOURCE, PayoffShot } from "../PROBLEM/Payoff";
 import { capAt, capRect, center, placeOn, screenAt, type Box } from "./geom";
-import { Clock307, DRAFT, DraftCard, draftCodeRect, MarkTile, ReaderChip, type ChipStatus } from "./parts";
+import { Clock307, DRAFT, DraftCard, draftCodeRect, ReaderChip, type ChipStatus } from "./parts";
 import { T } from "./timing";
 
 /**
@@ -36,16 +36,17 @@ import { T } from "./timing";
  * only, never a whole-frame swap); the only cut is the carry into the 3 a.m. payoff, on a beat. No paint on any real
  * capture (amber only on our crafted twins; Mist bands only).
  *
- *   World      the runbook (flagged: its byline item is the one amber) on the right and its readers on the left,
- *              PROMISE's chips. The page racks back (dim, soft, grey) while a card is up; the readers never do.
- *   S16        the agents' status slips to "Read only" on "never edit"; "People · Edits the page" lifts in on "A
- *              person does"; the quick fix card ("File path renamed · one-click fix, no AI") flies out of step 2's
+ *   World      the runbook (flagged: its byline item is the one amber) on the right and its two readers on the left,
+ *              PROMISE's chips "AI agents" and "People". The page racks back (dim, soft, grey) while a card is up; the
+ *              readers never do.
+ *   S16        "AI agents · never edit the page" is written in on "never edit"; "People · edit the page" lifts in on
+ *              "A person does"; the quick fix card ("Linked file renamed · one-click fix, no AI") flies out of step 2's
  *              dead path and lands big on "the rename"; it turns into the real card in place (p4-review-rec) with the
  *              real click on "one click" and Mist on "No AI used." on "no AI"; back to the card, done, which flies
  *              back into step 2 (now renamed) as S16 ends
- *   S17        "Drift Reviewer · Our agent" joins the readers on "Our agent"; its draft ("Wording changed · drafted by
- *              our agent") flies out and lands big on "drafts"; on "a renamed timeout setting" the old name sits on
- *              the drift's amber and "_SECS" is written in (one baseline, no empty frame); the real draft in place
+ *   S17        our agent's draft ("Drafted by our agent · applied only by a person", labelled "Other text on the page
+ *              · drafted by our agent") flies out of "AI agents" and lands big on "drafts"; on "a renamed timeout
+ *              setting" the old name sits on the drift's amber and "_SECS" is written in (one baseline, no empty frame); the real draft in place
  *              (p4-draft-diff), Mist on "Nothing changes until you accept."; the Accept fix button lifts on "until"
  *              and turns into the real footer (p4-accept-rec): the cursor's click on the real Accept fix on "accepts",
  *              then the same real panel's "Accepted. A new page version names PR #482."
@@ -90,18 +91,18 @@ const rackStyle = (r: number): React.CSSProperties =>
   r <= 0.001 ? {} : { opacity: 1 - 0.4 * r, filter: `blur(${(2.4 * r).toFixed(2)}px) grayscale(${(0.9 * r).toFixed(3)})` };
 
 const CHIP_X = 330;
-const CHIPS = { rovo: 250, code: 366, agent: 482, people: 618 } as const;
-const STATUS: Record<"stale" | "readOnly" | "edits" | "cite", ChipStatus> = {
-  stale: { icon: "slip", text: "Possibly stale" },
-  readOnly: { icon: "lock", text: "Read only" },
-  edits: { icon: "pencil", text: "Edits the page" },
+/** PROMISE's two readers, centred on the page: "AI agents" (there from the start) and "People" (in on "A person"). */
+const CHIPS = { agents: 400, people: 526 } as const;
+const STATUS: Record<"never" | "edit" | "cite", ChipStatus> = {
+  never: { icon: "lock", text: "never edit the page" },
+  edit: { icon: "pencil", text: "edit the page" },
   cite: { icon: "check", text: "Safe to cite" },
 };
-/** An agent chip's status: Possibly stale, "Read only" on "never edit", "Safe to cite" on "Now agents". */
-const agentStatus = (f: number, d: number) =>
+/** The agents' status: written in on "never edit", "Safe to cite" on "Now agents". */
+const agentsStatus = (f: number) =>
   f < T.citeAt - 8
-    ? { status: STATUS.stale, next: { status: STATUS.readOnly, at: T.readOnly + d } }
-    : { status: STATUS.readOnly, next: { status: STATUS.cite, at: T.citeAt + d, tone: "verified" as const } };
+    ? { status: null, next: { status: STATUS.never, at: T.readOnly } }
+    : { status: STATUS.never, next: { status: STATUS.cite, at: T.citeAt, tone: "verified" as const } };
 
 const World: React.FC = () => {
   const frame = useCurrentFrame();
@@ -110,10 +111,8 @@ const World: React.FC = () => {
       <div style={{ position: "absolute", inset: 0, ...rackStyle(rackAt(frame)) }}>
         <PageTwin {...pageAt(frame)} />
       </div>
-      <ReaderChip icon="comment" label="Rovo agent" {...agentStatus(frame, 0)} x={CHIP_X} y={CHIPS.rovo} appear />
-      <ReaderChip icon="terminal" label="Coding assistant" {...agentStatus(frame, 2)} x={CHIP_X} y={CHIPS.code} appear />
-      <ReaderChip tile={<MarkTile />} label="Drift Reviewer" status={{ icon: "comment", text: "Our agent" }} x={CHIP_X} y={CHIPS.agent} at={T.agentIn} />
-      <ReaderChip icon="user" label="People" status={STATUS.edits} x={CHIP_X} y={CHIPS.people} at={T.personIn} />
+      <ReaderChip icon="comment" label="AI agents" {...agentsStatus(frame)} x={CHIP_X} y={CHIPS.agents} appear />
+      <ReaderChip icon="user" label="People" status={STATUS.edit} x={CHIP_X} y={CHIPS.people} at={T.personIn} />
     </Camera3D>
   );
 };
@@ -236,7 +235,7 @@ const QuickFix: React.FC = () => {
     <AbsoluteFill>
       {card}
       <Label right={QF.x + QF.w} y={QF.y - 57} at={T.qfLift + 4} out={T.qfOut} icon="rename">
-        File path renamed · one-click fix, no AI
+        Linked file renamed · one-click fix, no AI
       </Label>
     </AbsoluteFill>
   );
@@ -251,8 +250,8 @@ const DR_CODE = draftCodeRect(DR.x, DR.y);
 const ACC_K = 2;
 const ACC_W = textWidth(STR.acceptFix, { size: 14 * ACC_K, weight: 600 }) + 30 * ACC_K;
 const ACC: Rect = { x: DR.x + DR.w - ACC_W, y: DR.y + DR.h + 63, w: ACC_W, h: 36 * ACC_K };
-/** The Drift Reviewer chip on the screen as its draft flies out. */
-const AGENT_ON_FLY = screenAt({ x: CHIP_X, y: CHIPS.agent, w: 400, h: 100 }, T.draftFly, W_KEYS, W_OPTS);
+/** The "AI agents" chip on the screen as our agent's draft flies out of it. */
+const AGENT_ON_FLY = screenAt({ x: CHIP_X, y: CHIPS.agents, w: 400, h: 100 }, T.draftFly, W_KEYS, W_OPTS);
 
 /** The crafted draft (and, from "until", the Accept fix button under it): leaves dimmed behind the real panel. */
 const DraftLayer: React.FC = () => {
@@ -365,7 +364,7 @@ const Draft: React.FC = () => {
     <AbsoluteFill>
       {layer}
       <Label right={DR.x + DR.w} y={DR.y - 57} at={T.draftFly + 6} out={T.proofA} icon="words">
-        Wording changed · drafted by our agent
+        Other text on the page · drafted by our agent
       </Label>
     </AbsoluteFill>
   );

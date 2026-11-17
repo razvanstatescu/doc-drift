@@ -21,7 +21,6 @@ const one = w("S16", "one");
 const no = w("S16", "no");
 const ai = w("S16", "ai", "to");
 // S17 · "Our agent drafts the other change, a renamed timeout setting. Nothing changes until a person accepts."
-const our = w("S17", "our");
 const drafts = w("S17", "drafts");
 const renamed = w("S17", "renamed");
 const timeout = w("S17", "timeout");
@@ -40,10 +39,10 @@ const right = w("S18", "right");
 
 export const T = {
   // ---- S16 ----------------------------------------------------------------------------------------------------------
-  /** The agents' status slips to "Read only" on "never edit" (readable on the word). */
+  /** "AI agents · never edit the page": the status is written in on "never edit" (readable on the word). */
   readOnly: never - 3,
   never,
-  /** People lifts in on "A person does" (and keeps "Edits the page" to S18: the readers are never covered). */
+  /** "People · edit the page" lifts in on "A person does" (held to the carry: the readers are never covered). */
   personIn: person16 - 4,
   /** The quick fix card flies out of step 2's dead path and lands big on "rename" (the page racks back under it). */
   qfLift: theRename - 4,
@@ -61,8 +60,7 @@ export const T = {
   ai,
 
   // ---- S17 ----------------------------------------------------------------------------------------------------------
-  /** Drift Reviewer lifts into the readers on "Our agent"; its draft flies out of it and lands big on "drafts". */
-  agentIn: our - 4,
+  /** Our agent's draft flies out of "AI agents" and lands big on "drafts". */
   draftFly: drafts - 12,
   draftLand: drafts - 2,
   drafts,

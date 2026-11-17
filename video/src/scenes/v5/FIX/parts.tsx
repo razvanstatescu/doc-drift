@@ -9,7 +9,7 @@ import { textWidth } from "../../../v4/twins";
 /**
  * FIX's crafted pieces (v5 round 3; nothing here draws on a real capture):
  *   ReaderChip   PROMISE's reader chips (same size and look): a tile, a label, and a status line whose words slip-swap
- *                ("Read only", "Edits the page", "Verified", "Safe to cite"), as the byline's words do
+ *                ("never edit the page", "Safe to cite"), as the byline's words do
  *   DraftCard    our agent's draft, big: the step's setting line on one baseline and one size; the old name sits on the
  *                drift's amber, then "_SECS" is written in by a wipe while "=300" moves along (no empty frame)
  *   Clock307     a small 03:07 chip for the 3 a.m. payoff (Night)
@@ -51,13 +51,14 @@ const StatusWords: React.FC<{ s: ChipStatus; color: string }> = ({ s, color }) =
 
 /**
  * One reader chip. It lifts in at `at` (12 frames) unless `appear` (on screen from the start). Its status line
- * slip-swaps from `status` to `next.status` around `next.at` (old words gone at `at`, new readable at `at + 3`).
+ * slip-swaps from `status` to `next.status` around `next.at` (old words gone at `at`, new readable at `at + 3`); with
+ * `status` null the line is empty until `next.status` writes in.
  */
 export const ReaderChip: React.FC<{
   icon?: IconName;
   tile?: React.ReactNode;
   label: string;
-  status: ChipStatus;
+  status: ChipStatus | null;
   next?: { status: ChipStatus; at: number; tone?: "verified" };
   x: number;
   y: number;
@@ -105,6 +106,7 @@ export const ReaderChip: React.FC<{
         <div style={{ fontSize: 31, fontWeight: 600, lineHeight: "38px", letterSpacing: "-0.01em", color: DAY.text }}>{label}</div>
         <div style={{ position: "relative", height: 32, fontSize: 25, fontWeight: 500, lineHeight: "32px", color: DAY.text }}>
           {!swapped ? (
+            status === null ? null : (
             <span
               style={{
                 position: "absolute",
@@ -116,6 +118,7 @@ export const ReaderChip: React.FC<{
             >
               <StatusWords s={status} color={DAY.text} />
             </span>
+            )
           ) : (
             <span
               style={{
@@ -135,9 +138,6 @@ export const ReaderChip: React.FC<{
     </div>
   );
 };
-
-/** Our mark as a chip tile (Drift Reviewer is our agent). */
-export const MarkTile: React.FC = () => <AppTile size={44} />;
 
 // ---------------------------------------------------------------------------------------------------------------------
 // The draft, big
@@ -166,7 +166,8 @@ export const draftCodeRect = (x: number, y: number) => ({
 });
 
 /**
- * Our agent's draft as one big card: a small "Draft · Drift Reviewer" head, then the step's setting line in a code well,
+ * Our agent's draft as one big card: a head that says who drafts and who applies it ("Drafted by our agent · applied
+ * only by a person"), then the step's setting line in a code well,
  * on one baseline and one size. From `drift` the old name sits on the drift's amber block (crafted, under the words);
  * on `replace` a wipe writes "_SECS" in after it while "=300" moves along and the amber leaves (no empty frame: the
  * shared "ROLLBACK_TIMEOUT" never moves). The new words get a Current underline.
@@ -200,10 +201,10 @@ export const DraftCard: React.FC<{ x: number; y: number; drift: number; replace:
         color: DAY.text,
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 14, height: 44 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, height: 44, whiteSpace: "nowrap" }}>
         <AppTile size={40} />
-        <span style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.01em" }}>Draft</span>
-        <span style={{ fontSize: 26, fontWeight: 500, color: DAY.textMuted }}>· Drift Reviewer</span>
+        <span style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.01em" }}>Drafted by our agent</span>
+        <span style={{ fontSize: 26, fontWeight: 500, color: DAY.textMuted }}>· applied only by a person</span>
       </div>
       <div style={{ position: "relative", marginTop: 20, height: lineH + 40, borderRadius: 18, background: DAY.surfaceSunk }}>
         <div style={{ position: "absolute", left: DRAFT.well, top: 20, height: lineH }}>

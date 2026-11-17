@@ -7,7 +7,7 @@ import type { Binding, StoredPageState } from '@dds/shared';
 import { parseBlockId } from './blocks';
 import { plural, refLabel } from './copy';
 
-export const CONSENT_GUIDANCE = 'Grant Doc Drift Sentinel access in Connected apps, then retry.';
+export const CONSENT_GUIDANCE = 'Grant Doc Drift access in Connected apps, then retry.';
 export const NOT_VISIBLE_GUIDANCE = 'Page not found or not visible to you. Do not cite it.';
 export const NO_PAGE_GUIDANCE = 'Could not identify the page. Pass a numeric pageId, a page URL or the exact page title.';
 export const UNREADABLE_URL_GUIDANCE = 'Could not read a page from that link. Ask the user which page they mean, then pass the full page URL or the exact title. Do not answer for the open page instead.';

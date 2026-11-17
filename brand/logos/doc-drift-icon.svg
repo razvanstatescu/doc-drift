@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="dds-t" xmlns:c2pa="http://c2pa.org/manifest">
-  <title id="dds-t">Doc Drift Sentinel logo</title>
+  <title id="dds-t">Doc Drift logo</title>
   <defs>
     <linearGradient id="dds-tile" x1="0" y1="0" x2="0" y2="512" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0E3D48"/><stop offset="1" stop-color="#05191F"/></linearGradient>
     <radialGradient id="dds-lift" cx="140" cy="60" r="380" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#22717E" stop-opacity="0.5"/><stop offset="1" stop-color="#22717E" stop-opacity="0"/></radialGradient>

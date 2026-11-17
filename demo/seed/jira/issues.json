@@ -2,7 +2,7 @@
   "project": {
     "key": "PAY",
     "name": "Payments",
-    "description": "Payments platform work: charges, refunds, settlement, deploy safety. Demo project for Doc Drift Sentinel.",
+    "description": "Payments platform work: charges, refunds, settlement, deploy safety. Demo project for Doc Drift.",
     "projectTypeKey": "software",
     "projectTemplateKey": "com.pyxis.greenhopper.jira:gh-simplified-scrum-classic"
   },

@@ -1,5 +1,5 @@
 // Workspace settings page (UI Kit). Admins paste the core ingest URL and shared secret from
-// Doc Drift Sentinel settings in Confluence, then send a signed test ping.
+// Doc Drift settings in Confluence, then send a signed test ping.
 import React, { useEffect, useState } from 'react';
 import ForgeReconciler, {
   Box,
@@ -167,10 +167,10 @@ const App = () => {
   return (
     <Stack space="space.300">
       <Stack space="space.100">
-        <Heading size="medium">Doc Drift Sentinel Relay</Heading>
+        <Heading size="medium">Doc Drift Relay</Heading>
         <Text>
           When a pull request merges into a repository's main branch, this app sends its changed files to Doc Drift
-          Sentinel in Confluence. Doc Drift Sentinel then flags the pages anchored to those files. Merges into other
+          in Confluence. Doc Drift then flags the pages anchored to those files. Merges into other
           branches are ignored.
         </Text>
       </Stack>
@@ -192,7 +192,7 @@ const App = () => {
               {fieldErrors.ingestUrl ? (
                 <ErrorMessage>{fieldErrors.ingestUrl}</ErrorMessage>
               ) : (
-                <HelperMessage>Copy it from Doc Drift Sentinel settings in Confluence.</HelperMessage>
+                <HelperMessage>Copy it from Doc Drift settings in Confluence.</HelperMessage>
               )}
             </Box>
             <Box>
@@ -237,7 +237,7 @@ const App = () => {
 
       <Stack space="space.100">
         <Heading size="small">Connection</Heading>
-        <Text>Sends a signed test record to Doc Drift Sentinel. Nothing is stored and no page changes.</Text>
+        <Text>Sends a signed test record to Doc Drift. Nothing is stored and no page changes.</Text>
         <Box>
           <LoadingButton onClick={sendPing} isLoading={pinging} isDisabled={!configured}>
             Send test ping

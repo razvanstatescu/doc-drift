@@ -10,7 +10,7 @@ modules:
       resolver:
         function: settings-resolver
       render: native
-      title: Doc Drift Sentinel Relay
+      title: Doc Drift Relay
   function:
     - key: on-merged
       handler: index.onMerged

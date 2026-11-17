@@ -236,7 +236,7 @@ const App = () => {
   return (
     <Stack space="space.300">
       <Text>
-        Doc Drift Sentinel anchors Confluence pages to code and Jira work, flags them Possibly stale when those change, and tells agents which pages
+        Doc Drift anchors Confluence pages to code and Jira work, flags them Possibly stale when those change, and tells agents which pages
         to trust. These settings apply to the next change it receives.
       </Text>
 
@@ -245,7 +245,7 @@ const App = () => {
           <Text>
             {connected
               ? 'The relay is sending merged pull requests. Details are under Bitbucket relay below.'
-              : 'Install the Doc Drift Sentinel Bitbucket relay in your workspace. Paste the ingest URL and a secret from Bitbucket relay below into its settings, then send a test ping.'}
+              : 'Install the Doc Drift Bitbucket relay in your workspace. Paste the ingest URL and a secret from Bitbucket relay below into its settings, then send a test ping.'}
           </Text>
         </Step>
         <Step n={2} title="Anchor pages" done={anchoredPages > 0}>
@@ -289,7 +289,7 @@ const App = () => {
             <Text>{`Repositories seen: ${conn.repos.map((r) => r.repo).join(', ')}`}</Text>
           ) : null}
         </Stack>
-        <Text>Install the Doc Drift Sentinel Bitbucket relay in your workspace, then paste this URL and the secret into its settings.</Text>
+        <Text>Install the Doc Drift Bitbucket relay in your workspace, then paste this URL and the secret into its settings.</Text>
         <Heading size="xxsmall" as="h3">Ingest URL</Heading>
         <CodeBlock text={String(data.ingestUrl || '')} language="text" shouldWrapLongLines />
         <Heading size="xxsmall" as="h3">Relay secret</Heading>

@@ -2,7 +2,7 @@
   "name": "@dds/matcher",
   "version": "0.1.0",
   "private": true,
-  "description": "Doc Drift Sentinel deterministic matcher: anchors, scoring, severity, page state",
+  "description": "Doc Drift deterministic matcher: anchors, scoring, severity, page state",
   "type": "module",
   "exports": {
     ".": {

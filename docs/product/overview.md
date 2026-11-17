@@ -2,7 +2,7 @@
 
 ## One line
 
-Doc Drift Sentinel flags Confluence pages as possibly stale when the code or Jira work they describe changes, and tells Rovo and coding agents not to trust those pages until a person re-verifies them.
+Doc Drift flags Confluence pages as possibly stale when the code or Jira work they describe changes, and tells Rovo and coding agents not to trust those pages until a person re-verifies them.
 
 **Pitch lead:** agents should not cite docs that the code has already invalidated.
 

@@ -24,12 +24,12 @@ The video must be under 5 minutes, public on YouTube, and show the app running. 
 | --- | --- | --- |
 | 0:00 to 0:20 | Generic on-call alert card. On-call opens the Confluence runbook. Rovo chat confidently quotes the old step. | "At 3am, the runbook says run rollback.sh. That script was renamed two weeks ago, and Rovo still quotes it." |
 | 0:20 to 0:30 | Age-based "fresh" label next to the page | "Age-based tools call this page fresh. It was edited last month." |
-| 0:30 to 0:55 | Binding modal, auto-suggested anchors, save, green Verified badge | "Doc Drift Sentinel anchors pages to the code and Jira work they describe." |
+| 0:30 to 0:55 | Binding modal, auto-suggested anchors, save, green Verified badge | "Doc Drift anchors pages to the code and Jira work they describe." |
 | 0:55 to 1:25 | Merge PR #482 in Bitbucket. Cut to the page: the badge turns Possibly stale, the tooltip shows the PR. | "Merge happens. Within minutes the page is flagged, with the exact change." |
 | 1:25 to 2:05 | Review panel, highlighted step, Propose fix, Drift Reviewer draft, Accept, badge green | "A Rovo agent drafts the edit. A human accepts it. Nothing changes silently." |
 | 2:05 to 2:40 | Rovo chat asks again: caveated or correct. A terminal coding agent calls `find-docs-for-path`, then `check-page-freshness`, over MCP. | "Any agent can check freshness before citing, inside Rovo or from a coding agent over MCP." |
 | 2:40 to 2:55 | Jira epic marked Won't Do flips an ADR page. Dashboard drift debt. | "Jira scope changes count too. Leads see drift debt per space." |
-| 2:55 to 3:00 | Logo and tagline | "Doc Drift Sentinel. Catch the slip before your agents do." |
+| 2:55 to 3:00 | Logo and tagline | "Doc Drift. Catch the slip before your agents do." |
 | 3:00 to 3:40 (bonus) | Architecture slide: two apps, zero-LLM detection, credits only on fix, eval confusion matrix | "Detection is deterministic: 30 seeded scenarios, measured precision and recall." |
 | 3:40 to 3:55 (bonus) | Vision | "Docs that agents can trust, because they know when to stop trusting them." |
 
@@ -57,5 +57,5 @@ A submission can win one Grand Prize plus at most one Bonus Prize. Lead with **M
 2. Optional: install the Bitbucket relay in a team workspace, paste the URL and secret.
 3. Or use Demo mode: Settings > Replay seeded PR.
 4. Open the app once in Confluence (the Doc Drift badge or the settings page) and click **Allow access**. MCP sign-in alone does not grant this, and without it every tool returns `consent_required` (S3).
-5. Enable external MCP: Admin > Apps > Sites > site > Connected apps > Doc Drift Sentinel > Details > Tools > "Expose tools to MCP-compatible apps". Then run `claude mcp add --transport http doc-drift https://mcp.atlassian.com/forge/<appId>` and `/mcp` to sign in.
+5. Enable external MCP: Admin > Apps > Sites > site > Connected apps > Doc Drift > Details > Tools > "Expose tools to MCP-compatible apps". Then run `claude mcp add --transport http doc-drift https://mcp.atlassian.com/forge/<appId>` and `/mcp` to sign in.
 6. Ask Drift Reviewer in Rovo chat.

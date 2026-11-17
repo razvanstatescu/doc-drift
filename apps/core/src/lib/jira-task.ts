@@ -82,7 +82,7 @@ export function taskDescription(input: TaskInput): Adf {
   const sections = [...new Set(input.sections.filter((s): s is string => Boolean(s && s.trim())))].slice(0, 10);
   const content: Adf[] = [
     para(
-      text('Doc Drift Sentinel flagged '),
+      text('Doc Drift flagged '),
       text(input.pageTitle || 'this page', [{ type: 'link', attrs: { href: input.pageUrl } }]),
       text(' as Possibly stale: code or work items it is anchored to changed.'),
     ),

@@ -31,7 +31,7 @@ Calm, specific, on watch. Say what changed, where and when, with numbers. Never 
 ## Product descriptions
 
 - **One line (listing summary):** Flags pages when the code or Jira work they describe changes, and tells agents which pages to trust.
-- **Website hero body:** Doc Drift Sentinel anchors Confluence pages to code and Jira work, flags them when those change, and tells Rovo and coding agents which pages to trust.
+- **Website hero body:** Doc Drift anchors Confluence pages to code and Jira work, flags them when those change, and tells Rovo and coding agents which pages to trust.
 - **Cover paragraph:** A Forge app for Confluence. It anchors pages to the code and Jira work they describe, flags them the moment those change, and tells Rovo and coding agents not to trust them until a person re-verifies.
 - **Marketplace categories (draft):** Documentation, Developer tools, Rovo agents.
 
@@ -92,7 +92,7 @@ Calm, specific, on watch. Say what changed, where and when, with numbers. Never 
 
 ## Maker
 
-Doc Drift Sentinel is made by **Nano-Soft Technology SRL**, trading as **Nano Soft** (Bucharest, Romania; https://nano-soft.tech/). Contact and support: hello@nano-soft.tech. Use "Nano Soft" in bylines and footers, and the legal name in copyright and privacy text.
+Doc Drift is made by **Nano-Soft Technology SRL**, trading as **Nano Soft** (Bucharest, Romania; https://nano-soft.tech/). Contact and support: hello@nano-soft.tech. Use "Nano Soft" in bylines and footers, and the legal name in copyright and privacy text.
 
 ## Placeholders
 

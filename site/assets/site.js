@@ -1,4 +1,4 @@
-// Doc Drift Sentinel website: theme, menu, tabs, copy buttons, table of contents, and the hero demo.
+// Doc Drift website: theme, menu, tabs, copy buttons, table of contents, and the hero demo.
 (function () {
   'use strict';
 

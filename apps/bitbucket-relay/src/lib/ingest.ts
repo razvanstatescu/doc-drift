@@ -10,7 +10,7 @@ export type Checked<T> = { ok: true; value: T } | { ok: false; message: string }
 export function validateIngestUrl(raw: unknown): Checked<string> {
   const fail = {
     ok: false as const,
-    message: 'Paste the ingest URL from Doc Drift Sentinel settings. Its host ends in webtrigger.atlassian.app.',
+    message: 'Paste the ingest URL from Doc Drift settings. Its host ends in webtrigger.atlassian.app.',
   };
   if (typeof raw !== 'string' || raw.trim().length === 0) return fail;
   if (raw.trim().length > 500) return fail;
@@ -36,7 +36,7 @@ export function validateSecret(raw: unknown): Checked<string> {
   if (secret.length < SECRET_MIN_LENGTH || secret.length > SECRET_MAX_LENGTH || /\s/.test(secret)) {
     return {
       ok: false,
-      message: `Paste the shared secret from Doc Drift Sentinel settings. It has at least ${SECRET_MIN_LENGTH} characters and no spaces.`,
+      message: `Paste the shared secret from Doc Drift settings. It has at least ${SECRET_MIN_LENGTH} characters and no spaces.`,
     };
   }
   return { ok: true, value: secret };
@@ -69,24 +69,24 @@ export function classifyCoreResponse(status: number): CoreOutcome {
     case 403:
       return {
         kind: 'rejected',
-        message: 'Doc Drift Sentinel rejected the signature. Check that the shared secret matches its settings page.',
+        message: 'Doc Drift rejected the signature. Check that the shared secret matches its settings page.',
       };
     case 400:
       return {
         kind: 'rejected',
-        message: 'Doc Drift Sentinel could not read the record. Update both apps to their latest versions.',
+        message: 'Doc Drift could not read the record. Update both apps to their latest versions.',
       };
     case 404:
       return {
         kind: 'rejected',
-        message: 'No web trigger answers at this URL. Copy the ingest URL again from Doc Drift Sentinel settings.',
+        message: 'No web trigger answers at this URL. Copy the ingest URL again from Doc Drift settings.',
       };
     case 429:
-      return { kind: 'retry', message: 'Doc Drift Sentinel is rate limiting requests. Try again in a minute.' };
+      return { kind: 'retry', message: 'Doc Drift is rate limiting requests. Try again in a minute.' };
     default:
       return status >= 500
-        ? { kind: 'retry', message: `Doc Drift Sentinel answered ${status}. Try again in a minute.` }
-        : { kind: 'rejected', message: `Doc Drift Sentinel answered ${status}.` };
+        ? { kind: 'retry', message: `Doc Drift answered ${status}. Try again in a minute.` }
+        : { kind: 'rejected', message: `Doc Drift answered ${status}.` };
   }
 }
 

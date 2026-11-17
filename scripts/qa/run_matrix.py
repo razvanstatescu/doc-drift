@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Live QA matrix for Doc Drift Sentinel (development environment, demo site, DDSTEST space only).
+"""Live QA matrix for Doc Drift (development environment, demo site, DDSTEST space only).
 
 Runs the headless cases of docs/testing/test-plan.md through the dev driver and REST, and appends one
 JSON line per case to scripts/qa/out/results.jsonl (case id, verdict, evidence). Each group creates

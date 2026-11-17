@@ -123,7 +123,7 @@ export async function onMerged(event: unknown): Promise<InvocationError | void> 
       await markDelivered(key, { at, status: res.status });
       await setLastDelivery({
         at, prId: pr.prId, repo: record.repoSlug, result: 'sent', files: record.files.length,
-        detail: `Doc Drift Sentinel accepted it (HTTP ${res.status}).`,
+        detail: `Doc Drift accepted it (HTTP ${res.status}).`,
       });
       return;
     }

@@ -1,4 +1,4 @@
-# Doc Drift Sentinel knowledge base
+# Doc Drift knowledge base
 
 Start with [product/overview.md](product/overview.md), then [architecture/overview.md](architecture/overview.md).
 

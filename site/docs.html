@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Setup guide · Doc Drift Sentinel</title>
-  <meta name="description" content="Install Doc Drift Sentinel, connect Jira and Bitbucket, anchor your first pages, and connect Rovo and coding agents.">
+  <title>Setup guide · Doc Drift</title>
+  <meta name="description" content="Install Doc Drift, connect Jira and Bitbucket, anchor your first pages, and connect Rovo and coding agents.">
   <meta name="theme-color" content="#F2F6F7">
   <link rel="icon" href="assets/doc-drift-icon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,9 +20,9 @@
 
   <header class="site-header">
     <div class="wrap">
-      <a class="lockup" href="./" aria-label="Doc Drift Sentinel home">
+      <a class="lockup" href="./" aria-label="Doc Drift home">
         <img src="assets/doc-drift-icon.svg" alt="" width="40" height="40">
-        <span>Doc Drift Sentinel</span>
+        <span>Doc Drift</span>
       </a>
       <nav class="nav" id="site-nav" aria-label="Main">
         <a href="./#how">How it works</a>
@@ -85,7 +85,7 @@
           </ul>
           <div class="note">
             <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-info"/></svg>
-            <p>Doc Drift Sentinel is two Forge apps: the main app in Confluence, and a small relay in Bitbucket that sends merged pull requests to it. Forge doesn't let one app span Bitbucket and Confluence, so the relay is separate.</p>
+            <p>Doc Drift is two Forge apps: the main app in Confluence, and a small relay in Bitbucket that sends merged pull requests to it. Forge doesn't let one app span Bitbucket and Confluence, so the relay is separate.</p>
           </div>
         </section>
 
@@ -105,7 +105,7 @@
           <h2>Connect Jira</h2>
           <p>Jira is optional. With it, a page can be anchored to an issue or epic, and changes to its status, resolution, fix versions, components, summary, description or parent flag the page. You can also create a Jira task from a flagged page.</p>
           <p>If you skipped Jira at install, connect it later in Atlassian Administration:</p>
-          <pre>Apps › Sites › your site › Connected apps › Doc Drift Sentinel › View app details › Connections › Jira › Connect</pre>
+          <pre>Apps › Sites › your site › Connected apps › Doc Drift › View app details › Connections › Jira › Connect</pre>
           <p>To turn Jira changes off without disconnecting, use <strong>Jira</strong> in the app settings.</p>
         </section>
 
@@ -113,9 +113,9 @@
           <h2>Connect Bitbucket</h2>
           <p>The relay reads each pull request merged into a repository's main branch, and sends Doc Drift the list of changed files and a short diff. It signs every request with a secret that only your site and the relay know.</p>
           <ol class="steps-list">
-            <li>In Confluence, open <strong>Settings</strong> (the gear), then <strong>Doc Drift Sentinel</strong> in the sidebar. Under <strong>Bitbucket relay</strong>, copy the ingest URL and select <strong>Generate secret</strong>. Copy the secret now: it's shown only once.</li>
-            <li>Install the Doc Drift Sentinel Relay in your Bitbucket team workspace with its install link.</li>
-            <li>In Bitbucket, open <strong>Workspace settings</strong>, then <strong>Doc Drift Sentinel Relay</strong> under Forge apps. Paste the URL and the secret and select <strong>Save</strong>.</li>
+            <li>In Confluence, open <strong>Settings</strong> (the gear), then <strong>Doc Drift</strong> in the sidebar. Under <strong>Bitbucket relay</strong>, copy the ingest URL and select <strong>Generate secret</strong>. Copy the secret now: it's shown only once.</li>
+            <li>Install the Doc Drift Relay in your Bitbucket team workspace with its install link.</li>
+            <li>In Bitbucket, open <strong>Workspace settings</strong>, then <strong>Doc Drift Relay</strong> under Forge apps. Paste the URL and the secret and select <strong>Save</strong>.</li>
             <li>Select <strong>Send test ping</strong>. It should say Connected, and the Confluence settings page shows the time of the last ping.</li>
           </ol>
           <p>Merge a pull request and the settings page lists the repository under <strong>Repositories seen</strong>. Rotating the secret stops the old one at once, so update the relay right after.</p>
@@ -180,7 +180,7 @@
 
         <section id="settings">
           <h2>Settings</h2>
-          <p>Confluence administrators find the settings under <strong>Settings</strong>, then <strong>Doc Drift Sentinel</strong>. Changes apply to the next change the app receives.</p>
+          <p>Confluence administrators find the settings under <strong>Settings</strong>, then <strong>Doc Drift</strong>. Changes apply to the next change the app receives.</p>
           <div class="table-wrap">
             <table>
               <thead><tr><th>Setting</th><th>Default</th><th>What it changes</th></tr></thead>
@@ -201,7 +201,7 @@
           <h2>Connect coding agents</h2>
           <p>Doc Drift has an MCP server with three read-only tools: <code>check-page-freshness</code>, <code>find-docs-for-path</code> and <code>list-stale-pages</code>. Agents sign in as a person and only see pages that person can view.</p>
           <ol class="steps-list">
-            <li><strong>An admin turns on the tools.</strong> In Atlassian Administration: Apps, Sites, your site, Connected apps, Doc Drift Sentinel, View app details. Under Tools, turn on the tools to share with MCP clients.</li>
+            <li><strong>An admin turns on the tools.</strong> In Atlassian Administration: Apps, Sites, your site, Connected apps, Doc Drift, View app details. Under Tools, turn on the tools to share with MCP clients.</li>
             <li><strong>Open the app once in Confluence</strong> and allow access, if you haven't yet. Signing in to the MCP server doesn't grant this.</li>
             <li><strong>Add the server.</strong> In Claude Code, run the command below, then <code>/mcp</code> in a session to sign in and pick your site.</li>
           </ol>
@@ -284,7 +284,7 @@
         <section id="support">
           <h2>Support</h2>
           <p>Email <a href="mailto:hello@nano-soft.tech">hello@nano-soft.tech</a>, or open an issue on <a href="https://github.com/razvanstatescu/doc-drift/issues">GitHub</a>. Say what you did, what you expected, and what happened. Leave out page content and secrets.</p>
-          <p>Doc Drift Sentinel is made by <a href="https://nano-soft.tech/">Nano-Soft Technology SRL</a> (Nano Soft), Bucharest, Romania.</p>
+          <p>Doc Drift is made by <a href="https://nano-soft.tech/">Nano-Soft Technology SRL</a> (Nano Soft), Bucharest, Romania.</p>
           <p>For how the apps handle data, see <a href="privacy.html">Privacy and data handling</a>.</p>
         </section>
       </article>
@@ -295,7 +295,7 @@
     <div class="wrap">
       <div class="footer-grid">
         <div>
-          <a class="lockup" href="./"><img src="assets/doc-drift-icon.svg" alt="" width="40" height="40"><span>Doc Drift Sentinel</span></a>
+          <a class="lockup" href="./"><img src="assets/doc-drift-icon.svg" alt="" width="40" height="40"><span>Doc Drift</span></a>
           <p>Docs that know when the code moved. A Forge app for Confluence by <a href="https://nano-soft.tech/">Nano Soft</a>, built for Codegeist 2026.</p>
         </div>
         <div>
@@ -325,7 +325,7 @@
           </ul>
         </div>
       </div>
-      <p class="legal">© <span data-year>2026</span> Nano-Soft Technology SRL. Doc Drift Sentinel is made by <a href="https://nano-soft.tech/">Nano Soft</a>, Bucharest, Romania. An independent app built on Atlassian Forge, not made or endorsed by Atlassian. Atlassian, Confluence, Jira, Bitbucket and Rovo are trademarks of Atlassian.</p>
+      <p class="legal">© <span data-year>2026</span> Nano-Soft Technology SRL. Doc Drift is made by <a href="https://nano-soft.tech/">Nano Soft</a>, Bucharest, Romania. An independent app built on Atlassian Forge, not made or endorsed by Atlassian. Atlassian, Confluence, Jira, Bitbucket and Rovo are trademarks of Atlassian.</p>
     </div>
   </footer>
 

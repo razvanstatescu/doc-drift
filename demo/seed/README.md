@@ -1,6 +1,6 @@
 # Demo seed
 
-Everything needed to build the Doc Drift Sentinel demo environment: the `payments-api` repo in Bitbucket, the Jira project PAY, and the Confluence space PLAT. The scripts use only the Python standard library and never print a token.
+Everything needed to build the Doc Drift demo environment: the `payments-api` repo in Bitbucket, the Jira project PAY, and the Confluence space PLAT. The scripts use only the Python standard library and never print a token.
 
 ```
 demo/seed/

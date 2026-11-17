@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared helpers for the Doc Drift Sentinel QA scripts (stdlib only, development environment only).
+"""Shared helpers for the Doc Drift QA scripts (stdlib only, development environment only).
 
 - Confluence REST (basic auth from ATLASSIAN_EMAIL / ATLASSIAN_API_TOKEN): create, read, update,
   trash, restore pages and read content properties.

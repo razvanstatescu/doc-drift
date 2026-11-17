@@ -25,8 +25,8 @@ On the 512 px grid: the D spans 248 x 272 px with 30 px outer corners. Two 12 px
 
 ## Lockups
 
-- **Horizontal:** icon, then "Doc Drift Sentinel" in Spline Sans 600 at 42% of the icon height, gap of 28% of the icon height, vertically centred.
-- **Stacked:** icon above "Doc Drift" over "Sentinel", centred, gap of 1 S.
+- **Horizontal:** icon, then "Doc Drift" in Spline Sans 600 at 42% of the icon height, gap of 28% of the icon height, vertically centred.
+- **Stacked:** icon above "Doc Drift", centred, gap of 1 S.
 - The name never appears as a wordmark on its own in brand placements. It travels with the mark.
 
 ## Don't

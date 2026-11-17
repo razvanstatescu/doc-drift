@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Seed the Doc Drift Sentinel demo repo payments-api in Bitbucket Cloud.
+"""Seed the Doc Drift demo repo payments-api in Bitbucket Cloud.
 
 Usage (from the repo root, with .env loaded):
   set -a; . ./.env; set +a

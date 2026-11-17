@@ -1,6 +1,6 @@
 # Website
 
-The public site for Doc Drift Sentinel (D36), published to GitHub Pages by [../.github/workflows/pages.yml](../.github/workflows/pages.yml) on every push to `main` that touches `site/`.
+The public site for Doc Drift (D36), published to GitHub Pages by [../.github/workflows/pages.yml](../.github/workflows/pages.yml) on every push to `main` that touches `site/`.
 
 | File | What |
 | --- | --- |
@@ -31,7 +31,7 @@ Open http://localhost:4173/. Everything works from the file system except the 40
 
 ## Rules for editing
 
-- Copy follows [../brand/voice-and-copy.md](../brand/voice-and-copy.md): sentence case, digits, no exclamation marks or emoji, state names with a word and an icon, "Doc Drift Sentinel" in full on first use, never "DocDrift" or "DDS".
+- Copy follows [../brand/voice-and-copy.md](../brand/voice-and-copy.md): sentence case, digits, no exclamation marks or emoji, state names with a word and an icon, "Doc Drift" in full on first use, never "DocDrift" or "DDS".
 - One beacon (amber) per view. Primary buttons fill with the text colour.
 - No invented numbers. The agent examples on the home page are real tool output from the PLAT demo space (Nov 13); the hero and the `check-page-freshness` example show the demo replay of PR #482 and say so.
 - `privacy.html` must stay true to [../docs/architecture/trust-safety.md](../docs/architecture/trust-safety.md) and the schema in `apps/core/src/lib/db.ts`. When storage, scopes or AI use change, update both.

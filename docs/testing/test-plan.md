@@ -1,6 +1,6 @@
 # Test plan
 
-Owner: QA track (Claude), written 2026-11-11 for M4/M5. It lists every user-facing path and input class of Doc Drift Sentinel, ranked by risk, with how each case is checked. Results of the first run are in [test-report-2026-11-11.md](test-report-2026-11-11.md).
+Owner: QA track (Claude), written 2026-11-11 for M4/M5. It lists every user-facing path and input class of Doc Drift, ranked by risk, with how each case is checked. Results of the first run are in [test-report-2026-11-11.md](test-report-2026-11-11.md).
 
 ## How to run
 

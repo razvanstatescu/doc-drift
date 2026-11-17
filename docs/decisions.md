@@ -34,7 +34,7 @@ Only one bonus can be won. The Marketplace bonus has 6 winners, so submit for li
 2026-11-11 · Accepted
 It is `asUser()` only, needs persisted queries, and registration is fiddly. It is never in background detection.
 
-### D9. Brand: "Doc Drift Sentinel", Night shift teal with one amber "slip"
+### D9. Brand: "Doc Drift", Night shift teal with one amber "slip"
 2026-11-11 · Accepted
 Never "DocDrift" or "DDS" in user-facing text. `beacon` amber is reserved for drift; primary buttons fill with the text colour. See [brand/](../brand/).
 
@@ -189,3 +189,7 @@ The drifted-page `guidance` read "Cite with caveat: changed by PR #482 on <date>
 ### D39. Launch film v4: a Day film, crafted twins proved by real captures
 2026-11-16 · Accepted (Razvan's review of v3)
 Razvan found v3's story clear but its picture "boring and cheap" next to our Satchel and Pot films, and asked for more movement, fewer Confluence screens, crafted visuals that real recordings prove quickly, and a light version that follows the brand book. Measured (research R1): v3 was frozen 50.5% of the time and only 25% of its frames moved (Satchel 81%, Pot 98%). v4 keeps every word of narration, the music and the timeline, and changes the picture: (1) the film is Day, on a lit Paper sweep, with Night only for the reveal and the literal 3 a.m. scenes (A1, A4's return); (2) the product is explained with crafted *twins* of our own UI, built only from real strings and data, and each claim is proved inside the same line by a short framed crop of a real capture tagged "Recorded in Confluence" (or Bitbucket, Rovo, Jira) or "Real output: doc-drift MCP", with 14 required inserts; this replaces D37's "mock interfaces appear only in the problem act"; (3) the frame never freezes (camera creep, moving ground), while type holds still to be read; (4) the end card drops the maker line (Nano Soft stays in the video description and on the website). Night shift remains the primary look of our other surfaces. Research: [video/v4/](video/v4/); direction: [../video/V4.md](../video/V4.md).
+
+### D40. The product is renamed from "Doc Drift Sentinel" to "Doc Drift"
+2026-11-17 · Accepted (Razvan)
+The product name is now **Doc Drift** everywhere: the apps' titles and copy, the website, the docs, the brand book and `brand/tokens.json`. The Confluence byline label already read "Doc Drift", so the short name is now the only name. Unchanged: the repository, the GitHub Pages URL, the `doc-drift` MCP server key, the `dds-` code key prefix, the Forge app IDs (so the share links are unaffected), and the logo artwork. Decisions and spike notes written before this date may still say "Doc Drift Sentinel" where they quote earlier wording: `docs/source/plan-v1.md` and `spikes/` are kept as written. The launch video (v4) and its YouTube description still use the old name until its next update. The demo site's seeded Jira and Confluence descriptions are not re-seeded.

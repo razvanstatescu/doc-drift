@@ -1,4 +1,4 @@
-# Doc Drift Sentinel brand
+# Doc Drift brand
 
 The brand has one job: make "this page no longer matches the system" visible at a glance, calmly and precisely.
 
@@ -28,9 +28,9 @@ Everything else stays still and aligned, so the slip is the only thing that read
 
 ## Naming
 
-- Product: **Doc Drift Sentinel**. Write it in full in titles, listings and first mentions. "Doc Drift" is fine where space is tight, such as the Confluence byline label.
+- Product: **Doc Drift** (renamed from "Doc Drift Sentinel" on 2026-11-17, D40). Use the same name everywhere, including the Confluence byline label.
 - Never "DocDrift" or "DDS" in user-facing text. "DocDrift" is already the name of unrelated open-source tools. (Code identifiers such as a `dds-` key prefix are fine.)
-- Marketplace listing: "Doc Drift Sentinel for Confluence".
+- Marketplace listing: "Doc Drift for Confluence".
 - The Rovo agent is **Drift Reviewer**. The main agent tool is `check-page-freshness`.
 - Page states are names and keep their capital: **Verified, Possibly stale, Stale, Unanchored**.
 

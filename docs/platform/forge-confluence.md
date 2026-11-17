@@ -1,4 +1,4 @@
-# Forge for Confluence: verified platform reference (Doc Drift Sentinel)
+# Forge for Confluence: verified platform reference (Doc Drift)
 
 Checked 2026-11-11. Every fact is tagged **Verified** (with its source) or **Unverified**. Source keys:
 

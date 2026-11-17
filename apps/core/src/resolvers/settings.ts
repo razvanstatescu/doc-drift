@@ -23,7 +23,7 @@ const resolver = new Resolver();
 const DENIED = {
   ok: false,
   error: 'forbidden',
-  message: 'Only Confluence administrators can change Doc Drift Sentinel settings. Ask an administrator to make changes here.',
+  message: 'Only Confluence administrators can change Doc Drift settings. Ask an administrator to make changes here.',
 };
 
 interface SettingsContext {
@@ -98,7 +98,7 @@ resolver.define('saveSettings', async ({ payload }) => {
     (k) => JSON.stringify(parsed.value[k]) !== JSON.stringify(current[k]),
   );
   console.log(`DDS_SETTINGS_SAVED ${JSON.stringify({ changed })}`);
-  return { ok: true, settings: parsed.value, message: 'Saved. Changes apply to the next change Doc Drift Sentinel receives.' };
+  return { ok: true, settings: parsed.value, message: 'Saved. Changes apply to the next change Doc Drift receives.' };
 });
 
 /**

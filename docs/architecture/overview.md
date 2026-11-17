@@ -6,13 +6,13 @@ Forge multi-app compatibility (Preview) covers Jira, Confluence and Compass, not
 
 | App | Products | Job |
 | --- | --- | --- |
-| **doc-drift-sentinel** (core) | Confluence required, Jira optional | Bindings, matcher, byline badge, review panel, dashboard, settings, Jira trigger, Rovo agent, skill, actions, `rovo:mcp` |
+| **doc-drift** (core) | Confluence required, Jira optional | Bindings, matcher, byline badge, review panel, dashboard, settings, Jira trigger, Rovo agent, skill, actions, `rovo:mcp` |
 | **dds-bitbucket-relay** | Bitbucket | Listens for merged PRs, reads the diffstat (+ diff), and POSTs a compact, HMAC-signed change record to the core app's web trigger |
 
 ```
 Bitbucket workspace                      Atlassian site (Confluence + Jira)
 ┌────────────────────────┐               ┌──────────────────────────────────────────────┐
-│ dds-bitbucket-relay     │  HTTPS POST   │ doc-drift-sentinel (core)                    │
+│ dds-bitbucket-relay     │  HTTPS POST   │ doc-drift (core)                    │
 │ trigger: fulfilled:PR   │──────────────▶│ webtrigger: ingest-change (HMAC verified)    │
 │ fn: read diffstat+diff  │  (HMAC)       │   └─▶ queue: match-queue (debounce 600s)     │
 │ storage: relay secret   │               │ trigger: avi:jira:updated:issue (filtered)   │

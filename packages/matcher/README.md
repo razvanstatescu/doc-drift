@@ -1,6 +1,6 @@
 # @dds/matcher
 
-The deterministic matcher for Doc Drift Sentinel (F3). Pure TypeScript with no Forge imports and no LLM. The algorithm is in [docs/architecture/detection.md](../../docs/architecture/detection.md). Types such as `ChangeRecord`, `Binding` and page states come from `@dds/shared`.
+The deterministic matcher for Doc Drift (F3). Pure TypeScript with no Forge imports and no LLM. The algorithm is in [docs/architecture/detection.md](../../docs/architecture/detection.md). Types such as `ChangeRecord`, `Binding` and page states come from `@dds/shared`.
 
 ## API
 

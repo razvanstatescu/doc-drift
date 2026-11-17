@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Seed the Doc Drift Sentinel demo space PLAT in Confluence Cloud.
+"""Seed the Doc Drift demo space PLAT in Confluence Cloud.
 
 Creates the space (if missing), 5 section folders under the space homepage, the 24 pages
 from index.json (storage format) inside their folders, and their labels. Idempotent: a space,

@@ -1,10 +1,10 @@
 # Design reference: the brand canvas
 
-Canvas: https://claude.ai/artifact/W6PzEst8WGEZLv82vH8bSr ("Doc Drift Sentinel brand"). It uses the design system https://claude.ai/artifact/MWaTaUbAyKQZ1qNyYzkLF6. Six boards at 1440 px wide. This file says what each board defines, so you know where to look before building a surface. Board copy is collected in [voice-and-copy.md](voice-and-copy.md).
+Canvas: https://claude.ai/artifact/W6PzEst8WGEZLv82vH8bSr ("Doc Drift brand"). It uses the design system https://claude.ai/artifact/MWaTaUbAyKQZ1qNyYzkLF6. Six boards at 1440 px wide. This file says what each board defines, so you know where to look before building a surface. Board copy is collected in [voice-and-copy.md](voice-and-copy.md).
 
 ## 1. Cover (Night shift)
 
-The hero: "Doc Drift Sentinel / Docs that know when the code moved." The icon sits on tide lines. Below it are three story cards, each with a three-band glyph:
+The hero: "Doc Drift / Docs that know when the code moved." The icon sits on tide lines. Below it are three story cards, each with a three-band glyph:
 1. **In sync.** The runbook is anchored to `scripts/rollback.sh` and verified against it.
 2. **Code moved.** The middle band slips in amber with its trace. PR #482 renames the script. The page is flagged Possibly stale and agents are told to hold off.
 3. **Reviewed.** Shows a Verified badge. Dana accepts the proposed fix. The band slides back and agents trust the page again.
@@ -49,8 +49,8 @@ For our own surfaces (website, docs, decks, dashboard mockups). Inside Confluenc
 ## 6. In context
 
 - **Website hero:** nav (How it works · For agents · Docs · Install for Confluence). Headline, body, two CTAs (Install for Confluence, Watch the 4 minute demo). A page mock with "Owned by Dana" and a Possibly stale badge.
-- **Marketplace listing:** "Doc Drift Sentinel for Confluence", by Nano Soft (Nano-Soft Technology SRL), one-line summary, categories (Documentation, Developer tools, Rovo agents). The logo is exported at 144 x 144 px from `doc-drift-icon.svg`.
+- **Marketplace listing:** "Doc Drift for Confluence", by Nano Soft (Nano-Soft Technology SRL), one-line summary, categories (Documentation, Developer tools, Rovo agents). The logo is exported at 144 x 144 px from `doc-drift-icon.svg`.
 - **Confluence page:** the byline badge with a tooltip, and an optional banner reading "Agents won't trust this page until it's reviewed."
 - **Agent answer:** the Drift Reviewer reply to "How do I roll back payments-api?" with a page citation chip showing the state.
 - **Coding agent over MCP:** a terminal transcript. The user asks "Before I edit deploy/helm/values.yaml, which docs describe it?" and the agent calls `doc-drift · find-docs-for-path (payments-api, deploy/helm/values.yaml)`. Results: Payments rollback runbook, `possibly_stale`; Scaling payment workers, `verified`. Then: "I'll update the runbook in the same PR."
-- **Video title and Devpost thumbnail:** "Doc Drift Sentinel. Catch the slip before your agents do. Built on Forge for Codegeist 2026."
+- **Video title and Devpost thumbnail:** "Doc Drift. Catch the slip before your agents do. Built on Forge for Codegeist 2026."

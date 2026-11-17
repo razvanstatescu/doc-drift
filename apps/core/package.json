@@ -2,7 +2,7 @@
   "name": "@dds/core-app",
   "version": "0.1.0",
   "private": true,
-  "description": "Doc Drift Sentinel core Forge app (Confluence required, Jira optional)",
+  "description": "Doc Drift core Forge app (Confluence required, Jira optional)",
   "license": "UNLICENSED",
   "scripts": {
     "prebuild:packages": "pnpm --filter @dds/shared --filter @dds/matcher build",

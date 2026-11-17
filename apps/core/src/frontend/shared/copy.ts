@@ -29,10 +29,10 @@ export const COPY = {
 
   // Access states
   consentTitle: 'Allow access to see drift.',
-  consentBody: 'Doc Drift Sentinel reads pages as you. Grant access in Connected apps, then try again.',
+  consentBody: 'Doc Drift reads pages as you. Grant access in Connected apps, then try again.',
   restrictedTitle: "Restricted pages can't be watched yet.",
   restrictedBody:
-    "This page has view restrictions, so Doc Drift Sentinel can't read it or receive its updates. Remove the restriction to add anchors.",
+    "This page has view restrictions, so Doc Drift can't read it or receive its updates. Remove the restriction to add anchors.",
   unwatchedTitle: "This space isn't watched yet.",
   openSettings: 'Open settings',
   viewOnlyTitle: 'View only',

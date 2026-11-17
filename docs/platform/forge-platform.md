@@ -1,6 +1,6 @@
 # Forge platform reference (verified 2026-11-11)
 
-Scope: what Doc Drift Sentinel needs from the Forge platform. There are two apps: **core**, which requires Confluence and treats Jira as optional, and **bitbucket-relay**, a Bitbucket app that POSTs to the core app's web trigger.
+Scope: what Doc Drift needs from the Forge platform. There are two apps: **core**, which requires Confluence and treats Jira as optional, and **bitbucket-relay**, a Bitbucket app that POSTs to the core app's web trigger.
 
 Legend: **Verified** means read on the cited page today. **Unverified** means not stated in the docs, or inferred.
 

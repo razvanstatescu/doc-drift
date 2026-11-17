@@ -220,7 +220,7 @@ modules:
       render: native
       resolver:
         function: settings-resolver
-      title: Doc Drift Sentinel
+      title: Doc Drift
       # No useAsConfig: a Configure-only page gets no sidebar link, and the Configure link
       # is hidden for unshared (development) apps, so admins could not reach settings.
       # As a plain global settings page it appears in Confluence administration's sidebar.

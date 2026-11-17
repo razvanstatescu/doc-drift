@@ -1,10 +1,10 @@
-# Doc Drift Sentinel Relay
+# Doc Drift Relay
 
-The Bitbucket half of Doc Drift Sentinel (milestone M1). When a pull request merges into a repository's main branch, the relay reads its changed files, builds a `ChangeRecord` (`@dds/shared`), signs it, and POSTs it to the core app's ingest web trigger in Confluence. Forge multi-app compatibility excludes Bitbucket, so this is a separate Forge app (see [docs/architecture/overview.md](../../docs/architecture/overview.md)).
+The Bitbucket half of Doc Drift (milestone M1). When a pull request merges into a repository's main branch, the relay reads its changed files, builds a `ChangeRecord` (`@dds/shared`), signs it, and POSTs it to the core app's ingest web trigger in Confluence. Forge multi-app compatibility excludes Bitbucket, so this is a separate Forge app (see [docs/architecture/overview.md](../../docs/architecture/overview.md)).
 
 | | |
 | --- | --- |
-| App name | Doc Drift Sentinel Relay |
+| App name | Doc Drift Relay |
 | App ID | `ari:cloud:ecosystem::app/409a6e1e-dd37-482c-b30f-e56d322b4035` |
 | Developer Space | Doc Drift (`af90295c-aad7-4188-9754-122ee3c4c6f4`) |
 | Installed | development, Bitbucket workspace `nano-soft-dev` (installation `6e94238f-5912-48c6-8485-962b02059db9`) |
@@ -63,8 +63,8 @@ Do not add `"type": "module"` to package.json, and never add `app.licensing` to 
 
 ## Configure
 
-1. In Confluence, open Doc Drift Sentinel settings and copy the ingest URL and the shared secret.
-2. In Bitbucket, open **Workspace settings > Forge Apps > Doc Drift Sentinel Relay**
+1. In Confluence, open Doc Drift settings and copy the ingest URL and the shared secret.
+2. In Bitbucket, open **Workspace settings > Forge Apps > Doc Drift Relay**
    (`https://bitbucket.org/nano-soft-dev/workspace/settings/forge/409a6e1e-dd37-482c-b30f-e56d322b4035/development/relay-settings`; the environment segment is unverified, so use the menu if this 404s).
 3. Paste both and select **Save**, then **Send test ping**.
 
@@ -78,7 +78,7 @@ Until `apps/core` serves its ingest trigger, use the S1 spike core (`spikes/s1-c
 
 ## Browser checks for Razvan
 
-1. Open the settings page (step 2 above) as a workspace admin. Expect the heading "Doc Drift Sentinel Relay", 2 fields, and "No merged pull requests seen yet." If Bitbucket asks you to allow access, allow it.
+1. Open the settings page (step 2 above) as a workspace admin. Expect the heading "Doc Drift Relay", 2 fields, and "No merged pull requests seen yet." If Bitbucket asks you to allow access, allow it.
 2. Paste `http://example.com` and select Save. Expect the URL error that mentions `webtrigger.atlassian.app`.
 3. Paste the S1 core URL and secret, then Save. Expect "Saved". Reload the page: the URL is back, the secret field is empty, and the secret line reads "Secret saved ... never shown again."
 4. Select **Send test ping**. Expect a green "Connected" message with the HTTP status and time. In the S1 core logs (`cd spikes/s1-core-webtrigger && forge logs -e development`), expect `ingest: ping verified`.

@@ -1,6 +1,6 @@
 # payments-api
 
-Payments service for Acme. Demo repository for Doc Drift Sentinel (Codegeist 2026).
+Payments service for Acme. Demo repository for Doc Drift (Codegeist 2026).
 
 - `src/` service code
 - `deploy/helm/` Helm chart and values

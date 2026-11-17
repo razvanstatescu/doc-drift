@@ -83,7 +83,7 @@ resolver.define('saveSettings', async ({ payload, context }) => {
     if (checked.ok) secret = checked.value;
     else fieldErrors.secret = checked.message;
   } else if (!existing) {
-    fieldErrors.secret = 'Paste the shared secret from Doc Drift Sentinel settings.';
+    fieldErrors.secret = 'Paste the shared secret from Doc Drift settings.';
   }
   if (fieldErrors.ingestUrl || fieldErrors.secret || !url.ok) return { ok: false, fieldErrors };
 

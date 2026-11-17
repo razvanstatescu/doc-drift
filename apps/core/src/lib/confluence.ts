@@ -101,7 +101,7 @@ export async function updateFooterComment(
   const res = await requester.requestConfluence(route`/wiki/api/v2/footer-comments/${commentId}`, {
     method: 'PUT',
     headers: JSON_HEADERS,
-    body: JSON.stringify({ version: { number: version, message: 'Doc Drift Sentinel' }, body: { representation: 'storage', value: storage } }),
+    body: JSON.stringify({ version: { number: version, message: 'Doc Drift' }, body: { representation: 'storage', value: storage } }),
   });
   if (!res.ok) return { status: res.status, error: await readBody(res) };
   const out = (await res.json()) as { version?: { number?: number } };
@@ -264,7 +264,7 @@ export async function upsertPageProperty(
       ? await requester.requestConfluence(route`/wiki/api/v2/pages/${pageId}/properties/${existing.id}`, {
           method: 'PUT',
           headers: JSON_HEADERS,
-          body: JSON.stringify({ key, value, version: { number: existing.version.number + 1, message: 'Doc Drift Sentinel state' } }),
+          body: JSON.stringify({ key, value, version: { number: existing.version.number + 1, message: 'Doc Drift state' } }),
         })
       : await requester.requestConfluence(route`/wiki/api/v2/pages/${pageId}/properties`, {
           method: 'POST',

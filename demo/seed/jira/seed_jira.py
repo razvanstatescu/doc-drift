@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Seed the Doc Drift Sentinel demo project PAY in Jira Cloud, and run the Jira demo beats.
+"""Seed the Doc Drift demo project PAY in Jira Cloud, and run the Jira demo beats.
 
 Keys are templated (D25). issues.json names each issue by a stable `ref` (for example
 `rollback-epic`), and pages cite it as the token `{{PAY:rollback-epic}}`. Jira assigns the real

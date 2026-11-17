@@ -36,7 +36,7 @@ Goal (if revived): the "Best Marketplace published app" bonus requires an app "p
 
 ## Listing assets
 
-- Name: Doc Drift Sentinel for Confluence (60 chars max; never lead with a product name; avoid "app", "plugin", "add-on", "beta"). The relay can be "Doc Drift Sentinel Relay for Bitbucket".
+- Name: Doc Drift for Confluence (60 chars max; never lead with a product name; avoid "app", "plugin", "add-on", "beta"). The relay can be "Doc Drift Relay for Bitbucket".
 - Legal: privacy policy (required), EULA (Atlassian template is fine), DPA if personal data is processed, a documentation link, a support contact, and a personal-data reporting and erasure flow.
 - Logo: 144 x 144 px PNG exported from [brand/logos/doc-drift-icon.svg](../../brand/logos/doc-drift-icon.svg)
 - Summary: "Flags pages when the code or Jira work they describe changes, and tells agents which pages to trust."

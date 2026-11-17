@@ -2,7 +2,7 @@
   "space": {
     "key": "PLAT",
     "name": "Platform",
-    "description": "Runbooks, service overviews, onboarding, ADRs and API guides for the payments platform. Demo space for Doc Drift Sentinel."
+    "description": "Runbooks, service overviews, onboarding, ADRs and API guides for the payments platform. Demo space for Doc Drift."
   },
   "folders": [
     "Runbooks",

@@ -1,4 +1,4 @@
-# Doc Drift Sentinel
+# Doc Drift
 
 A Forge app for Atlassian **Codegeist 2026**. It anchors Confluence pages to the code paths and Jira work they describe, flags a page **Possibly stale** when those change, and tells Rovo and coding agents (over MCP) not to trust the page until a person re-verifies it. Pitch: *agents should not cite docs that the code has already invalidated.* Tagline: *Docs that know when the code moved.*
 
@@ -14,7 +14,7 @@ A Forge app for Atlassian **Codegeist 2026**. It anchors Confluence pages to the
 | How it fits together | [docs/architecture/overview.md](docs/architecture/overview.md) and siblings |
 | Exact Forge manifest fields, scopes, REST paths, limits | [docs/platform/](docs/platform/). Start with its README's **corrections checklist** |
 | Rules, dates, distribution | [docs/hackathon/codegeist-rules.md](docs/hackathon/codegeist-rules.md), [docs/hackathon/timeline.md](docs/hackathon/timeline.md), [docs/hackathon/distribution.md](docs/hackathon/distribution.md) |
-| Why something is the way it is | [docs/decisions.md](docs/decisions.md) (D1 to D39) |
+| Why something is the way it is | [docs/decisions.md](docs/decisions.md) (D1 to D40) |
 | Terms | [docs/glossary.md](docs/glossary.md) |
 | Colours, type, logo, copy | [brand/](brand/) |
 | Public website (GitHub Pages) | [site/](site/), see [site/README.md](site/README.md) (D36) |
@@ -44,7 +44,7 @@ Storage leans Forge SQL. UI is UI Kit (`render: native`).
 
 ## Naming and copy
 
-- Product: **Doc Drift Sentinel** ("Doc Drift" only where space is tight). Never "DocDrift" or "DDS" in user-facing text. A `dds-` prefix in code keys is fine.
+- Product: **Doc Drift** (renamed from "Doc Drift Sentinel" on 2026-11-17, D40). Never "DocDrift" or "DDS" in user-facing text. A `dds-` prefix in code keys is fine.
 - States: **Verified, Possibly stale, Stale, Unanchored** (API: `verified`, `possibly_stale`, `stale`, `unanchored`, `unknown`). Always a word and an icon.
 - Voice: calm, specific, numbers as digits, sentence case, no exclamation marks, no emoji, tooltips under 90 chars. Copy library: [brand/voice-and-copy.md](brand/voice-and-copy.md).
 
@@ -83,5 +83,5 @@ Storage leans Forge SQL. UI is UI Kit (`render: native`).
 
 - Keep the docs current. When a spike or a discussion changes the design, update the relevant doc **and** add an entry to [docs/decisions.md](docs/decisions.md). Mark spike outcomes in [risks-and-spikes.md](docs/hackathon/risks-and-spikes.md). (We are building a doc-drift tool; don't let our own docs drift.)
 - Platform facts: prefer [docs/platform/](docs/platform/) over memory. If you verify something new against developer.atlassian.com, add it there with its source URL and a Verified/Unverified tag. Preview modules (`rovo:mcp`, `rovo:skill`, TWG, multi-app, page banner) change often, so check the Forge changelog before relying on details.
-- Feature IDs F1 to F18 and decision IDs D1 to D39 are stable. Reference them in issues and commits.
+- Feature IDs F1 to F18 and decision IDs D1 to D40 are stable. Reference them in issues and commits.
 - If brand changes are made here, mirror them to the design system artifact (and the reverse).

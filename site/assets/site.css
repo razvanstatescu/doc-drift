@@ -1,4 +1,4 @@
-/* Doc Drift Sentinel website. Tokens copied from brand/tokens.json. Day (light) is the default; Night shift on toggle. */
+/* Doc Drift website. Tokens copied from brand/tokens.json. Day (light) is the default; Night shift on toggle. */
 
 :root[data-theme='dark'] {
   color-scheme: dark;

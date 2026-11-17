@@ -1,6 +1,6 @@
 # Codegeist 2026: verified rules and Marketplace reference
 
-Researched 2026-11-11 for Doc Drift Sentinel (core Confluence+Jira app plus Bitbucket relay app).
+Researched 2026-11-11 for Doc Drift (core Confluence+Jira app plus Bitbucket relay app).
 
 **How to read the labels**
 - **Verified**: confirmed on the cited primary source.
@@ -164,7 +164,7 @@ Verified: https://developer.atlassian.com/platform/marketplace/atlassian-brand-g
 - "&" and "and" may join two Atlassian apps.
 - Avoid "Premium", "Atlassian", "plugin", "beta", "add-on" and "app".
 - Use correct product casing (Confluence, Jira, Bitbucket, Rovo).
-- Candidate names: "Doc Drift Sentinel for Confluence" (or "... for Confluence and Jira") and "Doc Drift Sentinel Relay for Bitbucket". Both comply.
+- Candidate names: "Doc Drift for Confluence" (or "... for Confluence and Jira") and "Doc Drift Relay for Bitbucket". Both comply.
 
 **Logos and icons**
 - "Do not use Atlassian logos or assets (illustrations, icons, fonts, wordmarks, etc.)".

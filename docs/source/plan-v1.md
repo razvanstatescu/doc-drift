@@ -1,6 +1,6 @@
-# Doc Drift Sentinel: Features and Implementation Plan (Codegeist 2026)
+# Doc Drift: Features and Implementation Plan (Codegeist 2026)
 
-Doc Drift Sentinel is buildable on Forge in 42 days, with one big change to the architecture: Bitbucket cannot be part of the same Forge install as Confluence, so you ship two Forge apps (a Confluence+Jira core app and a small Bitbucket relay). Every other piece you need (byline badge, page banner, Jira change events, Rovo agent, reusable skill, and MCP tools that Claude Code or Cursor can call) is documented and usable today. Build the core so detection is deterministic and needs no LLM. Use AI only when a human asks for a proposed fix. Lead the pitch with "agents should not cite docs that the code has already invalidated". The only competitors are age-based staleness apps and Atlassian's manual "Verified" status.
+Doc Drift is buildable on Forge in 42 days, with one big change to the architecture: Bitbucket cannot be part of the same Forge install as Confluence, so you ship two Forge apps (a Confluence+Jira core app and a small Bitbucket relay). Every other piece you need (byline badge, page banner, Jira change events, Rovo agent, reusable skill, and MCP tools that Claude Code or Cursor can call) is documented and usable today. Build the core so detection is deterministic and needs no LLM. Use AI only when a human asks for a proposed fix. Lead the pitch with "agents should not cite docs that the code has already invalidated". The only competitors are age-based staleness apps and Atlassian's manual "Verified" status.
 
 ## TL;DR
 

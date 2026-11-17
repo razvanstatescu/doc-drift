@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill } from "remotion";
-import { ProofFrame, Stage } from "../index";
+import { AmberBlock, ProofFrame, RealTake, Stage } from "../index";
 
 /** Kit checks (dev only): crops the guard must flag (R7 at h 360, R21 as reviewed) and one it must pass (R7 at h 300). */
 export const CropChecks: React.FC = () => (
@@ -12,4 +12,11 @@ export const CropChecks: React.FC = () => (
       <ProofFrame capture="p2-merge-rec" crop={[1320, 120, 1200, 880]} scale={0.4} x={1000} y={480} at={0} tag="R5 dialog (recording)" video={{ from: 4.88, to: 6.0 }} />
     </AbsoluteFill>
   </Stage>
+);
+
+/** Kit checks (dev only): a fill put over a real capture must be refused with a warning (V5.md 8.1). */
+export const PaintChecks: React.FC = () => (
+  <RealTake capture="p2-flagged" camera={[{ at: 0, to: { cx: 2150, cy: 600, s: 0.9 } }]} crop={{ x: 0, y: 0, w: 3840, h: 600 }} masks={[{ box: [100, 100, 50, 50] }]}>
+    <AmberBlock at={0} rect={{ x: 2256, y: 448, w: 360, h: 58 }} />
+  </RealTake>
 );

@@ -2,22 +2,22 @@
  "film": "v5",
  "fps": 30,
  "bpm": 120,
- "totalFrames": 3150,
+ "totalFrames": 3270,
  "markers": {
   "scoreStart": 0,
   "PROBLEM": 0,
   "PROMISE": 480,
   "LOOP": 900,
-  "AGENTS": 1575,
+  "AGENTS": 1620,
   "FIX": 2100,
-  "JIRA": 2550,
-  "CLOSE": 2880,
+  "JIRA": 2640,
+  "CLOSE": 3000,
   "daySlip": 480,
   "merge": 1174,
   "flag": 1369,
-  "snapBack": 2462,
-  "endHit": 2880,
-  "filmEnd": 3150
+  "snapBack": 2522,
+  "endHit": 3000,
+  "filmEnd": 3270
  },
  "scenes": [
   {
@@ -33,26 +33,26 @@
   {
    "id": "LOOP",
    "from": 900,
-   "durationInFrames": 675
+   "durationInFrames": 720
   },
   {
    "id": "AGENTS",
-   "from": 1575,
-   "durationInFrames": 525
+   "from": 1620,
+   "durationInFrames": 480
   },
   {
    "id": "FIX",
    "from": 2100,
-   "durationInFrames": 450
+   "durationInFrames": 540
   },
   {
    "id": "JIRA",
-   "from": 2550,
-   "durationInFrames": 330
+   "from": 2640,
+   "durationInFrames": 360
   },
   {
    "id": "CLOSE",
-   "from": 2880,
+   "from": 3000,
    "durationInFrames": 270
   }
  ],
@@ -761,9 +761,9 @@
    "id": "S12",
    "scene": "LOOP",
    "from": 1455,
-   "durationInFrames": 120,
+   "durationInFrames": 155,
    "file": "vo/S12.wav",
-   "text": "It names the exact change. No AI made that call.",
+   "text": "It names the exact change and tells the page owner. No AI made that call.",
    "words": [
     {
      "text": "It",
@@ -777,98 +777,113 @@
     },
     {
      "text": "the",
-     "from": 1471,
+     "from": 1472,
      "to": 1474
     },
     {
      "text": "exact",
      "from": 1475,
-     "to": 1490
+     "to": 1491
     },
     {
-     "text": "change.",
-     "from": 1495,
-     "to": 1507
+     "text": "change",
+     "from": 1493,
+     "to": 1508
+    },
+    {
+     "text": "and",
+     "from": 1509,
+     "to": 1513
+    },
+    {
+     "text": "tells",
+     "from": 1514,
+     "to": 1522
+    },
+    {
+     "text": "the",
+     "from": 1523,
+     "to": 1525
+    },
+    {
+     "text": "page",
+     "from": 1527,
+     "to": 1534
+    },
+    {
+     "text": "owner.",
+     "from": 1536,
+     "to": 1543
     },
     {
      "text": "No",
-     "from": 1528,
-     "to": 1535
+     "from": 1564,
+     "to": 1571
     },
     {
      "text": "AI",
-     "from": 1538,
-     "to": 1550
+     "from": 1574,
+     "to": 1585
     },
     {
      "text": "made",
-     "from": 1552,
-     "to": 1556
+     "from": 1586,
+     "to": 1591
     },
     {
      "text": "that",
-     "from": 1558,
-     "to": 1562
+     "from": 1591,
+     "to": 1597
     },
     {
      "text": "call.",
-     "from": 1564,
-     "to": 1572
+     "from": 1598,
+     "to": 1606
     }
    ]
   },
   {
    "id": "S13",
    "scene": "AGENTS",
-   "from": 1590,
-   "durationInFrames": 166,
+   "from": 1620,
+   "durationInFrames": 135,
    "file": "vo/S13.wav",
-   "text": "In Rovo, Atlassian's AI, ask our agent, Drift Reviewer, how to roll back.",
+   "text": "In Rovo, Atlassian's AI, ask our agent how to roll back.",
    "words": [
     {
      "text": "In",
-     "from": 1592,
-     "to": 1594
+     "from": 1622,
+     "to": 1625
     },
     {
      "text": "Rovo,",
-     "from": 1597,
-     "to": 1609
+     "from": 1628,
+     "to": 1641
     },
     {
      "text": "Atlassian's",
-     "from": 1618,
-     "to": 1636
+     "from": 1650,
+     "to": 1669
     },
     {
      "text": "AI,",
-     "from": 1640,
-     "to": 1651
+     "from": 1673,
+     "to": 1684
     },
     {
      "text": "ask",
-     "from": 1668,
-     "to": 1673
+     "from": 1702,
+     "to": 1708
     },
     {
      "text": "our",
-     "from": 1675,
-     "to": 1679
+     "from": 1709,
+     "to": 1714
     },
     {
-     "text": "agent,",
-     "from": 1681,
-     "to": 1691
-    },
-    {
-     "text": "Drift",
-     "from": 1697,
-     "to": 1705
-    },
-    {
-     "text": "Reviewer,",
-     "from": 1707,
-     "to": 1719
+     "text": "agent",
+     "from": 1715,
+     "to": 1726
     },
     {
      "text": "how",
@@ -877,18 +892,18 @@
     },
     {
      "text": "to",
-     "from": 1731,
+     "from": 1732,
      "to": 1733
     },
     {
      "text": "roll",
-     "from": 1735,
-     "to": 1739
+     "from": 1736,
+     "to": 1740
     },
     {
      "text": "back.",
-     "from": 1742,
-     "to": 1752
+     "from": 1743,
+     "to": 1751
     }
    ]
   },
@@ -1066,479 +1081,529 @@
    "id": "S16",
    "scene": "FIX",
    "from": 2100,
-   "durationInFrames": 165,
+   "durationInFrames": 191,
    "file": "vo/S16.wav",
-   "text": "People fix the page, never agents: the rename is one click, no AI.",
+   "text": "Agents never edit the page. A person does: the rename is one click, with no AI.",
    "words": [
     {
-     "text": "People",
+     "text": "Agents",
      "from": 2102,
-     "to": 2111
-    },
-    {
-     "text": "fix",
-     "from": 2114,
-     "to": 2121
-    },
-    {
-     "text": "the",
-     "from": 2122,
-     "to": 2125
-    },
-    {
-     "text": "page,",
-     "from": 2126,
-     "to": 2135
+     "to": 2113
     },
     {
      "text": "never",
-     "from": 2148,
-     "to": 2156
+     "from": 2120,
+     "to": 2129
     },
     {
-     "text": "agents:",
-     "from": 2158,
-     "to": 2170
+     "text": "edit",
+     "from": 2131,
+     "to": 2136
     },
     {
      "text": "the",
-     "from": 2188,
+     "from": 2137,
+     "to": 2140
+    },
+    {
+     "text": "page.",
+     "from": 2141,
+     "to": 2152
+    },
+    {
+     "text": "A",
+     "from": 2167,
+     "to": 2169
+    },
+    {
+     "text": "person",
+     "from": 2170,
+     "to": 2179
+    },
+    {
+     "text": "does:",
+     "from": 2182,
      "to": 2190
     },
     {
+     "text": "the",
+     "from": 2207,
+     "to": 2210
+    },
+    {
      "text": "rename",
-     "from": 2192,
-     "to": 2206
+     "from": 2212,
+     "to": 2225
     },
     {
      "text": "is",
-     "from": 2207,
-     "to": 2213
+     "from": 2227,
+     "to": 2232
     },
     {
      "text": "one",
-     "from": 2215,
-     "to": 2219
+     "from": 2234,
+     "to": 2239
     },
     {
      "text": "click,",
-     "from": 2222,
-     "to": 2231
+     "from": 2242,
+     "to": 2251
+    },
+    {
+     "text": "with",
+     "from": 2259,
+     "to": 2264
     },
     {
      "text": "no",
-     "from": 2244,
-     "to": 2248
+     "from": 2267,
+     "to": 2275
     },
     {
      "text": "AI.",
-     "from": 2252,
-     "to": 2263
+     "from": 2277,
+     "to": 2288
     }
    ]
   },
   {
    "id": "S17",
    "scene": "FIX",
-   "from": 2280,
-   "durationInFrames": 152,
+   "from": 2295,
+   "durationInFrames": 205,
    "file": "vo/S17.wav",
-   "text": "Drift Reviewer drafts other edits. Nothing changes until a person accepts.",
+   "text": "Our agent drafts the other change, a renamed timeout setting. Nothing changes until a person accepts.",
    "words": [
     {
-     "text": "Drift",
-     "from": 2282,
-     "to": 2290
-    },
-    {
-     "text": "Reviewer",
-     "from": 2291,
+     "text": "Our",
+     "from": 2297,
      "to": 2303
     },
     {
+     "text": "agent",
+     "from": 2305,
+     "to": 2313
+    },
+    {
      "text": "drafts",
-     "from": 2306,
-     "to": 2318
+     "from": 2316,
+     "to": 2327
+    },
+    {
+     "text": "the",
+     "from": 2329,
+     "to": 2332
     },
     {
      "text": "other",
-     "from": 2324,
-     "to": 2330
+     "from": 2334,
+     "to": 2338
     },
     {
-     "text": "edits.",
-     "from": 2332,
-     "to": 2342
-    },
-    {
-     "text": "Nothing",
-     "from": 2362,
-     "to": 2369
-    },
-    {
-     "text": "changes",
-     "from": 2372,
-     "to": 2387
-    },
-    {
-     "text": "until",
-     "from": 2389,
-     "to": 2395
+     "text": "change,",
+     "from": 2341,
+     "to": 2352
     },
     {
      "text": "a",
-     "from": 2397,
-     "to": 2400
+     "from": 2365,
+     "to": 2368
+    },
+    {
+     "text": "renamed",
+     "from": 2369,
+     "to": 2384
+    },
+    {
+     "text": "timeout",
+     "from": 2387,
+     "to": 2398
+    },
+    {
+     "text": "setting.",
+     "from": 2401,
+     "to": 2410
+    },
+    {
+     "text": "Nothing",
+     "from": 2431,
+     "to": 2438
+    },
+    {
+     "text": "changes",
+     "from": 2441,
+     "to": 2456
+    },
+    {
+     "text": "until",
+     "from": 2457,
+     "to": 2464
+    },
+    {
+     "text": "a",
+     "from": 2465,
+     "to": 2468
     },
     {
      "text": "person",
-     "from": 2402,
-     "to": 2411
+     "from": 2470,
+     "to": 2479
     },
     {
      "text": "accepts.",
-     "from": 2413,
-     "to": 2428
+     "from": 2480,
+     "to": 2495
     }
    ]
   },
   {
    "id": "S18",
    "scene": "FIX",
-   "from": 2460,
-   "durationInFrames": 86,
+   "from": 2520,
+   "durationInFrames": 122,
    "file": "vo/S18.wav",
-   "text": "Verified again. Now agents can cite it.",
+   "text": "Verified again. Now agents can cite it, with the right step.",
    "words": [
     {
      "text": "Verified",
-     "from": 2462,
-     "to": 2476
+     "from": 2522,
+     "to": 2536
     },
     {
      "text": "again.",
-     "from": 2477,
-     "to": 2486
+     "from": 2538,
+     "to": 2548
     },
     {
      "text": "Now",
-     "from": 2504,
-     "to": 2514
+     "from": 2569,
+     "to": 2576
     },
     {
      "text": "agents",
-     "from": 2516,
-     "to": 2525
+     "from": 2578,
+     "to": 2588
     },
     {
      "text": "can",
-     "from": 2527,
-     "to": 2531
+     "from": 2589,
+     "to": 2594
     },
     {
      "text": "cite",
-     "from": 2533,
-     "to": 2539
+     "from": 2596,
+     "to": 2601
     },
     {
-     "text": "it.",
-     "from": 2540,
-     "to": 2543
+     "text": "it,",
+     "from": 2602,
+     "to": 2606
+    },
+    {
+     "text": "with",
+     "from": 2615,
+     "to": 2618
+    },
+    {
+     "text": "the",
+     "from": 2620,
+     "to": 2621
+    },
+    {
+     "text": "right",
+     "from": 2623,
+     "to": 2628
+    },
+    {
+     "text": "step.",
+     "from": 2630,
+     "to": 2638
     }
    ]
   },
   {
    "id": "S19",
    "scene": "JIRA",
-   "from": 2550,
-   "durationInFrames": 176,
+   "from": 2670,
+   "durationInFrames": 149,
    "file": "vo/S19.wav",
-   "text": "Jira work counts too: close an epic, and the design page that still says it's planned gets flagged.",
+   "text": "Jira work counts too: close an epic, and the design page linked to it gets flagged.",
    "words": [
     {
      "text": "Jira",
-     "from": 2553,
-     "to": 2560
+     "from": 2673,
+     "to": 2680
     },
     {
      "text": "work",
-     "from": 2563,
-     "to": 2568
-    },
-    {
-     "text": "counts",
-     "from": 2569,
-     "to": 2578
-    },
-    {
-     "text": "too:",
-     "from": 2580,
-     "to": 2585
-    },
-    {
-     "text": "close",
-     "from": 2605,
-     "to": 2612
-    },
-    {
-     "text": "an",
-     "from": 2613,
-     "to": 2615
-    },
-    {
-     "text": "epic,",
-     "from": 2617,
-     "to": 2626
-    },
-    {
-     "text": "and",
-     "from": 2632,
-     "to": 2634
-    },
-    {
-     "text": "the",
-     "from": 2635,
-     "to": 2637
-    },
-    {
-     "text": "design",
-     "from": 2638,
-     "to": 2648
-    },
-    {
-     "text": "page",
-     "from": 2651,
-     "to": 2659
-    },
-    {
-     "text": "that",
-     "from": 2660,
-     "to": 2665
-    },
-    {
-     "text": "still",
-     "from": 2668,
-     "to": 2673
-    },
-    {
-     "text": "says",
-     "from": 2677,
-     "to": 2682
-    },
-    {
-     "text": "it's",
      "from": 2683,
      "to": 2689
     },
     {
-     "text": "planned",
+     "text": "counts",
      "from": 2690,
-     "to": 2703
+     "to": 2699
+    },
+    {
+     "text": "too:",
+     "from": 2701,
+     "to": 2707
+    },
+    {
+     "text": "close",
+     "from": 2725,
+     "to": 2732
+    },
+    {
+     "text": "an",
+     "from": 2734,
+     "to": 2735
+    },
+    {
+     "text": "epic,",
+     "from": 2737,
+     "to": 2746
+    },
+    {
+     "text": "and",
+     "from": 2753,
+     "to": 2755
+    },
+    {
+     "text": "the",
+     "from": 2756,
+     "to": 2759
+    },
+    {
+     "text": "design",
+     "from": 2760,
+     "to": 2770
+    },
+    {
+     "text": "page",
+     "from": 2773,
+     "to": 2780
+    },
+    {
+     "text": "linked",
+     "from": 2783,
+     "to": 2788
+    },
+    {
+     "text": "to",
+     "from": 2789,
+     "to": 2792
+    },
+    {
+     "text": "it",
+     "from": 2793,
+     "to": 2797
     },
     {
      "text": "gets",
-     "from": 2704,
-     "to": 2710
+     "from": 2797,
+     "to": 2804
     },
     {
      "text": "flagged.",
-     "from": 2711,
-     "to": 2723
+     "from": 2805,
+     "to": 2816
     }
    ]
   },
   {
    "id": "S20",
    "scene": "JIRA",
-   "from": 2730,
+   "from": 2850,
    "durationInFrames": 149,
    "file": "vo/S20.wav",
    "text": "Turn a flag into a Jira task, and see every flagged page on one dashboard.",
    "words": [
     {
      "text": "Turn",
-     "from": 2732,
-     "to": 2737
+     "from": 2852,
+     "to": 2857
     },
     {
      "text": "a",
-     "from": 2738,
-     "to": 2741
+     "from": 2858,
+     "to": 2861
     },
     {
      "text": "flag",
-     "from": 2743,
-     "to": 2752
+     "from": 2863,
+     "to": 2872
     },
     {
      "text": "into",
-     "from": 2753,
-     "to": 2759
+     "from": 2873,
+     "to": 2879
     },
     {
      "text": "a",
-     "from": 2761,
-     "to": 2764
+     "from": 2881,
+     "to": 2884
     },
     {
      "text": "Jira",
-     "from": 2765,
-     "to": 2772
+     "from": 2885,
+     "to": 2892
     },
     {
      "text": "task,",
-     "from": 2776,
-     "to": 2788
+     "from": 2896,
+     "to": 2908
     },
     {
      "text": "and",
-     "from": 2793,
-     "to": 2797
+     "from": 2913,
+     "to": 2917
     },
     {
      "text": "see",
-     "from": 2799,
-     "to": 2807
+     "from": 2919,
+     "to": 2927
     },
     {
      "text": "every",
-     "from": 2809,
-     "to": 2815
+     "from": 2929,
+     "to": 2935
     },
     {
      "text": "flagged",
-     "from": 2819,
-     "to": 2828
+     "from": 2939,
+     "to": 2948
     },
     {
      "text": "page",
-     "from": 2831,
-     "to": 2842
+     "from": 2951,
+     "to": 2962
     },
     {
      "text": "on",
-     "from": 2843,
-     "to": 2850
+     "from": 2963,
+     "to": 2970
     },
     {
      "text": "one",
-     "from": 2851,
-     "to": 2856
+     "from": 2971,
+     "to": 2976
     },
     {
      "text": "dashboard.",
-     "from": 2859,
-     "to": 2875
+     "from": 2979,
+     "to": 2995
     }
    ]
   },
   {
    "id": "S21",
    "scene": "CLOSE",
-   "from": 2895,
+   "from": 3015,
    "durationInFrames": 138,
    "file": "vo/S21.wav",
    "text": "Doc Drift: for Confluence, with Jira and Bitbucket. Get it here.",
    "words": [
     {
      "text": "Doc",
-     "from": 2897,
-     "to": 2902
+     "from": 3017,
+     "to": 3022
     },
     {
      "text": "Drift:",
-     "from": 2904,
-     "to": 2914
+     "from": 3024,
+     "to": 3034
     },
     {
      "text": "for",
-     "from": 2929,
-     "to": 2931
+     "from": 3049,
+     "to": 3051
     },
     {
      "text": "Confluence,",
-     "from": 2934,
-     "to": 2952
+     "from": 3054,
+     "to": 3072
     },
     {
      "text": "with",
-     "from": 2960,
-     "to": 2966
+     "from": 3080,
+     "to": 3086
     },
     {
      "text": "Jira",
-     "from": 2968,
-     "to": 2979
+     "from": 3088,
+     "to": 3099
     },
     {
      "text": "and",
-     "from": 2980,
-     "to": 2983
+     "from": 3100,
+     "to": 3103
     },
     {
      "text": "Bitbucket.",
-     "from": 2986,
-     "to": 3001
+     "from": 3106,
+     "to": 3121
     },
     {
      "text": "Get",
-     "from": 3014,
-     "to": 3017
+     "from": 3134,
+     "to": 3137
     },
     {
      "text": "it",
-     "from": 3019,
-     "to": 3021
+     "from": 3139,
+     "to": 3141
     },
     {
      "text": "here.",
-     "from": 3023,
-     "to": 3029
+     "from": 3143,
+     "to": 3149
     }
    ]
   },
   {
    "id": "S22",
    "scene": "CLOSE",
-   "from": 3045,
+   "from": 3165,
    "durationInFrames": 69,
    "file": "vo/S22.wav",
    "text": "Docs that know when the code moved.",
    "words": [
     {
      "text": "Docs",
-     "from": 3047,
-     "to": 3058
+     "from": 3167,
+     "to": 3178
     },
     {
      "text": "that",
-     "from": 3060,
-     "to": 3066
+     "from": 3180,
+     "to": 3186
     },
     {
      "text": "know",
-     "from": 3067,
-     "to": 3076
+     "from": 3187,
+     "to": 3196
     },
     {
      "text": "when",
-     "from": 3079,
-     "to": 3083
+     "from": 3199,
+     "to": 3203
     },
     {
      "text": "the",
-     "from": 3084,
-     "to": 3087
+     "from": 3204,
+     "to": 3207
     },
     {
      "text": "code",
-     "from": 3089,
-     "to": 3097
+     "from": 3209,
+     "to": 3217
     },
     {
      "text": "moved.",
-     "from": 3100,
-     "to": 3110
+     "from": 3220,
+     "to": 3230
     }
    ]
   }
@@ -1548,79 +1613,84 @@
    "id": "score",
    "file": "music/score-v5.wav",
    "from": 0,
-   "durationInFrames": 3150,
+   "durationInFrames": 3270,
    "gainDb": -12,
    "duckDb": -8,
-   "bpm": 120.003,
-   "firstBeatSec": 0.0048,
+   "bpm": 120.001,
+   "firstBeatSec": 0.0044,
    "lufs": -15.8,
+   "drop": {
+    "from": 1335,
+    "to": 1369,
+    "why": "the film's one silence: the score drops out, voice only, until the flag"
+   },
    "cues": [
     {
      "id": "N1",
      "from": 0,
-     "to": 465,
-     "what": "Night: sub pulse on the beat, ticking hats, dark pad; mid band 2 loud / 2 quiet bars, rising over the last 3 bars"
-    },
-    {
-     "id": "N2",
-     "from": 465,
      "to": 480,
-     "what": "hard stop: one beat of silence before daySlip"
+     "what": "Night (+4 dB): sub pulse, ticking hats, dark pad; 2 loud / 2 quiet bars, rising into the lift"
     },
     {
      "id": "D1",
      "from": 480,
      "to": 1275,
-     "what": "the Day lift on daySlip (kick, backbeat, bright synths), then a steady drive"
+     "what": "the take's own Day lift on daySlip (kick, backbeat, bright synths), then a steady drive"
     },
     {
      "id": "D2",
      "from": 1275,
-     "to": 1369,
+     "to": 1335,
      "what": "the 19 s roll: the band strips to bass and ticks"
     },
     {
      "id": "D3",
+     "from": 1335,
+     "to": 1369,
+     "what": "the drop: the film's one silence, voice only (\"the page says\")"
+    },
+    {
+     "id": "D4",
      "from": 1369,
      "to": 2100,
-     "what": "flag: full band back on 'Possibly' with a sub hit; a hats-fill bar, then a new 8-bar phrase at 48 (S12 at 48.5); steady drive under AGENTS"
+     "what": "the landing: band and sub hit together on the flag frame; steady drive under AGENTS"
     },
     {
      "id": "F1",
      "from": 2100,
-     "to": 2460,
-     "what": "FIX: low-pass 900 Hz (2-beat sweep down), opening over the 2 beats before S18"
+     "to": 2520,
+     "what": "FIX: low-pass 900 Hz, opening after S17 into the snap back"
     },
     {
      "id": "F2",
-     "from": 2460,
-     "to": 2760,
-     "what": "snapBack: full band and a small sub hit on S18's bar line; steady drive under JIRA"
+     "from": 2520,
+     "to": 2880,
+     "what": "snapBack: full band and a small sub hit on S18's downbeat (\"Verified\" just after); steady drive under JIRA"
     },
     {
      "id": "E1",
-     "from": 2760,
-     "to": 2880,
+     "from": 2880,
+     "to": 3000,
      "what": "build: a 2-bar riser, a 1-bar high-pass into endHit"
     },
     {
      "id": "E2",
-     "from": 2880,
-     "to": 3150,
-     "what": "endHit: the take's final hit plus a sub hit; its C major ring-out (2.5x stretched) under S21 and S22, fading to silence on the last frame"
+     "from": 3000,
+     "to": 3270,
+     "what": "endHit: the take's final hit plus a sub hit; its C major ring-out (2.5x) under S21 and S22, fading to silence on the last frame"
     }
    ],
    "hits": [
     {
      "at": 1369,
-     "why": "flag: the page flips to Possibly stale (the sixteenth nearest the word, f1368.75; the word at f1368.6)"
+     "why": "flag: lands with the band on the flag frame (f1369)"
     },
     {
-     "at": 2460,
-     "why": "snapBack: S18 on its bar line, 'Verified' 2 f later; the low-pass is fully open"
+     "at": 2520,
+     "why": "snapBack: the full band and this hit on S18's downbeat (f2520); \"Verified\" at f2522"
     },
     {
-     "at": 2880,
+     "at": 3000,
      "why": "endHit: the end card lands; doubles the take's own final hit"
     }
    ]
@@ -1645,11 +1715,19 @@
   ],
   [
    2095,
-   2428
+   2495
   ],
   [
-   2462,
-   2868
+   2522,
+   2652
+  ],
+  [
+   2665,
+   2829
+  ],
+  [
+   2845,
+   2988
   ]
  ],
  "mix": {

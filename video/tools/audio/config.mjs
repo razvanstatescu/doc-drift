@@ -91,7 +91,9 @@ for (const l of LINES) {
 export const KEYTERMS = ['Doc Drift Sentinel', 'Doc Drift', 'Confluence', 'Jira', 'Rovo', 'Drift Reviewer', 'MCP', 'runbook', 'rollback'];
 
 /**
- * Launch film v5 (D41, video/V5.md section 2): the locked script S01-S22, about 100 s, one story told forward. Same
+ * Launch film v5 (D41, video/V5.md section 2): the locked script S01-S22, about 100 s, one story told forward. Round 2
+ * (director, 2026-11-17, after first-time viewers of the first cut) rewrote S12, S13, S16, S17, S18 and S19; the other
+ * 16 lines stay as recorded (vo.mjs keeps a take whose own text is unchanged when only its neighbours changed). Same
  * voice, model, settings and mastering as v4. The scene ids are the v5 timeline's (V5.md section 3).
  * S22 is v4's V01 word for word, the tagline, so it keeps V01's measured direction tag (V01 came back at 19 chars/s
  * without it). Every other line is read without a tag, as v4's V02-V25 were.
@@ -108,14 +110,14 @@ export const LINES_V5 = [
   { id: 'S09', scene: 'LOOP', text: 'Save, and the page is Verified.' },
   { id: 'S10', scene: 'LOOP', text: 'Then the rename is merged in Bitbucket: pull request 482.' },
   { id: 'S11', scene: 'LOOP', text: '19 seconds later, the page says Possibly stale: it may be out of date.' },
-  { id: 'S12', scene: 'LOOP', text: 'It names the exact change. No AI made that call.' },
-  { id: 'S13', scene: 'AGENTS', text: "In Rovo, Atlassian's AI, ask our agent, Drift Reviewer, how to roll back." },
+  { id: 'S12', scene: 'LOOP', text: 'It names the exact change and tells the page owner. No AI made that call.' },
+  { id: 'S13', scene: 'AGENTS', text: "In Rovo, Atlassian's AI, ask our agent how to roll back." },
   { id: 'S14', scene: 'AGENTS', text: 'Instead of the old step, it warns the page may be out of date, and why.' },
   { id: 'S15', scene: 'AGENTS', text: 'Coding assistants get the same check over MCP, an open standard for AI tools.' },
-  { id: 'S16', scene: 'FIX', text: 'People fix the page, never agents: the rename is one click, no AI.' },
-  { id: 'S17', scene: 'FIX', text: 'Drift Reviewer drafts other edits. Nothing changes until a person accepts.' },
-  { id: 'S18', scene: 'FIX', text: 'Verified again. Now agents can cite it.' },
-  { id: 'S19', scene: 'JIRA', text: "Jira work counts too: close an epic, and the design page that still says it's planned gets flagged." },
+  { id: 'S16', scene: 'FIX', text: 'Agents never edit the page. A person does: the rename is one click, with no AI.' },
+  { id: 'S17', scene: 'FIX', text: 'Our agent drafts the other change, a renamed timeout setting. Nothing changes until a person accepts.' },
+  { id: 'S18', scene: 'FIX', text: 'Verified again. Now agents can cite it, with the right step.' },
+  { id: 'S19', scene: 'JIRA', text: 'Jira work counts too: close an epic, and the design page linked to it gets flagged.' },
   { id: 'S20', scene: 'JIRA', text: 'Turn a flag into a Jira task, and see every flagged page on one dashboard.' },
   { id: 'S21', scene: 'CLOSE', text: 'Doc Drift: for Confluence, with Jira and Bitbucket. Get it here.' },
   { id: 'S22', scene: 'CLOSE', text: 'Docs that know when the code moved.', direction: '[warm, measured]' },

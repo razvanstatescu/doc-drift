@@ -1,282 +1,270 @@
 import React from "react";
 import { AbsoluteFill, useCurrentFrame } from "remotion";
 import { Sfx } from "../../../audio/Sfx";
-import { EASE } from "../../../lib/time";
-import { capPose, capRectToScreen, DAY, GrowReveal, MistBand, RealTake, type CapKey, type Rect, type SpotKey } from "../../../v4/kit";
-import { PlateAmber } from "../FIX/parts";
-import { AmberColumn } from "./parts";
+import { Cursor } from "../../../components/Cursor";
+import { JIRA_UI, JiraEpicTwin, jiraRect } from "../../../components/P5/JiraEpicTwin";
+import { TRACK_UI, TrackInJiraTwin, trackRect } from "../../../components/P5/TrackInJiraTwin";
+import { EASE, tween } from "../../../lib/time";
+import {
+  Camera3D,
+  DAY,
+  InkLabel,
+  Lift,
+  MorphToReal,
+  ProofFrame,
+  proofRect,
+  PushSwap,
+  RebuildFromReal,
+  SignalLine,
+  Stage,
+  type Cam3Key,
+  type CameraOptions,
+  type Rect,
+} from "../../../v4/kit";
+import { PageTwin, pageRects, TOOLTIPS, type PageTwinProps } from "../../../v4/twins";
+import { inProof, screenAt } from "../FIX/geom";
+import { T as FIX_T } from "../FIX/timing";
+import { dashRects, Pay24Card, PAY24, SpaceDash } from "./parts";
 import { T } from "./timing";
 
 /**
- * JIRA · Jira work counts too (film 2550 to 2880, S19 and S20; video/V5.md section 5). A quick run of four real shots,
- * each 2 s or more, all at reading size (the kit's RealTake):
+ * JIRA · Jira work counts too (S19 and S20; video/V5.md sections 5 and 8). Round 2: crafted-led, 12 s, with short real
+ * proofs at reading size (the kit's MorphToReal and RebuildFromReal, tagged once each); amber only on crafted twins.
  *
- *   J1  0 .. 84     Jira, the epic PAY-18 "Multi-region active-passive database": the cut lands on the real click on
- *                   "To Do"; the real click on "Done"; the save's spinner at a labelled 6x; solid "Done" on "close";
- *                   then the camera pushes onto the epic's own "Decision: ADR-015." (Mist on "ADR-015.")
- *   J2  84 .. 180   carry cut: ADR-015's page grows out of the word "ADR-015" (the incoming camera starts with the
- *                   title's "ADR-015" exactly on the epic's, then lands at reading size: a push through the word).
- *                   The real crop (title, byline, Status row; never the Deciders or Owner rows): spotlight on the
- *                   Status row and Mist on "planned" on "still says it's planned"; on "gets flagged" the drift's amber
- *                   on the byline item and the real tooltip "PAY-18 moved to Done on Nov 13. Review." (S19)
- *   J3  180 .. 240  plain cut on the beat: the real Track in Jira form (summary prefilled from the flag), the real click
- *                   on "Create task" (14.447 s), the spinner at a labelled 9x, the real "Jira task created / PAY-24
- *                   tracks this change." on "Jira task" (Mist on "PAY-24 tracks this change.")
- *   J4  240 .. 330  plain cut on the beat: the real dashboard (sample data, tagged so): the rows with their real
- *                   "Possibly stale" states, big, on "every flagged page" (the amber on the state column); on "one
- *                   dashboard" the camera pulls back to tiles and rows, the final composed pose for the kit's slip
- *                   reveal into CLOSE at 330 (S20)
- * One amber per shot: the flagged byline item in J2, the column of flagged states in J4 (the drift itself, both times).
- * Masks from captures.json are always drawn; "(Development)" never shows, nor "PLAT" (the dashboard's anchor line is
- * covered), "Score" or "threshold" (J3's crop starts below the panel header), "Dana", Owner or Deciders rows.
+ * FIX cuts to JIRA plainly on its last frame (the payoff); the payoff's chime rings on over the cut (the L-cut: its tail is
+ * played here), under the kit's lead tick (LEADS.JIRA).
+ *
+ *   J       0 .. d     the Jira chain, one world: PAY-18 big, "Jira · Payments · Epic"; a person moves it To Do to
+ *                      Done on "close"; the real Done as a short proof; the camera opens on "the design page" to
+ *                      ADR-015; the anchor line draws from PAY-18 on "linked to it" and the change runs along it; the
+ *                      page's table band slips amber and hands it to its byline item ("Possibly stale · Doc Drift")
+ *                      on "gets flagged", with the real tooltip's words; the real byline and tooltip as a short proof
+ *                      (S19). Then "Turn a flag into a Jira task": the page's Track in Jira lifts out, a person's click
+ *                      on "into", "Jira task created" on "Jira task", and PAY-24 joins the chain big on "task"
+ *   D       d .. end   locked push to the space's dashboard, labelled "Confluence space dashboard · sample data from
+ *                      the demo space": the KPI cards drop and count up on "see", the rows set in on "every", the drift's
+ *                      amber on their states on "flagged"; the real rows as a short proof; on "one dashboard" the
+ *                      camera pulls back to the whole, the final pose the kit's slip reveal carries into CLOSE (S20)
  */
 
-const CAP = { w: 3840, h: 2160 };
-const TAKE = { creep: 1.5, float: 5 } as const;
-const startAt = (f: number, to: CapKey["to"]): CapKey => ({ at: f, dur: 0, to });
-const center = (r: Rect) => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 });
+// =====================================================================================================================
+// J · the Jira chain
+// =====================================================================================================================
 
-// ---------------------------------------------------------------------------------------------------------------------
-// The carried word: "ADR-015" in the epic's description (J1) and in the design page's title (J2), glyph boxes
-// ---------------------------------------------------------------------------------------------------------------------
+const JIRA_K = 1.35;
+const JIRA_POS = { x: 80, y: 330 };
+const JIRA_W = JIRA_UI.width * JIRA_K;
+const JIRA_NODE: [number, number] = [JIRA_POS.x + JIRA_W, JIRA_POS.y + JIRA_UI.node.y * JIRA_K];
+const JIRA_CARD: Rect = { x: JIRA_POS.x, y: JIRA_POS.y, w: JIRA_W, h: JIRA_UI.height * JIRA_K };
 
-const ADR_IN_JIRA: Rect = { x: 2259, y: 480, w: 113, h: 21 };
-const ADR_IN_TITLE: Rect = { x: 1481, y: 345, w: 220, h: 43 };
-/**
- * The incoming camera at the seam: the smallest scale RealTake can hold without its edge clamp moving the centre
- * (0.51: the view is then the whole capture), centred on the capture. The title's "ADR-015" sits here on screen...
- */
-const J2_MATCH = { cx: 1920, cy: 1080, s: 0.51 };
-const ADR_SEAM: Rect = {
-  x: 960 + (ADR_IN_TITLE.x - J2_MATCH.cx) * J2_MATCH.s,
-  y: 540 + (ADR_IN_TITLE.y - J2_MATCH.cy) * J2_MATCH.s,
-  w: ADR_IN_TITLE.w * J2_MATCH.s,
-  h: ADR_IN_TITLE.h * J2_MATCH.s,
+const ADR: PageTwinProps = {
+  world: "day",
+  doc: "adr015",
+  k: 1.35,
+  x: 1020,
+  y: 150,
+  // "gets flagged": the table band (the section that names PAY-18) slips amber and hands the amber to the byline item
+  // with its swap; the lit item is the shot's one amber
+  byline: { kind: "dds", state: "possibly_stale", from: "verified", at: T.bylineAt },
+  slip: { at: T.slip, handoff: T.bylineAt },
+  tooltip: { text: TOOLTIPS.adrFlagged, at: T.tipAt },
 };
-/** ... so the outgoing camera ends its push with the epic's "ADR-015" on that same rect (centres and widths matched). */
-const J1_CARRY = (() => {
-  const s = ADR_SEAM.w / ADR_IN_JIRA.w;
-  const a = center(ADR_SEAM);
-  const b = center(ADR_IN_JIRA);
-  return { cx: b.x - (a.x - 960) / s, cy: b.y - (a.y - 540) / s, s };
-})();
-/** J1 and J2 share the float's seed, so both worlds float together through the seam. */
-const CARRY_SEED = "jira-carry";
+const RADR = pageRects(ADR);
+const PAY18_TOKEN = RADR.tokens["PAY-18"] ?? { x: RADR.card.x + 140, y: RADR.bands.middle.y + 120, w: 60, h: 26 };
+const ADR_NODE: [number, number] = [RADR.card.x - 2, PAY18_TOKEN.y + PAY18_TOKEN.h / 2];
+const ANCHOR_D = `M ${JIRA_NODE[0] + 2} ${JIRA_NODE[1]} C ${JIRA_NODE[0] + 70} ${JIRA_NODE[1]}, ${ADR_NODE[0] - 70} ${ADR_NODE[1]}, ${ADR_NODE[0]} ${ADR_NODE[1]}`;
 
-// ---------------------------------------------------------------------------------------------------------------------
-// J1 · PAY-18 To Do to Done (p5-jira-rec)
-// ---------------------------------------------------------------------------------------------------------------------
+const TRACK_K = 1.25;
+const TRACK_POS = { x: 965, y: 270 };
+const TRACK_BUTTON = trackRect("button", TRACK_POS.x, TRACK_POS.y, TRACK_K);
+const PAY24_K = 1.05;
+const PAY24_POS = { x: 120, y: 700 };
 
-/**
- * Jira's own top bar is cut off; the breadcrumb, title, status, menu and description read at 0.8 (the view's top is
- * the capture's top, so the breadcrumb sits just under the tag; the status menu runs off the right edge, its items in).
- */
-const J1_CROP: Rect = { x: 0, y: 112, w: 3840, h: 2048 };
-const J1_POSE = { cx: 1866, cy: 700, s: 0.8 };
-const J1_HEADER: Rect = { x: 700, y: 140, w: 2470, h: 500 };
-const J1_DESC_END: Rect = { x: 2116, y: 470, w: 272, h: 40 };
-const J1_CAM: CapKey[] = [
-  startAt(0, J1_POSE),
-  // the push onto "ADR-015": it comes to rest on the word at the seam; the page then opens out of the resting word
-  { at: T.push, dur: T.carry - T.push, to: J1_CARRY, ease: EASE.expoInOut },
-];
-const J1_SPOT: SpotKey[] = [
-  { at: 0, dur: 0, rect: J1_HEADER, amount: 0.75 },
-  { at: T.push, dur: 14, rect: J1_DESC_END, amount: 0.85 },
-];
-const TODO_T = 2.318;
-const DONE_T = 4.049;
-const SOLID_T = 5.95;
-/** 1x around both clicks; the menu's wait at about 1.7x (no label under 3x); the save's spinner at a labelled 6x; 1x on. */
-const J1_KEYS = [
-  { f: 0, t: TODO_T - T.todoClick / 30 },
-  { f: T.todoClick, t: TODO_T },
-  { f: T.todoClick + 5, t: TODO_T + 5 / 30 },
-  { f: T.doneClick - 5, t: DONE_T - 5 / 30 },
-  { f: T.doneClick, t: DONE_T },
-  { f: T.doneClick + 5, t: DONE_T + 5 / 30 },
-  { f: T.doneSolid - 3, t: SOLID_T - 3 / 30 },
-  { f: T.doneSolid, t: SOLID_T },
-  // the page is still after "Done"; this last stretch runs a touch under 1x so the recording (7.29 s) never runs out
-  { f: T.carry + T.carryDur, t: 7.2 },
+const CHAIN = { x: 955, y: 520, zoom: 1 };
+const J_OPTS: CameraOptions = { base: CHAIN, seed: "jira-chain" };
+const J_KEYS: Cam3Key[] = [
+  // PAY-18 big as the line starts
+  { at: T.j, dur: 0, to: { x: JIRA_POS.x + JIRA_W / 2 + 10, y: JIRA_POS.y + 150, zoom: 1.4 } },
+  // "the design page": open to the chain, which then holds (the flag and the task play inside it)
+  { at: T.open, dur: 22, to: CHAIN, ease: EASE.expoInOut },
 ];
 
-const J1: React.FC = () => (
-  <RealTake
-    capture="p5-jira-rec"
-    time={{ keys: J1_KEYS }}
-    camera={J1_CAM}
-    spot={J1_SPOT}
-    crop={J1_CROP}
-    clicks={[
-      { t: TODO_T, x: 2795, y: 262, travel: 10 },
-      { t: DONE_T, x: 2932, y: 434 },
-    ]}
-    seed={CARRY_SEED}
-    tag={{ text: "Recorded in Jira", at: 0 }}
-    speed={{ x: 352, y: 56 }}
-  >
-    <MistBand rect={{ x: 2256, y: 476, w: 126, h: 30 }} at={T.adrMark} dur={8} />
-  </RealTake>
-);
-
-// ---------------------------------------------------------------------------------------------------------------------
-// J2 · ADR-015, the design page (p5-adr-flagged; p5-adr-tooltip from the tooltip on)
-// ---------------------------------------------------------------------------------------------------------------------
-
-/** Title, byline and the Status row; the crop ends on the row's bottom rule, above Date, Deciders and Owner. */
-const J2_CROP: Rect = { x: 1440, y: 300, w: 1570, h: 412 };
-const J2_READ = { cx: 2225, cy: 567, s: 0.97 };
-const J2_CAM: CapKey[] = [
-  { at: T.carry, dur: 0, to: J2_MATCH },
-  // in step with the window (both expo in-out): the word holds while the page opens around it, then the push in
-  { at: T.carry, dur: T.carryLand - T.carry, to: J2_READ, ease: EASE.expoInOut },
-];
-const TITLE: Rect = { x: 1466, y: 330, w: 1210, h: 80 };
-const STATUS_ROW: Rect = { x: 1484, y: 628, w: 1500, h: 76 };
-const PLANNED: Rect = { x: 2657, y: 648, w: 122, h: 38 };
-/** The byline item "Possibly stale · Doc Drift" (its hover fill from 2266; the suffix after 2589 is masked). */
-const PILL: Rect = { x: 2268, y: 466, w: 322, h: 36 };
-const PILL_TIP: Rect = { x: 2256, y: 454, w: 516, h: 160 };
-const J2_SPOT: SpotKey[] = [
-  { at: T.carry, dur: 0, rect: TITLE, amount: 0.75 },
-  { at: T.statusSpot, dur: 14, rect: STATUS_ROW, amount: 0.9 },
-  { at: T.flagAt, dur: 10, rect: PILL_TIP, amount: 0.9 },
-];
-
-const J2: React.FC = () => {
+const WorldJ: React.FC = () => {
   const frame = useCurrentFrame();
-  const tip = frame >= T.tipAt;
+  const done = tween(frame, T.doneClick + 1, T.doneClick + 9, 0, 1, EASE.expoOut);
+  const press = tween(frame, T.createClick, T.createClick + 2, 0, 1, EASE.linear) * (1 - tween(frame, T.createClick + 3, T.createClick + 6, 0, 1, EASE.linear));
+  const busy = tween(frame, T.createClick + 3, T.createClick + 6, 0, 1, EASE.linear) * (1 - tween(frame, T.created - 2, T.created, 0, 1, EASE.linear));
+  const created = tween(frame, T.created, T.created + 8, 0, 1, EASE.expoOut);
+  const statusC = jiraRect("status", JIRA_POS.x, JIRA_POS.y, JIRA_K);
+  const adrIn = tween(frame, T.open + 2, T.open + 14, 0, 1, EASE.expoOut);
   return (
-    <RealTake
-      capture={tip ? "p5-adr-tooltip" : "p5-adr-flagged"}
-      camera={J2_CAM}
-      spot={J2_SPOT}
-      crop={J2_CROP}
-      // the hovered item's grey ends under the amber (its masked suffix would leave a long empty grey pill)
-      masks={tip ? [{ box: [2594, 458, 180, 50], fill: "#FFFFFF" }] : []}
-      seed={CARRY_SEED}
-      tag={{ text: "Recorded in Confluence", at: T.carry + 6 }}
-    >
-      <MistBand rect={PLANNED} at={T.plannedMark} dur={10} exitAt={T.flagAt} />
-      <PlateAmber rect={PILL} at={T.flagAt} />
-    </RealTake>
+    <Stage world="day" motif="grid" light={["50%", "34%"]}>
+      <Camera3D keys={J_KEYS} {...J_OPTS}>
+        {/* ADR-015 arrives as the camera opens on "the design page" (no peek at the edge before) */}
+        <div style={{ position: "absolute", inset: 0, opacity: adrIn, transform: adrIn < 1 ? `translateY(${((1 - adrIn) * 30).toFixed(2)}px)` : undefined }}>
+          <PageTwin {...ADR} />
+        </div>
+        {/* the anchor: drawn on "linked to it", then the change runs along it to the page */}
+        <SignalLine d={ANCHOR_D} at={T.link} dur={12} pulse={false} dashed />
+        <SignalLine d={ANCHOR_D} at={T.link + 8} dur={T.slip - T.link - 6} pulse trail />
+        <Lift at={T.j - 30} from={1} to={3} appear radius={20 * JIRA_K} contact={0.12} x={JIRA_POS.x} y={JIRA_POS.y}>
+          <JiraEpicTwin k={JIRA_K} done={done} elev={0} />
+        </Lift>
+        {/* "Turn a flag into a Jira task": the page's Track in Jira lifts out over it */}
+        <Lift at={T.trackIn} from={1} to={4} radius={22 * TRACK_K} x={TRACK_POS.x} y={TRACK_POS.y}>
+          <TrackInJiraTwin k={TRACK_K} press={press} busy={busy} created={created} badgeGlow={1} />
+        </Lift>
+        {/* PAY-24 joins the chain, big, on "task" */}
+        <Lift at={T.pay24} from={1} to={4} radius={24 * PAY24_K} x={PAY24_POS.x} y={PAY24_POS.y}>
+          <Pay24Card k={PAY24_K} />
+        </Lift>
+        {frame < T.proofJ ? (
+          <Cursor
+            points={[
+              { frame: T.doneClick - 16, x: statusC.x + statusC.w / 2 + 150, y: statusC.y + statusC.h / 2 + 110 },
+              { frame: T.doneClick, x: statusC.x + statusC.w / 2, y: statusC.y + statusC.h / 2, click: true, cursor: "pointer", travel: 14 },
+            ]}
+            scale={2.4 / 1.28}
+            showAt={T.doneClick - 16}
+            hideAt={T.proofJ - 2}
+          />
+        ) : null}
+        {frame >= T.trackIn + 6 && frame < T.created + 10 ? (
+          <Cursor
+            points={[
+              { frame: T.trackIn + 6, x: TRACK_BUTTON.x + TRACK_BUTTON.w / 2 + 160, y: TRACK_BUTTON.y + TRACK_BUTTON.h / 2 + 120 },
+              { frame: T.createClick, x: TRACK_BUTTON.x + TRACK_BUTTON.w / 2, y: TRACK_BUTTON.y + TRACK_BUTTON.h / 2, click: true, cursor: "pointer", travel: 12 },
+            ]}
+            showAt={T.trackIn + 6}
+            hideAt={T.created + 6}
+          />
+        ) : null}
+      </Camera3D>
+    </Stage>
   );
 };
 
-/** The carry cut: J2 grows out of the word on J1 (the window), while both cameras push through the word. */
-const J1toJ2: React.FC = () => {
-  const from = capRectToScreen(capPose(T.carry, J1_CAM, { ...TAKE, seed: CARRY_SEED, cap: CAP }), ADR_IN_JIRA, CAP);
-  return <GrowReveal at={T.carry} dur={T.carryDur} from={from} outgoing={<J1 />} incoming={<J2 />} pad={[16, 12]} darken={0.15} />;
+// The real Done (p5-jira-done): the breadcrumb's key and the title row with the status, at 0.85 across the frame.
+const PJ_CROP: [number, number, number, number] = [700, 140, 2220, 160];
+const PJ_SCALE = 0.85;
+const PJ_POS = { x: Math.round(960 - (2220 * PJ_SCALE + 28) / 2), y: 420 };
+const PJ_IMG = proofRect({ crop: PJ_CROP, scale: PJ_SCALE, ...PJ_POS }).image;
+/** The title row with the status (the element the card's title and status stand for). */
+const PJ_ROW = inProof(PJ_IMG, PJ_CROP, PJ_SCALE, [714, 228, 2163, 66]);
+const ProofJ = <ProofFrame capture="p5-jira-done" crop={PJ_CROP} scale={PJ_SCALE} {...PJ_POS} at={T.proofJ} dur={T.proofJEnd + 8 - T.proofJ} enter="none" exit="none" tag="Recorded in Jira" />;
+const CARD_ROW: Rect = { x: JIRA_POS.x + 28 * JIRA_K, y: JIRA_POS.y + 64 * JIRA_K, w: (JIRA_UI.width - 56) * JIRA_K, h: 140 * JIRA_K };
+
+// The real byline and tooltip of ADR-015 (p5-adr-tooltip), at 1:1. The logged "(Development)" cover sits on the hovered
+// item, so it takes the item's own grey #F1F1F2 (the cover is logged in README.md).
+const PA_CROP: [number, number, number, number] = [1440, 300, 1460, 312];
+const PA_SCALE = 1;
+const PA_POS = { x: Math.round(960 - (1460 + 28) / 2), y: 380 };
+const PA_IMG = proofRect({ crop: PA_CROP, scale: PA_SCALE, ...PA_POS }).image;
+const PA_ITEM = inProof(PA_IMG, PA_CROP, PA_SCALE, [2266, 462, 502, 44]);
+const PA_MASKS = [{ box: [2589, 465, 176, 37] as [number, number, number, number], fill: "#F1F1F2", why: "Development install suffix (logged in captures.json), re-covered in the hovered item's grey" }];
+const ProofA = (
+  <ProofFrame capture="p5-adr-tooltip" crop={PA_CROP} scale={PA_SCALE} {...PA_POS} at={T.proofA} dur={T.proofAEnd + 8 - T.proofA} enter="none" exit="none" masks={PA_MASKS} tag="Recorded in Confluence" />
+);
+
+const ShotJ: React.FC = () => {
+  const frame = useCurrentFrame();
+  if (frame < T.proofJEnd) {
+    const from = screenAt(CARD_ROW, T.proofJ, J_KEYS, J_OPTS);
+    return <MorphToReal at={T.proofJ} fromRect={from} toRect={PJ_ROW} twin={<WorldJ />} proof={ProofJ} out={T.proofJEnd + 40} />;
+  }
+  if (frame < T.proofA) return <RebuildFromReal at={T.proofJEnd} fromRect={PJ_ROW} toRect={screenAt(CARD_ROW, T.proofJEnd, J_KEYS, J_OPTS)} twin={<WorldJ />} proof={ProofJ} />;
+  if (frame < T.proofAEnd) {
+    const from = screenAt(RADR.badge, T.proofA, J_KEYS, J_OPTS);
+    return <MorphToReal at={T.proofA} fromRect={from} toRect={PA_ITEM} twin={<WorldJ />} proof={ProofA} out={T.proofAEnd + 40} />;
+  }
+  return <RebuildFromReal at={T.proofAEnd} fromRect={PA_ITEM} toRect={screenAt(RADR.badge, T.proofAEnd, J_KEYS, J_OPTS)} twin={<WorldJ />} proof={ProofA} />;
 };
 
-// ---------------------------------------------------------------------------------------------------------------------
-// J3 · Create task, "Jira task created" (p5-track-rec)
-// ---------------------------------------------------------------------------------------------------------------------
+// =====================================================================================================================
+// D · the space's dashboard
+// =====================================================================================================================
 
-/** The review panel's lower half: from "Propose fix" down (the header with its score and the affected section with
- * its people sit above y 1240 in both layouts). */
-const J3_CROP: Rect = { x: 1150, y: 1240, w: 1550, h: 712 };
-const J3_POSE = { cx: 1925, cy: 1593, s: 0.97 };
-const FORM: Rect = { x: 1160, y: 1348, w: 1530, h: 500 };
-const NOTICE: Rect = { x: 1160, y: 1518, w: 1530, h: 280 };
-const PAY24: Rect = { x: 1278, y: 1722, w: 358, h: 32 };
-const CREATE_T = 14.447;
-const CREATED_T = 17.083;
-/**
- * 1x around the click (0.27 s); the spinner's 2.4 s at a labelled ramp (secant 6.5x, so the cubic's peak stays under
- * 10x); 1x into the result, which lands on a key (17.083 s; 17.1 so the decoded frame is the notice's).
- */
-const J3_KEYS = [
-  { f: T.j3, t: CREATE_T - (T.createClick - T.j3) / 30 },
-  { f: T.createClick - 4, t: CREATE_T - 4 / 30 },
-  { f: T.createClick, t: CREATE_T },
-  { f: T.createClick + 4, t: CREATE_T + 4 / 30 },
-  { f: T.created - 3, t: CREATED_T - 0.1 },
-  { f: T.created, t: CREATED_T + 0.017 },
-  { f: T.j4, t: CREATED_T + 0.017 + (T.j4 - T.created) / 30 },
-];
-const J3_SPOT: SpotKey[] = [
-  { at: T.j3, dur: 0, rect: FORM, amount: 0.9 },
-  { at: T.created, dur: 8, rect: NOTICE, amount: 0.9 },
+const DASH_K = 1.25;
+const DASH_POS = { x: Math.round(960 - (980 * DASH_K) / 2), y: 230 };
+const DR = dashRects(DASH_POS.x, DASH_POS.y, DASH_K);
+const D_WHOLE = { x: 960, y: 560, zoom: 0.98 };
+const D_OPTS: CameraOptions = { base: D_WHOLE, seed: "jira-dash" };
+const D_KEYS: Cam3Key[] = [
+  // in close on the rows, then one slow pull back over the line to the whole dashboard on "one dashboard"
+  { at: T.d, dur: 0, to: { x: 960, y: 600, zoom: 1.12 } },
+  { at: T.d + 2, dur: T.pull + T.pullDur - T.d - 2, to: D_WHOLE, ease: EASE.cubicInOut },
 ];
 
-const J3: React.FC = () => (
-  <RealTake
-    capture="p5-track-rec"
-    time={{ keys: J3_KEYS }}
-    camera={[startAt(T.j3, J3_POSE)]}
-    spot={J3_SPOT}
-    crop={J3_CROP}
-    clicks={[{ t: CREATE_T, x: 1294, y: 1820 }]}
-    seed="jira-track"
-    tag={{ text: "Recorded in Confluence", at: 0 }}
-    speed={{ x: 440, y: 56 }}
-  >
-    <MistBand rect={PAY24} at={T.payMark} dur={10} />
-  </RealTake>
-);
+const WorldD: React.FC = () => {
+  const frame = useCurrentFrame();
+  const kpiDrop = [0, 1, 2].map((i) => tween(frame, T.kpi + 3 * i, T.kpi + 3 * i + 12, 0, 1, EASE.linear));
+  const kpiRoll = [0, 1, 2].map((i) => tween(frame, T.kpi + 2 + 3 * i, T.kpi + 22 + 3 * i, 0, 1, EASE.linear));
+  const rows = tween(frame, T.rows, T.rows + 10, 0, 6, EASE.linear);
+  const band = tween(frame, T.amber, T.amber + 10, 0, 1, EASE.expoOut);
+  const bandOut = tween(frame, T.pull, T.pull + 8, 0, 1, EASE.expoIn);
+  return (
+    <Stage world="day" motif="grid" light={["50%", "30%"]}>
+      <Camera3D keys={D_KEYS} {...D_OPTS}>
+        <div style={{ position: "absolute", left: DASH_POS.x, top: DASH_POS.y - 64 }}>
+          <InkLabel icon="info" size={30}>
+            Confluence space dashboard · sample data from the demo space
+          </InkLabel>
+        </div>
+        <div style={{ position: "absolute", left: DASH_POS.x, top: DASH_POS.y }}>
+          <SpaceDash k={DASH_K} kpiDrop={kpiDrop} kpiRoll={kpiRoll} rows={rows} band={band} bandOut={bandOut} />
+        </div>
+      </Camera3D>
+    </Stage>
+  );
+};
 
-// ---------------------------------------------------------------------------------------------------------------------
-// J4 · the dashboard (p5-dashboard-2: sample data from the demo space)
-// ---------------------------------------------------------------------------------------------------------------------
-
-/** Two tiles (Pages anchored, Possibly stale) and the first five rows (Page, State, Severity), above the backlog. */
-const J4_CROP: Rect = { x: 700, y: 290, w: 1540, h: 1360 };
-/** "6 pages in PLAT are not anchored. ..." under "Anchor this space": the space key is never shown. */
-const J4_MASKS = [{ box: [716, 670, 860, 38] as [number, number, number, number], fill: "#FFFFFF" }];
-/** The rows big, with "Pages with drift" whole above them (the view's top at 700). */
-const J4_ROWS = { cx: 1330, cy: 1257, s: 0.97 };
-const J4_WHOLE = { cx: 1470, cy: 901, s: 0.7 };
-const ROWS: Rect = { x: 705, y: 1036, w: 1250, h: 600 };
-const STATES: Rect = { x: 1704, y: 1122, w: 226, h: 510 };
-const J4_CAM: CapKey[] = [startAt(T.j4, J4_ROWS), { at: T.pull, dur: T.pullDur, to: J4_WHOLE, ease: EASE.expoInOut }];
-const J4_SPOT: SpotKey[] = [
-  { at: T.j4, dur: 0, rect: ROWS, amount: 0.85 },
-  { at: T.pull, dur: T.pullDur, rect: J4_CROP, amount: 0 },
-];
-
-const J4: React.FC = () => (
-  <RealTake
+// The real rows (p5-dashboard-2: the page and state columns, rows 1 to 5), at 0.9.
+const PD_CROP: [number, number, number, number] = [705, 1036, 1250, 600];
+const PD_SCALE = 0.9;
+const PD_POS = { x: Math.round(960 - (1250 * PD_SCALE + 28) / 2), y: 300 };
+const PD_IMG = proofRect({ crop: PD_CROP, scale: PD_SCALE, ...PD_POS }).image;
+const PD_ROWS = inProof(PD_IMG, PD_CROP, PD_SCALE, [705, 1100, 1250, 530]);
+const ProofD = (
+  <ProofFrame
     capture="p5-dashboard-2"
-    camera={J4_CAM}
-    spot={J4_SPOT}
-    crop={J4_CROP}
-    masks={J4_MASKS}
-    seed="jira-dash"
-    // top right: the dashboard's text runs from the left edge of both poses, and its tiles start below this line
-    tag={{ text: "Sample data from the demo space", at: T.j4, x: 1428, y: 56 }}
-  >
-    {/* the scene's second shot with the drift's amber: every flagged page's state, on "flagged" (it leaves on the pull,
-        so the final pose hands CLOSE a calm frame) */}
-    <AmberColumn rect={STATES} at={T.stateMark} out={T.pull} />
-  </RealTake>
+    crop={PD_CROP}
+    scale={PD_SCALE}
+    {...PD_POS}
+    at={T.proofD}
+    dur={T.proofDEnd + 8 - T.proofD}
+    enter="none"
+    exit="none"
+    tag="Recorded in Confluence · sample data from the demo space"
+  />
 );
 
-// ---------------------------------------------------------------------------------------------------------------------
+const ShotD: React.FC = () => {
+  const frame = useCurrentFrame();
+  if (frame < T.proofDEnd) return <MorphToReal at={T.proofD} fromRect={screenAt(DR.rows, T.proofD, D_KEYS, D_OPTS)} toRect={PD_ROWS} twin={<WorldD />} proof={ProofD} out={T.proofDEnd + 40} />;
+  return <RebuildFromReal at={T.proofDEnd} fromRect={PD_ROWS} toRect={screenAt(DR.rows, T.proofDEnd, D_KEYS, D_OPTS)} twin={<WorldD />} proof={ProofD} />;
+};
+
+// =====================================================================================================================
 // The scene
-// ---------------------------------------------------------------------------------------------------------------------
+// =====================================================================================================================
 
 const JIRA: React.FC = () => {
   const frame = useCurrentFrame();
   let shot: React.ReactNode;
-  if (frame < T.j3) shot = <J1toJ2 />;
-  else if (frame < T.j4) shot = <J3 />;
-  else shot = <J4 />;
+  if (frame < T.d) shot = <ShotJ />;
+  else shot = <PushSwap at={T.d} dur={T.dDur} dir="left" outgoing={<ShotJ />} incoming={<ShotD />} />;
   return (
-    <AbsoluteFill style={{ background: DAY.surface }}>
+    <AbsoluteFill style={{ background: DAY.ground }}>
       {shot}
-      {/* FIX's ring tails over the cut (the L-cut): the same chime, from where FIX's Sequence clipped it */}
-      <Sfx id="chime-soft" at={-9} gainDb={-6} />
-      {/* S19: the real clicks (the first one is the cut's accent: we cut on it); the carry; the flag */}
-      <Sfx id="click" at={T.todoClick} gainDb={-3} />
-      <Sfx id="click" at={T.doneClick} gainDb={-2} />
-      {/* the page opens out of the word: a round pop on the grow's fastest frame, which falls on "design" */}
-      <Sfx id="pop" at={T.carry + 9} gainDb={-4} />
-      <Sfx id="tick" at={T.flagAt + 3} gainDb={-5} />
-      {/* S20: the real Create task click; the cut to the dashboard on the beat */}
-      <Sfx id="click" at={T.createClick} gainDb={-2} />
-      <Sfx id="tick-soft" at={T.j4} gainDb={-5} />
+      {/* the payoff's chime, on from FIX (the same sound, from where FIX's Sequence ended): the L-cut */}
+      <Sfx id="chime-soft" at={FIX_T.payoffChime - FIX_T.end} gainDb={-10} />
+      {/* S19: a person's click on the status; the flag lands (the cut's lead is the kit's, LEADS.JIRA) */}
+      <Sfx id="click" at={T.doneClick} gainDb={-8} />
+      <Sfx id="tick" at={T.bylineAt} gainDb={-12} />
+      {/* S20: a person's click on Create Jira task; PAY-24 lands; the push to the dashboard */}
+      <Sfx id="click" at={T.createClick} gainDb={-8} />
+      <Sfx id="pop" at={T.pay24 + 2} gainDb={-12} />
+      <Sfx id="whoosh-short" at={T.d + 7} gainDb={-12} />
     </AbsoluteFill>
   );
 };

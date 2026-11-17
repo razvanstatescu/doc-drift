@@ -1,101 +1,83 @@
 import { getScene } from "../../../lib/timeline";
-import type { RemapKey } from "../../../v4/kit";
-import { REC_T } from "./data";
 
 /**
- * AGENTS (v5, film 1575 to 2100, S13 to S15): every frame, local, from src/data/timeline.json. Beats sit on local
- * multiples of 15 (1575 is a beat); bars on 45, 105, ..., 345 (the score's new 8-bar phrase starts on S15), 525.
- * Words land 0 to 4 frames before they are said: a word's mask reveal (12 frames, expo out) starts 8 frames before it, so
- * it is readable 4 frames before and settled (95% up) 2 frames before.
+ * AGENTS (v5 round 2, S13 to S15; V5.md sections 5 and 8): every frame local, from cues in src/data/timeline.json.
+ * The scene starts on a bar, so beats sit on local multiples of 15 and bars on multiples of 60 (S15 starts on one).
+ * A word lands 0 to 4 frames before it is said: a word's mask reveal (12 frames, expo out) starts LEAD frames before
+ * it, so it is readable 4 frames before and settled 2 before.
  */
 export const sc = getScene("AGENTS");
 const w = (line: string, prefix: string, nth = 0) => sc.wordAt(line, prefix, "from", nth);
+const end = (line: string, prefix: string, nth = 0) => sc.wordAt(line, prefix, "to", nth);
 
-/** Frames a revealed word's reveal starts before its spoken word (readable 4 frames before, settled 2 before). */
+/** Frames a revealed word's reveal starts before its spoken word. */
 export const LEAD = 8;
 
-// ---- S13: "In Rovo, Atlassian's AI, ask our agent, Drift Reviewer, how to roll back." -----------------------------------
-const rovo = w("S13", "rovo"); // 22
-const ask = w("S13", "ask"); // 93
-const drift = w("S13", "drift"); // 122
-const how = w("S13", "how"); // 152
-
-// ---- S14: "Instead of the old step, it warns the page may be out of date, and why." ------------------------------------
-const instead = w("S14", "instead"); // 197
-const it = w("S14", "it"); // 241
-const may = w("S14", "may"); // 272
-const and = w("S14", "and"); // 304
-const why = w("S14", "why"); // 310
-
-// ---- S15: "Coding assistants get the same check over MCP, an open standard for AI tools." -------------------------------
-const s15 = sc.cue("S15"); // 345, a bar: the score's new phrase
-const get = w("S15", "get"); // 374
-const same = w("S15", "same"); // 386
-const check = w("S15", "check"); // 395
+// S13: "In Rovo, Atlassian's AI, ask our agent how to roll back."
+const rovo = w("S13", "rovo");
+const our = w("S13", "our");
+const how = w("S13", "how");
+const back = end("S13", "back");
+// S14: "Instead of the old step, it warns the page may be out of date, and why."
+const instead = w("S14", "instead");
+const step = w("S14", "step");
+const it = w("S14", "it");
+const page = w("S14", "page");
+const may = w("S14", "may");
+const and = w("S14", "and");
+const why = w("S14", "why");
+// S15: "Coding assistants get the same check over MCP, an open standard for AI tools."
+const s15 = sc.cue("S15");
+const check = w("S15", "check");
 
 export const T = {
-  // station 1: the page and Rovo
-  /** The Rovo strip slides in from the right and the page makes room (the panel opens on "Rovo"). */
-  open: rovo - 7,
-  openDur: 14,
-  /** The gloss chip, word by word: "Rovo" · "Atlassian's" · "AI". */
-  chipWords: [rovo - LEAD, w("S13", "atlassian") - LEAD, w("S13", "ai") - LEAD],
-  /** The chip leaves on the beat after its reading time (2 s + 0.2 s a word from "Rovo"), before the click. */
+  // ---- station 1: the carried words, then Drift Reviewer told big (crafted), one short real proof ----
+  /** The page card (the carried "Possibly stale") makes room and the panel arrives, so it is in by "Rovo". */
+  open: Math.max(2, rovo - 6),
+  openDur: 16,
+  /** "Rovo · Atlassian's AI", word by word. */
+  chipWords: [rovo, w("S13", "atlassian"), w("S13", "ai")].map((f) => f - LEAD),
+  /** It leaves on the beat after its reading time (2 s + 0.2 s a word from "Rovo"). */
   chipOut: sc.snap(rovo + 84),
-  /** Jump cut (in the strip) to the agent list, Drift Reviewer found, on a beat before "ask". */
-  cutList: sc.snap(ask - 3),
-  /** The recorded click on Drift Reviewer, 3 frames before "Drift". */
-  click: drift - 3,
-  /** Jump cut to the input, the question typing on "how to roll back" (a beat). */
-  cutType: sc.snap(how),
-  /** Jump cut to the sent question and the thinking, on S14's first beat. */
-  cutThink: sc.snap(instead),
-  /** Jump cut to the answer on "it warns" (a beat). */
-  cutAnswer: sc.snap(it),
-  /** The spotlight finds the first two sentences as the answer lands (the cut and the spotlight are one event). */
-  spotOn: sc.snap(it),
-  /** The camera pushes to 1:1 on the second sentence ("and why"), as its Mist sweeps. */
-  pushWhy: and - 6,
-  /** The badge's words fly from the page into the answer, landing 3 frames before "may". */
-  carryLand: may - 3,
-  carryDur: 14,
-  /** Mist on the second sentence, line by line, on "and why". */
+  /** "our agent", beside the panel's name. */
+  agentChip: our - LEAD,
+  agentChipOut: sc.snap(how + 20),
+  /** The question types on "how to roll back", each word about 2 frames before it is said. */
+  typeAt: how - 4,
+  typeEnd: w("S13", "back") + 8,
+  /** Sent: the question leaves the input for the conversation (the real panel's own order). */
+  send: back + 1,
+  /** S13's one camera beat: a slow drift down onto the input as the question types (calm: no push and pull). */
+  pushAsk: how - 8,
+  /** The steps: the third ("Invoking tool: Check page freshness") on "step". */
+  steps: [instead - 2, instead + 10, step - 3],
+  /** The answer starts on "it warns", its slot empty; the camera leans in a little as it does. */
+  answerAt: it,
+  leanIn: it - 6,
+  /** The page's "Possibly stale" flies into the answer's slot, landing on "page" (before "may"). */
+  carryAt: it + 4,
+  carryLand: Math.min(page, may - 5),
+  /**
+   * The short real proof: the real answer at 1:1 grows out of the twin on the beat before "and why" and wipes back on
+   * the beat after it (so the reason is read in the real answer). Until then the twin's amber carries "may be out of
+   * date". Placed so the take from the whip's landing to the proof runs 8 s or more (the film's third long shot).
+   */
+  proofAt: sc.snap(why - 6),
+  /** Mist on the second sentence, line by line, on "and why" (in the proof and in the twin under it). */
   mist2a: and - 4,
-  mist2b: why - 3,
-  // station 2: the coding assistant
-  cutSlab: s15,
-  question: s15 + 4,
-  tag: s15 + 11,
-  call: get - 6,
-  out: [get + 1, get + 4, get + 7],
-  amber: same - 5,
-  push: get + 2,
-  /** The camera finds the gloss chip on "open standard". */
-  pushGloss: w("S15", "open") - 3,
+  mist2b: why - 4,
+  rebuildAt: sc.snap(why + 20),
+  // ---- station 2: the coding assistant in plain words ----
+  /**
+   * A carry cut on the bar: the twin's amber "Possibly stale" holds its place and the coding assistant's card, already
+   * holding the whole exchange (question, call, reply), forms around those same words; the camera then settles.
+   */
+  cutChat: s15,
+  settle: 36,
+  /** "the same check": Mist on the call (check-page-freshness), on "check". */
+  callMark: check - 4,
   mcpWords: [w("S15", "mcp"), w("S15", "an"), w("S15", "open"), w("S15", "standard"), w("S15", "for"), w("S15", "ai"), w("S15", "tools")].map((f) => f - LEAD),
+  /** The camera finds the gloss under the card on "an open standard". */
+  pushGloss: w("S15", "open") - 6,
   end: sc.durationInFrames,
-  check,
 } as const;
-
-/**
- * The take's time keys (output frame -> source second of p3-rovo-v2.mp4), one set per jump-cut segment:
- *   A  the panel opens (1x from 2.467 s, just open)
- *   B  the agent list with Drift Reviewer (1x; the click at 10.741 s lands on T.click)
- *   C  typing at 1.33x (no label under 3x): "roll" from 156, "back" from 165, the question whole by 189
- *   D  the thinking ramped at 6x (labelled, with real seconds since Enter): the "Check page freshness" step at 217
- */
-export const KEYS: Record<"A" | "B" | "C" | "D", RemapKey[]> = {
-  A: [{ f: T.open, t: REC_T.panelOpen + 0.01 }],
-  B: [
-    { f: T.cutList, t: REC_T.clickDrift - (T.click - T.cutList) / 30 },
-    { f: T.click, t: REC_T.clickDrift },
-  ],
-  C: [
-    { f: T.cutType, t: 15.6 },
-    { f: T.cutThink, t: 17.6 },
-  ],
-  D: [
-    { f: T.cutThink, t: 19.4 },
-    { f: T.cutAnswer, t: 28.45 },
-  ],
-};

@@ -8,11 +8,13 @@ import { amber, BRAND, DAY, elevAt, ELEV_DARK, FONT, NIGHT, T, type Rect } from 
 import {
   DEMO_CARRY_FRAMES,
   DEMO_EDITTYPE_FRAMES,
+  DEMO_LIFTOUT_FRAMES,
   DEMO_PAGEOVERCODE_FRAMES,
   DEMO_REALTAKE_FRAMES,
   DEMO_REWIND_FRAMES,
   DemoCarry,
   DemoEditType,
+  DemoLiftOut,
   DemoPageOverCode,
   DemoRealTake,
   DemoRewind,
@@ -473,6 +475,7 @@ const V5_DEMOS: { name: string; C: React.FC; dur: number }[] = [
   { name: "v5-pageovercode", C: DemoPageOverCode, dur: DEMO_PAGEOVERCODE_FRAMES },
   { name: "v5-carry", C: DemoCarry, dur: DEMO_CARRY_FRAMES },
   { name: "v5-rewind", C: DemoRewind, dur: DEMO_REWIND_FRAMES },
+  { name: "v5-liftout", C: DemoLiftOut, dur: DEMO_LIFTOUT_FRAMES },
 ];
 
 const DEMOS: { name: string; C: React.FC }[] = [

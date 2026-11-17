@@ -17,6 +17,8 @@ export * from "./take";
 export * from "./edit";
 export * from "./pagecode";
 export * from "./carry";
+export * from "./liftout";
+export * from "./capturectx";
 // The look, so a scene can import everything from one place.
 export { amber, BRAND, current, DAY, ELEV, ELEV_DARK, elevAt, FONT, HAIR, ink, NIGHT, nightSweep, sweep, T, white } from "../look";
 export type { Elev, Rect } from "../look";

@@ -7,6 +7,7 @@ import { EASE, FPS, H, W, tween } from "../../lib/time";
 import { DAY, FONT, ink, type Rect } from "../look";
 import { cam3At, cam3Transform, stageToScreen, type Cam3, type Cam3Key } from "./camera3d";
 import { Lift } from "./lift";
+import { allowedCovers, RealCaptureContext } from "./capturectx";
 import { InkLabel } from "./stage";
 import { LabelSwap } from "./swap";
 
@@ -250,18 +251,20 @@ const roundRect = (r: Rect, rad: number) => {
  * The spotlight in SCREEN px: outside a rounded window the picture is veiled with Paper (60%), softened (3.5 px) and
  * drained (70% grey), R2's modal scrim made local; a hairline ring draws the window. Works over real captures and twins.
  */
-export const Spotlight: React.FC<{ rect: Rect; amount: number; radius?: number; veil?: number }> = ({ rect, amount, radius = 18, veil = 0.6 }) => {
+export const Spotlight: React.FC<{ rect: Rect; amount: number; radius?: number; veil?: number; mode?: "veil" | "ring" }> = ({ rect, amount, radius = 18, veil = 0.6, mode = "veil" }) => {
   if (amount <= 0.01) return null;
   const hole = roundRect(rect, radius);
   return (
     <AbsoluteFill style={{ pointerEvents: "none" }}>
-      <AbsoluteFill
-        style={{
-          background: `rgba(242, 246, 247, ${(veil * amount).toFixed(3)})`,
-          backdropFilter: `blur(${(3.5 * amount).toFixed(2)}px) grayscale(${(0.7 * amount).toFixed(2)})`,
-          clipPath: `path(evenodd, "M-20 -20 H${W + 20} V${H + 20} H-20 Z ${hole}")`,
-        }}
-      />
+      {mode === "veil" ? (
+        <AbsoluteFill
+          style={{
+            background: `rgba(242, 246, 247, ${(veil * amount).toFixed(3)})`,
+            backdropFilter: `blur(${(3.5 * amount).toFixed(2)}px) grayscale(${(0.7 * amount).toFixed(2)})`,
+            clipPath: `path(evenodd, "M-20 -20 H${W + 20} V${H + 20} H-20 Z ${hole}")`,
+          }}
+        />
+      ) : null}
       <div
         style={{
           position: "absolute",
@@ -289,16 +292,20 @@ export const clockValue = (f: number, keys: RemapKey[], zero: number) => Math.ma
  * `clockValue`, or carried across a seam and landed on the measured number); the label can swap ("Since the merge
  * click" to "Merge to flag") and a note can set under it ("Measured on the demo site, Nov 13").
  */
+/** The honest clock's label (V5.md 8.6). */
+export const CLOCK_LABEL = "Real time since the merge";
+
 export const HonestClock: React.FC<{
   at: number;
   value: number;
-  label: string;
+  /** Default "Real time since the merge". */
+  label?: string;
   swap?: { at: number; label: string };
   note?: { at: number; text: string };
   x?: number;
   y?: number;
   width?: number;
-}> = ({ at, value, label, swap, note, x = 64, y = 790, width = 470 }) => {
+}> = ({ at, value, label = CLOCK_LABEL, swap, note, x = 64, y = 790, width = 470 }) => {
   const frame = useCurrentFrame();
   if (frame < at) return null;
   const v = Math.floor(value + 1e-6);
@@ -349,10 +356,12 @@ export type RealTakeProps = {
   clicks?: TakeClick[];
   /** The proof tag, once per take: a string, or with its own frames and place (screen px). */
   tag?: string | { text: string; at?: number; until?: number; x?: number; y?: number };
-  /** The speed label while the ramp runs at 3x or more (default on; pass a place to move it). */
+  /** The speed label while the ramp runs at 3x or more (default OFF since v5 round 2; `true` or a place to show it). */
   speed?: boolean | { x?: number; y?: number };
-  /** The honest clock: real seconds since source second `zero` (a 470 px card at 64, 790; the speed label sits right of it). For a clock carried across takes, use HonestClock. */
-  clock?: { zero: number; label: string; at?: number; x?: number; y?: number; swap?: { at: number; label: string }; note?: { at: number; text: string } };
+  /** The honest clock: real seconds since source second `zero` (a 470 px card at 64, 790). Label default "Real time since the merge". For a clock carried across takes, use HonestClock. */
+  clock?: { zero: number; label?: string; at?: number; x?: number; y?: number; swap?: { at: number; label: string }; note?: { at: number; text: string } };
+  /** How the spotlight emphasises: "veil" (default: the rest veiled, softened, drained), "ring" (only the hairline ring), "none". Round 2: run a take with no veil and a tighter crop. */
+  spotlight?: "veil" | "ring" | "none";
   /** Only this region of the capture is drawn (capture px); the rest is `background`. Keeps Owner rows out. */
   crop?: Rect;
   /** Extra covers in capture px, drawn over captures.json's masks (same box + fill re-covers one). */
@@ -377,8 +386,9 @@ export const RealTake: React.FC<RealTakeProps> = ({
   spot = [],
   clicks = [],
   tag,
-  speed = true,
+  speed = false,
   clock,
+  spotlight = "veil",
   crop,
   masks = [],
   maskFill,
@@ -400,7 +410,8 @@ export const RealTake: React.FC<RealTakeProps> = ({
   const t = isVideo ? remap(frame, keys) : 0;
   const ok = Boolean(cap && hasStaticFile(cap.file));
   const fillOf = (i: number) => (Array.isArray(maskFill) ? maskFill[i] : maskFill);
-  const allMasks: CaptureMask[] = [...(cap?.masks ?? []).map((m, i) => ({ ...m, fill: m.fill ?? fillOf(i) })), ...masks];
+  // captures.json's covers are the logged "(Development)" ones; extra covers draw only if logged too (V5.md 8.1)
+  const allMasks: CaptureMask[] = [...(cap?.masks ?? []).map((m, i) => ({ ...m, fill: m.fill ?? fillOf(i) })), ...allowedCovers(capture, masks, cap?.masks)];
   const s = spotAt(frame, spot);
   const rate = isVideo && keys.length ? rateAt(frame, keys) : 1;
   const tagObj = typeof tag === "string" ? { text: tag } : tag;
@@ -425,7 +436,7 @@ export const RealTake: React.FC<RealTakeProps> = ({
           {allMasks.map((m, i) => (
             <div key={i} style={{ position: "absolute", left: m.box[0], top: m.box[1], width: m.box[2], height: m.box[3], background: m.fill ?? "#FFFFFF" }} />
           ))}
-          {children}
+          <RealCaptureContext.Provider value={capture}>{children}</RealCaptureContext.Provider>
         </div>
         {clicks.map((c, i) => {
           const cf = Math.round(isVideo && keys.length ? frameAtSource(c.t, keys) : c.t * FPS);
@@ -445,7 +456,7 @@ export const RealTake: React.FC<RealTakeProps> = ({
           );
         })}
       </CaptureWorld>
-      <Spotlight rect={capRectToScreen(pose, s.rect, size)} amount={s.amount} />
+      {spotlight !== "none" ? <Spotlight rect={capRectToScreen(pose, s.rect, size)} amount={s.amount} mode={spotlight} /> : null}
       {overlay}
       {tagOn && tagObj ? (
         <div style={{ position: "absolute", left: tagObj.x ?? 64, top: tagObj.y ?? 56, opacity: tween(frame, tagObj.at ?? 6, (tagObj.at ?? 6) + 4, 0, 1, EASE.linear) }}>
@@ -458,7 +469,7 @@ export const RealTake: React.FC<RealTakeProps> = ({
         <HonestClock
           at={clock.at ?? Math.max(0, Math.ceil(frameAtSource(clock.zero, keys)))}
           value={clockValue(frame, keys, clock.zero)}
-          label={clock.label}
+          label={clock.label ?? CLOCK_LABEL}
           swap={clock.swap}
           note={clock.note}
           x={clock.x}

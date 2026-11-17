@@ -1,91 +1,88 @@
 import { getScene } from "../../../lib/timeline";
 
 /**
- * JIRA's cues in LOCAL frames (frame 0 = film 2550), from src/data/timeline.json, so a re-voice re-times the scene.
- * JIRA starts half a bar in (2550 % 60 === 30): local beats are multiples of 15, bars fall on 30, 90, 150, 210, 270 and
- * the end (330 = endHit). Events land 0 to 4 frames before their word (V4 M6); real clicks on beats where the word
- * allows.
+ * JIRA's cues in LOCAL frames (frame 0 = the scene's start in src/data/timeline.json), all from words, so a re-voice
+ * re-times the scene. JIRA starts on a bar: local beats are multiples of 15, bars multiples of 60, and its end is
+ * endHit (the kit's slip reveal into CLOSE). Events land 0 to 4 frames before their word (V4 M6).
  */
 export const sc = getScene("JIRA");
 
 const w = (line: string, word: string, which: "from" | "to" = "from", nth = 0) => sc.wordAt(line, word, which, nth);
 
-// S19 · "Jira work counts too: close an epic, and the design page that still says it's planned gets flagged."
+// S19 · "Jira work counts too: close an epic, and the design page linked to it gets flagged."
 const jira = w("S19", "jira");
 const close = w("S19", "close");
-const epic = w("S19", "epic");
+const epic = w("S19", "epic", "to");
 const design = w("S19", "design");
-const that = w("S19", "that");
-const planned = w("S19", "planned");
+const linked = w("S19", "linked");
 const gets = w("S19", "gets");
 const flagged19 = w("S19", "flagged");
 // S20 · "Turn a flag into a Jira task, and see every flagged page on one dashboard."
-const s20 = sc.cue("S20");
-const flag = w("S20", "flag");
+const turn = w("S20", "turn");
+const into = w("S20", "into");
 const jira20 = w("S20", "jira");
+const task = w("S20", "task");
+const and20 = w("S20", "and");
+const see = w("S20", "see");
 const every = w("S20", "every");
 const flagged20 = w("S20", "flagged");
+const page20 = w("S20", "page");
 const one = w("S20", "one");
 
 export const T = {
-  // ---- J1 · PAY-18, To Do to Done (p5-jira-rec) ------------------------------------------------------------------
+  // ---- J · the Jira chain: PAY-18, the anchor, ADR-015 flagged, the task (0 .. d) -------------------------------
+  /** The plain cut from FIX's payoff lands on PAY-18 (the line starts a second later, on "Jira"). */
+  j: 0,
   jira,
-  /** The real click on the status "To Do" (2.318 s) 2 frames after the plain cut in: we cut on the action. */
-  todoClick: jira - 1,
-  /** The real click on "Done" (4.049 s) ... */
-  doneClick: close - 17,
-  /** ... the status saves (a spinner, ramped and labelled) and turns solid "Done" (5.95 s) just before "close". */
-  doneSolid: close - 1,
+  /** "close an epic": the status goes To Do to Done (a person's click), then the real Done as a short proof. */
+  doneClick: close - 4,
   close,
+  proofJ: close + 6,
+  get proofJEnd() {
+    return this.proofJ + 26;
+  },
   epic,
-  /** The camera pushes onto "Decision: ADR-015." in the epic's description on "an epic"; Mist on "ADR-015.". */
-  get push() {
-    return this.carry - 18;
-  },
-  get adrMark() {
-    return this.carry - 6;
-  },
-
-  // ---- J2 · the design page (p5-adr-flagged, then p5-adr-tooltip) ------------------------------------------------
-  /**
-   * Carry cut: ADR-015's page grows out of the word "ADR-015" (the window and a push through the word). The grow's
-   * fastest frames (carry + 8 to 10) fall on "design".
-   */
-  carry: design - 10,
-  carryDur: 16,
-  /** The incoming camera lands on the reading pose. */
-  get carryLand() {
-    return this.carry + 22;
-  },
+  /** "the design page": the camera opens to ADR-015, the page PAY-18's description names. */
+  open: design - 10,
   design,
-  /** The spotlight moves to the Status row on "that still says". */
-  statusSpot: that - 4,
-  planned,
-  plannedMark: planned - 4,
-  /** "gets flagged": the drift's amber lands on the byline item, then the real tooltip shows the reason. */
-  gets,
-  flagAt: gets - 4,
-  tipAt: gets + 3,
+  /** "linked to it": the anchor line draws from PAY-18 to the page, and the change runs along it. */
+  link: linked - 3,
+  linked,
+  /** "gets flagged": the page's table band slips amber and hands it to the byline item, then the tooltip. */
+  slip: gets - 2,
+  bylineAt: flagged19 - 5,
+  tipAt: flagged19,
   flagged: flagged19,
-
-  // ---- J3 · Create task -> "Jira task created" (p5-track-rec) ----------------------------------------------------
-  /** Plain cut on the beat as S20 starts (the cursor already travelling to "Create task"). */
-  j3: sc.snap(s20 - 2),
-  /** The real click on "Create task" (14.447 s), on the beat after "flag". */
-  createClick: sc.snap(flag + 2),
-  /** The real result (17.083 s), after a labelled ramp over the spinner, 3 frames before "Jira task". */
+  /** The real byline and tooltip (p5-adr-tooltip) as a short proof. */
+  proofA: flagged19 + 8,
+  get proofAEnd() {
+    return turn - 2;
+  },
+  /** "Turn a flag into a Jira task": the page's Track in Jira, a person's click on "into", the task on "Jira task". */
+  turn,
+  trackIn: turn + 2,
+  createClick: into - 2,
   created: jira20 - 3,
-  jira20,
-  payMark: jira20 - 2,
+  /** PAY-24, big, joins the chain on "task". */
+  pay24: task - 4,
+  task,
 
-  // ---- J4 · the dashboard (p5-dashboard-2, sample data) ----------------------------------------------------------
-  /** Plain cut on the beat before "see every flagged page": the rows, big. */
-  j4: sc.snap(every - 19),
+  // ---- D · every flagged page, one dashboard (d .. end) --------------------------------------------------------
+  /** Locked push to the dashboard on "and see". */
+  d: and20 - 4,
+  dDur: 14,
+  /** The KPI cards drop and count up on "see"; the rows set in on "every"; the drift's amber on the states on "flagged". */
+  kpi: see - 6,
+  rows: every - 6,
   every,
-  /** Mist on the column of real "Possibly stale" states on "flagged". */
-  stateMark: flagged20 - 4,
-  /** On "one dashboard" the camera pulls back to the whole dashboard (tiles and rows): the final, composed pose. */
+  amber: flagged20 - 4,
+  /** The real rows as a short proof on "page". */
+  proofD: page20 - 6,
+  get proofDEnd() {
+    return one - 3;
+  },
+  /** "one dashboard": the camera pulls back to the whole dashboard and holds the final pose. */
   pull: one - 4,
-  pullDur: 20,
+  pullDur: 18,
   end: sc.durationInFrames,
 };

@@ -18,8 +18,8 @@ import { PROMISE_T as T } from "./timing";
  *   5    the path flies into the mark that lands around it and docks as the D's middle band, in line (19); "Doc Drift"
  *        rises beside it, readable on "Doc"
  *   30   on "catches" the band slips one unit, amber (the shot's one amber): the brand's own picture of drift caught
- *   56   the camera pulls back; "For teams with docs" sets under the lockup on "for", "in Confluence" on "in", and the
- *        gloss "Atlassian's wiki" under "Confluence" as it is said
+ *   56   the camera pulls back; "For teams with docs" sets under the lockup on "for"; the logo holds about 3 s, and on
+ *        "Confluence" the scene cuts to the page itself (Diagram.tsx), labelled "Confluence" and "Atlassian's wiki"
  */
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -31,23 +31,16 @@ const M = 280;
 const K = M / 512;
 const LOCK_W = M + 0.28 * M + textWidth("Doc Drift", { size: 0.42 * M, weight: 600, tracking: -0.02 });
 const LINE = { size: 58, lh: 1.25, gap: 52 };
-const GLOSS = { size: 38, lh: 1.25, gap: 4 };
-const BLOCK_H = M + LINE.gap + LINE.size * LINE.lh + GLOSS.gap + GLOSS.size * GLOSS.lh;
+const BLOCK_H = M + LINE.gap + LINE.size * LINE.lh;
 const LOCK = { x: Math.round(960 - LOCK_W / 2), y: Math.round(540 - BLOCK_H / 2) };
 /** The middle band's slot in line with the D (slip 0), on the 512 grid: x 110 to 358, y 226 to 286, corners 8. */
 const BAND0: Rect = { x: LOCK.x + 110 * K, y: LOCK.y + 226 * K, w: 248 * K, h: 60 * K };
 
+/** The line under the lockup; "in Confluence, Atlassian's wiki" is the next shot (the page itself, labelled). */
 const P1 = "For teams with docs";
-const P2 = "in Confluence";
-const G = "Atlassian’s wiki";
-const wSans = (t: string, size: number, weight = 500) => textWidth(t, { size, weight });
-const LINE_W = wSans(`${P1} ${P2}`, LINE.size);
+const LINE_W = textWidth(P1, { size: LINE.size, weight: 500 });
 const LINE_X = 960 - LINE_W / 2;
 const LINE_Y = LOCK.y + M + LINE.gap;
-const P2_X = LINE_X + wSans(`${P1} `, LINE.size);
-const CONF_CX = LINE_X + wSans(`${P1} in `, LINE.size) + wSans("Confluence", LINE.size) / 2;
-const G_W = wSans(G, GLOSS.size);
-const G_Y = LINE_Y + LINE.size * LINE.lh + GLOSS.gap;
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Camera: on the lockup, then pulled back to the whole block for the line
@@ -107,23 +100,12 @@ const LockupBlock: React.FC = () => {
   );
 };
 
-/** "For teams with docs" on "for", "in Confluence" on "in" (one line, the functional mask reveal), the gloss under it. */
-const ForLine: React.FC = () => {
-  const text: React.CSSProperties = { fontFamily: FONT.sans, fontWeight: 500, letterSpacing: "0em", whiteSpace: "nowrap" };
-  return (
-    <>
-      <MaskLine at={T.line1} style={{ position: "absolute", left: LINE_X, top: LINE_Y }}>
-        <div style={{ ...text, fontSize: LINE.size, lineHeight: LINE.lh, color: DAY.text }}>{P1}</div>
-      </MaskLine>
-      <MaskLine at={T.line2} style={{ position: "absolute", left: P2_X, top: LINE_Y }}>
-        <div style={{ ...text, fontSize: LINE.size, lineHeight: LINE.lh, color: DAY.text }}>{P2}</div>
-      </MaskLine>
-      <MaskLine at={T.gloss} style={{ position: "absolute", left: CONF_CX - G_W / 2, top: G_Y }}>
-        <div style={{ ...text, fontSize: GLOSS.size, lineHeight: GLOSS.lh, color: DAY.textMuted }}>{G}</div>
-      </MaskLine>
-    </>
-  );
-};
+/** "For teams with docs" under the lockup on "for" (the functional mask reveal). */
+const ForLine: React.FC = () => (
+  <MaskLine at={T.line1} style={{ position: "absolute", left: LINE_X, top: LINE_Y }}>
+    <div style={{ fontFamily: FONT.sans, fontWeight: 500, whiteSpace: "nowrap", fontSize: LINE.size, lineHeight: LINE.lh, color: DAY.text }}>{P1}</div>
+  </MaskLine>
+);
 
 /** S06's world: the Day ground, the lockup and the line, under one camera. */
 export const TurnWorld: React.FC = () => (

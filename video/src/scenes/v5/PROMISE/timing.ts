@@ -22,14 +22,14 @@ export const PROMISE_T = {
   name: w("S06", "doc") - 10,
   /** The middle band slips one unit and turns amber on "catches". */
   slip: w("S06", "catches") - 4,
-  // ---- S06: who it is for ----
+  // ---- S06: who it is for; the logo holds about 3 s (round 2), then the page itself is "docs in Confluence" ----
   /** The camera pulls back from the lockup to make room for the line under it. */
   pull: w("S06", "for") - 14,
   line1: w("S06", "for") - 7,
-  line2: w("S06", "in") - 6,
-  gloss: w("S06", "atlassian") - 8,
-  // ---- S07: the page over its code (one hold), cut on the beat after S06 ----
-  cut: sc.snap(sc.cue("S06", "end")),
+  /** Cut on the beat to the Confluence page, its label "Confluence" readable as the word is said. */
+  pageCut: sc.snap(w("S06", "confluence") - 1),
+  gloss: w("S06", "atlassian") - 9,
+  // ---- S07: the page over its code, one shot with the S06 tail ----
   codeAt: w("S07", "code") - 10,
   jiraAt: w("S07", "jira") - 9,
   slipAt: w("S07", "changes") - 5,
@@ -38,8 +38,12 @@ export const PROMISE_T = {
   closeAt: w("S07", "changes") + 6,
   bandAt: w("S07", "changes") + 16,
   bylineAt: w("S07", "flags") - 4,
+  /** Back out from the flag to the page's head and the readers' column, before "people". */
+  pullOut: w("S07", "for") - 16,
   people: w("S07", "people") - 6,
   agents: w("S07", "ai") - 6,
+  /** "until someone checks": a person lands beside the byline's label on "until", its check on "checks". */
+  person: w("S07", "until") - 5,
   check: w("S07", "checks") - 5,
   end: sc.durationInFrames,
 };

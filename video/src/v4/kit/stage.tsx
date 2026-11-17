@@ -4,6 +4,7 @@ import { Icon, type IconName } from "../../brand/icons";
 import { H, W } from "../../lib/time";
 import { amber, current, DAY, ELEV_DARK, FONT, ink, NIGHT, nightSweep, sweep, white } from "../look";
 import { layerCorrection, useCam3OrNull, StageSlotContext, type Cam3, type StageSlot } from "./camera3d";
+import { useRealCapture, warnPaint } from "./capturectx";
 
 /**
  * The v4 stage (V4.md L1, L5, M1): the lit ground with its one motif, parallaxed by the camera.
@@ -252,7 +253,16 @@ export const Float: React.FC<{
 );
 
 /** The slip's bloom: a soft amber light under the ONE drifted element (part of that element, not a second amber). */
-export const Bloom: React.FC<{ cx: number; cy: number; w: number; h: number; strength?: number }> = ({ cx, cy, w, h, strength = 0.32 }) => (
+export const Bloom: React.FC<{ cx: number; cy: number; w: number; h: number; strength?: number }> = ({ cx, cy, w, h, strength = 0.32 }) => {
+  const onCapture = useRealCapture();
+  if (onCapture) {
+    warnPaint(`Bloom over the real capture ${onCapture}: amber goes on a crafted element beside it (LiftOut), never on the capture`);
+    return null;
+  }
+  return <BloomDiv cx={cx} cy={cy} w={w} h={h} strength={strength} />;
+};
+
+const BloomDiv: React.FC<{ cx: number; cy: number; w: number; h: number; strength: number }> = ({ cx, cy, w, h, strength }) => (
   <div
     style={{
       position: "absolute",

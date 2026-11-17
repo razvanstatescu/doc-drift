@@ -7,6 +7,9 @@ import { BYLINE, BylineItem, bylineItemSize, bylineTitle, PageTwin, pageRects, t
 import { BRAND, DAY, elevAt, FONT, NIGHT } from "../../look";
 import {
   AmberBlock,
+  capPose,
+  capRectToScreen,
+  LiftOut,
   cam3At,
   Camera3D,
   cameraToMatch,
@@ -365,3 +368,35 @@ export const DemoRewind: React.FC = () => {
   );
 };
 export const DEMO_REWIND_FRAMES = 60;
+
+// ---------------------------------------------------------------------------------------------------------------------
+// v5 round 2: the flag on the real page with no veil; the crafted label lifts out of the real byline, big, beside the
+// clock (LiftOut); the real capture is never painted
+// ---------------------------------------------------------------------------------------------------------------------
+
+const LO_CAM: CapKey[] = [{ at: 0, to: { cx: 2150, cy: 600, s: 0.9 } }];
+const LO_ITEM = { x: 2256, y: 448, w: 360, h: 58 }; // the real "Possibly stale · Doc Drift" item in p2-flagged (capture px)
+const LO_LIFT = 36;
+
+export const DemoLiftOut: React.FC = () => {
+  const frame = useCurrentFrame();
+  const pose = capPose(frame, LO_CAM, { seed: "p2-flagged" });
+  const label = capRectToScreen(pose, LO_ITEM);
+  return (
+    <AbsoluteFill style={{ background: DAY.surface, fontFamily: FONT.sans }}>
+      <RealTake
+        capture="p2-flagged"
+        camera={LO_CAM}
+        crop={{ x: 0, y: 0, w: 3840, h: 600 }}
+        spot={[{ at: 10, dur: 14, rect: { x: LO_ITEM.x - 14, y: LO_ITEM.y - 10, w: LO_ITEM.w + 28, h: LO_ITEM.h + 20 }, amount: 1 }]}
+        spotlight="ring"
+        tag="Recorded in Confluence"
+        seed="p2-flagged"
+      />
+      <HonestClock at={0} value={19} note={{ at: 0, text: "Measured on the demo site, Nov 13" }} />
+      {/* "Possibly stale · Doc Drift" is about 15.6 x its type size wide with the slip: 76 px fits beside the clock */}
+      <LiftOut from={label} at={LO_LIFT} to={{ x: 600, y: 831 }} size={76} />
+    </AbsoluteFill>
+  );
+};
+export const DEMO_LIFTOUT_FRAMES = 120;

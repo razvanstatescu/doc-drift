@@ -9,7 +9,7 @@ import { sceneSpan, TIMELINE, type SceneSpan } from "./lib/timeline";
 import { SlipBands } from "./motion/slip";
 import { SlipReveal } from "./v4/kit/reveal";
 import { SCENES } from "./scenes/registry";
-import { CUTS, cutSfxList, pushAt, pushFlash, sfxAt, slipPushAt, whipAt, type SceneCut } from "./transitions";
+import { CUTS, cutSfxList, leadOnset, leadsFor, pushAt, pushFlash, sfxAt, slipPushAt, whipAt, type SceneCut } from "./transitions";
 
 /** Where the body starts: the end of the first scene (A0). tools/render-master.sh joins the A0 and Body renders here. */
 export const BODY_START = TIMELINE.scenes.length > 0 ? TIMELINE.scenes[0].from + TIMELINE.scenes[0].durationInFrames : 0;
@@ -178,9 +178,26 @@ export const Film: React.FC = () => (
         <Sfx key={`cut-${span.id}-${i}`} id={s.id} at={span.from + span.durationInFrames + sfxAt(cut, s)} gainDb={s.gainDb} />
       ));
     })}
+    {TIMELINE.scenes.map((span, i) => {
+      // J-cuts: each section's lead sounds, at film level, so they can start before the section's first frame
+      if (i === 0) return null;
+      // (a scene's own lead, set with withLead in its file, wins over the default in LEADS)
+      return leadsFor(span.id, SCENES[span.id]).map((s, k) => {
+        const on = leadOnset(s);
+        if (on > -4 || on < -10) warnLead(`lead ${span.id}[${k}] (${s.id}) starts ${on} frames from the boundary (a J-cut wants -10 to -4)`);
+        return <Sfx key={`lead-${span.id}-${k}`} id={s.id} at={span.from + (s.at ?? 0)} gainDb={s.gainDb} />;
+      });
+    })}
     <AudioLayer />
   </AbsoluteFill>
 );
+
+const warnedLeads = new Set<string>();
+const warnLead = (m: string) => {
+  if (warnedLeads.has(m)) return;
+  warnedLeads.add(m);
+  console.warn(m);
+};
 
 /** Composition "Main": the whole film, totalFrames long. */
 export const Main: React.FC = () => <Film />;

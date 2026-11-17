@@ -156,112 +156,119 @@ node tools/sfx/process.mjs               # re-trim and re-catalog the effects (n
 node tools/audio/music.mjs --score --seed 7102   # a second score take (paid, about 1,100 credits), then a new edit list
 ```
 
-## v5 (2026-11-17)
+## v5 (2026-11-17, round 2)
 
-Made by the audio agent for launch film v5 (D41, [V5.md](../../V5.md)): narration S01-S22, a new `src/data/timeline.json` and `public/music/score-v5.wav`. **No new music was generated**: the score is a new edit of v4's take. Nobody has listened yet; every judgement below is measured. v4 stays reproducible: V00-V25, `score.wav` and `m0*.wav` are untouched; v4's timeline is now `src/data/timeline-v4.json` (`timeline.mjs` writes it and reproduces the committed v4 file byte for byte; the extended `arrange.py` re-renders `score.wav` byte for byte).
+Made by the audio agent for launch film v5 (D41, [V5.md](../../V5.md)): narration S01-S22, `src/data/timeline.json` and `public/music/score-v5.wav`. **No new music was generated**: the score is an edit of v4's take. Nobody has listened yet; every judgement below is measured. **Round 2** (director, after first-time viewers of the first cut) rewrote S12, S13, S16, S17, S18 and S19. It also asked for at least 12 s of JIRA, a film under 110 s, and R6's "one silence" before the flag.
+
+v4 stays reproducible: V00-V25, `score.wav` and `m0*.wav` are untouched. v4's timeline is `src/data/timeline-v4.json`; `timeline.mjs` writes it and reproduces the committed v4 file byte for byte, and the extended `arrange.py` still re-renders `score.wav` byte for byte.
 
 ### Listen first
 
 | # | File | What to judge |
 | --- | --- | --- |
-| 1 | `tools/audio/cache/qa/preview-mix-v5.wav` (local) | The whole film without effects. The hard stop and the Day lift at **0:15.5-0:16.0**; the roll (bass and ticks) and the flag hit at **0:42.5-0:45.6**; the FIX low-pass from 1:10 opening into the snap back at **1:22.0**; the build and end hit at **1:36.0**; the stretched ring-out to **1:45.0**. Balance (score -12 dB, duck -8 dB, Night +4 dB) is a measured guess |
+| 1 | `tools/audio/cache/qa/preview-mix-v5.wav` (local) | The whole film without effects. The take's own lift on `daySlip` (**0:16.0**, no stop before it). The roll (bass and ticks from 0:42.5), then **the drop: the score is silent from 0:44.5 to 0:45.63, voice only**, then the band and a hit land together on "Possibly" (f1369). The FIX low-pass from 1:10 opens into the snap back on S18's downbeat (**1:24.0**). The build and the end hit (**1:40.0**). The ring-out, stretched 2.5x, to **1:49.0**. Balance (score -12 dB, duck -8 dB, Night +4 dB) is a measured guess |
 | 2 | `public/vo/S21.wav`, `S22.wav`; alternates `cache/vo/S21.t0.wav`, `cache/vo/alt/S22.plain.t0.wav` | The close. S21 is the highest line (median 203 Hz, rising on "Get it here") and sits right before S22, the lowest (115 Hz, tagged `[warm, measured]` like v4's V01). A second S21 take reads the same way. The untagged S22 is 158 Hz but 19 chars/s, v4's reason to tag this line |
-| 3 | `public/vo/S12.wav`, `S16.wav` | The slowest reads (12.5, 12.4 chars/s): pauses at "change. / No AI" and "agents: / the rename" |
+| 3 | `public/vo/S12.wav`, `S13.wav`, `S16.wav`-`S19.wav` | The six round-2 lines next to their kept neighbours (S11, S14, S15, S20 were voiced with the old neighbour text as context) |
 | 4 | `public/vo/S10.wav`, `S11.wav` | "four eighty-two" and "Nineteen seconds" (Scribe hears "482" and "Nineteen") |
-| 5 | `public/music/score-v5.wav` 1:36-1:45 | The 2.5x phase-vocoder stretch of the final C major chord: phasiness or warble |
+| 5 | `public/music/score-v5.wav` 1:40-1:49 | The 2.5x phase-vocoder stretch of the final C major chord: phasiness or warble |
 
 ### Narration
 
 - **Settings as v4**: Eric `cjVigY5qzO86Huf0OWal`, `eleven_v4`, stability 0.5, similarity 0.8, `wav_48000`, `/with-timestamps`, `previous_text`/`next_text` from the script neighbours (S01 opens cold, so none), seeds 5000 + 10 x line + take, mastering by `vo-core.mjs` (-20 LUFS, -3 dBFS sample peak, 40 ms lead, 60 ms tail). Lines and spellings: `LINES_V5` and `SAY_V5` in `config.mjs`; `--film v5` is the default of `vo.mjs`, `qa.mjs` and `run.mjs`.
 - **Spellings**: "482" is sent as "four eighty-two", "19" as "Nineteen"; "3 a.m.", "Rovo" and "MCP" go as written (v4 measured them). Captions keep the script; `mapWords` maps the aligned spoken words back ("four eighty-two." becomes the word `482.`).
-- **Takes**: all 22 lines word-perfect on the first take. One retake of S21 (a pitch outlier; it read the same, and take 1 ships: 0.18 s shorter, 1.6 dB less limiting). One untagged S22 is kept aside (`vo.mjs --variant plain`). `vo.mjs --pick S21=0` ships another take.
-- **V02/V04 not reused**, by measurement against the v5 lines (median F0 165.6 Hz):
-
-| Candidate | F0 vs v5 median | Spectrum distance to v5 lines | Chars/s |
-| --- | --- | --- | --- |
-| S01 (new) / V02 (v4) | +1.0 / **+3.6 semitones** (V02's urgent "3") | 2.6 / 2.0 dB | 15.4 / 15.8 |
-| S03 (new) / V04 (v4) | -1.0 / -1.6 semitones | 1.7 / 1.6 dB | 17.2 / 18.3 |
-
-  The v5 lines' own spectrum distances are 1.7 dB median, 3.5 dB max, so both pairs are within the normal spread on timbre; pitch decides S01, S03 is a tie, and the default (new takes, read in the v5 context) holds.
+- **Round 1**: all 22 lines word-perfect on the first take. One retake of S21 (a pitch outlier; it read the same; take 1 ships). One untagged S22 is kept aside (`vo.mjs --variant plain`).
+- **Round 2**: the six rewritten lines, word-perfect on the first take, within 1.6 semitones of the v5 median pitch (163 Hz).
+  - S18 has a second take (take 1 ships): its last word ends 0.16 s sooner, which lets JIRA start on f2640 and the film stay under 110 s.
+  - S11, S14, S15 and S20 only had new neighbours, so `vo.mjs` keeps them **as recorded** (a line whose own text, voice and settings are unchanged keeps its take; `--recontext ID` re-voices one).
+  - Round 1's takes of the six lines are in `cache/vo/v5r1/`.
+- **V02/V04 not reused** (round 1, by measurement against the v5 lines): S01 sits 1.0 semitone from the v5 median pitch where V02 sits 3.6 above (its urgent "3"); S03 and V04 tie on timbre (1.7 vs 1.6 dB of spectrum distance; v5's own lines spread 1.7 median, 3.5 max), so the default (new takes, read in the v5 context) holds.
 
 | Line | From (f) | File (s) | Chars/s | F0 (Hz) | Line | From (f) | File (s) | Chars/s | F0 (Hz) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| S01 | 45 | 2.15 | 15.4 | 176 | S12 | 1455 | 3.98 | 12.5 | 136 |
-| S02 | 120 | 2.69 | 16.9 | 157 | S13 | 1590 | 5.52 | 13.6 | 154 |
+| S01 | 45 | 2.15 | 15.4 | 176 | S12 | 1455 | 5.14 | 14.7 | 160 |
+| S02 | 120 | 2.69 | 16.9 | 157 | S13 | 1620 | 4.49 | 13.0 | 159 |
 | S03 | 210 | 2.20 | 17.2 | 157 | S14 | 1770 | 4.20 | 17.4 | 169 |
 | S04 | 285 | 2.68 | 19.0 | 169 | S15 | 1920 | 5.46 | 14.5 | 151 |
-| S05 | 375 | 3.06 | 17.0 | 163 | S16 | 2100 | 5.50 | 12.4 | 158 |
-| S06 | 495 | 4.99 | 15.6 | 174 | S17 | 2280 | 5.05 | 15.3 | 180 |
-| S07 | 660 | 7.75 | 15.3 | 167 | S18 | 2460 | 2.86 | 14.4 | 184 |
-| S08 | 900 | 5.19 | 15.7 | 162 | S19 | 2550 | 5.85 | 17.5 | 168 |
-| S09 | 1065 | 2.21 | 15.5 | 188 | S20 | 2730 | 4.96 | 15.5 | 145 |
-| S10 | 1140 | 4.40 | 13.4 | 164 | S21 | 2895 | 4.59 | 14.5 | 203 |
-| S11 | 1290 | 5.20 | 14.0 | 174 | S22 | 3045 | 2.27 | 16.7 | 115 |
+| S05 | 375 | 3.06 | 17.0 | 163 | S16 | 2100 | 6.35 | 12.7 | 164 |
+| S06 | 495 | 4.99 | 15.6 | 174 | S17 | 2295 | 6.81 | 15.3 | 161 |
+| S07 | 660 | 7.75 | 15.3 | 167 | S18 | 2520 | 4.04 | 15.5 | 163 |
+| S08 | 900 | 5.19 | 15.7 | 162 | S19 | 2670 | 4.96 | 17.4 | 153 |
+| S09 | 1065 | 2.21 | 15.5 | 188 | S20 | 2850 | 4.96 | 15.5 | 145 |
+| S10 | 1140 | 4.40 | 13.4 | 164 | S21 | 3015 | 4.59 | 14.5 | 203 |
+| S11 | 1290 | 5.20 | 14.0 | 174 | S22 | 3165 | 2.27 | 16.7 | 115 |
 
-92.76 s of narration. Every line -20.0 LUFS, true peak -3.6 to -2.9 dBTP.
+95.79 s of narration. Every line -20.0 LUFS, true peak at most -2.9 dBTP.
 
 ### Timeline (`src/data/timeline.json`, built by `timeline-v5.mjs`)
 
-**Total 3150 f = 105.00 s.** 30 fps, 120 BPM, the beat grid from frame 0 (`scoreStart` 0).
+**Total 3270 f = 109.00 s** (round 1: 3150 f = 105.00 s). 30 fps, 120 BPM, the beat grid from frame 0 (`scoreStart` 0). Every scene starts on a bar line.
 
 | Scene | From | To | Frames | Bars | Lines |
 | --- | --- | --- | --- | --- | --- |
 | PROBLEM | 0 | 480 | 480 | 8 | S01-S05 |
 | PROMISE | 480 | 900 | 420 | 7 | S06, S07 |
-| LOOP | 900 | 1575 | 675 | 11.25 | S08-S12 |
-| AGENTS | 1575 | 2100 | 525 | 8.75 | S13-S15 |
-| FIX | 2100 | 2550 | 450 | 7.5 | S16-S18 |
-| JIRA | 2550 | 2880 | 330 | 5.5 | S19, S20 |
-| CLOSE | 2880 | 3150 | 270 | 4.5 | S21, S22 |
+| LOOP | 900 | 1620 | 720 | 12 | S08-S12 |
+| AGENTS | 1620 | 2100 | 480 | 8 | S13-S15 |
+| FIX | 2100 | 2640 | 540 | 9 | S16-S18 |
+| JIRA | 2640 | 3000 | 360 | 6 (12.0 s) | S19, S20 |
+| CLOSE | 3000 | 3270 | 270 | 4.5 | S21, S22 |
 
-- **Markers**: `daySlip` 480, `merge` 1174 ("merged"), `flag` 1369 ("Possibly"), `snapBack` 2462 ("Verified"; S18 starts on the bar line 2460), `endHit` 2880, `filmEnd` 3150, plus one per scene start.
-- **Rules**: every line on a beat, S18 on a bar line; at least 0.3 s between one line's last word and the next line's first; a 0.4 s breath added before S11 (the 19 s roll) and S18 (the snap back). Silences between words run 0.32-0.92 s (median 0.62). The two over 1 s are the chosen beats: 1.14 s at the Day turn and 1.16 s before S18. Beat quantisation sets the gaps: a 0.2 or 0.25 s minimum gives the same layout. Extra air: S01 starts at 1.5 s (the clock and alert land), and there is one extra beat before S15 (the whip to the terminal).
-- **Bar lines**: PROMISE and CLOSE must start on bar lines (the score's lift and final hit are downbeats). LOOP and FIX start on bar lines at no cost. AGENTS (f1575) and JIRA (f2550) start on beats, because a bar line there would add over 1 s of silence. In those two scenes `sc.bar(n)` is off the film's bar lines; use `sc.snap(f, BAR)`. CLOSE ends 1.3 s after "moved." on a beat.
-- **For the picture team**: the v4 scene modules call `getScene("A0")` and the like when imported, so they throw against this timeline until the scene registry is replaced. `timeline-v5.md` in the cache has the full line table.
+- **Markers**: `daySlip` 480, `merge` 1174 ("merged"), `flag` 1369 ("Possibly"), `snapBack` 2522 ("Verified"; S18 starts on the bar line 2520), `endHit` 3000, `filmEnd` 3270, plus one per scene start.
+- **What moved in round 2**: S01-S11 did not move (so neither did `merge` or `flag`). S12, S14, S15 and S16 start where they did. S13 moved +30 f, S17 +15, S18 +60, S19 +120, S20 +120, S21 and S22 +120. AGENTS starts at 1620 (was 1575), JIRA at 2640 (was 2550), CLOSE and `endHit` at 3000 (was 2880), `snapBack` at 2522 (was 2462).
+- **Rules**: every line on a beat, and S18 on a bar line; PROMISE and CLOSE start on bar lines (the score's lift and final hit are downbeats). At least 0.3 s between one line's last word and the next one's first. Holds where the picture needs air: 0.4 s before S11 (the 19 s roll) and S18 (the snap back), 0.3 s before S15 (the whip). JIRA lasts at least 12 s. PROBLEM's last word ends 0.5 s or more before `daySlip`. A cut falls at least 0.05 s after a line's last word.
+- **The layout is searched, not hand-set**: leads, extra beats per gap and cut positions. Ranking: the shortest film first, then the fewest silences over 1 s outside the chosen beats (the Day turn, the S18 breath, the Jira air, the end hit; up to 1.6 s), then the least squared silence over 0.6 s, then bar-line scene starts, then the least dead air before a cut. A re-voice re-times the film under the same rules.
+- **Silences** between words: 0.32-0.92 s, plus the chosen ones (1.14 s at the Day turn, 0.9 s before S18, 1.16 s before S19 and 1.2 s before S20 as Jira air). "dashboard" ends 5 frames before `endHit`.
+- **For the picture team**: the v4 scene modules call `getScene("A0")` and the like when imported, so they throw against this timeline until the scene registry is replaced. The full line table is `timeline-v5.md` in the cache.
 
-### Music (`public/music/score-v5.wav`, `arrangements/score-v5.json`)
+### Music (`public/music/score-v5.wav`, fitted by `score-v5.mjs`)
 
-The edit: 105.000 s, 48 kHz 16-bit stereo, -15.8 LUFS, true peak -3.0 dBTP, 120.003 BPM (grid RMS 5.6 ms, first beat 4.8 ms in). The source is v4's take (seed 7101). Its 8-bar phrases run from its lift at source 32 s, and each phrase ends on a fill bar.
+`score-v5.mjs` writes `arrangements/score-v5.json` from the timeline's markers and words, then renders it, so a re-timed film re-fits its score (`run.mjs` does this). `timeline-v5.mjs` marks the score `pending` if the edit was fitted to other anchors. The output is 109.000 s, 48 kHz 16-bit stereo, -15.8 LUFS, true peak -2.8 dBTP, 120.001 BPM (grid RMS 5.5 ms, first beat 4.4 ms in). The source is v4's take (seed 7101); its 8-bar phrases run from its lift at source 32 s, each ending on a fill bar.
 
 | Cue | Frames | What |
 | --- | --- | --- |
-| N1 | 0-465 | Night: source 16-31.5 s at +4 dB (sub pulse, ticks, dark pad; 2 loud / 2 quiet bars, rising) |
-| N2 | 465-480 | Hard stop: one beat of silence before `daySlip` (S05 ends at f463) |
-| D1 | 480-1275 | The take's own lift (source 32) on `daySlip`, then the drive |
-| D2 | 1275-1369 | The 19 s roll: the band strips to bass and ticks |
-| D3 | 1369-2100 | Full band back with a sub hit on the sixteenth of "Possibly". One 16-bar splice at f1380 (source 62 to 94) skips a kick drop-out bar and 2 phrases |
-| F1 | 2100-2460 | FIX: low-pass 900 Hz, opening over the 2 beats before S18 |
-| F2 | 2460-2760 | `snapBack`: full band and a small sub hit on S18's bar line |
-| E1 | 2760-2880 | Build: a 2-bar riser, then a 1-bar high-pass |
-| E2 | 2880-3150 | `endHit`: the take's final hit (source 144) and a sub hit. Its C major ring-out is stretched 2.5x, so it rings under S21 and S22 to the last frame |
+| N1 | 0-480 | Night: the take's Night from source 16 at +4 dB, rising into its own lift (no stop: R6 allows one silence) |
+| D1 | 480-1275 | The take's lift (source 32) on `daySlip`, then the drive |
+| D2 | 1275-1335 | The 19 s roll: bass and ticks only |
+| D3 | **1335-1369** | **The drop, the film's one silence**: no score, voice only ("the page says"), 34 f = 0.57 bar |
+| D4 | 1369-2100 | The landing: the band (3 ms entry, where the take would be) and a sub hit together on the flag frame. One 14-bar splice at f1380 (source 62 to 90) skips the take's kick drop-out bar and lands its final hit on `endHit` |
+| F1 | 2100-2520 | FIX: low-pass 900 Hz, opening after S17 (from 83.25 s) |
+| F2 | 2520-2880 | The snap back: full band and a small sub hit on S18's downbeat ("Verified", the marker, 2 frames later); the drive under JIRA |
+| E1 | 2880-3000 | Build: a 2-bar riser, then a 1-bar high-pass |
+| E2 | 3000-3270 | `endHit`: the take's final hit (source 144) and a sub hit; its C major ring-out stretched 2.5x, fading to silence on the last frame |
 
-Measured: 0.5 s of silence (-96 dB) before the lift's kick on f480. The strip takes mids down 10 dB and highs down 15 dB, with the sub kept. FIX highs fall to -69 dB by 71 s and recover over 81-82 s. The ring decays about 2 dB/s. The seams jump no more than an ordinary kick does.
+Measured contacts:
+- **Flag**: the score is under -80 dBFS from f1335.06 to f1368.96, then -15 dB on f1369 (attack at f1369.07).
+- **End hit**: attack at f3000.06.
+- **Lift**: f479 -24 dB, then f480 -8 dB.
+- **Snap back**: the level steps up on S18's downbeat (f2519 -17 dB, f2520 -10, f2521 -7). The groove's kick is on that downbeat anyway, so a hit 2 frames later on "Verified" would only double it. This is the same offset as round 1, which the metrics pass accepted.
+- **Silences**: the drop is the only one (under -70 dBFS for more than 50 ms), apart from the final fade.
 
-`arrange.py` gained four options, all of which leave the v4 edits unchanged:
+`arrange.py` gained five options, all of which leave the v4 edits unchanged:
 - `stretch` segments (phase vocoder with identity phase locking, stereo coherent);
-- `points` cutoff curves for sweeps (adjacent sweeps used to leave about 21 ms unfiltered at their boundary);
+- `points` cutoff curves for sweeps;
 - `rampIn`/`rampOut` for the strip;
-- `startFadeMs`.
+- `startFadeMs`;
+- a per-segment crossfade, `xfMs` (the 3 ms entry after the drop).
 
 **Mix** (timeline `music[0]`, `duck` and `mix`): score `gainDb` -12, `duckDb` -8, attack 6 f, release 12 f, as v4. The duck follows v4's rule (lines padded 5 f before, 10 f after), with `DUCK_RULES` around the hits:
-- S06 and S18 duck from their first word, so the lift and the resolution land first;
-- S17 releases at its last word, so the score opens in the breath;
+- S06 and S18 duck from their first word;
+- S17 releases at its last word;
 - S20 releases 12 f before `endHit`, so the build swells under "dashboard" and the hit lands at full;
-- CLOSE does not duck, so the hit rings under S21 and S22.
+- CLOSE does not duck.
 
-Measured music level under the voice: -35 to -37 LUFS in every scene (15-17 dB under the voice), against -40.8 for the Night before the +4 dB.
+Measured: the score sits at -35 to -37 LUFS under the voice in every scene, 15-17 dB under it. `music[0].drop` gives the drop's frames.
 
 ### QA (`tools/audio/qa-report-v5.json`)
 
-- **WER** (Scribe on the 105 s narration bed, normalised, Levenshtein): **2.37% raw** (6 of 253 words), all from Scribe writing "DocDrift" as one word 3 times. **0.00%** with that spelling split. Every line is heard inside its own span.
+- **WER** (Scribe on the 109 s narration bed of the final layout, normalised, Levenshtein): **2.26% raw** (6 of 266 words), all from Scribe writing "DocDrift" as one word 3 times. **0.00%** with that spelling split. Every line is heard inside its own span (round 1: 2.37% raw, 0.00% split).
 - **Loudness**: 22 lines at -20.0 LUFS (spread 0.0 LU), true peak at most -2.9 dBTP. Preview mix -20.0 LUFS, true peak -5.1 dBTP.
 - **Files**: 107 WAVs decode at 48 kHz.
-- **Credits**: 390 (`character_count` 17,861 to 18,251). 73 paid calls (24 TTS, 25 Scribe, 24 alignments), all in `gen-log.jsonl`, with line ids S01-S22.
+- **Credits**: 548 for v5 (`character_count` 17,861 to 18,409; round 2: 158). 96 paid calls (31 TTS, 34 Scribe, 31 alignments), all in `gen-log.jsonl`, with line ids S01-S22.
 
 ### Re-run (v5)
 
 ```bash
-node tools/audio/run.mjs                    # vo (cached) -> timeline-v5 -> QA -> timeline-v5   (--scribe: paid WER)
-python3 -I tools/audio/arrange.py tools/audio/arrangements/score-v5.json && node tools/audio/timeline-v5.mjs
+node tools/audio/run.mjs                    # vo (cached) -> timeline-v5 -> score-v5 fit -> QA -> timeline-v5   (--scribe: paid WER)
+node tools/audio/score-v5.mjs               # re-fit and render the score to the current timeline (no spend)
 node tools/audio/run.mjs --film v4          # v4, from its caches, into src/data/timeline-v4.json and qa-report.json
 ```

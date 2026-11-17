@@ -7,6 +7,9 @@
 //   --pick S21=1        ship take 1 of S21 (a choice made by measurement; remembered in the line's state as `pick`)
 //   --variant plain     with --only: voice those lines WITHOUT their direction tag into cache/vo/alt/<id>.plain.*
 //                       (state, takes and Scribe QA; never shipped, never aligned), as v4 kept V00/V01's plain reads
+//   --recontext S14     re-voice a line whose own text is unchanged but whose neighbours changed. Without it such a
+//                       line is KEPT AS RECORDED (its state keeps the previous_text/next_text it was voiced with), so a
+//                       script edit re-voices only the edited lines (v5 round 2)
 // Shipped: public/vo/<id>.wav (48 kHz 16-bit mono, -20 LUFS integrated, sample peak <= -3 dBFS).
 // Working files: tools/audio/cache/vo/ (raw takes, masters, transcripts, per-line state). Manifest: cache/vo/vo.json
 // (v4) or cache/vo/vo-v5.json (v5). Line ids differ between films, so their takes never share a cache entry.
@@ -23,6 +26,7 @@ const FILM = filmOf(a.film ?? 'v5');
 const LINES = FILM.lines;
 const only = a.only ? new Set(String(a.only).split(',')) : null;
 const retake = a.retake ? new Set(String(a.retake).split(',')) : new Set();
+const recontext = a.recontext ? new Set(String(a.recontext).split(',')) : new Set();
 const picks = Object.fromEntries((a.pick ? String(a.pick).split(',') : []).map((x) => x.split('=')).map(([id, n]) => [id, Number(n)]));
 const variant = a.variant ? String(a.variant) : null;
 if (variant && variant !== 'plain') throw new Error(`unknown --variant ${variant} (have: plain)`);
@@ -76,6 +80,12 @@ async function voiceLine(line0, i) {
   const state = readJson(statePath);
   const pick = picks[line.id] ?? (state?.key === key ? state.pick : undefined);
   if (state?.key === key && state.final && !retake.has(line.id) && (pick === undefined || state.final.qa.chosen === pick)) return state;
+  // same voice, model, settings, text and tag, only the neighbours' text changed: the recorded take stands
+  const sameContent = state?.final && ['voice', 'model', 'settings', 'say', 'format', 'direction'].every((k) => JSON.stringify(state[k]) === JSON.stringify(base[k]));
+  if (sameContent && state.key !== key && !variant && !retake.has(line.id) && !recontext.has(line.id) && picks[line.id] === undefined) {
+    console.log(`${line.id} kept as recorded (only its neighbours changed; --recontext ${line.id} re-voices it)`);
+    return state;
+  }
 
   const takes = state?.key === key ? state.takes ?? [] : [];
   const start = retake.has(line.id) ? takes.length : 0;

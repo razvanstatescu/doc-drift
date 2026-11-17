@@ -1,6 +1,88 @@
 {
- "at": "2026-11-17T12:15:04.939Z",
+ "at": "2026-11-17T14:19:28.307Z",
  "film": "v5",
+ "narration": {
+  "file": "/Users/razvanstatescu/Documents/Work/doc-drift/video/tools/audio/cache/qa/narration-v5.wav",
+  "wordsMatch": true,
+  "exact": false,
+  "diffs": [
+   {
+    "script": "doc drift",
+    "heard": "docdrift",
+    "kind": "joined"
+   },
+   {
+    "script": "doc drift",
+    "heard": "docdrift",
+    "kind": "joined"
+   },
+   {
+    "script": "doc drift",
+    "heard": "docdrift",
+    "kind": "joined"
+   }
+  ],
+  "linesInPlace": true,
+  "lineMismatches": [],
+  "wer": {
+   "raw": {
+    "words": 266,
+    "sub": 3,
+    "del": 3,
+    "ins": 0,
+    "wer": 0.0226,
+    "ops": [
+     {
+      "op": "del",
+      "script": "doc",
+      "at": 38
+     },
+     {
+      "op": "sub",
+      "script": "drift",
+      "heard": "docdrift",
+      "at": 39
+     },
+     {
+      "op": "del",
+      "script": "doc",
+      "at": 75
+     },
+     {
+      "op": "sub",
+      "script": "drift",
+      "heard": "docdrift",
+      "at": 76
+     },
+     {
+      "op": "del",
+      "script": "doc",
+      "at": 248
+     },
+     {
+      "op": "sub",
+      "script": "drift",
+      "heard": "docdrift",
+      "at": 249
+     }
+    ]
+   },
+   "docDriftSplit": {
+    "words": 266,
+    "sub": 0,
+    "del": 0,
+    "ins": 0,
+    "wer": 0,
+    "ops": []
+   }
+  },
+  "transcript": "It's 3:00 a.m. Payments is down. The runbook says, \"Run the rollback script.\" That script was renamed last week. The page's review date can't see a code change, and an AI assistant reads you the same old step. DocDrift catches this. For teams with docs in Confluence, Atlassian's wiki, when the code or Jira work behind a page changes, it flags the page for people and AI agents until someone checks. Rewind a week. DocDrift links the page to the script and Jira issue it names. Save, and the page is verified. Then the rename is merged in Bitbucket, pull request 482. Nineteen seconds later, the page says, \"Possibly stale. It may be out of date.\" It names the exact change and tells the page owner. No AI made that call. In Rovo, Atlassian's AI, ask our agent how to roll back. Instead of the old step, it warns the page may be out of date and why. Coding assistants get the same check over MCP, an open standard for AI tools. Agents never edit the page. A person does. The rename is one click with no AI. Our agent drafts the other change, a renamed timeout setting. Nothing changes until a person accepts. Verified again. Now agents can cite it with the right step. Jira work counts too. Close an epic, and the design page linked to it gets flagged. Turn a flag into a Jira task and see every flagged page on one dashboard. DocDrift for Confluence with Jira and Bitbucket. Get it here. Docs that know when the code moved.",
+  "credits": {
+   "before": 18409,
+   "after": 18409
+  },
+  "at": "2026-11-17T14:19:28.307Z"
+ },
  "voLoudness": {
   "medianLufs": -20,
   "min": -20,
@@ -99,18 +181,18 @@
    {
     "id": "S12",
     "I": -20,
-    "LRA": 1.1,
+    "LRA": 1.7,
     "TP": -3,
-    "Mmax": -16.4,
+    "Mmax": -16.7,
     "Smax": -20.2
    },
    {
     "id": "S13",
     "I": -20,
-    "LRA": 1.1,
+    "LRA": 1.9,
     "TP": -3,
-    "Mmax": -15.5,
-    "Smax": -19.5
+    "Mmax": -13.9,
+    "Smax": -19.3
    },
    {
     "id": "S14",
@@ -131,34 +213,34 @@
    {
     "id": "S16",
     "I": -20,
-    "LRA": 0.8,
+    "LRA": 1.7,
     "TP": -3,
-    "Mmax": -16.2,
-    "Smax": -20.1
+    "Mmax": -15.7,
+    "Smax": -19.9
    },
    {
     "id": "S17",
     "I": -20,
     "LRA": 1.5,
     "TP": -3,
-    "Mmax": -17,
+    "Mmax": -15.8,
     "Smax": -19.6
    },
    {
     "id": "S18",
     "I": -20,
-    "LRA": 0,
-    "TP": -3.1,
-    "Mmax": -15.8,
-    "Smax": -120.7
+    "LRA": 1.6,
+    "TP": -2.9,
+    "Mmax": -15.6,
+    "Smax": -19.9
    },
    {
     "id": "S19",
     "I": -20,
     "LRA": 0.7,
-    "TP": -3,
-    "Mmax": -16.2,
-    "Smax": -19.6
+    "TP": -2.9,
+    "Mmax": -16.4,
+    "Smax": -19.8
    },
    {
     "id": "S20",
@@ -189,27 +271,27 @@
  "music": {
   "score": {
    "file": "/Users/razvanstatescu/Documents/Work/doc-drift/video/public/music/score-v5.wav",
-   "duration": 105,
+   "duration": 109,
    "sampleRate": 48000,
    "channels": 2,
    "codec": "pcm_s16le",
    "bits": 16,
-   "bpm": 120.003,
+   "bpm": 120.001,
    "within01": true,
-   "gridRmsMs": 5.6,
-   "firstBeatSec": 0.0048,
+   "gridRmsMs": 5.5,
+   "firstBeatSec": 0.0044,
    "loudness": {
     "I": -15.8,
-    "LRA": 3.9,
-    "TP": -3,
+    "LRA": 4.3,
+    "TP": -2.8,
     "Mmax": -12.5,
     "Smax": -14.3
    },
    "kicksOnGrid": {
-    "lowOnsets": 280,
-    "onBeatWithin20ms": 91,
-    "medianAbsDevMs16th": 19.8,
-    "within15ms16th": 73
+    "lowOnsets": 284,
+    "onBeatWithin20ms": 93,
+    "medianAbsDevMs16th": 19.4,
+    "within15ms16th": 81
    },
    "matchesTimeline": true
   }
@@ -223,94 +305,11 @@
   "file": "/Users/razvanstatescu/Documents/Work/doc-drift/video/tools/audio/cache/qa/preview-mix-v5.wav",
   "loudness": {
    "I": -20,
-   "LRA": 1.8,
+   "LRA": 2,
    "TP": -5.1,
-   "Mmax": -15.4,
-   "Smax": -19
+   "Mmax": -13.8,
+   "Smax": -18.9
   },
   "note": "score-v5 at -12 dB with the duck ranges (-8 dB, 6 f in, 12 f out), VO at 0 dB; no effects"
- },
- "narration": {
-  "file": "/Users/razvanstatescu/Documents/Work/doc-drift/video/tools/audio/cache/qa/narration-v5.wav",
-  "wordsMatch": true,
-  "exact": false,
-  "diffs": [
-   {
-    "script": "doc drift",
-    "heard": "docdrift",
-    "kind": "joined"
-   },
-   {
-    "script": "doc drift",
-    "heard": "docdrift",
-    "kind": "joined"
-   },
-   {
-    "script": "doc drift",
-    "heard": "docdrift",
-    "kind": "joined"
-   }
-  ],
-  "linesInPlace": true,
-  "lineMismatches": [],
-  "wer": {
-   "raw": {
-    "words": 253,
-    "sub": 3,
-    "del": 3,
-    "ins": 0,
-    "wer": 0.0237,
-    "ops": [
-     {
-      "op": "del",
-      "script": "doc",
-      "at": 38
-     },
-     {
-      "op": "sub",
-      "script": "drift",
-      "heard": "docdrift",
-      "at": 39
-     },
-     {
-      "op": "del",
-      "script": "doc",
-      "at": 75
-     },
-     {
-      "op": "sub",
-      "script": "drift",
-      "heard": "docdrift",
-      "at": 76
-     },
-     {
-      "op": "del",
-      "script": "doc",
-      "at": 235
-     },
-     {
-      "op": "sub",
-      "script": "drift",
-      "heard": "docdrift",
-      "at": 236
-     }
-    ]
-   },
-   "docDriftSplit": {
-    "words": 253,
-    "sub": 0,
-    "del": 0,
-    "ins": 0,
-    "wer": 0,
-    "ops": []
-   }
-  },
-  "transcript": "It's 3:00 a.m., payments is down. The runbook says, \"Run the rollback script.\" That script was renamed last week. The page's review date can't see a code change, and an AI assistant reads you the same old step. DocDrift catches this. For teams with docs in Confluence, Atlassian's wiki, when the code or Jira work behind a page changes, it flags the page for people and AI agents until someone checks. Rewind a week. DocDrift links the page to the script and Jira issue it names. Save, and the page is verified. Then the rename is merged in Bitbucket, pull request 482. Nineteen seconds later, the page says, \"Possibly stale. It may be out of date.\" It names the exact change. No AI made that call. In Rovo, Atlassian's AI, ask our agent, Drift Reviewer, how to roll back. Instead of the old step, it warns the page may be out of date and why. Coding assistants get the same check over MCP, an open standard for AI tools. People fix the page, never agents. The rename is one click, no AI. Drift Reviewer drafts other edits. Nothing changes until a person accepts. Verified again. Now agents can cite it. Jira work counts too. Close an epic, and the design page that still says it's planned gets flagged. Turn a flag into a Jira task and see every flagged page on one dashboard. DocDrift for Confluence with Jira and Bitbucket. Get it here. Docs that know when the code moved.",
-  "credits": {
-   "before": 18235,
-   "after": 18235
-  },
-  "at": "2026-11-17T12:12:01.272Z",
-  "note": "kept from the Scribe run of 2026-11-17T12:12:01.272Z"
  }
 }

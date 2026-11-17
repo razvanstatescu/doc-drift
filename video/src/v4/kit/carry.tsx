@@ -1,5 +1,5 @@
 import React from "react";
-import { AbsoluteFill, Freeze, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Freeze, useCurrentFrame, useVideoConfig } from "remotion";
 import { EASE, H, tween, W } from "../../lib/time";
 import { DAY, FONT, type Rect } from "../look";
 import { stageToScreen, type Cam3 } from "./camera3d";
@@ -98,9 +98,19 @@ export const CarryHold: React.FC<{ rect: Rect; children?: React.ReactNode; style
 // RewindFrom
 // ---------------------------------------------------------------------------------------------------------------------
 
+/** Sine in-out: the speed peaks at 1.57x the average, so the reverse motion is visible from start to end. */
+export const sineInOut = (t: number) => 0.5 - 0.5 * Math.cos(Math.PI * t);
+const warnedShort = new Set<string>();
+const warnShort = (m: string) => {
+  if (warnedShort.has(m)) return;
+  warnedShort.add(m);
+  console.warn(m);
+};
+
 /**
  * "Rewind a week": another scene's frames played BACKWARDS, fast, from source frame `from` back across `span` source
- * frames in `dur` output frames (expo in-out: it speeds up, then settles on the frame it lands on), with a light scrub
+ * frames in `dur` output frames (sine in-out by default, so the reverse motion is visible over the whole rewind: give it 15
+ * to 20 frames or more, starting on "Rewind"), with a light scrub
  * texture (a few moving scan lines, a slight vertical blur scaled by speed) and a chip ("Last week"). Pass the other
  * scene as children (it is frozen frame by frame, so its sound is muted):
  *
@@ -119,12 +129,19 @@ export const RewindFrom: React.FC<{
   chipHold?: number;
   /** Scrub texture strength 0 to 1 (default 1). */
   texture?: number;
+  /** The speed curve (default sine in-out: the reverse motion stays visible over the whole rewind; v5 round 2). */
+  ease?: (t: number) => number;
   children: React.ReactNode;
-}> = ({ from, span, dur, at = 0, chip = "Last week", texture = 1, children }) => {
+}> = ({ from, span, dur, at = 0, chip = "Last week", texture = 1, ease = sineInOut, children }) => {
   const frame = useCurrentFrame();
-  const p = tween(frame, at, at + dur, 0, 1, EASE.expoInOut);
+  const { durationInFrames } = useVideoConfig();
+  if (dur < 15) warnShort(`RewindFrom: ${dur} frames reads as a jump, not a rewind; give it 15 to 20 frames or more (V5 round 2)`);
+  // Remotion clamps a frozen frame to the composition's last frame: in a composition shorter than `from`, the rewind
+  // would show the wrong frames (Main and the scene compositions are long enough; a short test composition is not)
+  if (from >= durationInFrames) warnShort(`RewindFrom: from ${from} is past this composition's last frame (${durationInFrames - 1}); Remotion clamps it, so the rewind shows the wrong frames here`);
+  const p = tween(frame, at, at + dur, 0, 1, ease);
   const src = Math.max(0, Math.round(from - span * p));
-  const speed = Math.abs(tween(frame + 0.5, at, at + dur, 0, 1, EASE.expoInOut) - tween(frame - 0.5, at, at + dur, 0, 1, EASE.expoInOut)) * span; // source frames per frame
+  const speed = Math.abs(tween(frame + 0.5, at, at + dur, 0, 1, ease) - tween(frame - 0.5, at, at + dur, 0, 1, ease)) * span; // source frames per frame
   const k = Math.min(1, speed / 12) * texture;
   const lines = [0.18, 0.43, 0.71, 0.86].map((y0, i) => ((y0 + frame * (0.037 + i * 0.011)) % 1) * H);
   return (

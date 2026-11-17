@@ -3,6 +3,7 @@ import { Easing, useCurrentFrame } from "remotion";
 import { EASE, tween } from "../../lib/time";
 import { BRAND, DAY, FONT, NIGHT, amber, type Rect } from "../look";
 import { DirectionalBlur } from "./blur";
+import { useRealCapture, warnPaint } from "./capturectx";
 
 /**
  * Kinetic type for v4 (V4.md M6, L3; ported from Pot's text/KineticText.tsx WordRise and text/marks.tsx at 30 fps).
@@ -341,6 +342,12 @@ export const CurrentUnderline: React.FC<MarkProps> = ({ at, dur = 10, world = "d
  */
 export const AmberBlock: React.FC<MarkProps> = ({ at, dur = 9, world = "day", rect, exitAt, children, style }) => {
   const frame = useCurrentFrame();
+  const onCapture = useRealCapture();
+  if (onCapture) {
+    // V5.md 8.1: amber only on crafted elements; never painted over a real capture (use LiftOut beside it)
+    warnPaint(`AmberBlock over the real capture ${onCapture}: amber goes on a crafted element beside it (LiftOut), never on the capture`);
+    return rect ? null : <span style={style}>{children}</span>;
+  }
   const { a, b, show } = sweepOf(frame, at, dur, exitAt);
   const padX = 0.12;
   const bloom = show ? Math.min(1, (b - a) * 1.4) : 0;

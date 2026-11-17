@@ -7,6 +7,7 @@ import { hasStaticFile } from "../../lib/files";
 import { EASE, FPS, tween } from "../../lib/time";
 import { DAY, FONT, elevAt, ink, type Rect } from "../look";
 import { useCam3OrNull } from "./camera3d";
+import { allowedCovers, RealCaptureContext } from "./capturectx";
 import clipsJson from "./proofclips.json";
 import { InkLabel } from "./stage";
 
@@ -480,7 +481,8 @@ export const ProofFrame: React.FC<ProofFrameProps> = ({
   const file = cap?.file;
   const ok = Boolean(cap && file && hasStaticFile(file));
   const fillOf = (i: number) => (Array.isArray(maskFill) ? maskFill[i] : maskFill);
-  const allMasks: CaptureMask[] = [...(cap?.masks ?? []).map((m, i) => ({ ...m, fill: m.fill ?? fillOf(i) })), ...masks];
+  // captures.json's covers are the logged "(Development)" ones; extra covers draw only if logged too (V5.md 8.1)
+  const allMasks: CaptureMask[] = [...(cap?.masks ?? []).map((m, i) => ({ ...m, fill: m.fill ?? fillOf(i) })), ...allowedCovers(capture, masks, cap?.masks)];
   const [cx, cy, cw, ch] = seg.crop;
 
   const media = () => {
@@ -536,7 +538,7 @@ export const ProofFrame: React.FC<ProofFrameProps> = ({
             transform: `translate(${w / 2}px, ${h / 2}px) scale(${s * k}) translate(${-(cx + cw / 2)}px, ${-(cy + ch / 2)}px)`,
           }}
         >
-          {media()}
+          <RealCaptureContext.Provider value={capture}>{media()}</RealCaptureContext.Provider>
           {allMasks.map((m, i) => (
             <div key={i} style={{ position: "absolute", left: m.box[0], top: m.box[1], width: m.box[2], height: m.box[3], background: m.fill ?? "#FFFFFF" }} />
           ))}

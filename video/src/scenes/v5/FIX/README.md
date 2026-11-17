@@ -1,35 +1,42 @@
-# FIX (v5): a person fixes it
+# FIX (v5 round 2): a person fixes it
 
-Film 2100 to 2550 (450 frames), lines S16 to S18. Owner: Review and scale. Brief: `video/V5.md` sections 5 and 7.
-Render: `out/v5/fixjira/FIX.mp4`.
+Film 2100 to 2640 (540 frames), lines S16 to S18. Owner: Review and scale. Brief: `video/V5.md` sections 5 and 8.
+Render: `out/v5/fixjira/FIX.mp4`. Every cue comes from `timing.ts` (words and the `snapBack` marker).
 
-Four shots, all real captures at reading size through the kit's `RealTake`. Every shot opens composed: its first
-camera key has `dur: 0` (a `dur: 1` key shows the whole capture for one frame) and its spotlight is on from the first
-frame. One tag, "Recorded in Confluence", stays put through all four shots.
+Round 2: crafted twins lead each line, big; short real proofs at reading size show it is real (the kit's
+MorphToReal, then RebuildFromReal back, one tag each); nothing is painted on a real capture (amber only on our twins).
 
-| Shot | Frames | Capture | What happens (word it lands on) |
+| Local frames | World | What (word it lands on) |
+| --- | --- | --- |
+| 0 to 103 | P, the page and its readers | Opens composed under the kit's slip push: the runbook twin, flagged (its lit byline item is the one amber), and PROMISE's reader chips. The agents' status slips from "Possibly stale" to "Read only" on "never edit" (readable on 20); "People", "Edits the page", lifts in on "A person" (66) |
+| 103 to 190 | Q, the quick fix | Carry cut: the card grows out of step 2's dead path (the camera starts with the card's `scripts/rollback.sh` exactly on the page's). The real click as a short 1:1 proof (`p4-review-rec`, 37.97 to 39.0 s, the click on 140, "click" 142); back to the card with its result; Mist on its "No AI used." on "no" (163) |
+| 190 to 398 | R, our agent's draft | Locked push to Drift Reviewer ("Our agent"); its draft flies out of the chip and lands big on "drafts" (214). The old setting name sits on the drift's amber from "renamed" (265); EditLine strikes it and opens `ROLLBACK_TIMEOUT_SECS` on "timeout setting" (285 to 298). The real draft as a short 1:1 proof (`p4-draft-diff`, 306 to 352), Mist on its "Nothing changes until you accept." on "Nothing" (327). A person's click on Accept fix on "accepts" (378); "Accepted" |
+| 398 to 513 | V, verified | Locked push back to the page, close on its header (the lit item about 55 px). On "Verified" the item slip-swaps to "Verified · Doc Drift" (old words gone 419, new readable 422) with the film's one snap (420, the score's downbeat); no amber after. The real "Verified by Razvan Statescu, just now." as a short proof on "again" (`p4-accepted`, 434 to 464). Pull back to the readers on "Now agents" (465); the agents' status turns "Safe to cite" on "cite" (readable 496) |
+| 513 to 540 | payoff | Plain cut on "with the right step" to the Night owner's `PayoffShot` (`../PROBLEM/Payoff`): the 3 a.m. assistant now answers `./scripts/rollback-v2.sh --timeout $ROLLBACK_TIMEOUT_SECS`, underlined on "right" (517 to 525), citing "Payments rollback runbook · Verified" (523). Its chime (525) rings on over the plain cut into JIRA, which plays its tail (the L-cut) |
+
+## Proofs (all at 1:1, tagged "Recorded in Confluence")
+
+| Capture | Crop (x, y, w, h) | Frames | Morph from / to |
 | --- | --- | --- | --- |
-| F1 | 0 to 90 | `p2-flagged`, header crop | Author lit on "People" (2); the header on "fix the page" (14); the agent chips "Rovo agent", "Coding assistant" and the "Read only" tag lift in at 44 ("never agents" 48 to 58). The flagged byline item carries the drift's amber |
-| F2 | 90 to 180 | `p4-review-rec` 37.3 to 41.6 s | Cut on the beat before "the rename" (92). The real click on "Replace in 1 place" at 120 ("click" 122). Mist on "No AI used." at 140 ("no" 144). The spinner at a labelled ramp (6x), then at 156 the recording's own 730 px scroll to "Replaced ... in 1 place.": the camera takes the jump on that frame and pans it in 12 frames, so "No AI used." rides out of the frame as "AI" ends (163); the result holds to the cut |
-| F3 | 180 to 345 | `p4-draft-diff`, then `p4-accept-rec` from 292 | The drafted step, red and green, lit on "Drift Reviewer drafts" (180). Mist on "Nothing changes until you accept." at 258 ("Nothing" 262). The invisible source switch at 292 (the recording at 11.7 s is the still shifted 313 px). Camera to the footer, the real "Accept fix" click at 311 ("accepts" 313), the spinner at a labelled ramp. Rovo's confirmation step is never shown |
-| F4 | 345 to 450 | `p2-flagged`, then `p4-verified` from 360 | The header again, flagged (amber). On the score's hit (360, the one `snap`) the amber leaves and the real byline reads "Verified · Doc Drift". "Verified." rises (up at 360, "Verified" 362), flies on "again" (374 to 392) and lands on the real word (the kit's `TypeToUI`, dissolving into the word over its last 4 frames). The real `checkVerified` guidance line rises at 402 ("Now" 404), "Safe to cite." marked at 429 ("cite" 433) |
+| `p4-review-rec` 37.97 to 39.0 s | 1148, 1305, 1530, 340 | 130 to 161 | the twin card / the real card (1168, 1390, 1503, 243); the kit cursor only at the recorded click (1337, 1577, 38.308 s) |
+| `p4-draft-diff` | 1176, 1340, 1484, 320 | 306 to 352 | the big code line / `+ export ROLLBACK_TIMEOUT_SECS=300` (1258, 1440); the Mist on 1658, 1627, 382, 23 |
+| `p4-accepted` | 1150, 318, 526, 66 | 434 to 464 | the byline item / "Verified by Razvan Statescu, just now." (1169, 337); the crop stops before "Watching 3 anchors." and below the panel's sticky header |
 
-Measured on the captures (capture px):
-- `p4-review-rec`: Quick fix card 1168 to 2672 x 1390 to 1634; "No AI used." 1496 to 1626 x 1500 to 1528; the click
-  (1337, 1577) at 38.308 s; every line moves up 730 px between 41.13 and 41.15 s, when the result notice shows
-  (1168 to 2672 x 1662 to 1902).
-- `p4-accept-rec`: static 11.0 to 12.25 s; "Accept fix" clicked at 12.373 s (1929, 1894).
-- `p4-verified`: "Verified" glyphs 2394 to 2479, cap top 474, baseline 492, ink (80, 82, 87).
-- Spline Sans in `TypeToUI`'s 1.25 line box: cap top 0.258 em, cap height 0.733 em (measured on frame 366).
-- The page's byline item shows through the review modal's scrim with its "(Development)" suffix (right of the modal,
-  x 2720 to 2848): `p4-draft-diff`'s own mask paints it white and `p4-accept-rec` has none. Both, and
-  `p4-review-rec` (y 403), get an extra mask in the scrim's grey (140, 144, 152).
+Covers: none beyond the logged `captures.json` "(Development)" masks; every crop lies clear of the byline pill, so no
+extra cover is needed (round 1's scrim-grey covers are gone with those shots).
 
-Sound (8 effects, 32 a minute): pop on the chips, tick-soft on the cut at 90, the two real clicks, tick-soft on the
-cut at 345, `snap` on the hit at 360, tick on the type's landing, and `chime-soft` at 441: the ring tails into JIRA
-as an L-cut (JIRA plays the same chime from its frame -9, since FIX's Sequence ends at 450).
+## Sound (10 effects in 18 s: 33 a minute, each 12 to 28 dB under the voice by RMS)
 
-QA on the render: motion 87.1% moving (pass); flash pass (1.5 flashes at most in a local window); amber 4 of 15 s
-(the flag in F1 and F4 only, as the story asks); rhythm: median shot 2.7 s, moving transitions 8 a minute, major
-interrupts 20 a minute, longest gap 2.4 s, cuts on a hit 60%. The rhythm tool counts F2's scroll pan and F3's
-camera move to the footer as moving transitions, so it sees a 0.4 s "shot" after the pan (F2's result hold).
+tick-soft on the agents' status (19), pop on the carry (113), the real click (140), whoosh-short on the push to R
+(199), pop as the draft lands (214), a person's click on Accept fix (378), whoosh-short on the push to V (408), `snap`
+on the score's downbeat as the byline swaps (420, the film's one snap); the PayoffShot's own tick-soft (523) and chime
+(525). The kit plays FIX's lead (`LEADS.FIX`, swish-up); nothing here duplicates it at frame 0.
+
+## QA (2026-11-17, `out/v5/fixjira/FIX.mp4`)
+
+- `tools/qa/motion.py`: 86.5% moving (pass); M1 notes three still runs on the proofs (14 to 23 frames).
+- `tools/qa/flashcheck.py`: pass, 2-flash target met.
+- `tools/qa/amber.py`: 3 of 18 s (the flag in P, the old setting name in R); no sample with two blobs. After the swap
+  nothing is amber.
+- `tools/qa/rhythm.py --scene FIX`: 7 shots, median 1.33 s, 13.3 moving transitions and 6.7 hard cuts a minute (the
+  proofs' morphs count as transitions), 40 interrupts a minute, longest gap 3.7 s.

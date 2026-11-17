@@ -14,7 +14,8 @@ Added for film v5 (all optional, so the v4 edit lists render exactly as before):
 - a "lowpass"/"highpass" sweep may give "points": [[t, Hz], ...] (cutoff log-interpolated between points) instead of
   fromHz/toHz, so a dip and its opening are ONE sweep with no unprocessed frames at an internal boundary;
 - a "strip" sweep may give "rampIn"/"rampOut" (seconds) instead of one "ramp", e.g. a slow drop and a sharp release;
-- "startFadeMs": a fade-in at the very start of the file (a score that starts mid-take on the film's first frame).
+- "startFadeMs": a fade-in at the very start of the file (a score that starts mid-take on the film's first frame);
+- a segment's "xfMs" sets the crossfade at its start (default 30 ms), e.g. a 3 ms hard entry after a silent drop.
 """
 import json, os, subprocess, sys
 import numpy as np
@@ -41,14 +42,18 @@ def save_wav(y, path):
 
 
 def splice(x, segs, off, dur, xf=0.030, pre=0.005):
-    """Place source spans on the dest timeline. Seam = beat - pre; outgoing (cos) and incoming (sin) fade over [seam - xf, seam]."""
+    """Place source spans on the dest timeline. Seam = beat - pre; outgoing (cos) and incoming (sin) fade over
+    [seam - xf, seam]. A segment's "xfMs" sets the crossfade at its own start (e.g. 3 ms for a hard entry after a drop)."""
     n = int(round(dur * SR))
-    k = int(round(xf * SR))
-    fin, fout = np.sin(np.linspace(0, np.pi / 2, k)), np.cos(np.linspace(0, np.pi / 2, k))
+    K = lambda s: int(round(s.get('xfMs', xf * 1000) / 1000 * SR))
     y = np.zeros((n, 2))
     seam = lambda t: int(round((t + off - pre) * SR))
     for i, s in enumerate(segs):
         first, last = i == 0, i == len(segs) - 1
+        k = K(s)  # fade at this segment's start
+        ko = K(segs[i + 1]) if not last else k  # fade at its end (the next segment's)
+        fin = np.sin(np.linspace(0, np.pi / 2, k))
+        fout = np.cos(np.linspace(0, np.pi / 2, ko))
         a = 0 if first else seam(s['t0']) - k
         b = n if last else seam(s['t1'])
         seg = np.zeros((b - a, 2))
@@ -74,7 +79,7 @@ def splice(x, segs, off, dur, xf=0.030, pre=0.005):
         if not first:
             seg[:k] *= fin[:, None]
         if not last:
-            seg[-k:] *= fout[:, None]
+            seg[-ko:] *= fout[:, None]
         y[a:b] += seg
     return y
 

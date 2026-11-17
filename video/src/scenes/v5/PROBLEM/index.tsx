@@ -46,11 +46,14 @@ const sc = getScene("PROBLEM");
 export const PROBLEM_T = {
   // S01
   /**
-   * The drums are already rolling (smeared) on frame 0, under the pager's tones: never a still wrong time. -6 (not -2,
-   * -4 or -8) keeps the digits passing through the clock's right half under the 2-flash target (flashcheck: 4 in 1 s).
+   * The drums are already rolling (smeared) on frame 0, under the pager's tones: never a still wrong time. They settle
+   * on 03:06 well before the voice, and the minute turns to 03:07 on "3" (a quick one-row tick: the 6 is gone about
+   * 4 frames before the word, the 7 within 4 px about 1.5 frames before): the clock reads the time as it is said
+   * (round 2: it used to land 10 frames early).
    */
   clockAt: -6,
-  clockLand: landFor(-6, sc.wordAt("S01", "3") - 2, TRAVEL[3], CLOCK_SIZE),
+  clockLand: landFor(-6, 34, TRAVEL[3], CLOCK_SIZE),
+  clockTick: { at: sc.wordAt("S01", "3") - 6, land: sc.wordAt("S01", "3") },
   cardAt: sc.wordAt("S01", "payments") - 7,
   rateAt: sc.wordAt("S01", "payments") - 4,
   tiltAt: sc.wordAt("S01", "3") + 2,
@@ -91,7 +94,17 @@ const cy = (r: Rect) => r.y + r.h / 2;
 // ---------------------------------------------------------------------------------------------------------------------
 
 const AlertShot: React.FC = () => (
-  <AlertStation clockAt={T.clockAt} clockLand={T.clockLand} cardAt={T.cardAt} rateAt={T.rateAt} tiltAt={T.tiltAt} outAt={T.cut1} seed="p-alert" />
+  <AlertStation
+    clockAt={T.clockAt}
+    clockLand={T.clockLand}
+    clockFrom="03:06"
+    clockTick={T.clockTick}
+    cardAt={T.cardAt}
+    rateAt={T.rateAt}
+    tiltAt={T.tiltAt}
+    outAt={T.cut1}
+    seed="p-alert"
+  />
 );
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -192,28 +205,31 @@ const TerminalShot: React.FC = () => (
 );
 
 // ---------------------------------------------------------------------------------------------------------------------
-// Shot 4 · the page's review date (S04): the page's head on the left, the card hanging outside it, the statement.
+// Shot 4 · the page's review date (S04): the page's head, the change card under it at reading size, the statement.
 // ---------------------------------------------------------------------------------------------------------------------
 
 const PAGE4: PageTwinProps = { world: "night", doc: "runbook", x: 48, y: 74, byline: { kind: "reviewed", text: "Reviewed 34 days ago" } };
 const R4 = pageRects(PAGE4);
-const REST4 = { x: 960, y: 540, zoom: 1 };
+/** Only the page's head is shown (title, byline, table): it fades out under its header band. */
+const HEAD4_BOTTOM = R4.bands.top.y + R4.bands.top.h;
+/** The content (the head, the card under it) sits centred in frame. */
+const REST4 = { x: 960, y: 384, zoom: 1 };
 const KEYS4: Cam3Key[] = [{ at: T.carry2, dur: 0, to: REST4 }];
 const OPTS4 = { base: REST4, seed: "p-date" } as const;
-/** The card's slot in this world: hanging outside the page (a clear gap from its edge), lower right, at half size. */
-const CARD4_SCALE = 0.5;
-const CARD4: Rect = { x: 1920 - 52 - CHANGE_W * CARD4_SCALE, y: 708, w: CHANGE_W * CARD4_SCALE, h: CHANGE_H * CARD4_SCALE };
-/** The statement beside the page: three lines, measured so the longest fits the zone. */
-const STATE_LINES = ["A review date", "can’t see a", "code change."];
+/** The card's slot in this world: under the page's head, outside it, at reading size (its type at 27 px; review N5-1). */
+const CARD4_SCALE = 0.72;
+const CARD4: Rect = { x: R4.card.x + 20, y: HEAD4_BOTTOM + 78, w: CHANGE_W * CARD4_SCALE, h: CHANGE_H * CARD4_SCALE };
+/**
+ * The statement beside the page, in the voice's own words: a faithful cut of "The page's review date can't see a code
+ * change." (round 2: every word set on screen is said). The byline carries "The page's review date" itself.
+ */
+const STATE_LINES = ["Can’t see a", "code change."];
 const STATE_X = R4.card.x + R4.card.w + 70;
 const STATE_W = 1920 - 60 - STATE_X;
-const STATE_SIZE = Math.min(96, Math.floor(STATE_W / Math.max(...STATE_LINES.map((l) => textWidth(l, { size: 1, weight: 600, tracking: -0.028 })))));
+const STATE_SIZE = Math.min(104, Math.floor(STATE_W / Math.max(...STATE_LINES.map((l) => textWidth(l, { size: 1, weight: 600, tracking: -0.028 })))));
 const STATE_LH = Math.round(STATE_SIZE * 1.06);
-const STATE_TOP = 150;
-/**
- * The statement's words land (within 4 px, about 3 frames into their rise) 2 frames before their spoken words; "A review
- * date" lands as "date" is said (the byline carries "review date" itself), then the voice's own words.
- */
+const STATE_TOP = Math.round((R4.card.y + CARD4.y + CARD4.h) / 2 - STATE_LH);
+/** Each word lands (within 4 px, about 3 frames into its rise) 2 frames before it is said. */
 const S04 = sc.line("S04").words;
 const wordFrom = (prefix: string, nth = 0) => {
   const m = S04.filter((w) => w.text.toLowerCase().replace(/[^a-z']/g, "").startsWith(prefix));
@@ -221,10 +237,11 @@ const wordFrom = (prefix: string, nth = 0) => {
 };
 const LAND = (f: number) => f - 2 - 3;
 const STATE_CUES: number[][] = [
-  [LAND(wordFrom("date")), LAND(wordFrom("date") + 3), LAND(wordFrom("date") + 6)],
   [LAND(wordFrom("can")), LAND(wordFrom("see")), LAND(wordFrom("a", 1))],
   [LAND(wordFrom("code")), LAND(wordFrom("change"))],
 ];
+/** The card pulses once on "code" (peak a frame before the word). */
+const PULSE4 = wordFrom("code") - 8;
 
 /** The Night Mist band and its Current underline on the reviewed line ("Reviewed 34 days ago"), on "review date". */
 const BylineMark: React.FC<{ r: Rect; at: number }> = ({ r, at }) => {
@@ -239,10 +256,14 @@ const BylineMark: React.FC<{ r: Rect; at: number }> = ({ r, at }) => {
   );
 };
 
+const HEAD4_MASK = `linear-gradient(to bottom, #000 0px, #000 ${HEAD4_BOTTOM - 6}px, transparent ${HEAD4_BOTTOM + 34}px)`;
+
 const BylineShot: React.FC = () => (
   <Stage world="night" motif="grid" light={["36%", "30%"]} grid={{ opacity: 0.04 }}>
     <Camera3D keys={KEYS4} {...OPTS4}>
-      <PageTwin {...PAGE4} />
+      <div style={{ position: "absolute", left: 0, top: 0, width: 1920, height: 1300, WebkitMaskImage: HEAD4_MASK, maskImage: HEAD4_MASK }}>
+        <PageTwin {...PAGE4} />
+      </div>
       <BylineMark r={R4.badge} at={T.bylineMark} />
       <div style={{ position: "absolute", left: STATE_X, top: STATE_TOP, width: STATE_W }}>
         {STATE_LINES.map((line, i) => (
@@ -257,7 +278,7 @@ const BylineShot: React.FC = () => (
 // Shot 5 · the generic AI assistant (S05), PROBLEM's final pose.
 // ---------------------------------------------------------------------------------------------------------------------
 
-const PANEL: AgentPanelTwinProps = {
+export const PANEL: AgentPanelTwinProps = {
   world: "night",
   variant: "generic",
   question: { text: "How do I roll back payments-api?", at: T.cut2, prefilled: true },
@@ -351,9 +372,12 @@ const Carry2: React.FC = () => {
   const fromR = screenRectOf(cam3At(T.carry2 - 2, KEYS3, OPTS3), { x: CARD3.x, y: CARD3.y, w: CHANGE_W, h: CHANGE_H });
   // its slot, where the page's world has it on this frame (so once landed it creeps with that world)
   const toR = screenRectOf(cam3At(frame, KEYS4, OPTS4), CARD4);
-  const r = lerpRect(fromR, toR, fly);
+  const r0 = lerpRect(fromR, toR, fly);
+  // one pulse on "code" (the card is the code change the statement names), around its centre
+  const pulse = 1 + 0.05 * Math.sin(Math.PI * Math.max(0, Math.min(1, (frame - PULSE4) / 14)));
+  const r: Rect = { x: r0.x + (r0.w * (1 - pulse)) / 2, y: r0.y + (r0.h * (1 - pulse)) / 2, w: r0.w * pulse, h: r0.h * pulse };
   const flying = frame >= T.carry2 - 2 && frame < T.carry2 + T.carry2Dur + 4;
-  const arc = flying ? -60 * Math.sin(Math.PI * fly) : 0;
+  const arc = flying ? -40 * Math.sin(Math.PI * fly) : 0;
   return (
     <AbsoluteFill>
       <PushSwap at={T.carry2} dur={T.carry2Dur} outgoing={<TerminalShotWithoutCard />} incoming={<BylineShot />} />
@@ -386,21 +410,16 @@ const PROBLEM: React.FC = () => {
   return (
     <AbsoluteFill style={{ background: NIGHT.ground }}>
       <AbsoluteFill style={{ isolation: "isolate" }}>{shot}</AbsoluteFill>
-      {/* sound (voice and score are global): the cold open's pager, the clock, the card, the error, the slip, the stream */}
-      <Sfx id="alert" at={2} gainDb={-2} />
-      <Sfx id="clock-tick" at={T.clockLand - 1} gainDb={-2} />
-      <Sfx id="swish-up" at={T.cardAt + 8} gainDb={-5} />
-      <Sfx id="tick-soft" at={T.mark + 3} gainDb={-2} />
-      <Sfx id="whoosh-short" at={T.carry1 + 7} gainDb={-6} />
-      <Sfx id="type-key" at={T.enter} gainDb={-2} />
-      <Sfx id="error-blip" at={T.error} />
-      <Sfx id="slip" at={T.slip + 6} gainDb={-3} />
-      <Sfx id="whoosh-short" at={T.carry2 + 6} gainDb={-5} />
-      <Sfx id="tick" at={T.bylineMark + 4} gainDb={-3} />
-      {[0, 4, 8, 13, 17, 22].map((d) => (
-        <Sfx key={`k-${d}`} id="type-key" at={T.answer + d} gainDb={-8} />
-      ))}
-      <Sfx id="tick-soft" at={T.source + 2} gainDb={-3} />
+      {/* sound (voice and score are global), 9 effects, none repeated: the pager, the minute's tick, the card, the carries, the error, the slip, the byline mark, the stream */}
+      <Sfx id="alert" at={2} gainDb={-4} />
+      <Sfx id="clock-tick" at={T.clockTick.land - 2} gainDb={-4} />
+      <Sfx id="swish-up" at={T.cardAt + 8} gainDb={-8} />
+      <Sfx id="whoosh-short" at={T.carry1 + 7} gainDb={-8} />
+      <Sfx id="error-blip" at={T.error} gainDb={-3} />
+      <Sfx id="slip" at={T.slip + 6} gainDb={-5} />
+      <Sfx id="whoosh-short" at={T.carry2 + 6} gainDb={-9} />
+      <Sfx id="tick" at={T.bylineMark + 4} gainDb={-6} />
+      <Sfx id="type-burst" at={T.answer} gainDb={-10} />
     </AbsoluteFill>
   );
 };

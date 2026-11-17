@@ -11,9 +11,10 @@ import { CarriedPath, TurnReveal, TurnWorld } from "./Turn";
  *
  *   0     daySlip: the carry cut on the dead path, Night to Day, through the slip cut drawn from PROBLEM's frozen last
  *         frame; the path docks as the mark's middle band; "Doc Drift" on "Doc"; the band slips amber on "catches"
- *   56    "For teams with docs in Confluence" under the lockup, the gloss "Atlassian's wiki" under "Confluence"     (S06)
- *   165   cut on the beat to the one diagram, the page over its code: the script and PAY-6 under the page, the script
- *         renamed on "changes", the byline flagged on "flags the page", the readers, the empty check            (S07)
+ *   56    "For teams with docs" under the lockup; the logo holds about 3 s                                         (S06)
+ *   105   cut on the beat to the page itself, labelled "Confluence" and "Atlassian's wiki"; then the one diagram, the
+ *         page over its code: the script and PAY-6 under the page, the script renamed on "changes", the byline
+ *         flagged big on "flags the page", "People" and "AI agents", a person and a check                     (S07)
  *   420   LOOP opens by rewinding this scene's last frames ("Rewind a week", the kit's RewindFrom)
  *
  * Everything here is a pure function of the frame (RewindFrom freezes it frame by frame, muting the sound).
@@ -26,25 +27,19 @@ const PROMISE: React.FC = () => {
   return (
     <AbsoluteFill style={{ background: DAY.ground }}>
       <AbsoluteFill style={{ isolation: "isolate" }}>
-        {frame < T.cut ? <TurnWorld /> : <DiagramWorld />}
+        {frame < T.pageCut ? <TurnWorld /> : <DiagramWorld />}
         <TurnReveal />
         <CarriedPath />
       </AbsoluteFill>
-      {/* sound (voice and score are global; the score's Day lift lands on frame 0) */}
-      <Sfx id="slip-alt1" at={0} gainDb={-3} />
-      <Sfx id="tick-soft" at={T.dock - 2} gainDb={-4} />
-      <Sfx id="slip" at={T.slip + 2} gainDb={-1} />
-      <Sfx id="tick-soft" at={T.gloss + 4} gainDb={-8} />
-      <Sfx id="paper-land" at={T.cut} gainDb={-6} />
-      <Sfx id="tick-soft" at={T.codeAt + 8} gainDb={-5} />
-      <Sfx id="tick-soft" at={T.jiraAt + 8} gainDb={-5} />
-      <Sfx id="slip" at={T.slipAt + 2} gainDb={-3} />
-      <Sfx id="tick" at={T.bandAt + 3} gainDb={-4} />
-      <Sfx id="tick-soft" at={T.bylineAt + 3} gainDb={-3} />
-      <Sfx id="tick-soft" at={T.people + 3} gainDb={-6} />
-      <Sfx id="tick-soft" at={T.agents + 3} gainDb={-7} />
-      <Sfx id="tick-soft" at={T.agents + 5} gainDb={-8} />
-      <Sfx id="tick-soft" at={T.check + 3} gainDb={-5} />
+      {/* sound (voice and score are global; the score's Day lift lands on frame 0): 7 effects, none repeated more than twice.
+          The cut's slip-alt1 is the film-level J-cut lead in src/transitions.ts LEADS (starts 9 frames before frame 0). */}
+      <Sfx id="slip" at={T.slip + 2} gainDb={-3} />
+      <Sfx id="tick-soft" at={T.codeAt + 8} gainDb={-8} />
+      <Sfx id="slip-alt2" at={T.slipAt + 2} gainDb={-6} />
+      <Sfx id="hit-soft" at={T.bylineAt + 2} gainDb={-5} />
+      <Sfx id="pop" at={T.people + 3} gainDb={-10} />
+      <Sfx id="pop" at={T.agents + 3} gainDb={-11} />
+      <Sfx id="tick" at={T.check + 3} gainDb={-7} />
     </AbsoluteFill>
   );
 };

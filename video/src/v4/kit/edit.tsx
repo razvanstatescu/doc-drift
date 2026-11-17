@@ -163,7 +163,18 @@ export type TypeToUIProps = {
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-export const TypeToUI: React.FC<TypeToUIProps> = ({ text, landText, at, dock, dur = 18, from, to, block = "none", hideAt, font = "sans", color, world = "day" }) => {
+const warnedVerified = new Set<string>();
+/** Verified never carries amber (v5 round 2): an amber block on a "Verified" line is refused and drawn as Mist. */
+const verifiedBlock = (text: string): "mist" => {
+  if (!warnedVerified.has(text)) {
+    warnedVerified.add(text);
+    console.warn(`TypeToUI "${text}": Verified never carries amber (one amber per shot is the drift); drawn with the Mist block`);
+  }
+  return "mist";
+};
+
+export const TypeToUI: React.FC<TypeToUIProps> = ({ text, landText, at, dock, dur = 18, from, to, block: blockIn = "none", hideAt, font = "sans", color, world = "day" }) => {
+  const block = blockIn === "amber" && /verified/i.test(`${text} ${landText ?? ""}`) ? verifiedBlock(text) : blockIn;
   const frame = useCurrentFrame();
   const end = hideAt ?? dock + dur + 1;
   if (frame < at || frame >= end) return null;

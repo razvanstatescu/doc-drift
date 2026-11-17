@@ -1,3 +1,4 @@
+import { SFX } from "./audio/Sfx";
 import { DAY } from "./brand/tokens";
 import { EASE, H, W } from "./lib/time";
 import type { SlipCutOptions } from "./motion/slip";
@@ -43,7 +44,8 @@ export type SceneCut = SlipSceneCut | SlipPushSceneCut | WhipSceneCut | PushScen
 
 export const CUTS: Record<string, SceneCut> = {
   // v5 (video/V5.md section 7). Each cut is drawn over the incoming scene's first frames; whips and pushes end in a
-  // landing tick (R6 section 6.7: a swell alone does not read as sync). The incoming scene J-cuts its own first sound.
+  // landing tick (R6 section 6.7: a swell alone does not read as sync). The incoming scene's first sound leads its
+  // picture from LEADS (below), at film level.
   // LOOP to AGENTS (1575): a whip to the left, the seam at 3.5 of 9 frames.
   LOOP: { kind: "whip", frames: 9, dir: "left", sfx: [{ id: "whoosh-short", at: 4 }, { id: "tick-soft", at: 8 }] },
   // AGENTS to FIX (2100): the slip push, the middle band last.
@@ -54,6 +56,36 @@ export const CUTS: Record<string, SceneCut> = {
   // PROBLEM to PROMISE (480) and PROMISE to LOOP (900) are drawn by their scenes (the carry cut and slip cut; the
   // rewind with RewindFrom); FIX to JIRA (2550) is a plain cut on an action. v4's entries (A1, P1, P2, P3, P5) are gone;
   // their kinds (slip, slipPush, whip, push, slip with reveal) all stay available.
+};
+
+/**
+ * J-cuts (V5.md section 8.7, R6 6.7): each section's first sound starts 4 to 10 frames BEFORE its picture. A sound
+ * placed inside the incoming scene cannot do that (its Sequence starts on the boundary and clips anything earlier), so
+ * these lead sounds live at FILM level: key = the INCOMING scene id; `at` is where the effect's PEAK lands relative to
+ * the boundary (negative = before it); its onset is `at - peakFrame`, which should sit 4 to 10 frames before.
+ *
+ * Defaults: the incoming section's first designed sound, moved to lead its picture. Where a default IS your scene's
+ * first sound (PROMISE's slip-alt1 at 0, AGENTS's swish-up at T.open + 6, LOOP's whoosh-short at rewindAt + 20),
+ * delete your in-scene copy, or the film plays both.
+ *
+ * To set your own, in YOUR scene file (no edit here): wrap the default export,
+ *   export default withLead(AGENTS, [{ id: "swish-up", at: 4, gainDb: -2 }]);   // [] = no lead for this scene
+ * A scene's own lead wins over LEADS. `leadOnset()` tells you where a lead starts (onset = at - peakFrame); Main warns
+ * in the Studio and in `remotion render` logs when one does not start 4 to 10 frames early.
+ */
+export const LEADS: Record<string, CutSfx[]> = {
+  // the Day slip: the slide starts 10 frames early, its latch on the cut (PROMISE's own first sound)
+  PROMISE: [{ id: "slip-alt1", at: 0, gainDb: -3 }],
+  // into "Rewind a week": a short whoosh starting 6 frames early
+  LOOP: [{ id: "whoosh-short", at: -2, gainDb: -5 }],
+  // the Rovo panel's rise (AGENTS's own first sound), starting 6 frames before the whip lands it
+  AGENTS: [{ id: "swish-up", at: 4, gainDb: -4 }],
+  // a rise into the slip push
+  FIX: [{ id: "swish-up", at: 4, gainDb: -6 }],
+  // a soft tick 6 frames before the plain cut, under the snap's ring (the L-cut)
+  JIRA: [{ id: "tick-soft", at: -6, gainDb: -6 }],
+  // a rise into the end card's reveal on the hit
+  CLOSE: [{ id: "swish-up", at: 4, gainDb: -4 }],
 };
 
 /** A cut's sounds as a list. */
@@ -139,3 +171,22 @@ export function pushAt(f: number, cut: PushSceneCut): { side: "out" | "in"; scal
 
 /** The flash colour of a push cut (default Paper). */
 export const pushFlash = (cut: PushSceneCut) => cut.flash ?? DAY.ground;
+
+/**
+ * A scene's own lead sounds, set in the scene's file: `export default withLead(Scene, [{ id, at, gainDb }])`.
+ * `[]` turns the default off. Main plays them at film level (they can start before the scene's first frame).
+ */
+export function withLead<T extends object>(scene: T, lead: CutSfx[]): T & { lead: CutSfx[] } {
+  return Object.assign(scene, { lead });
+}
+
+/** The lead sounds of the scene `id`: its own (withLead) if it set any, else the default in LEADS. */
+export function leadsFor(id: string, scene?: unknown): CutSfx[] {
+  const own = scene ? (scene as { lead?: CutSfx[] }).lead : undefined;
+  return own ?? LEADS[id] ?? [];
+}
+
+/** Where a lead sound's ONSET lands relative to its boundary (frames; a J-cut wants -10 to -4). */
+export function leadOnset(s: CutSfx): number {
+  return (s.at ?? 0) - (SFX[s.id]?.peakFrame ?? 0);
+}

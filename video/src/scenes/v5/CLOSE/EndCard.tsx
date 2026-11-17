@@ -4,7 +4,7 @@ import { measureText } from "@remotion/layout-utils";
 import { Lockup } from "../../../brand/Lockup";
 import { EASE, tween } from "../../../lib/time";
 import { CurrentUnderline, DAY, FONT, ink, KineticLine, Lift, useFontsReady } from "../../../v4/kit";
-import { CARD, CUE, TAGLINE, URL } from "./timing";
+import { CARD, CUE, DUR, LINE, TAGLINE, URL } from "./timing";
 
 /**
  * The v5 end card on Paper (V5.md section 5, CLOSE), first copied from v4's src/components/A4/EndCardDay.tsx and
@@ -23,7 +23,7 @@ import { CARD, CUE, TAGLINE, URL } from "./timing";
  */
 
 /** A functional line reveal: the words rise from behind their own baseline (no smear, no fade), 13 frames, expo out. */
-const Mask: React.FC<{ at: number; dur?: number; children: React.ReactNode; style?: React.CSSProperties }> = ({ at, dur = 13, children, style }) => {
+const Mask: React.FC<{ at: number; dur?: number; children: React.ReactNode; style?: React.CSSProperties }> = ({ at, dur = DUR.mask, children, style }) => {
   const frame = useCurrentFrame();
   const t = tween(frame, at, at + dur, 0, 1, EASE.expoOut);
   return (
@@ -47,7 +47,7 @@ const LockupLanding: React.FC = () => {
   // it lands on the hit: up from below its place, growing a little, its contact shadow opening (expo out)
   const land = tween(frame, 0, CUE.land, 0, 1, EASE.expoOut);
   const slip = tween(frame, CUE.slip, CUE.slip + 6, 0, 1, EASE.expoOut);
-  const name = tween(frame, CUE.name, CUE.name + 15, 0, 1, EASE.expoOut);
+  const name = tween(frame, CUE.name, CUE.name + DUR.name, 0, 1, EASE.expoOut);
   // alone at first, the tile sits at the centre; as the name sets the row forms around the centre
   const alone = 1 - tween(frame, CUE.name - 1, CUE.name + 13, 0, 1, EASE.expoOut);
   // then it glides (as one) to the S21 card, and settles into the final card before the tagline
@@ -111,9 +111,12 @@ const WorksWith: React.FC = () => {
       whiteSpace: "nowrap",
     }}
   >
-    <Mask at={CUE.line[0]}>For Confluence</Mask> <Mask at={CUE.line[1]}>
-      <span style={{ color: DAY.textMuted }}>·</span> with Jira
-    </Mask> <Mask at={CUE.line[2]}>and Bitbucket</Mask>
+    {LINE.map((w, i) => (
+      <React.Fragment key={i}>
+        <Mask at={w.at}>{w.muted ? <span style={{ color: DAY.textMuted }}>{w.text}</span> : w.text}</Mask>
+        {i < LINE.length - 1 ? " " : null}
+      </React.Fragment>
+    ))}
   </div>
   );
 };
@@ -124,7 +127,7 @@ const UrlCard: React.FC = () => {
   const w = (ready ? measureText({ text: URL, fontFamily: FONT.mono, fontWeight: 500, fontSize: CARD.urlSize, letterSpacing: "-0.01em" }).width : URL.length * CARD.urlSize * 0.6) + 2 * CARD.urlPadX;
   const h = Math.round(CARD.urlSize * 1.3) + 2 * CARD.urlPadY;
   return (
-    <Lift at={CUE.url} dur={14} from={1} to={3} radius={24} x={960 - w / 2} y={CARD.urlCy - h / 2} w={w} h={h}>
+    <Lift at={CUE.url} dur={DUR.lift} from={1} to={3} radius={24} x={960 - w / 2} y={CARD.urlCy - h / 2} w={w} h={h}>
       <div
         style={{
           width: w,
@@ -164,12 +167,14 @@ export const EndCard: React.FC = () => {
       <LockupLanding />
       <WorksWith />
       <UrlCard />
-      {frame >= TAGLINE.at - 8 ? (
+      {frame >= TAGLINE.at - TAGLINE.lead - 2 ? (
         <div style={{ position: "absolute", left: 0, right: 0, top: CARD.tagTop }}>
           <KineticLine
             text={TAGLINE.text}
             at={TAGLINE.at}
             words={TAGLINE.words}
+            lead={TAGLINE.lead}
+            dur={TAGLINE.dur}
             size={CARD.tagSize}
             lineHeight={CARD.tagLine}
             align="center"

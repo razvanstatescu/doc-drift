@@ -18,7 +18,7 @@ import { PROMISE_T as T } from "./timing";
  *   5    the path flies into the mark that lands around it and docks as the D's middle band, in line (19); "Doc Drift"
  *        rises beside it, readable on "Doc"
  *   30   on "catches" the band slips one unit, amber (the shot's one amber): the brand's own picture of drift caught
- *   56   the camera pulls back; "For teams with docs" sets under the lockup on "for"; the logo holds about 3 s, and on
+ *   56   the camera pulls back; "For teams with docs in Confluence" sets under the lockup on "teams"; the logo holds about 3 s, and on
  *        "Confluence" the scene cuts to the page itself (Diagram.tsx), labelled "Confluence" and "Atlassian's wiki"
  */
 
@@ -36,8 +36,8 @@ const LOCK = { x: Math.round(960 - LOCK_W / 2), y: Math.round(540 - BLOCK_H / 2)
 /** The middle band's slot in line with the D (slip 0), on the 512 grid: x 110 to 358, y 226 to 286, corners 8. */
 const BAND0: Rect = { x: LOCK.x + 110 * K, y: LOCK.y + 226 * K, w: 248 * K, h: 60 * K };
 
-/** The line under the lockup; "in Confluence, Atlassian's wiki" is the next shot (the page itself, labelled). */
-const P1 = "For teams with docs";
+/** The line under the lockup, whole (round 3: "For teams with docs" alone read as an empty line); the gloss follows on the page. */
+const P1 = "For teams with docs in Confluence";
 const LINE_W = textWidth(P1, { size: LINE.size, weight: 500 });
 const LINE_X = 960 - LINE_W / 2;
 const LINE_Y = LOCK.y + M + LINE.gap;
@@ -100,7 +100,7 @@ const LockupBlock: React.FC = () => {
   );
 };
 
-/** "For teams with docs" under the lockup on "for" (the functional mask reveal). */
+/** "For teams with docs in Confluence" under the lockup on "teams" (the functional mask reveal). */
 const ForLine: React.FC = () => (
   <MaskLine at={T.line1} style={{ position: "absolute", left: LINE_X, top: LINE_Y }}>
     <div style={{ fontFamily: FONT.sans, fontWeight: 500, whiteSpace: "nowrap", fontSize: LINE.size, lineHeight: LINE.lh, color: DAY.text }}>{P1}</div>

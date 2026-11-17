@@ -6,6 +6,15 @@ first; it wins over everything else. Research: [../docs/video/research.md](../do
 
 Remotion 4.0.543 (every `remotion` and `@remotion/*` package pinned to exactly that version), React 19.3.1.
 
+## v5 (2026-11-17, D41)
+
+v5 is a 1:49 rewrite for clarity: new script and narration (lines S01 to S22), seven scenes in `src/scenes/v5/`
+(PROBLEM, PROMISE, LOOP, AGENTS, FIX, JIRA, CLOSE), the same Day look and kit. Direction and results: [V5.md](V5.md).
+v4's timeline is `src/data/timeline-v4.json` and its scene folders stay for reference (not imported). New kit pieces:
+`RealTake` (directed real recordings), `PageOverCode`, `EditType`, `LiftOut`, carry cuts, `RewindFrom`, J-cut `LEADS`
+in `src/transitions.ts`; QA adds `tools/qa/rhythm.py`. render-master renders v5 in one pass (no WebGL). The viewer
+test kit (contact sheets, transcript, questionnaire) is in `out/v5/viewer-test/` (git-ignored).
+
 ## v4 (2026-11-16, D39)
 
 v4 is a Day redesign of the picture; narration, music and timeline are unchanged. Direction: [V4.md](V4.md) (rules,

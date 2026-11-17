@@ -2,7 +2,7 @@ import React from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
 import { Sfx } from "../../../audio/Sfx";
 import { Icon } from "../../../brand/icons";
-import { AlertStation, CLOCK_SIZE } from "../../../components/A1/AlertStation";
+import { AlertStation, CLOCK_SIZE } from "./AlertStation";
 import { landFor, TRAVEL } from "../../../components/A1/ClockRoll";
 import { turnTravel } from "../../../components/A1/moves";
 import { ROLLBACK_CMD, ZSH_ERROR } from "../../../components/A1/runbook";
@@ -28,7 +28,7 @@ import { CHANGE_H, CHANGE_W, ChangeCard } from "./ChangeCard";
  * ./scripts/rollback.sh is the object carried through the section. Local frames = film frames; all from timeline.json.
  *
  *   0       cold open on sound: the pager tones over the Night ground, then 03:07 rolls in; its last drum lands on "3";
- *           the card lifts on "Payments" and the rate rolls to 14% before "down"; the camera tilts down to it   (S01)
+ *           the card lifts on "Payments" and the rate rolls to 97% (down) before "down"; the camera tilts down to it   (S01)
  *   120     cut on the bar to the runbook, labelled "A page in Confluence"; on "run" the camera travels to step 2 and
  *           the Mist band (with its Current underline) marks ./scripts/rollback.sh on "rollback script"          (S02)
  *   200     carry cut on the dead path: the terminal grows out of it, the command runs and fails on "script"; the

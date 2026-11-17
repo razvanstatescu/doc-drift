@@ -116,6 +116,10 @@ const warnShort = (m: string) => {
  *
  *   {frame < 20 ? <RewindFrom from={419} span={150} dur={20} chip="Last week"><PROMISE /></RewindFrom> : <LoopWorld />}
  *
+ * `span` may be many times `dur` (PROMISE's whole 420 frames in 26, say): while the rewind runs fast, each output frame
+ * blends `blend` source frames spread over the stretch it passes (v5 round 3), so a long span reads as a smeared reverse
+ * scrub and the source's own cuts become short dissolves instead of one-frame jumps.
+ *
  * Crafted scenes only: a recording inside a Freeze can show the wrong frame (use RealTake's VideoAt for footage).
  */
 export const RewindFrom: React.FC<{
@@ -131,23 +135,47 @@ export const RewindFrom: React.FC<{
   texture?: number;
   /** The speed curve (default sine in-out: the reverse motion stays visible over the whole rewind; v5 round 2). */
   ease?: (t: number) => number;
+  /** Source frames blended into each output frame while it runs at 1.5 source frames a frame or more (default 6, at
+   *  most 8; 1 = off). Each sample renders the children once more (only on the fast frames). */
+  blend?: number;
+  /** The stretch of source travel each output frame blends, in output frames (default 2.5: neighbours overlap, so a
+   *  source cut dissolves over about 3 frames). */
+  shutter?: number;
   children: React.ReactNode;
-}> = ({ from, span, dur, at = 0, chip = "Last week", texture = 1, ease = sineInOut, children }) => {
+}> = ({ from, span, dur, at = 0, chip = "Last week", texture = 1, ease = sineInOut, blend = 6, shutter = 2.5, children }) => {
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
   if (dur < 15) warnShort(`RewindFrom: ${dur} frames reads as a jump, not a rewind; give it 15 to 20 frames or more (V5 round 2)`);
   // Remotion clamps a frozen frame to the composition's last frame: in a composition shorter than `from`, the rewind
   // would show the wrong frames (Main and the scene compositions are long enough; a short test composition is not)
   if (from >= durationInFrames) warnShort(`RewindFrom: from ${from} is past this composition's last frame (${durationInFrames - 1}); Remotion clamps it, so the rewind shows the wrong frames here`);
-  const p = tween(frame, at, at + dur, 0, 1, ease);
-  const src = Math.max(0, Math.round(from - span * p));
+  const srcAt = (f: number) => Math.max(0, Math.round(from - span * tween(f, at, at + dur, 0, 1, ease)));
   const speed = Math.abs(tween(frame + 0.5, at, at + dur, 0, 1, ease) - tween(frame - 0.5, at, at + dur, 0, 1, ease)) * span; // source frames per frame
+  // the temporal blend: n samples spread over the source stretch this frame passes (equal weights; repeats merge)
+  const n = speed >= 1.5 ? Math.max(1, Math.min(8, Math.round(blend))) : 1;
+  const samples: { f: number; w: number }[] = [];
+  for (let i = 0; i < n; i++) {
+    const s = srcAt(n === 1 ? frame : frame + (-0.5 + (i + 0.5) / n) * shutter);
+    const last = samples[samples.length - 1];
+    if (last && last.f === s) last.w += 1 / n;
+    else samples.push({ f: s, w: 1 / n });
+  }
+  let acc = 0;
+  const layers = samples.map((sm, i) => {
+    acc += sm.w;
+    // stacked over the layers below at w / (sum so far): the result is the weighted average of all samples
+    return (
+      <AbsoluteFill key={i} style={{ opacity: i === 0 ? undefined : sm.w / acc }}>
+        <Freeze frame={sm.f}>{children}</Freeze>
+      </AbsoluteFill>
+    );
+  });
   const k = Math.min(1, speed / 12) * texture;
   const lines = [0.18, 0.43, 0.71, 0.86].map((y0, i) => ((y0 + frame * (0.037 + i * 0.011)) % 1) * H);
   return (
     <AbsoluteFill style={{ background: DAY.ground }}>
       <AbsoluteFill style={{ filter: k > 0.05 ? `blur(${(1.2 * k).toFixed(2)}px)` : undefined, transform: k > 0.05 ? `translateY(${(Math.sin(frame * 2.1) * 2 * k).toFixed(2)}px)` : undefined }}>
-        <Freeze frame={src}>{children}</Freeze>
+        {layers}
       </AbsoluteFill>
       {k > 0.05
         ? lines.map((y, i) => (

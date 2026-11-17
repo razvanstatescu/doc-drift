@@ -11,7 +11,7 @@ import { CarriedPath, TurnReveal, TurnWorld } from "./Turn";
  *
  *   0     daySlip: the carry cut on the dead path, Night to Day, through the slip cut drawn from PROBLEM's frozen last
  *         frame; the path docks as the mark's middle band; "Doc Drift" on "Doc"; the band slips amber on "catches"
- *   56    "For teams with docs" under the lockup; the logo holds about 3 s                                         (S06)
+ *   56    "For teams with docs in Confluence" under the lockup; the logo holds about 3 s                                        (S06)
  *   105   cut on the beat to the page itself, labelled "Confluence" and "Atlassian's wiki"; then the one diagram, the
  *         page over its code: the script and PAY-6 under the page, the script renamed on "changes", the byline
  *         flagged big on "flags the page", "People" and "AI agents", a person and a check                     (S07)
@@ -36,7 +36,7 @@ const PROMISE: React.FC = () => {
       <Sfx id="slip" at={T.slip + 2} gainDb={-3} />
       <Sfx id="tick-soft" at={T.codeAt + 8} gainDb={-8} />
       <Sfx id="slip-alt2" at={T.slipAt + 2} gainDb={-6} />
-      <Sfx id="hit-soft" at={T.bylineAt + 2} gainDb={-5} />
+      <Sfx id="hit-soft" at={T.bylineAt + 3} gainDb={-8} />
       <Sfx id="pop" at={T.people + 3} gainDb={-10} />
       <Sfx id="pop" at={T.agents + 3} gainDb={-11} />
       <Sfx id="tick" at={T.check + 3} gainDb={-7} />

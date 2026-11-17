@@ -6,12 +6,18 @@ import { capPose, capRectToScreen, DAY, FONT, HonestClock, InkLabel, LiftOut, Ma
 import { FLAGGED_ITEM, LIFT, PAGE_CAM, PAGE_MOTION, PAGE_SEED } from "./geom";
 import { clockAt, T } from "./timing";
 
-/** The real block's one tag (V5.md 8.6: one tag per real block, no other labels on the footage). */
+/**
+ * The real block's one tag (V5.md 8.6: one tag per real block, no other labels on the footage). It steps aside while the
+ * merge take's push-in carries the real PR title under its corner (QA L2-2), and returns on the review panel.
+ */
 export const BlockTag: React.FC = () => {
   const frame = useCurrentFrame();
   if (frame < T.real) return null;
+  const away = tween(frame, T.punch, T.punch + 6, 0, 1, EASE.linear) * (1 - tween(frame, T.cut3, T.cut3 + 4, 0, 1, EASE.linear));
+  const opacity = tween(frame, T.real, T.real + 4, 0, 1, EASE.linear) * (1 - away);
+  if (opacity <= 0.01) return null;
   return (
-    <div style={{ position: "absolute", left: 64, top: 56, opacity: tween(frame, T.real, T.real + 4, 0, 1, EASE.linear) }}>
+    <div style={{ position: "absolute", left: 64, top: 56, opacity }}>
       <InkLabel icon="eye" size={26}>
         Real product · demo site · Nov 13
       </InkLabel>

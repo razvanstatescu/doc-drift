@@ -3,16 +3,16 @@ import { useCurrentFrame } from "remotion";
 import { Icon, type IconName } from "../../../brand/icons";
 import { AppTile } from "../../../components/P4/ui";
 import { EASE, tween } from "../../../lib/time";
-import { amber, BRAND, DAY, EditLine, elevAt, FONT } from "../../../v4/kit";
+import { amber, BRAND, current, DAY, elevAt, FONT, NIGHT } from "../../../v4/kit";
 import { textWidth } from "../../../v4/twins";
 
 /**
- * FIX's crafted pieces (v5 round 2: crafted leads, short real proofs; video/V5.md section 8). Nothing here draws on a
- * real capture.
- *   ReaderChip     PROMISE's reader chips (same size and look): a tile, a label, and a status line whose words slip-swap
- *                  ("Read only", "Edits the page", "Safe to cite"), as the byline's words do
- *   DraftCard      our agent's draft, big: the step's setting line as an EditLine (`ROLLBACK_TIMEOUT` struck and
- *                  replaced by `ROLLBACK_TIMEOUT_SECS`)
+ * FIX's crafted pieces (v5 round 3; nothing here draws on a real capture):
+ *   ReaderChip   PROMISE's reader chips (same size and look): a tile, a label, and a status line whose words slip-swap
+ *                ("Read only", "Edits the page", "Verified", "Safe to cite"), as the byline's words do
+ *   DraftCard    our agent's draft, big: the step's setting line on one baseline and one size; the old name sits on the
+ *                drift's amber, then "_SECS" is written in by a wipe while "=300" moves along (no empty frame)
+ *   Clock307     a small 03:07 chip for the 3 a.m. payoff (Night)
  */
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -143,88 +143,133 @@ export const MarkTile: React.FC = () => <AppTile size={44} />;
 // The draft, big
 // ---------------------------------------------------------------------------------------------------------------------
 
-export const DRAFT = { w: 1180, h: 300, code: 50, pad: 40 } as const;
-/** Where the code line sits inside the card (film px from the card's top-left), for morphs and marks. */
-export const draftCodeRect = (x: number, y: number) => ({ x: x + DRAFT.pad + 30, y: y + 128, w: 0.6 * DRAFT.code * 32, h: DRAFT.code * 1.3 });
+const PRE = "export ";
+const OLD = "ROLLBACK_TIMEOUT";
+const ADD = "_SECS";
+const POST = "=300";
+const CODE = 44;
+const PAD = 36;
+const WELL = 28;
+/** The draft card: sized to its code line (44 px mono, one line) in a code well, under a 44 px head. */
+export const DRAFT = (() => {
+  const lineH = CODE * 1.3;
+  const w = Math.ceil(textWidth(PRE + OLD + ADD + POST, { size: CODE, mono: true }) + 2 * WELL + 2 * PAD);
+  const h = Math.ceil(PAD - 6 + 44 + 20 + lineH + 40 + PAD);
+  return { w, h, code: CODE, pad: PAD, well: WELL, lineH };
+})();
+/** The code line's text box inside the card (film px from the card's top-left), for morphs and marks. */
+export const draftCodeRect = (x: number, y: number) => ({
+  x: x + PAD + WELL,
+  y: y + PAD - 6 + 44 + 20 + 20,
+  w: textWidth(PRE + OLD + ADD + POST, { size: CODE, mono: true }),
+  h: DRAFT.lineH,
+});
 
 /**
  * Our agent's draft as one big card: a small "Draft · Drift Reviewer" head, then the step's setting line in a code well,
- * edited in place by the kit's EditLine (strike, then replace on "timeout"). The old name is the drift: from `drift` it
- * sits on the drift's amber block (crafted, under the words), which leaves with the old words on `replace`. `accepted`
- * 0..1 turns the head to "Accepted" with a check (the person's click on Accept fix).
+ * on one baseline and one size. From `drift` the old name sits on the drift's amber block (crafted, under the words);
+ * on `replace` a wipe writes "_SECS" in after it while "=300" moves along and the amber leaves (no empty frame: the
+ * shared "ROLLBACK_TIMEOUT" never moves). The new words get a Current underline.
  */
-export const DraftCard: React.FC<{ x: number; y: number; drift: number; strike: number; replace: number; accepted?: number }> = ({
-  x,
-  y,
-  drift,
-  strike,
-  replace,
-  accepted = 0,
-}) => {
+export const DraftCard: React.FC<{ x: number; y: number; drift: number; replace: number }> = ({ x, y, drift, replace }) => {
   const frame = useCurrentFrame();
-  const inn = tween(frame, drift, drift + 8, 0, 1, EASE.expoOut);
-  const out = tween(frame, replace, replace + 5, 0, 1, EASE.expoIn);
-  const preW = textWidth("export ", { size: DRAFT.code, mono: true });
-  const oldW = textWidth("ROLLBACK_TIMEOUT", { size: DRAFT.code, mono: true });
+  const size = DRAFT.code;
+  const preW = textWidth(PRE, { size, mono: true });
+  const oldW = textWidth(OLD, { size, mono: true });
+  const addW = textWidth(ADD, { size, mono: true });
+  const amberIn = tween(frame, drift, drift + 8, 0, 1, EASE.expoOut);
+  const wipe = tween(frame, replace, replace + 9, 0, 1, EASE.expoInOut);
+  const amberOut = tween(frame, replace, replace + 6, 0, 1, EASE.expoIn);
+  const under = tween(frame, replace + 9, replace + 19, 0, 1, EASE.expoOut);
+  const lineH = DRAFT.lineH;
+  const text: React.CSSProperties = { position: "absolute", top: 0, fontFamily: FONT.mono, fontSize: size, lineHeight: `${lineH}px`, letterSpacing: 0, color: DAY.text, whiteSpace: "pre" };
   return (
-  <div
-    style={{
-      position: "absolute",
-      left: x,
-      top: y,
-      width: DRAFT.w,
-      height: DRAFT.h,
-      boxSizing: "border-box",
-      padding: `${DRAFT.pad - 6}px ${DRAFT.pad}px`,
-      borderRadius: 30,
-      background: DAY.surface,
-      boxShadow: elevAt(3),
-      fontFamily: FONT.sans,
-      color: DAY.text,
-    }}
-  >
-    <div style={{ display: "flex", alignItems: "center", gap: 14, height: 44 }}>
-      <AppTile size={40} />
-      <span style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.01em" }}>{accepted >= 0.5 ? "Accepted" : "Draft"}</span>
-      <span style={{ fontSize: 26, fontWeight: 500, color: DAY.textMuted }}>· Drift Reviewer</span>
-      {accepted > 0 ? (
-        <span style={{ display: "grid", placeItems: "center", width: 34, height: 34, borderRadius: "50%", background: DAY.verified, opacity: accepted, transform: `scale(${(0.6 + 0.4 * accepted).toFixed(3)})` }}>
-          <Icon name="check" size={22} color={DAY.surface} />
-        </span>
-      ) : null}
-    </div>
     <div
       style={{
-        marginTop: 30,
-        padding: "22px 30px",
-        borderRadius: 18,
-        background: DAY.surfaceSunk,
-        display: "flex",
-        alignItems: "center",
-        height: DRAFT.code * 1.3 + 44,
+        position: "absolute",
+        left: x,
+        top: y,
+        width: DRAFT.w,
+        height: DRAFT.h,
         boxSizing: "border-box",
+        padding: `${DRAFT.pad - 6}px ${DRAFT.pad}px`,
+        borderRadius: 30,
+        background: DAY.surface,
+        boxShadow: elevAt(3),
+        fontFamily: FONT.sans,
+        color: DAY.text,
       }}
     >
-      <div style={{ position: "relative" }}>
-        {inn > 0 && out < 1 ? (
-          <div
-            aria-hidden
-            style={{
-              position: "absolute",
-              left: preW - 6,
-              top: 0,
-              width: oldW + 12,
-              height: DRAFT.code * 1.3,
-              borderRadius: 10,
-              background: BRAND.beacon,
-              boxShadow: `0 0 26px ${amber(0.4 * inn * (1 - out))}`,
-              clipPath: `inset(-40% ${((1 - inn) * 100).toFixed(1)}% -40% ${(out * 100).toFixed(1)}%)`,
-            }}
-          />
-        ) : null}
-        <EditLine pre="export " old="ROLLBACK_TIMEOUT" neu="ROLLBACK_TIMEOUT_SECS" post="=300" size={DRAFT.code} mono strike={strike} replace={replace} style={{ position: "relative" }} />
+      <div style={{ display: "flex", alignItems: "center", gap: 14, height: 44 }}>
+        <AppTile size={40} />
+        <span style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.01em" }}>Draft</span>
+        <span style={{ fontSize: 26, fontWeight: 500, color: DAY.textMuted }}>· Drift Reviewer</span>
+      </div>
+      <div style={{ position: "relative", marginTop: 20, height: lineH + 40, borderRadius: 18, background: DAY.surfaceSunk }}>
+        <div style={{ position: "absolute", left: DRAFT.well, top: 20, height: lineH }}>
+          {/* the drift's amber under the old name (crafted); it leaves as the new words are written */}
+          {amberIn > 0 && amberOut < 1 ? (
+            <div
+              aria-hidden
+              style={{
+                position: "absolute",
+                left: preW - 6,
+                top: 0,
+                width: oldW + 12,
+                height: lineH,
+                borderRadius: 10,
+                background: BRAND.beacon,
+                boxShadow: `0 0 26px ${amber(0.4 * amberIn * (1 - amberOut))}`,
+                clipPath: `inset(-40% ${((1 - amberIn) * 100).toFixed(1)}% -40% ${(amberOut * 100).toFixed(1)}%)`,
+              }}
+            />
+          ) : null}
+          <span style={{ ...text, left: 0 }}>{PRE + OLD}</span>
+          {/* "_SECS" written in by a wipe, "=300" moving along with the wipe's edge */}
+          <span style={{ ...text, left: preW + oldW, clipPath: `inset(-20% ${((1 - wipe) * 100).toFixed(2)}% -20% 0)` }}>{ADD}</span>
+          <span style={{ ...text, left: preW + oldW + addW * wipe }}>{POST}</span>
+          {under > 0 ? (
+            <div style={{ position: "absolute", left: preW, top: lineH - 6, width: (oldW + addW) * under, height: 4, borderRadius: 2, background: current(0.9) }} />
+          ) : null}
+        </div>
       </div>
     </div>
-  </div>
+  );
+};
+
+// ---------------------------------------------------------------------------------------------------------------------
+// 03:07
+// ---------------------------------------------------------------------------------------------------------------------
+
+/** The 3 a.m. clock, small, for the payoff (Night): it tells the return without a word. */
+export const Clock307: React.FC<{ at: number; x?: number; y?: number }> = ({ at, x = 64, y = 56 }) => {
+  const frame = useCurrentFrame();
+  if (frame < at) return null;
+  const up = tween(frame, at, at + 10, 0, 1, EASE.expoOut);
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: x,
+        top: y,
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 12,
+        height: 52,
+        padding: "0 20px 0 16px",
+        borderRadius: 16,
+        background: NIGHT.surface,
+        boxShadow: `inset 0 0 0 1.5px ${NIGHT.line}`,
+        color: NIGHT.text,
+        fontFamily: FONT.mono,
+        fontSize: 30,
+        letterSpacing: "0.02em",
+        opacity: Math.min(1, up * 3),
+        transform: `translateY(${((1 - up) * 12).toFixed(2)}px)`,
+      }}
+    >
+      <Icon name="clock" size={26} color={NIGHT.text} />
+      03:07
+    </div>
   );
 };

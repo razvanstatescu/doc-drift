@@ -74,18 +74,20 @@ export const CUTS: Record<string, SceneCut> = {
  * in the Studio and in `remotion render` logs when one does not start 4 to 10 frames early.
  */
 export const LEADS: Record<string, CutSfx[]> = {
-  // the Day slip: the slide starts 10 frames early, its latch on the cut (PROMISE's own first sound)
+  // Round 3: placed so each lead is within 6 dB of the score (5 ms RMS) 4 to 10 frames before its cut, measured on the
+  // v5 cut-2 stems (audible lead in brackets); every one stays 11 dB or more under the voice in any word it touches.
+  // the Day slip: the slide starts 9 frames early, its latch on the cut (PROMISE's own first sound) [8.85 f]
   PROMISE: [{ id: "slip-alt1", at: 0, gainDb: -3 }],
-  // into "Rewind a week": a short whoosh starting 6 frames early
-  LOOP: [{ id: "whoosh-short", at: -2, gainDb: -5 }],
-  // the Rovo panel's rise (AGENTS's own first sound), starting 6 frames before the whip lands it
-  AGENTS: [{ id: "swish-up", at: 4, gainDb: -4 }],
-  // a rise into the slip push
-  FIX: [{ id: "swish-up", at: 4, gainDb: -6 }],
-  // a soft tick 6 frames before the plain cut, under the snap's ring (the L-cut)
+  // into "Rewind a week": a short whoosh starting 7 frames early, its peak 3 frames before the rewind moves [5.95 f]
+  LOOP: [{ id: "whoosh-short", at: -3, gainDb: -4 }],
+  // the Rovo panel's rise (AGENTS's own first sound), starting 9 frames early, peaking as the whip begins [6.6 f]
+  AGENTS: [{ id: "swish-up", at: 1, gainDb: -4 }],
+  // a rise that ends on the cut, into the slip push [7.0 f]
+  FIX: [{ id: "swish-up", at: 0, gainDb: -6 }],
+  // a soft tick 6 frames before the plain cut, under the payoff chime's ring (the L-cut) [5.85 f]
   JIRA: [{ id: "tick-soft", at: -6, gainDb: -6 }],
-  // a rise into the end card's reveal on the hit
-  CLOSE: [{ id: "swish-up", at: 4, gainDb: -4 }],
+  // a rise that ends on the end card's hit, audible over the score's riser [8.2 f]
+  CLOSE: [{ id: "swish-up", at: 0, gainDb: -4 }],
 };
 
 /** A cut's sounds as a list. */

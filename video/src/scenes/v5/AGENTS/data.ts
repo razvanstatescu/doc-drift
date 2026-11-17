@@ -34,6 +34,15 @@ export const STEPS = ["Analyzing: Reviewing your question.", "Invoking tool: Rea
   if (!String(still?.takenAt ?? "").startsWith("2026-11-13")) fail("the Rovo capture's date");
 }
 
+/**
+ * The agent's own welcome before a question, as the real panel shows it (p3-rovo-v2-rec at 11.8 s; the words are the
+ * agent's manifest description and conversation starters, apps/core/manifest.yml, in the order Rovo lists them).
+ */
+export const WELCOME = {
+  description: "Checks whether a Confluence page's code anchors changed, explains the change, and drafts fixes for you to accept.",
+  starters: ["Draft a fix for the drifted sections of this page", "Is this page still current?", "What changed since this page was verified?"],
+} as const;
+
 /** The proof's tag (once per real block, V5 section 8). */
 export const ROVO_TAG = "Recorded in Rovo";
 
@@ -83,3 +92,5 @@ export const MCP_REPLY = { status: CHECK.output.statusLabel, guidance: DO_NOT_PR
 /** The call, small: the MCP server and the tool. */
 export const CALL = { server: "doc-drift", tool: CHECK.tool } as const;
 export const MCP_TAG = "Real output: doc-drift MCP";
+/** What frames the reply as the tool's output: what the coding assistant is told (round 3). */
+export const TOLD = "Told to the coding assistant:";

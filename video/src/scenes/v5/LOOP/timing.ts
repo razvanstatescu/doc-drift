@@ -54,21 +54,24 @@ const flag = sc.marker("flag"); // 469: the score's band and sub hit; the real l
 
 export const T = {
   // S08: the rewind starts on "Rewind"; the real block starts on the beat after "week"
-  rewindAt: 0,
+  rewindAt: 1,
   rewindDur: 26,
   weekChip: WORD.week - 4, // 14
   real: sc.snap(WORD.week + 10), // 30
-  pushA: WORD.links - 6, // 58: the one push-in, onto the two suggestions
-  markScript: WORD.script - 6, // 91
-  markJira: WORD.jira - 6, // 111
+  markSuggest: WORD.links - 6, // 58: "Suggested from this page": Doc Drift found them, as "links the page to" is said
+  rowsIn: WORD.script - 15, // 82: the two suggestions rise under the heading as "to the script" is said
+  markScript: WORD.script - 5, // 92
+  markJira: WORD.jira - 5, // 112
+  pushA: WORD.jira + 7, // 124: the excerpts' one push-in, to reading size, through "it names"
   // S09
-  cutB: sc.snap(WORD.save - 19), // 150: the button, on a beat
+  cutB: WORD.save - 13, // 156: the button (the suggestions held as long as the click allows)
   save: sc.snap(WORD.save - 2), // 165: the real click on "Save and mark verified", on a beat
   cut1: WORD.page9 - 1, // 195: cut on the score's backbeat to the page's real label, on "page"
   markVerified: WORD.verified - 6, // 206
   // S10 and S11: one take, from the merge dialog to the flag
   cut2: sc.snap(WORD.then - 3), // 240
-  markRename: WORD.rename - 6, // 248
+  markRename: WORD.rename - 6, // 248: "Rename rollback script" in the commit message
+  markTimeout: WORD.merged + 22, // 296: "and timeout variable" in the PR title (S17's "other change", set up)
   merge, // 270
   merged: merge + 45, // 315: "Merged" on a beat (the ramp's keys put it there)
   punch: merge + 47, // 317: the take's one push-in, onto "Merged pull request ... (pull request #482)"
@@ -76,8 +79,7 @@ export const T = {
   mark482: WORD.pull - 6, // 317
   grow2: WORD.n482 + 6, // 352: the page opens out of "(pull request #482)", its label in the same place
   grow2Dur: 20,
-  rampFrom: merge + 47 + 34, // 351: the clock speeds up once the punch-in has landed
-  clockLand: WORD.seconds - 2, // 405: the clock lands on 19 on "seconds"
+  clock18: WORD.seconds - 2, // 405: the clock reads 18 on "seconds" (even pacing from "Merged"), and 19 on the flip
   note: WORD.stale + 6, // 494: "Measured on the demo site, Nov 13" sets under the landed clock
   leanIn: WORD.seconds, // 407: the page leans in to the label through the score's silence, landing on the flag
   flag, // 469
@@ -111,20 +113,16 @@ const AFTER_MERGED = MERGE_KEYS[MERGE_KEYS.length - 1]; // 319.5, 12.85 s
 
 /**
  * The honest clock: real seconds since the confirm click ("Real time since the merge"). The merge footage plays on the
- * same clock (they never disagree); after the punch-in it speeds up on a raised-cosine rate, from 1x to its peak and
- * back to 1x, and lands on 19 (the measured 18.6 s, rounded) as "seconds" is said. It holds there: that is the merge to
- * flag time.
+ * same clock (they never disagree). After "Merged" it counts at an even pace to 18 on "seconds", then on to 19 exactly
+ * on the flip (the measured 18.6 s, rounded): it never sits on 19 while the page still reads Verified. After the flip it
+ * holds 19, labelled "Merge to flag".
  */
 function clockRaw(f: number): number {
   if (f <= AFTER_MERGED.f) return remap(f, MERGE_KEYS) - SRC.mergeClick;
-  const cStart = AFTER_MERGED.t - SRC.mergeClick + (T.rampFrom - AFTER_MERGED.f) / FPS;
-  if (f <= T.rampFrom) return AFTER_MERGED.t - SRC.mergeClick + (f - AFTER_MERGED.f) / FPS;
-  if (f >= T.clockLand) return 19;
-  const L = T.clockLand - T.rampFrom;
-  const peak = 2 * (((19 - cStart) * FPS) / L - 1) + 1;
-  const x = f - T.rampFrom;
-  const integral = x + ((peak - 1) / 2) * (x - (L / (2 * Math.PI)) * Math.sin((2 * Math.PI * x) / L));
-  return cStart + integral / FPS;
+  const c0 = AFTER_MERGED.t - SRC.mergeClick; // 7.67 s
+  if (f <= T.clock18) return c0 + ((18 - c0) * (f - AFTER_MERGED.f)) / (T.clock18 - AFTER_MERGED.f);
+  if (f < T.flag) return 18 + (f - T.clock18) / (T.flag - T.clock18);
+  return 19;
 }
 
 export const clockAt = (f: number) => Math.max(0, clockRaw(f));

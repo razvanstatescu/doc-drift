@@ -25,7 +25,7 @@ export const PROMISE_T = {
   // ---- S06: who it is for; the logo holds about 3 s (round 2), then the page itself is "docs in Confluence" ----
   /** The camera pulls back from the lockup to make room for the line under it. */
   pull: w("S06", "for") - 14,
-  line1: w("S06", "for") - 7,
+  line1: w("S06", "teams") - 7,
   /** Cut on the beat to the Confluence page, its label "Confluence" readable as the word is said. */
   pageCut: sc.snap(w("S06", "confluence") - 1),
   gloss: w("S06", "atlassian") - 9,

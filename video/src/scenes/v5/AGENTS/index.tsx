@@ -21,15 +21,14 @@ import {
   ProofFrame,
   proofPoint,
   proofRect,
-  RebuildFromReal,
   screenRectOf,
   Stage,
   type Cam3Key,
   type Rect,
 } from "../../../v4/kit";
 import { AgentPanelTwin, agentPanelRects, BYLINE, BylineItem, bylineItemSize, bylineTitle, layoutRuns, textWidth, type AgentPanelTwinProps } from "../../../v4/twins";
-import { ANSWER_BOX, ANSWER_LINES, ANSWER_STILL, MCP_TAG, PAGE_TITLE, PROOF_CROP, QUESTION, ROVO_TAG, STEPS } from "./data";
-import { GlossChip, glossWidth, type GlossWord } from "./GlossChip";
+import { ANSWER_BOX, ANSWER_LINES, ANSWER_STILL, MCP_TAG, PAGE_TITLE, PROOF_CROP, QUESTION, ROVO_TAG, STEPS, WELCOME } from "./data";
+import { GlossChip, type GlossWord } from "./GlossChip";
 import { chatCallRect, chatLayout, chatStatusRect, CHAT, McpChat } from "./McpChat";
 import { T } from "./timing";
 
@@ -75,13 +74,11 @@ const CARD = { x: 84, cy: 572, rest: 1.15, open: 1.6 };
 /** The card's place and scale at a frame: big at the centre, then making room for Rovo. */
 function cardPose(frame: number) {
   const p = tween(frame, T.open, T.open + T.openDur - 2, 0, 1, EASE.expoOut);
-  // its words carried, it leaves left as the twin comes back from the proof (the frame is the answer's)
-  const leave = tween(frame, T.rebuildAt, T.rebuildAt + 12, 0, 1, EASE.expoIn);
   const s = CARD.open + (CARD.rest - CARD.open) * p;
   const cx0 = W / 2;
   const cy0 = 540;
   const cx1 = CARD.x + (CARD_W * CARD.rest) / 2;
-  const cx = cx0 + (cx1 - cx0) * p - leave * 900;
+  const cx = cx0 + (cx1 - cx0) * p;
   const cy = cy0 + (CARD.cy - cy0) * p;
   return { s, x: cx - (CARD_W * s) / 2, y: cy - (CARD_H * s) / 2 };
 }
@@ -147,7 +144,7 @@ const PANEL_PROPS: AgentPanelTwinProps = {
   height: PANEL.h,
   question: { text: QUESTION, at: T.send, typeDur: 1 },
   source: { text: PAGE_TITLE, at: T.send + 7 },
-  steps: STEPS.map((text, i) => ({ text, at: T.steps[i] })),
+  steps: [STEPS[0], STEPS[2]].map((text, i) => ({ text, at: T.steps[i] })),
   answer: { lines: ANSWER_PARAS, at: T.answerAt, cps: 60 },
 };
 const PR = agentPanelRects(PANEL_PROPS);
@@ -169,25 +166,8 @@ const POSSIBLY = (() => {
 /** The amber block around those words (AmberToken's 0.12 em padding). */
 const SLOT: Rect = { x: POSSIBLY.x - 0.12 * PANEL.size, y: POSSIBLY.y + POSSIBLY.h / 2 - PANEL.size * 0.6, w: POSSIBLY.w + 0.24 * PANEL.size, h: PANEL.size * 1.2 };
 
-/** The second sentence ("What it describes ... last verified.") on the twin's paragraph lines, unscaled px. */
-const SENTENCE2: Rect[] = (() => {
-  const lines = layoutRuns([{ t: ANSWER_PARAS[1] }], INNER, { size: PANEL.size, codeSize: PANEL.size * 0.88 });
-  const words = ANSWER_LINES[1].split(" ").length;
-  const out: Rect[] = [];
-  let n = 0;
-  lines.forEach((l, li) => {
-    if (n >= words) return;
-    const take = l.runs.slice(0, Math.min(l.runs.length, words - n));
-    n += take.length;
-    const last = take[take.length - 1];
-    const r = PR.answerLines[1 + li];
-    out.push({ x: r.x + take[0].x, y: r.y + r.h / 2 - PANEL.size * 0.42, w: last.x + last.w - take[0].x, h: PANEL.size * 0.84 });
-  });
-  return out;
-})();
-
 /** The welcome's name, unscaled px (centred in the empty conversation, as in the real panel). */
-const WELCOME_Y = PANEL.y + 250;
+const WELCOME_Y = PANEL.y + 150;
 
 /** The panel's foot, as the real one: the page as context, and the input the question is typed into (unscaled px). */
 const INPUT = { h: 66, ctxH: 40, gap: 12 };
@@ -237,6 +217,47 @@ const PanelFoot: React.FC = () => {
   );
 };
 
+/** The welcome (unscaled px, centred in the empty conversation): real words, so the panel reads as a working agent. */
+const Welcome: React.FC<{ fade: number }> = ({ fade }) => {
+  const cx = PANEL.x + PANEL.w / 2;
+  const starterW = PANEL.w - 2 * 34 - 80;
+  return (
+    <div style={{ position: "absolute", left: 0, top: 0, width: W, height: 1080, opacity: 1 - fade, fontFamily: FONT.sans }}>
+      <div style={{ position: "absolute", left: PANEL.x, top: WELCOME_Y, width: PANEL.w, textAlign: "center", fontSize: 42, fontWeight: 600, letterSpacing: "-0.015em", color: DAY.text }}>
+        Drift Reviewer
+      </div>
+      <div style={{ position: "absolute", left: cx - 360, top: WELCOME_Y + 66, width: 720, textAlign: "center", fontSize: 26, lineHeight: "36px", color: DAY.textMuted }}>
+        {WELCOME.description}
+      </div>
+      {WELCOME.starters.map((t, i) => (
+        <div
+          key={t}
+          style={{
+            position: "absolute",
+            left: cx - starterW / 2,
+            top: WELCOME_Y + 172 + i * 56,
+            width: starterW,
+            height: 46,
+            display: "flex",
+            alignItems: "center",
+            gap: 14,
+            padding: "0 18px",
+            boxSizing: "border-box",
+            borderRadius: 12,
+            boxShadow: `inset 0 0 0 2px ${DAY.line}`,
+            fontSize: 26,
+            color: DAY.text,
+            whiteSpace: "nowrap",
+          }}
+        >
+          <Icon name="comment" size={24} color={DAY.textMuted} />
+          {t}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const PanelTwin: React.FC = () => {
   const frame = useCurrentFrame();
   const slotOn = frame >= T.answerAt && frame < T.carryLand;
@@ -244,26 +265,8 @@ const PanelTwin: React.FC = () => {
     <div style={{ position: "absolute", left: 0, top: 0, width: W, height: 1080, transformOrigin: `${PANEL.x}px ${PANEL.y}px`, transform: `scale(${PANEL.scale})` }}>
       <AgentPanelTwin {...PANEL_PROPS} />
       <PanelFoot />
-      {/* before the question, the agent's own welcome, as the real panel shows it: its name, big */}
-      {frame < T.send + 4 ? (
-        <div
-          style={{
-            position: "absolute",
-            left: PANEL.x,
-            top: WELCOME_Y,
-            width: PANEL.w,
-            textAlign: "center",
-            fontFamily: FONT.sans,
-            fontSize: 44,
-            fontWeight: 600,
-            letterSpacing: "-0.015em",
-            color: DAY.text,
-            opacity: 1 - tween(frame, T.send, T.send + 4, 0, 1, EASE.linear),
-          }}
-        >
-          Drift Reviewer
-        </div>
-      ) : null}
+      {/* before the question, the agent's own welcome, as the real panel shows it: its name, what it does, its starters */}
+      {frame < T.send + 4 ? <Welcome fade={tween(frame, T.send, T.send + 4, 0, 1, EASE.linear)} /> : null}
       {/* the answer's slot waits for the page's words: covered, with a trace where they will land */}
       {slotOn ? (
         <>
@@ -280,10 +283,6 @@ const PanelTwin: React.FC = () => {
           </AmberToken>
         </div>
       ) : null}
-      {/* "and why": the reason marked, line by line (the same marks as the proof's) */}
-      {SENTENCE2.map((r, i) => (
-        <MistBand key={i} rect={r} at={i === 0 ? T.mist2a : T.mist2b} dur={i === 0 ? 10 : 8} />
-      ))}
     </div>
   );
 };
@@ -296,17 +295,6 @@ const CHIP_ROVO: GlossWord[] = [
   { text: "· Atlassian's", at: T.chipWords[1] },
   { text: "AI", at: T.chipWords[2] },
 ];
-const CHIP_AGENT: GlossWord[] = [
-  { text: "our", at: T.agentChip },
-  { text: "agent", at: T.agentChip + 6 },
-];
-/** "our agent" sits under the welcome's name, centred on it (stage px). */
-const AGENT_CHIP = (() => {
-  const w = glossWidth(CHIP_AGENT, 30).total;
-  const cx = PANEL.x + (PANEL.w / 2) * PANEL.scale;
-  return { x: cx - w / 2, y: scaled({ x: 0, y: WELCOME_Y + 70, w: 0, h: 0 }).y };
-})();
-
 /** The page's words fly from the card into the answer's slot, on their amber, landing flush on the twin's words. */
 const CarriedWords: React.FC = () => {
   const frame = useCurrentFrame();
@@ -361,7 +349,6 @@ const RovoWorld: React.FC = () => {
       <div style={{ position: "absolute", left: 0, top: 0, width: W, height: 1080, transform: slide > 0.5 ? `translateX(${slide}px)` : undefined }}>
         <PanelTwin />
         <GlossChip words={CHIP_ROVO} x={PANEL.x} y={PANEL.y - 72} out={T.chipOut} />
-        <GlossChip words={CHIP_AGENT} x={AGENT_CHIP.x} y={AGENT_CHIP.y} out={T.agentChipOut} />
       </div>
       <CarriedWords />
     </Camera3D>
@@ -419,13 +406,9 @@ const StationRovo: React.FC = () => {
   const frame = useCurrentFrame();
   const world = <RovoWorld />;
   let body: React.ReactNode = world;
-  if (frame >= T.proofAt && frame < T.rebuildAt) {
-    body = <MorphToReal at={T.proofAt} fromRect={twinLine1(T.proofAt)} toRect={PROOF.line1} twin={world} proof={<RovoProof />} frameRect={PROOF_FRAME} out={T.rebuildAt} />;
-  } else if (frame >= T.rebuildAt && frame < T.rebuildAt + 10) {
-    const d = driftAt(T.rebuildAt);
-    body = (
-      <RebuildFromReal at={T.rebuildAt} dur={4} fromRect={shift(PROOF.line1, d)} toRect={twinLine1(T.rebuildAt)} twin={world} proof={<RovoProof />} frameRect={shift(PROOF_FRAME, d)} />
-    );
+  if (frame >= T.proofAt) {
+    // the real answer holds to the cut (its "why" reads complete for about 1.8 s); the twin rests dimmed behind it
+    body = <MorphToReal at={T.proofAt} fromRect={twinLine1(T.proofAt)} toRect={PROOF.line1} twin={world} proof={<RovoProof />} frameRect={PROOF_FRAME} />;
   }
   return (
     <Stage world="day" motif="grid" light={["40%", "34%"]}>
@@ -442,18 +425,24 @@ const CHAT_H = chatLayout().height;
 const CHAT_X = Math.round((W - CHAT.w) / 2);
 const CHAT_Y = Math.round((1080 - (64 + CHAT_H + 28 + 54)) / 2 + 64);
 const CHIP_MCP: GlossWord[] = ["MCP", "· an", "open", "standard", "for", "AI", "tools"].map((text, i) => ({ text, at: T.mcpWords[i] }));
-/** The carry cut: the chat camera starts so the reply's "Possibly stale" sits exactly where the twin's was. */
-const STATUS_STAGE: Rect = (() => {
+/**
+ * The carry cut: the chat camera starts so the reply's "Possibly stale" sits exactly on the real answer's (Mist, at
+ * 1:1, as the proof holds it on the cut's last frame), then settles onto the card; one push on "the same check".
+ */
+const STATUS_WORDS_STAGE: Rect = (() => {
   const r = chatStatusRect();
-  return { x: CHAT_X + r.x, y: CHAT_Y + r.y, w: r.w, h: r.h };
+  const L = chatLayout();
+  return { x: CHAT_X + L.blockX, y: CHAT_Y + r.y + r.h / 2 - CHAT.reply * 0.36, w: L.statusW, h: CHAT.reply * 0.72 };
 })();
-const TWIN_WORDS_SCREEN = screenRectOf(cam3At(T.cutChat - 1, ROVO_KEYS, ROVO_CAM), scaled(SLOT));
+const REAL_WORDS_SCREEN = shift(PROOF_MIST.possibly, driftAt(T.cutChat - 1));
 const CHAT_KEYS: Cam3Key[] = [
-  { at: T.cutChat, dur: 0, to: cameraToMatch(TWIN_WORDS_SCREEN, STATUS_STAGE) },
-  // then it settles onto the card (fast at the cut, slow after), the reply a little forward, the gloss's row below
-  { at: T.cutChat, dur: T.settle, to: { x: 920, y: 580, zoom: 1.05 }, ease: EASE.expoOut },
+  { at: T.cutChat, dur: 0, to: cameraToMatch(REAL_WORDS_SCREEN, STATUS_WORDS_STAGE) },
+  // it settles onto the card (fast at the cut, slow after)
+  { at: T.cutChat, dur: T.settle, to: { x: 930, y: 560, zoom: 1.03 }, ease: EASE.expoOut },
+  // "the same check": one push onto the reply
+  { at: T.pushSame, dur: 18, to: { x: 820, y: 596, zoom: 1.11 }, ease: EASE.expoInOut },
   // on "an open standard" it drifts down to the gloss under the card (a small beat, not a new shot)
-  { at: T.pushGloss, dur: 30, to: { x: 900, y: 612, zoom: 1.07 }, ease: EASE.standard },
+  { at: T.pushGloss, dur: 30, to: { x: 800, y: 630, zoom: 1.1 }, ease: EASE.standard },
 ];
 const CALL_STAGE: Rect = (() => {
   const r = chatCallRect();
@@ -471,7 +460,7 @@ const StationChat: React.FC = () => {
           </InkLabel>
         </div>
         {/* arrives holding the whole exchange (the carry cut lands on its reply) */}
-        <McpChat x={CHAT_X} y={CHAT_Y} enter={T.cutChat - 20} call={T.cutChat - 20} status={T.cutChat - 20} guidance={T.cutChat - 20} />
+        <McpChat x={CHAT_X} y={CHAT_Y} amberAt={T.cutChat - 1} />
         {/* "the same check": the call itself, marked */}
         <MistBand rect={CALL_STAGE} at={T.callMark} world="night" />
         <GlossChip words={CHIP_MCP} x={CHAT_X} y={CHAT_Y + CHAT_H + 28} />
@@ -489,7 +478,6 @@ const Sounds: React.FC = () => (
     <Sfx id="whoosh-short" at={T.carryLand - 7} gainDb={-8} />
     <Sfx id="tick-soft" at={T.carryLand} gainDb={-2} />
     <Sfx id="tick" at={T.proofAt} gainDb={-5} />
-    <Sfx id="tick" at={T.rebuildAt + 2} gainDb={-6} />
     <Sfx id="tick" at={T.cutChat} gainDb={-2} />
     <Sfx id="pop" at={T.mcpWords[0] + 3} gainDb={-5} />
   </>

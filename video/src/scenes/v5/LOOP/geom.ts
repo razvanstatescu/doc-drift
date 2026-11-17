@@ -20,11 +20,16 @@ import { SRC, T } from "./timing";
 // S08 and S09: the anchors dialog (p1-suggestions-ticked, identical to p1-anchor-rec at 14.3 s in this region)
 // ---------------------------------------------------------------------------------------------------------------------
 
-/** "Suggested from this page (2)" with both suggestions ticked: the box, border to border. */
-export const SUGGEST_CROP: Rect = { x: 1160, y: 648, w: 1396, h: 419 };
+/**
+ * "Suggested from this page (2)" with both suggestions ticked, as two excerpts at 1:1 (round 3): the heading, and the
+ * two rows cropped before the "Weak" tag (x 1706 on). One crop cannot hold both without the "Weak" tag or a cut
+ * sentence: the line between them reads "... when you save. Weak ones start unchecked." and runs past x 1706.
+ */
+export const SUGGEST_HEAD_CROP: Rect = { x: 1180, y: 674, w: 476, h: 58 };
+export const SUGGEST_ROWS_CROP: Rect = { x: 1180, y: 926, w: 524, h: 118 };
 export const SUGGEST = {
-  rows: { x: 1500, y: 986 }, // the push-in's focus: between the two rows
-  scriptChip: { x: 1255, y: 994, w: 242, h: 30 }, // "scripts/rollback.sh"
+  heading: { x: 1195, y: 687, w: 396, h: 32 }, // "Suggested from this page"
+  scriptChip: { x: 1259, y: 994, w: 236, h: 30 }, // "scripts/rollback.sh"
   jiraRow: { x: 1255, y: 936, w: 188, h: 30 }, // "PAY-6 Jira issue"
 };
 
@@ -42,7 +47,8 @@ export const VERIFIED_WORD = { x: 2318, y: 470, w: 96, h: 28 };
 // ---------------------------------------------------------------------------------------------------------------------
 
 export const MERGE = {
-  renameLine: { x: 1385, y: 717, w: 580, h: 30 }, // commit message: "Rename rollback script and timeout variable"
+  renameWords: { x: 1385, y: 717, w: 302, h: 30 }, // commit message: "Rename rollback script"
+  titleTimeout: { x: 1247, y: 214, w: 463, h: 46 }, // the PR title's "and timeout variable"
   pr482: { x: 1408, y: 614, w: 256, h: 32 }, // "(pull request #482)" in the Merged banner
 };
 const PR482_CENTER = { x: 1536, y: 630 };

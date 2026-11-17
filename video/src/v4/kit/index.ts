@@ -13,6 +13,10 @@ export * from "./press";
 export * from "./blur";
 export * from "./swap";
 export * from "./reveal";
+export * from "./take";
+export * from "./edit";
+export * from "./pagecode";
+export * from "./carry";
 // The look, so a scene can import everything from one place.
 export { amber, BRAND, current, DAY, ELEV, ELEV_DARK, elevAt, FONT, HAIR, ink, NIGHT, nightSweep, sweep, T, white } from "../look";
 export type { Elev, Rect } from "../look";

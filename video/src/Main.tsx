@@ -9,7 +9,7 @@ import { sceneSpan, TIMELINE, type SceneSpan } from "./lib/timeline";
 import { SlipBands } from "./motion/slip";
 import { SlipReveal } from "./v4/kit/reveal";
 import { SCENES } from "./scenes/registry";
-import { CUTS, cutSfxAt, pushAt, pushFlash, slipPushAt, whipAt, type SceneCut } from "./transitions";
+import { CUTS, cutSfxList, pushAt, pushFlash, sfxAt, slipPushAt, whipAt, type SceneCut } from "./transitions";
 
 /** Where the body starts: the end of the first scene (A0). tools/render-master.sh joins the A0 and Body renders here. */
 export const BODY_START = TIMELINE.scenes.length > 0 ? TIMELINE.scenes[0].from + TIMELINE.scenes[0].durationInFrames : 0;
@@ -171,11 +171,12 @@ export const Film: React.FC = () => (
       <SceneSlot key={span.id} span={span} prev={i > 0 ? TIMELINE.scenes[i - 1] : undefined} />
     ))}
     {TIMELINE.scenes.map((span) => {
-      // a cut's sound lives at the film level, so the outgoing scene's Sequence ending cannot clip its tail
+      // a cut's sounds live at the film level, so the outgoing scene's Sequence ending cannot clip their tails
       const cut = CUTS[span.id];
-      if (!cut?.sfx) return null;
-      const at = span.from + span.durationInFrames + cutSfxAt(cut);
-      return <Sfx key={`cut-${span.id}`} id={cut.sfx.id} at={at} gainDb={cut.sfx.gainDb} />;
+      if (!cut) return null;
+      return cutSfxList(cut).map((s, i) => (
+        <Sfx key={`cut-${span.id}-${i}`} id={s.id} at={span.from + span.durationInFrames + sfxAt(cut, s)} gainDb={s.gainDb} />
+      ));
     })}
     <AudioLayer />
   </AbsoluteFill>

@@ -1,4 +1,4 @@
-import { DAY, NIGHT } from "./brand/tokens";
+import { DAY } from "./brand/tokens";
 import { EASE, H, W } from "./lib/time";
 import type { SlipCutOptions } from "./motion/slip";
 
@@ -28,7 +28,7 @@ export type CutSfx = { id: string; at?: number; gainDb?: number };
 export type SlipSceneCut = {
   kind: "slip";
   frames: number;
-  sfx?: CutSfx;
+  sfx?: CutSfx | CutSfx[];
   /**
    * Open as a REVEAL (the kit's SlipReveal, A2's DaySlipReveal behaviour) instead of holding the bands and cutting:
    * split on the cut's first frame with the band already landed (`lead` of the 2-frame slip done), then the bands
@@ -36,37 +36,42 @@ export type SlipSceneCut = {
    */
   reveal?: { lead?: number; slipFrames?: number };
 } & SlipCutOptions;
-export type SlipPushSceneCut = { kind: "slipPush"; frames: number; direction?: "left" | "right"; maxBlur?: number; sfx?: CutSfx };
-export type WhipSceneCut = { kind: "whip"; frames: number; dir: "left" | "right" | "up" | "down"; maxBlur?: number; sfx?: CutSfx };
-export type PushSceneCut = { kind: "push"; frames: number; flash?: string; sfx?: CutSfx };
+export type SlipPushSceneCut = { kind: "slipPush"; frames: number; direction?: "left" | "right"; maxBlur?: number; sfx?: CutSfx | CutSfx[] };
+export type WhipSceneCut = { kind: "whip"; frames: number; dir: "left" | "right" | "up" | "down"; maxBlur?: number; sfx?: CutSfx | CutSfx[] };
+export type PushSceneCut = { kind: "push"; frames: number; flash?: string; sfx?: CutSfx | CutSfx[] };
 export type SceneCut = SlipSceneCut | SlipPushSceneCut | WhipSceneCut | PushSceneCut;
 
 export const CUTS: Record<string, SceneCut> = {
-  // A1 to A2: the film's change of light. Since v1 the PICTURE of this cut lives in A2's first frames
-  // (src/components/A2/DaySlipReveal, fed A1's frozen last frame): the frame is already split on A2's first frame
-  // (markers.daySlip, the score's lift), the Paper world is behind the slipped band, and the bands clear by frame 6.
-  // So this entry carries the SOUND only: `frames: 0` adds no picture tail, and the slip's latch lands on daySlip with
-  // the band and the lift (the slide part of the sound runs over A1's last frames, at film level, so nothing is clipped).
-  A1: { kind: "slip", frames: 0, traceColor: DAY.trace, sfx: { id: "slip", at: 0 } },
-  // P1 to P2 (2077): P1's last frame leaves in three bands over P2's opening; the whoosh peaks mid-cut.
-  P1: { kind: "slipPush", frames: 12, direction: "left", sfx: { id: "whoosh-short", at: 6 } },
-  // P2 to P3 (2617): a whip to the left, the seam on frame 4.5.
-  P2: { kind: "whip", frames: 9, dir: "left", sfx: { id: "whoosh-short", at: 4 } },
-  // P3 to P4 (3277): a whip downward (the content travels down; P4 comes in from the top).
-  P3: { kind: "whip", frames: 9, dir: "down", sfx: { id: "whoosh-short", at: 4 } },
-  // P5 to A4 (4177, on the bar): the film's last change of light, as a reveal (QA 2026-11-16: the held bands then a
-  // hard Day-to-Night cut at 4185 read as a cut 8 frames late). The Day frame is split on the bar with the middle band
-  // one unit out (landed: lead 1 of the 2-frame slip) and its Night trace; A4's Night shows in the cuts and grows every
-  // frame as the top and bottom bands slide out left and the middle carries on right; fully open at 4185. The slip's
-  // latch lands on the bar, with the band.
-  P5: { kind: "slip", frames: 8, traceColor: NIGHT.trace, reveal: { lead: 1, slipFrames: 2 }, sfx: { id: "slip", at: 0 } },
+  // v5 (video/V5.md section 7). Each cut is drawn over the incoming scene's first frames; whips and pushes end in a
+  // landing tick (R6 section 6.7: a swell alone does not read as sync). The incoming scene J-cuts its own first sound.
+  // LOOP to AGENTS (1575): a whip to the left, the seam at 3.5 of 9 frames.
+  LOOP: { kind: "whip", frames: 9, dir: "left", sfx: [{ id: "whoosh-short", at: 4 }, { id: "tick-soft", at: 8 }] },
+  // AGENTS to FIX (2100): the slip push, the middle band last.
+  AGENTS: { kind: "slipPush", frames: 12, direction: "left", sfx: [{ id: "whoosh-short", at: 6 }, { id: "tick-soft", at: 11 }] },
+  // JIRA to CLOSE (2880, endHit): the three-band slip reveal into the end card on the score's hit (no effect of its
+  // own: the hit is the score's; the slip budget is 6 for the film).
+  JIRA: { kind: "slip", frames: 8, traceColor: DAY.trace, reveal: { lead: 1, slipFrames: 2 } },
+  // PROBLEM to PROMISE (480) and PROMISE to LOOP (900) are drawn by their scenes (the carry cut and slip cut; the
+  // rewind with RewindFrom); FIX to JIRA (2550) is a plain cut on an action. v4's entries (A1, P1, P2, P3, P5) are gone;
+  // their kinds (slip, slipPush, whip, push, slip with reveal) all stay available.
 };
 
-/** Frame (into the cut) where a cut's sound peaks. */
-export function cutSfxAt(cut: SceneCut): number {
-  if (cut.sfx?.at !== undefined) return cut.sfx.at;
+/** A cut's sounds as a list. */
+export function cutSfxList(cut: SceneCut): CutSfx[] {
+  return cut.sfx === undefined ? [] : Array.isArray(cut.sfx) ? cut.sfx : [cut.sfx];
+}
+
+/** Frame (into the cut) where a cut sound peaks (`s`, or the cut's first sound). */
+export function sfxAt(cut: SceneCut, s?: CutSfx): number {
+  const sfx = s ?? cutSfxList(cut)[0];
+  if (sfx?.at !== undefined) return sfx.at;
   if (cut.kind === "slip") return cut.reveal ? 0 : (cut.slipFrames ?? 6);
   return Math.floor(cut.frames / 2);
+}
+
+/** Frame (into the cut) where a cut's first sound peaks (v4 name, kept). */
+export function cutSfxAt(cut: SceneCut): number {
+  return sfxAt(cut);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

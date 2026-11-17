@@ -1,7 +1,25 @@
 # Kit status
 
-**round 3 ready** (2026-11-16, after `out/v4/qa/review-r2.md`: K-5 once more, K-6). Every prop from rounds 1 and 2
-still works. Round 3 changes are right below, then round 2's, then the round 1 notes.
+**v5 ready** (2026-11-17, video/V5.md, D41): the kit serves v5, and every v4 prop still works. All of R6's lab pieces are
+promoted into the kit (RealTake, PageOverCode, EditType, carry cuts, RewindFrom), plus the v5 scene cuts and
+`tools/qa/rhythm.py`. Import from `src/v4/kit`; do not import from `src/v5/lab`.
+
+## v5: the new pieces (all ready, 2026-11-17)
+
+Demos are the first 975 frames of Dev/Kit4: RealTake 0 to 299, EditType 300 to 509, PageOverCode 510 to 719, carry
+cuts 720 to 914, rewind 915 to 974. Stills, sheets and renders are in `out/v5/kit/`. Kit-only renders:
+`npx remotion render src/v4/kit/dev/entry.tsx Kit4 ... --frames=...`.
+
+| Piece | API |
+| --- | --- |
+| `RealTake` (R6 technique 1) | **`capture`**: a captures.json id, a still or a recording.<br>**`time`**: `{ events: { f, t, hold? }[], start? }`. Each event lands source second `t` on frame `f`, at 1x for `hold` s (0.3); the waits between ramp smoothly. Or explicit `{ keys: { f, t }[] }`.<br>**`camera`**: `{ at, dur?, to: { cx, cy, s }, ease? }[]` in CAPTURE px. `s` is film px per capture px, at most 1; it warns past that.<br>**`spot`**: `{ at, dur?, rect, amount }[]` in capture px. The rest is veiled, softened and drained, and the window rides the camera.<br>**`clicks`**: `{ t, x, y, cursor?, from?, travel? }[]`. The kit cursor shows only around these.<br>**`tag`**: a string, or `{ text, at?, until?, x?, y? }`. Once per take.<br>**`speed`**: the "N× speed" label while the ramp runs at 3x or more. Default on.<br>**`clock`**: `{ zero, label, at?, x?, y?, swap?, note? }`. Real seconds since source second `zero`.<br>**`crop`**: capture px. Only this region is drawn, so Owner rows and "Dana" never show.<br>**`masks`/`maskFill`**: captures.json masks are always drawn.<br>**`creep`** (1.5), **`float`** (5), **`seed`**, **`background`** (white).<br>**`children`**: capture px, over the capture (`<MistBand rect>` on a real word).<br>**`overlay`**: screen px.<br>Video frames come from **`VideoAt`**, a one-frame Sequence with `trimBefore` (the Freeze fix).<br>Demo: `out/v5/kit/realtake-merge.mp4` (87% moving, no hold). |
+| Take helpers | `takeKeys(events, { start? })`, `remap(f, keys)`, `rateAt(f, keys)`, `frameAtSource(t, keys)` (the frame a source second lands on: aim marks and sounds with it), `rampPeak(f, keys)`, `VideoAt` (`src`, `t`), `capPose(frame, camKeys, opts)`, `capToScreen`, `capRectToScreen`, `screenScale`, `CaptureWorld`, `Spotlight` (`rect` and `amount` in SCREEN px; also over twins: R6 technique 12), `spotAt`, `clockValue(f, keys, zero)`, `HonestClock` (`at`, `value`, `label`, `swap?`, `note?`, `x` (64), `y` (790), `width` (470); carry it across a seam yourself, as the demo does), `SpeedChip` (`rate`, `x` (562), `y`). |
+| `PageOverCode` (R6 technique 4) | `page` (PageTwin props for the runbook; it sets the byline and slip), `codeAt` (the code row's window opens, on "code"), `jiraAt` (on "Jira work"), `slipAt` (the code row slips amber and renames, on "changes"; hold it 1.1 s or more), `closeAt`, `bandAt?` (closeAt + 4: the Steps band takes the amber), `bylineAt` (Possibly stale, on "flags the page"), `bylineFrom?` ("verified"), `rise?` ([from, to]: the dark layer comes up, inside a 3D camera), `openDur?` (14), `code?`, `jira?` (real strings by default). World space: put it inside your Stage and Camera3D; aim with `pageOverCodeRects(props)` (`page`, `slab`, `codeRow`, `jiraRow`, tokens). The people and agent chips of S07 are scene content. |
+| `EditType` | **`MaskLine`**: `at`, `dur` (13), `out?`. The functional voice.<br>**`EditLine`**: `pre`, `old`, `neu`, `post`, `size`, `mono`, `weight`, `mark?`, `strike?`, `replace`, `underline`, `world`. Strike and replace. The old words leave over 5 frames, then the new ones open over 8: never both.<br>**`TypeToUI`**: `text`, `landText?`, `at` (the big words rise), `dock` (the flight starts), `dur` (18), `from`/`to` (`{ x, y, size, weight?, tracking? }`: `to` is the UI slot's own text box), `block` ("amber" only for the drift, "mist", "none"), `hideAt?` (dock + dur + 1), `font`, `world`. Type becomes UI. Open the UI's swap so its old words have left 2 frames before `dock + dur` (see the demo with BylineItem).<br>**`EditType`**: `{ MaskLine, EditLine, TypeToUI }`. |
+| Carry cuts (R6 technique 3) | `screenRectOf(pose, stageRect)`, `cameraToMatch(screenRect, stageRect)` (the incoming camera's first key, `dur: 0`), `GrowReveal` (`at`, `dur` (16), `from` (screen rect of the carried object), `outgoing`, `incoming`, `pad`, `radius`, `darken` (0.5)), `PushSwap` (`at`, `dur` (14), `outgoing`, `incoming`, `dir`), `CarryHold` (`rect`: the carried object on top, in the incoming twin's own metrics), and `KineticDock` for the flight into a slot. |
+| `RewindFrom` | `from` (the source scene's frame to start from, e.g. PROMISE's last), `span` (source frames to rewind), `dur` (output frames), `at?`, `chip?` ("Last week"), `texture?` (0 to 1), `children` (the other scene: `<PROMISE />`; frozen frame by frame, so muted). Crafted scenes only (footage goes through VideoAt). |
+| Scene cuts | `src/transitions.ts`:<br>**LOOP→AGENTS**: `whip` left, 9 f (`whoosh-short` on the seam, `tick-soft` on the landing).<br>**AGENTS→FIX**: `slipPush`, 12 f (`whoosh-short` at 6, `tick-soft` at 11).<br>**JIRA→CLOSE**: `slip` with `reveal` on endHit 2880 (the score's hit is the sound).<br>v4 entries are removed; all kinds are kept, and a cut's `sfx` may be a list. The incoming scene opens composed and J-cuts its own first sound. |
+| `tools/qa/rhythm.py` | `python3 tools/qa/rhythm.py <video> [--scene ID] [--body-from S] [--json out]`. Reports the median shot, shots of 8 s or more, body time in shots of 4 s or more, shots under 1 s, moving transitions and hard cuts a minute, all, major and medium interrupts a minute, the share inside a composition, the longest gaps, time in major/medium gaps over 4 s, and cuts and moves on a strong sound hit (share, lift), with V5's gates. On v4 it reproduces R6's numbers (median 1.53 s, 20.7 moving a minute, 30.4 major a minute, longest gap 5.7 s, hard cuts on a hit 36%, lift 1.29). Camera moves on full-bleed footage count as transitions and major interrupts: inside a take, move at most every 2 to 3 s (R6 6.5.7) and let the spotlight and the cursor do the in-between work. |
 
 ## Round 3: what changed
 
@@ -56,7 +74,7 @@ are capture px (3840 x 2160).
 9. If a render fails in a scene file you do not own, kit-only renders still work:
    `npx remotion render src/v4/kit/dev/entry.tsx Kit4 out/v4/<you>/x.mp4 --port=<yours>`.
 
-## Scene cuts (src/Main.tsx + src/transitions.ts)
+## Scene cuts in v4 (history: v5's are in the table above)
 
 | Out → in | Frame | Cut | Sound |
 | --- | --- | --- | --- |

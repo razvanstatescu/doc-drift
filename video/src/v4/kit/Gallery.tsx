@@ -6,6 +6,18 @@ import { EASE, tween } from "../../lib/time";
 import { Slip } from "../../motion/slip";
 import { amber, BRAND, DAY, elevAt, ELEV_DARK, FONT, NIGHT, T, type Rect } from "../look";
 import {
+  DEMO_CARRY_FRAMES,
+  DEMO_EDITTYPE_FRAMES,
+  DEMO_PAGEOVERCODE_FRAMES,
+  DEMO_REALTAKE_FRAMES,
+  DEMO_REWIND_FRAMES,
+  DemoCarry,
+  DemoEditType,
+  DemoPageOverCode,
+  DemoRealTake,
+  DemoRewind,
+} from "./demos/v5";
+import {
   Bloom,
   Breakout,
   Camera3D,
@@ -454,6 +466,15 @@ const DemoLift: React.FC = () => (
   </Stage>
 );
 
+// v5 demos first (Root's Dev/Kit4 is 1800 frames long; the v4 demos follow and the dev entry renders all of them)
+const V5_DEMOS: { name: string; C: React.FC; dur: number }[] = [
+  { name: "v5-realtake", C: DemoRealTake, dur: DEMO_REALTAKE_FRAMES },
+  { name: "v5-edittype", C: DemoEditType, dur: DEMO_EDITTYPE_FRAMES },
+  { name: "v5-pageovercode", C: DemoPageOverCode, dur: DEMO_PAGEOVERCODE_FRAMES },
+  { name: "v5-carry", C: DemoCarry, dur: DEMO_CARRY_FRAMES },
+  { name: "v5-rewind", C: DemoRewind, dur: DEMO_REWIND_FRAMES },
+];
+
 const DEMOS: { name: string; C: React.FC }[] = [
   { name: "camera", C: DemoCamera },
   { name: "night", C: DemoNight },
@@ -474,13 +495,34 @@ const DEMOS: { name: string; C: React.FC }[] = [
 
 export const DEMO_FRAMES = 120;
 
+/** Where each demo starts in the gallery (v5 demos, then the v4 demos at 120 frames each). */
+export const GALLERY_INDEX: { name: string; from: number; dur: number }[] = (() => {
+  const out: { name: string; from: number; dur: number }[] = [];
+  let f = 0;
+  for (const d of V5_DEMOS) {
+    out.push({ name: d.name, from: f, dur: d.dur });
+    f += d.dur;
+  }
+  for (const d of DEMOS) {
+    out.push({ name: d.name, from: f, dur: DEMO_FRAMES });
+    f += DEMO_FRAMES;
+  }
+  return out;
+})();
+export const GALLERY_FRAMES = GALLERY_INDEX.reduce((m, d) => Math.max(m, d.from + d.dur), 0);
+
+const ALL = [...V5_DEMOS.map((d) => ({ name: d.name, C: d.C })), ...DEMOS];
+
 const Gallery: React.FC = () => (
   <AbsoluteFill style={{ background: DAY.ground }}>
-    {DEMOS.map(({ name, C }, i) => (
-      <Sequence key={name} from={i * DEMO_FRAMES} durationInFrames={DEMO_FRAMES} name={name}>
-        <C />
-      </Sequence>
-    ))}
+    {GALLERY_INDEX.map((g, i) => {
+      const C = ALL[i].C;
+      return (
+        <Sequence key={g.name} from={g.from} durationInFrames={g.dur} name={g.name}>
+          <C />
+        </Sequence>
+      );
+    })}
   </AbsoluteFill>
 );
 export default Gallery;

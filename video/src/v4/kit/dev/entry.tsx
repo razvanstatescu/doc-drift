@@ -2,7 +2,7 @@ import React from "react";
 import { Composition, registerRoot } from "remotion";
 import { loadBrandFonts } from "../../../brand/fonts";
 import { FPS, H, W } from "../../../lib/time";
-import Gallery from "../Gallery";
+import Gallery, { GALLERY_FRAMES } from "../Gallery";
 import { CropChecks } from "./checks";
 
 /**
@@ -15,7 +15,7 @@ loadBrandFonts();
 
 const KitRoot: React.FC = () => (
   <>
-    <Composition id="Kit4" component={Gallery} durationInFrames={1800} fps={FPS} width={W} height={H} />
+    <Composition id="Kit4" component={Gallery} durationInFrames={GALLERY_FRAMES} fps={FPS} width={W} height={H} />
     <Composition id="KitChecks" component={CropChecks} durationInFrames={30} fps={FPS} width={W} height={H} />
   </>
 );

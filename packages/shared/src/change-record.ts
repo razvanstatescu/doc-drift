@@ -27,7 +27,7 @@ export interface BitbucketChangeRecord {
   /** The repository's main branch, when the relay knows it. Used to ignore non-default merges. */
   defaultBranch?: string;
   files: ChangedFile[];
-  /** Raw unified diff (`/diff`), at most 150 KB. Absent for PRs over 300 files. */
+  /** Raw unified diff (`/diff`), at most 200,000 UTF-8 bytes (`maxHunksBytes`). Absent for PRs over 300 files. */
   hunks?: string;
   /**
    * True when the PR changed more files than the record carries (the relay keeps the first 500). The core
@@ -69,7 +69,7 @@ export type ChangeRecord = BitbucketChangeRecord | JiraChangeRecord;
 /** Size and count limits enforced by the validator. */
 export const CHANGE_RECORD_LIMITS = {
   maxFiles: 500,
-  /** The relay trims the diff to 150 KB of text; this leaves headroom for multibyte characters. */
+  /** The relay trims the diff to this many UTF-8 bytes (`trimUtf8` in the relay), and the validator rejects anything longer. */
   maxHunksBytes: 200_000,
   maxChangelogItems: 100,
   maxStringLength: 1_000,

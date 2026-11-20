@@ -197,3 +197,42 @@ The product name is now **Doc Drift** everywhere: the apps' titles and copy, the
 ### D41. Launch film v5: about 100 s, one story told forward, plain words, real footage directed at full size
 2026-11-17 · Accepted (Razvan's review of v4)
 Razvan found v4 a bit long and boring for a simple product, and a friend who mostly uses Jira did not understand what it does. An expert audit (R4) and four simulated first-time viewers found why: no sentence says plainly what it does and for whom; about 40 terms go unexplained; the story is told twice; key words miss their picture; real footage appears only as one-second thumbnails; and the opening collage is unreadable. Motion research (R6) found v4 uniformly busy rather than under-cut (20.7 moving transitions a minute, a 1.5 s median shot). v5 rewrites the script into about 100 s, told once and forward: the 3 a.m. problem, then what Doc Drift is and for whom, voiced and on screen by 0:27. Then one continuous real loop (link, merge, flagged 19 s later, the exact change, no AI), agents told, a person fixing it, Jira, and an end card with the link and the tagline. Jargon is explained at first use. The picture shows what the voice names, and real recordings are directed at full size. Longer, steadier shots carry small events inside them. It keeps v4's Day look, kit and twins, uses the name Doc Drift (D40), and drops "Catch the slip before your agents do." Direction: [../video/V5.md](../video/V5.md); research: [video/v5/](video/v5/).
+
+### D42. Website v2: a short home page told like the film; the guide holds the technical detail; motion beyond the slip
+2026-11-20 · Accepted (Razvan: "check all section first of all for accuracy regarding the product. Then, make sure all information is presented in a clear, succint way for a marketing website. No technical details everywhere, no long texts that make user lose attention, nice animated visuals, nice transitions between sections, good UI/UX")
+An audit of every claim on the site (R2) found 20 inaccurate claims on the home page, 14 in the guide and 13 on the privacy page:
+- the social card still said "Doc Drift Sentinel";
+- the Jira and anchor rules were stated wrongly (a normal folder anchor never flags from file size alone, and a status change flags only on Done or Won't Do);
+- there is one MCP URL for every site and one admin switch;
+- the agent examples were out of date;
+- the byline mock had state icons the real byline lacks.
+
+Research on 12 large sites (R1) found our page as tall as theirs but with about twice the words (1,040 at reading size against a median of 445, a 59-word hero against 20).
+
+What changed:
+- **The home page tells the v5 film's story in its words** (D41). It runs from the 3 a.m. problem as a Night band, through "Doc Drift catches this" (the mark's slip, scroll-linked), to how it works as a pinned board in whole steps, then AI agents, a person fixes it, in Confluence, trust, get started, questions and close.
+- **It is 2,134 words down to about 810 of copy, plus the real UI strings inside the visuals.** No JSON, tool names, setup commands or matcher terms.
+- **The visuals are HTML twins built from the app's real strings**, plus one real recording from the film: merge to flag, 9.9 s, muted. It plays only in view and has a pause button.
+- **The agents section is one answer with a "Without Doc Drift / With Doc Drift" switch.**
+- **The guide and the privacy page are corrected line by line against the code** and get "Quick start" and "In short" boxes.
+  - The guide gains the real flag rules and a "who can do what" table.
+  - Its deepest reference folds away.
+  - The privacy page drops "the developer can't browse your data", which is untrue while the development driver ships and Forge gives developers log access by default.
+- **The social card is remade from a source file** (`brand/social-card/`).
+
+**Motion.** brand/README.md says the slip is the one motion idea and "nothing else moves on its own". For the website, as D39 did for the film, that widens to:
+- the slip leads every animation;
+- other motion follows the reader's scroll or plays once on entry (section heads and visuals only);
+- the hero loop and the recording, the only things that move on their own, pause off screen and carry a pause button (WCAG 2.2.2);
+- reduced motion shows every final state.
+
+It is plain CSS and JS, with no library and no scroll listeners. Page-to-page view transitions apply where browsers support them. The brand book itself is unchanged. Plan and research: [website/](website/).
+
+**Tested.** Four simulated first-time visitors ran two rounds (website/visitor-test/). By round 2 every one scored the problem 5 of 5 and the solution 4, and the Codegeist judge persona ranked the site about 5th to 8th of 40. What they still want is a way to act today: the production share link (`CONFIG.installUrl`) and the public film (`CONFIG.videoUrl`).
+
+**Wrong product copy found on the way, not fixed here:**
+- `anchors.jsx:31` says "Whole repository (weak: flags on every merge)", but a whole-repo anchor never flags on size.
+- `settings/index.jsx:455`: Jira help says any status change counts.
+- `dashboard/index.jsx:203`: "all of them at once", but it is at most 25 pages.
+- `shared/copy.ts:92`: Critical anchors also flag on smaller edits.
+- `shared/format.ts:604`: "changes to anchored code" also counts Jira.

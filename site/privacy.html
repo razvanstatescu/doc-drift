@@ -26,9 +26,8 @@
       </a>
       <nav class="nav" id="site-nav" aria-label="Main">
         <a href="./#how">How it works</a>
-        <a href="./#confluence">In Confluence</a>
-        <a href="./#agents">For agents</a>
-        <a href="docs.html">Docs</a>
+        <a href="./#agents">AI agents</a>
+        <a href="docs.html">Setup guide</a>
         <a href="privacy.html" aria-current="page">Privacy</a>
       </nav>
       <div class="header-actions">
@@ -49,8 +48,8 @@
       <div class="wrap">
         <p class="eyebrow">Trust</p>
         <h1 class="heading-lg" style="margin-top:10px">Privacy and data handling</h1>
-        <p class="body-lg">What Doc Drift reads, what it keeps and for how long, when AI is involved, and the permissions it asks for. In short: it runs on Atlassian Forge, keeps metadata rather than your pages, and acts as the person who clicks.</p>
-        <span class="caption">Last updated November 13, 2026</span>
+        <p class="body-lg">What Doc Drift reads, what it keeps and for how long, when AI is involved, and the permissions it asks for.</p>
+        <span class="caption">Last updated November 20, 2026</span>
       </div>
     </div>
 
@@ -58,8 +57,8 @@
       <nav class="toc" aria-label="On this page">
         <h2>On this page</h2>
         <ol>
+          <li><a href="#in-short">In short</a></li>
           <li><a href="#who">Who we are</a></li>
-          <li><a href="#summary">Summary</a></li>
           <li><a href="#where">Where data lives</a></li>
           <li><a href="#reads">What the apps read</a></li>
           <li><a href="#stores">What the apps store</a></li>
@@ -68,50 +67,53 @@
           <li><a href="#writes">What the apps change</a></li>
           <li><a href="#scopes">Permissions</a></li>
           <li><a href="#deletion">Retention and deletion</a></li>
+          <li><a href="#website">This website</a></li>
           <li><a href="#contact">Contact</a></li>
         </ol>
       </nav>
 
       <article class="prose">
+        <section id="in-short" class="guide-box">
+          <h2>In short</h2>
+          <ul>
+            <li><strong>No servers of ours.</strong> Both apps run on Atlassian Forge and keep their data in Forge storage for your site. The Bitbucket relay talks only to the Confluence app.</li>
+            <li><strong>No page bodies kept.</strong> Pages are read to match changes and find the affected sections. The app keeps anchors, states, change details and file paths, and a fix draft keeps the one block it replaces.</li>
+            <li><strong>Diffs are deleted after 30 days.</strong> File lists and pull request titles stay, so the history still makes sense.</li>
+            <li><strong>No AI in detection.</strong> Fixed rules flag pages. AI runs only in Rovo, when someone chats with Drift Reviewer or asks it to draft a fix.</li>
+            <li><strong>Permission-aware.</strong> People and agents see only pages they can view. Diffs are shown only to people who can edit the page, and never through MCP.</li>
+            <li><strong>Pages change only on a click.</strong> Page text changes only when a person applies a fix, as that person. On its own, the app writes only badge data and owner comments.</li>
+            <li><strong>This website doesn't track you.</strong> It has no analytics and sets no cookies. GitHub Pages hosts it and logs visitors' IP addresses for security.</li>
+          </ul>
+        </section>
+
         <section id="who">
           <h2>Who we are</h2>
           <p>Doc Drift is made by <strong>Nano-Soft Technology SRL</strong> (“Nano Soft”), a software company registered in Romania and based in Bucharest. Nano Soft builds and runs the Doc Drift apps and this website, and is responsible for how they handle data. Website: <a href="https://nano-soft.tech/">nano-soft.tech</a>.</p>
           <p>The apps run on Atlassian Forge inside your Atlassian site, so your organization stays in control of its Confluence, Jira and Bitbucket data. Atlassian's own handling of that data is covered by Atlassian's terms and privacy policy.</p>
         </section>
 
-        <section id="summary">
-          <h2>Summary</h2>
-          <ul>
-            <li><strong>No servers of ours.</strong> Both apps run on Atlassian Forge. Data stays in Forge storage for your site, and the Bitbucket relay talks only to the Confluence app.</li>
-            <li><strong>No page bodies stored.</strong> Pages are read to match changes and find affected sections, then discarded. The app keeps anchors, page states, change details and file paths.</li>
-            <li><strong>Diff text is deleted after 30 days.</strong> The list of changed files and the pull request title stay, so the history still makes sense.</li>
-            <li><strong>No AI in detection.</strong> AI runs only when someone clicks Propose fix, inside Rovo on your own site.</li>
-            <li><strong>Permission-aware.</strong> People and agents only see the state of pages they can view.</li>
-            <li><strong>No tracking.</strong> The apps have no analytics. This website sets no cookies, loads its fonts from Google Fonts, and remembers only your theme choice, in your browser.</li>
-          </ul>
-        </section>
-
         <section id="where">
           <h2>Where data lives</h2>
-          <p>Doc Drift is two Forge apps: the main app in Confluence, and a relay in Bitbucket. Forge runs them on Atlassian's cloud. The apps don't send data to any other service.</p>
+          <p>Doc Drift is two Forge apps: the main app in Confluence, and a relay in Bitbucket. Forge runs both on Atlassian's cloud, and the apps send data to no service outside Atlassian.</p>
           <ul>
             <li>App data is kept in Forge hosted storage (Forge SQL and the Key-Value Store). Atlassian encrypts it at rest, keeps each installation's data separate, and stores it in the same location as your Atlassian site, so it follows your data residency settings. Source: <a href="https://developer.atlassian.com/platform/forge/storage-reference/">Forge storage overview</a>.</li>
             <li>The relay's only outbound address is the Confluence app's Forge web trigger (<code>*.webtrigger.atlassian.app</code>). Every request is signed with a secret generated on your site. The Confluence app keeps the secret in Forge's secret store and shows only a short fingerprint.</li>
-            <li>The developer can't browse your data. App logs record IDs, counts and outcomes, and never page text.</li>
+            <li>App logs record IDs, counts and outcomes, plus repository names, file paths, change reasons, badge tooltips and the lines of owner comments, which name pull request authors. They never contain page text. Nano Soft can read these logs for your site to fix problems, unless an admin turns off <strong>Logs access</strong> in the app's details in Atlassian Administration. Source: <a href="https://developer.atlassian.com/platform/forge/access-app-logs/">Access app logs</a>.</li>
           </ul>
         </section>
 
         <section id="reads">
           <h2>What the apps read</h2>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>What</th><th>Why</th></tr></thead>
+          <div class="table-wrap" role="region" aria-label="What the apps read" tabindex="0">
+            <table class="table-fit">
+              <thead><tr><th>What</th><th>When and why</th></tr></thead>
               <tbody>
-                <tr><td>Confluence pages you anchor</td><td>To suggest anchors, match changes to the sections that mention them, and show those sections in the review panel</td></tr>
-                <tr><td>Page owner and your account</td><td>To mention the owner in a comment, and to check you can view or edit a page before acting</td></tr>
-                <tr><td>Merged pull requests (relay)</td><td>The title, author name, merge commit, list of changed files, and the diff for up to 300 files</td></tr>
-                <tr><td>Anchored Jira issues</td><td>When an anchored issue changes: which fields changed, with their old and new values</td></tr>
-                <tr><td>Jira projects you can create in</td><td>Only when you open Create Jira task, to list the projects</td></tr>
+                <tr><td>Confluence pages</td><td>To suggest anchors, match changes to the sections that mention them, and show those sections in the review panel. That covers anchored pages, any page whose badge someone opens (read as that person), pages an agent asks about (read as the person signed in), and a space's page list for the dashboard and <strong>Anchor this space</strong>.</td></tr>
+                <tr><td>People</td><td>Page owners, to mention them in comments and list them on the dashboard. Display names, to show who made, verified or changed something. Your rights on a page, before you act.</td></tr>
+                <tr><td>Spaces</td><td>Space keys and names, for the dashboard and the <strong>Spaces to watch</strong> setting</td></tr>
+                <tr><td>Merged pull requests (relay)</td><td>The number, title, author's name and account ID, merge commit, branch names, changed files with line counts (up to 500), and the diff (left out above 300 files, cut at about 200 KB)</td></tr>
+                <tr><td>Anchored Jira issues</td><td>When one changes or is deleted: which fields changed, with their old and new values, who changed it, and the issue's current summary, status, resolution, fix versions, components and parent</td></tr>
+                <tr><td>Jira projects</td><td>The projects you can create issues in, when you open <strong>Create Jira task</strong>. When a page suggests a Jira key, up to 200 keys of projects you can browse, so look-alike keys such as <code>COVID-19</code> aren't suggested.</td></tr>
               </tbody>
             </table>
           </div>
@@ -119,36 +121,43 @@
 
         <section id="stores">
           <h2>What the apps store</h2>
-          <div class="table-wrap">
+          <div class="table-wrap" role="region" aria-label="What the apps store" tabindex="0">
             <table>
               <thead><tr><th>Data</th><th>Contents</th><th>Kept</th></tr></thead>
               <tbody>
-                <tr><td>Anchors</td><td>Page ID, space key, repository, path or glob, Jira key, weight, who created it</td><td>Until removed</td></tr>
-                <tr><td>Page state</td><td>State, owner account ID, who verified and when, a one-line change summary</td><td>While the page exists</td></tr>
-                <tr><td>Changes</td><td>Pull request number, title, author name, merge commit, changed file paths; or a Jira key with the changed fields and values</td><td>Kept, for the history</td></tr>
+                <tr><td>Anchors</td><td>Page ID, space key, repository, path or glob, Jira key, weight, dismissal count, paths it no longer watches, who created it and when</td><td>Until removed, or the page is trashed or deleted</td></tr>
+                <tr><td>Page state</td><td>State, owner account ID, who verified and when, open change count, highest severity, a one-line summary of the latest change</td><td>Until the page is trashed or deleted</td></tr>
+                <tr><td>Changes</td><td>For a pull request: number, title, author name and account ID, merge commit, branches, changed files with line counts. For a Jira change: issue key, the changed fields with old and new values, who changed it, the issue summary and status category</td><td>Kept, for the history</td></tr>
                 <tr><td>Diff text</td><td>The raw diff of a merged pull request</td><td>30 days, then deleted</td></tr>
-                <tr><td>Drift events</td><td>Which anchor matched, score, severity, reasons, identifiers the change removed, status and who closed it</td><td>Kept, for the audit trail</td></tr>
-                <tr><td>Verifications</td><td>Who verified a page, when, and an optional note</td><td>Kept, for the audit trail</td></tr>
-                <tr><td>Fix drafts</td><td>The text of the one block a draft replaces, the proposed text, and who accepted or rejected it</td><td>Kept with the decision</td></tr>
-                <tr><td>Settings</td><td>Sensitivity, ignored paths, watched spaces, timings, the relay secret</td><td>Until changed</td></tr>
+                <tr><td>Drift events</td><td>Which anchor matched, the files, score, severity, reasons, identifiers the change removed, status, dismiss reason, snooze date, who closed it, and the key of any Jira task tracking it</td><td>Kept, for the audit trail</td></tr>
+                <tr><td>Verifications</td><td>Who verified a page, when and how, which changes it closed, and an optional note</td><td>Kept, for the audit trail</td></tr>
+                <tr><td>Fix drafts</td><td>The section heading, the text of the one block a draft replaces, the proposed text and its rationale, who asked for it, and who accepted or rejected it</td><td>Kept with the decision</td></tr>
+                <tr><td>Rename proposals</td><td>The old and new path of a renamed anchored file, and who decided</td><td>Until the page is trashed or deleted</td></tr>
+                <tr><td>Comment records</td><td>The owner comment's ID and lines, which name pull request authors, the owner, and when its 24-hour window began</td><td>Until the page is trashed or deleted</td></tr>
+                <tr><td>Settings</td><td>Sensitivity, ignore globs, watched spaces, timings, and the address of the settings page</td><td>Until changed</td></tr>
+                <tr><td>Relay connection</td><td>The relay secret, in Forge's secret store; its fingerprint, who created it and when; the last test ping's workspace ID and time</td><td>Until replaced</td></tr>
+                <tr><td>Relay (Bitbucket)</td><td>The ingest URL, the shared secret in Forge's secret store, the last merged pull request it handled, a record of each delivery, and repository details such as the main branch</td><td>Delivery records 30 days, repository details 1 hour, the rest until changed</td></tr>
               </tbody>
             </table>
           </div>
-          <p>The badge state is also written to a content property on each anchored page, so the badge loads with the page. It holds the state, a title and a tooltip.</p>
+          <p>The badge state is also written to a content property on each anchored page, so the badge loads with the page. It holds a title that leads with the state, such as <code>Possibly stale · Doc Drift</code>, and a tooltip.</p>
         </section>
 
         <section id="ai">
           <h2>When AI is used</h2>
-          <p>Detection never uses AI. A deterministic matcher compares the files and identifiers a change touched with each page's anchors.</p>
-          <p>AI is used only when a person clicks <strong>Propose fix</strong> or asks the Drift Reviewer agent in Rovo. Drift Reviewer runs in Rovo on your site, under Atlassian's terms for Rovo, and uses your Rovo credits. It receives the affected sections of the page and a summary of each change with up to 4,000 characters of its diff. It never receives a whole repository. It can save drafts, but only a person can apply one to the page.</p>
-          <p>The apps call no other AI service.</p>
+          <p>Detection never uses AI. Fixed rules compare the files and identifiers a change touched with each page's anchors, so the same change always gives the same result.</p>
+          <p>AI is used only in Rovo, on your site: when someone chats with Drift Reviewer, or clicks <strong>Propose fix</strong>, which asks it for a draft. Drift Reviewer runs under Atlassian's terms for Rovo and uses your Rovo credits.</p>
+          <p>It receives the page's title and state, a summary of each change, and the page sections that mention the changes, up to 5, with long blocks cut at 2,500 characters. If the person asking can edit the page, it also gets up to 4,000 characters of each change's diff and the full text of changed Jira fields. The page context it reads is at most 15,000 bytes, and never a whole repository.</p>
+          <p>It can save drafts, but only a person can apply one to the page. The apps call no other AI service.</p>
+          <p>When a coding agent calls an MCP tool, the answer goes to that agent and its AI provider. The MCP tools never return diffs.</p>
         </section>
 
         <section id="access">
           <h2>Who sees what</h2>
           <ul>
-            <li>The review panel, the agent and the MCP tools read pages as the signed-in person. A page that person can't view comes back as <code>unknown</code>, with no title.</li>
+            <li>The review panel, Drift Reviewer and the MCP tools read pages as the signed-in person. A page that person can't view comes back as <code>unknown</code>, with no title.</li>
             <li>Anyone who can view a page sees that it drifted and a summary: the change, its author, the file paths and why it matched. Raw diffs and full Jira field values are shown only to people who can edit the page, and never to MCP tools.</li>
+            <li>Owner comments are ordinary page comments, so anyone who can view the page can read them.</li>
             <li>Pages with view restrictions aren't supported yet: the app doesn't watch them.</li>
             <li>Settings are for Confluence administrators. The relay's settings are for Bitbucket workspace admins.</li>
             <li>Coding agents connect through Atlassian's MCP gateway with OAuth, only after an admin turns the tools on for the site, and only as the person who signs in.</li>
@@ -158,34 +167,34 @@
         <section id="writes">
           <h2>What the apps change</h2>
           <ul>
-            <li><strong>Page text</strong> changes only when a person accepts a fix, as that person, with a version message naming the pull request. Page history can undo it.</li>
-            <li><strong>Page metadata:</strong> the badge content property, written by the app after it checks the clicking person's permission.</li>
-            <li><strong>Comments:</strong> one footer comment per page that mentions the owner when anchors change. Admins can turn these off.</li>
-            <li><strong>Jira tasks</strong> are created only when a person clicks Create Jira task, as that person.</li>
+            <li><strong>Page text</strong> changes only when a person accepts a fix or applies the rename quick fix. The edit is made as that person, with a version message naming the pull request, so page history can undo it.</li>
+            <li><strong>Badge data:</strong> the content property behind the badge. The app writes it after checking the clicking person's rights, and on its own when a change arrives, a page turns Stale, a snooze ends, or a page is trashed or restored.</li>
+            <li><strong>Comments:</strong> a footer comment on a flagged page that mentions the owner, and the pull request author when their account is on your site. There is at most 1 new comment per page in 24 hours, and later changes are added to it. Administrators can turn comments off.</li>
+            <li><strong>Jira tasks</strong> are created only when a person uses <strong>Create Jira task</strong>, as that person.</li>
           </ul>
         </section>
 
         <section id="scopes">
           <h2>Permissions</h2>
           <h3>Doc Drift (Confluence, Jira optional)</h3>
-          <div class="table-wrap">
+          <div class="table-wrap" role="region" aria-label="Doc Drift permissions" tabindex="0">
             <table>
               <thead><tr><th>Scope</th><th>Used for</th></tr></thead>
               <tbody>
-                <tr><td><code>read:page:confluence</code></td><td>Reading anchored pages and their owners</td></tr>
-                <tr><td><code>write:page:confluence</code></td><td>The badge content property, and saving fixes a person accepts</td></tr>
+                <tr><td><code>read:page:confluence</code></td><td>Reading pages, their owners, your rights on them and the badge property, and a space's page list</td></tr>
+                <tr><td><code>write:page:confluence</code></td><td>The badge content property, and saving fixes a person applies</td></tr>
                 <tr><td><code>write:comment:confluence</code></td><td>The owner comment</td></tr>
-                <tr><td><code>read:space:confluence</code></td><td>The space dashboard</td></tr>
-                <tr><td><code>read:confluence-user</code></td><td>Checking who is an administrator</td></tr>
-                <tr><td><code>read:confluence-content.summary</code>, <code>write:confluence-content</code></td><td>Receiving page trashed and deleted events, so their drift closes. Atlassian requires these scopes for those events</td></tr>
-                <tr><td><code>read:jira-work</code></td><td>Changes to anchored Jira issues</td></tr>
-                <tr><td><code>write:jira-work</code></td><td>Create Jira task, only as the person who clicks</td></tr>
-                <tr><td><code>storage:app</code></td><td>Settings and the relay secret</td></tr>
+                <tr><td><code>read:space:confluence</code></td><td>Finding a space for the dashboard, and listing spaces in settings</td></tr>
+                <tr><td><code>read:confluence-user</code></td><td>Display names, and checking who is an administrator</td></tr>
+                <tr><td><code>read:confluence-content.summary</code>, <code>write:confluence-content</code></td><td>Receiving page trashed and deleted events, so their drift closes. Atlassian requires both scopes for those events. The first also brings page moved and restored events</td></tr>
+                <tr><td><code>read:jira-work</code></td><td>Changes to anchored Jira issues, and listing Jira projects</td></tr>
+                <tr><td><code>write:jira-work</code></td><td><strong>Create Jira task</strong>, only as the person who clicks</td></tr>
+                <tr><td><code>storage:app</code></td><td>Settings, the relay secret and the relay's connection status</td></tr>
               </tbody>
             </table>
           </div>
           <h3>Doc Drift Relay (Bitbucket)</h3>
-          <div class="table-wrap">
+          <div class="table-wrap" role="region" aria-label="Doc Drift Relay permissions" tabindex="0">
             <table>
               <thead><tr><th>Scope</th><th>Used for</th></tr></thead>
               <tbody>
@@ -202,11 +211,21 @@
           <h2>Retention and deletion</h2>
           <ul>
             <li>Diff text is deleted 30 days after a change arrives, by a daily job.</li>
-            <li>Removing an anchor deletes it. When a page is trashed or deleted, its anchors and state are deleted and its open drift closes.</li>
-            <li>When the app is uninstalled, Atlassian keeps its Forge storage for 28 days so a reinstall can be linked back to it, then deletes it under Atlassian's data retention policy. Source: <a href="https://developer.atlassian.com/platform/forge/storage-reference/hosted-storage-data-lifecycle/">data lifecycle for Forge-hosted storage</a>.</li>
+            <li>Removing an anchor deletes it. When a page is trashed or deleted, its anchors and state are deleted, its open changes close, and its open drafts are rejected.</li>
+            <li>When the app is uninstalled, Atlassian keeps its Forge storage for 28 days, then deletes it. Within 21 days, Nano Soft can ask Atlassian to link it to a reinstall, with your consent. Source: <a href="https://developer.atlassian.com/platform/forge/storage-reference/hosted-storage-data-lifecycle/">data lifecycle for Forge-hosted storage</a>.</li>
+            <li>When the apps delete data, Atlassian keeps a soft-deleted copy for its retention period, to recover from accidents, then destroys it. The apps can't read that copy.</li>
             <li>Content properties, comments, page versions and Jira tasks the apps created belong to Confluence and Jira, and stay until you delete them there.</li>
           </ul>
           <p>To have data for a person or a page removed before then, email <a href="mailto:hello@nano-soft.tech">hello@nano-soft.tech</a>.</p>
+        </section>
+
+        <section id="website">
+          <h2>This website</h2>
+          <p>This website is a static site with no analytics, and it sets no cookies. It remembers only your theme choice, in your browser.</p>
+          <ul>
+            <li>GitHub Pages hosts it, and GitHub logs each visitor's IP address for security. Source: <a href="https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages#data-collection">About GitHub Pages</a>.</li>
+            <li>Its fonts load from Google Fonts, so your browser also requests them from Google.</li>
+          </ul>
         </section>
 
         <section id="contact">
@@ -230,8 +249,8 @@
           <h2>Product</h2>
           <ul>
             <li><a href="./#how">How it works</a></li>
+            <li><a href="./#agents">AI agents</a></li>
             <li><a href="./#confluence">In Confluence</a></li>
-            <li><a href="./#agents">For agents</a></li>
             <li><a href="./#faq">Questions</a></li>
           </ul>
         </div>
@@ -239,7 +258,7 @@
           <h2>Docs</h2>
           <ul>
             <li><a href="docs.html">Setup guide</a></li>
-            <li><a href="docs.html#mcp">Connect coding agents</a></li>
+            <li><a href="docs.html#mcp">Connect coding assistants</a></li>
             <li><a href="docs.html#troubleshooting">Troubleshooting</a></li>
           </ul>
         </div>

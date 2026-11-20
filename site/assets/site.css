@@ -1926,3 +1926,117 @@ td:first-child {
     transform: none;
   }
 }
+
+/* Guide pages (v2) */
+.prose .guide-box {
+  padding: 24px 24px 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+.prose .guide-box h2 {
+  font-size: 19px;
+  line-height: 28px;
+}
+.prose .guide-box ol,
+.prose .guide-box ul {
+  margin-top: 12px;
+}
+.prose > .guide-box + section {
+  margin-top: 56px;
+  padding-top: 0;
+  border-top: 0;
+}
+.prose td:first-child > code:only-child {
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .prose .guide-box {
+    padding: 20px 18px;
+  }
+  .prose .table-wrap table.table-fit {
+    min-width: 0;
+  }
+}
+
+/* Guide pages (v2): folded reference blocks and the troubleshooting accordion */
+.prose details.fold {
+  margin-top: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+.prose details.fold > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+}
+.prose details.fold > summary::-webkit-details-marker {
+  display: none;
+}
+.prose details.fold > summary::after {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-right: 4px;
+  border-right: 1.75px solid var(--text-muted);
+  border-bottom: 1.75px solid var(--text-muted);
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 160ms ease;
+}
+.prose details.fold[open] > summary::after {
+  transform: translateY(2px) rotate(-135deg);
+}
+.prose details.fold > :not(summary) {
+  margin: 0 20px 20px;
+}
+.prose .faq-guide {
+  max-width: none;
+  margin-top: 16px;
+}
+.prose .faq-guide summary {
+  padding: 18px 0;
+  font-size: 17px;
+}
+.prose .faq-guide .answer {
+  color: var(--text);
+}
+
+/* Shared (v2, 2026-11-20): page-to-page view transitions (Chrome 126+, Safari 18.2+; others just
+   navigate) and 44 px touch targets on small screens, for every page. */
+@view-transition {
+  navigation: auto;
+}
+.site-header {
+  view-transition-name: site-header;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+@media (max-width: 860px) {
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+  }
+  .lockup {
+    min-height: 44px;
+  }
+  .footer-grid a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .footer-grid ul {
+    gap: 0;
+  }
+}

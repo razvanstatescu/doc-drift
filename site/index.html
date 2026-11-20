@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Doc Drift: docs that know when the code moved</title>
-  <meta name="description" content="Doc Drift anchors Confluence pages to code and Jira work, flags them when those change, and tells Rovo and coding agents which pages to trust.">
+  <meta name="description" content="When the code or Jira work behind a Confluence page changes, Doc Drift flags the page and warns AI agents before they rely on it.">
   <meta name="theme-color" content="#F2F6F7">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Doc Drift">
-  <meta property="og:description" content="Docs that know when the code moved. Flags Confluence pages when the code or Jira work they describe changes, and tells agents which pages to trust.">
+  <meta property="og:description" content="Docs that know when the code moved. When the code or Jira work behind a Confluence page changes, Doc Drift flags the page and warns AI agents before they rely on it.">
   <meta property="og:image" content="https://razvanstatescu.github.io/doc-drift/assets/social-card.png">
   <meta property="og:url" content="https://razvanstatescu.github.io/doc-drift/">
   <meta name="twitter:card" content="summary_large_image">
@@ -17,39 +17,43 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/site.css">
+  <link rel="stylesheet" href="assets/home.css">
   <script>
-    try { var t = localStorage.getItem('dds-theme'); if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+    (function (r) {
+      try { var t = localStorage.getItem('dds-theme'); if (t === 'light' || t === 'dark') r.setAttribute('data-theme', t); } catch (e) {}
+      r.classList.add('js');
+      try { if (!matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) r.classList.add('motion-ok'); } catch (e) {}
+    })(document.documentElement);
   </script>
 </head>
-<body>
+<body class="home">
   <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
     <symbol id="i-check" viewBox="0 0 20 20"><path d="M4.5 10.5l3.75 3.75L15.5 6.5"/></symbol>
     <symbol id="i-slip" viewBox="0 0 20 20"><path d="M3 7h9.5M7.5 13H17"/></symbol>
     <symbol id="i-clock" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><path d="M10 6.5V10l2.5 1.75"/></symbol>
-    <symbol id="i-trace" viewBox="0 0 20 20"><rect x="3.5" y="3.5" width="13" height="13" rx="2" stroke-dasharray="2.6 2.4"/></symbol>
     <symbol id="i-anchor" viewBox="0 0 20 20"><path d="M8.6 11.4a3 3 0 0 0 4.24 0l2.5-2.5a3 3 0 0 0-4.24-4.24l-.9.9"/><path d="M11.4 8.6a3 3 0 0 0-4.24 0l-2.5 2.5a3 3 0 0 0 4.24 4.24l.9-.9"/></symbol>
     <symbol id="i-merge" viewBox="0 0 20 20"><circle cx="6" cy="4.75" r="1.75"/><circle cx="6" cy="15.25" r="1.75"/><circle cx="14" cy="15.25" r="1.75"/><path d="M6 6.5v7M14 13.5V9a2.5 2.5 0 0 0-2.5-2.5H9"/><path d="M10.75 4.75 9 6.5l1.75 1.75"/></symbol>
     <symbol id="i-page" viewBox="0 0 20 20"><path d="M5 2.75h6.25L15 6.5v10.75H5z"/><path d="M11 2.75V6.5h4M7.75 10.5h4.5M7.75 13.5h4.5"/></symbol>
-    <symbol id="i-copy" viewBox="0 0 20 20"><rect x="7" y="7" width="9.5" height="9.5" rx="2"/><path d="M13 7V5.25A1.5 1.5 0 0 0 11.5 3.75h-6A1.5 1.5 0 0 0 4 5.25v6a1.5 1.5 0 0 0 1.5 1.5H7"/></symbol>
     <symbol id="i-sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="3.25"/><path d="M10 2.75v1.5M10 15.75v1.5M2.75 10h1.5M15.75 10h1.5M4.87 4.87l1.06 1.06M14.07 14.07l1.06 1.06M4.87 15.13l1.06-1.06M14.07 5.93l1.06-1.06"/></symbol>
     <symbol id="i-moon" viewBox="0 0 20 20"><path d="M16 12.4A6.5 6.5 0 0 1 7.6 4a6.5 6.5 0 1 0 8.4 8.4z"/></symbol>
     <symbol id="i-menu" viewBox="0 0 20 20"><path d="M3.5 6h13M3.5 10h13M3.5 14h13"/></symbol>
-    <symbol id="i-x" viewBox="0 0 20 20"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9"/></symbol>
     <symbol id="i-plus" viewBox="0 0 20 20"><path d="M10 4.5v11M4.5 10h11"/></symbol>
     <symbol id="i-arrow" viewBox="0 0 20 20"><path d="M4 10h11.5M11 5.5l4.5 4.5-4.5 4.5"/></symbol>
     <symbol id="i-eye" viewBox="0 0 20 20"><path d="M2.5 10s2.75-5 7.5-5 7.5 5 7.5 5-2.75 5-7.5 5-7.5-5-7.5-5z"/><circle cx="10" cy="10" r="2.25"/></symbol>
     <symbol id="i-hand" viewBox="0 0 20 20"><path d="M7 10.5V4.75a1.25 1.25 0 0 1 2.5 0V9.5M9.5 9V3.75a1.25 1.25 0 0 1 2.5 0V9.5M12 9.25V5a1.25 1.25 0 0 1 2.5 0v6.5a5.75 5.75 0 0 1-5.75 5.75c-2 0-3.2-.9-4.3-2.5L2.9 12.4a1.3 1.3 0 0 1 2.1-1.5L7 13"/></symbol>
     <symbol id="i-rule" viewBox="0 0 20 20"><path d="M3.5 5.5h13M3.5 10h13M3.5 14.5h7"/><path d="M13.5 13.75l1.5 1.5 2.5-2.75"/></symbol>
-    <symbol id="i-store" viewBox="0 0 20 20"><ellipse cx="10" cy="5" rx="6" ry="2.25"/><path d="M4 5v10c0 1.24 2.69 2.25 6 2.25s6-1.01 6-2.25V5M4 10c0 1.24 2.69 2.25 6 2.25s6-1.01 6-2.25"/></symbol>
-    <symbol id="i-key" viewBox="0 0 20 20"><circle cx="7" cy="12.5" r="3.5"/><path d="M9.5 10 16 3.5M13.5 6l2 2M11.75 7.75l1.5 1.5"/></symbol>
+    <symbol id="i-box" viewBox="0 0 20 20"><path d="M10 2.75 16.5 6.5v7L10 17.25 3.5 13.5v-7z"/><path d="M3.5 6.5 10 10.25l6.5-3.75M10 10.25v7"/></symbol>
     <symbol id="i-words" viewBox="0 0 20 20"><path d="M3.5 4.5h13v8.5H9l-3.5 3v-3h-2z"/><path d="M6.5 8h7M6.5 10.5h4"/></symbol>
-    <symbol id="i-bell" viewBox="0 0 20 20"><path d="M5.5 8.5a4.5 4.5 0 0 1 9 0c0 4 1.75 5.5 1.75 5.5H3.75S5.5 12.5 5.5 8.5z"/><path d="M8.25 16.5a1.85 1.85 0 0 0 3.5 0"/></symbol>
-    <symbol id="i-sliders" viewBox="0 0 20 20"><path d="M3.5 6h6M13.5 6h3M3.5 14h3M10.5 14h6"/><circle cx="11.5" cy="6" r="2"/><circle cx="8.5" cy="14" r="2"/></symbol>
-    <symbol id="i-play" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><path d="M8.5 7.25v5.5l4.25-2.75z"/></symbol>
+    <symbol id="i-play" viewBox="0 0 20 20"><path d="M7 5.25v9.5L14.75 10z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 20 20"><path d="M7.25 5v10M12.75 5v10"/></symbol>
     <symbol id="i-undo" viewBox="0 0 20 20"><path d="M6.5 5 3.5 8l3 3"/><path d="M3.5 8h8a5 5 0 0 1 0 10H8"/></symbol>
     <symbol id="i-rename" viewBox="0 0 20 20"><path d="M3.5 6.5h9M3.5 13.5h9"/><path d="M14 4l2.5 2.5L14 9M14 11l2.5 2.5L14 16"/></symbol>
     <symbol id="i-filter" viewBox="0 0 20 20"><path d="M3.5 4.5h13l-5 6v5l-3 1.5v-6.5z"/></symbol>
     <symbol id="i-ticket" viewBox="0 0 20 20"><path d="M3 6.5a1.5 1.5 0 0 1 1.5-1.5h11A1.5 1.5 0 0 1 17 6.5V8a2 2 0 0 0 0 4v1.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 13.5V12a2 2 0 0 0 0-4z"/><path d="M12 5v10" stroke-dasharray="1.5 2"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 20 20"><rect x="3.5" y="4.5" width="13" height="12" rx="2"/><path d="M3.5 8.5h13M7 3v3M13 3v3"/></symbol>
+    <symbol id="i-bars" viewBox="0 0 20 20"><path d="M4.5 16V10M8.5 16V5M12.5 16v-4M16.5 16V7.5"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 20 20"><path d="M5.5 8.5a4.5 4.5 0 0 1 9 0c0 4 1.75 5.5 1.75 5.5H3.75S5.5 12.5 5.5 8.5z"/><path d="M8.25 16.5a1.85 1.85 0 0 0 3.5 0"/></symbol>
+    <symbol id="dd-mark" viewBox="0 0 512 512"><path d="M140 120H222A136 136 0 0 1 347.19 202.88A8 8 0 0 1 339.83 214H118A8 8 0 0 1 110 206V150A30 30 0 0 1 140 120Z" fill="currentColor"/><path d="M118 298H339.83A8 8 0 0 1 347.19 309.12A136 136 0 0 1 222 392H140A30 30 0 0 1 110 362V306A8 8 0 0 1 118 298Z" fill="currentColor"/><path d="M118 226H348.1A8 8 0 0 1 355.98 232.62A136 136 0 0 1 355.98 279.38A8 8 0 0 1 348.1 286H118A8 8 0 0 1 110 278V234A8 8 0 0 1 118 226Z" fill="currentColor" style="fill-opacity:var(--mark-trace,0.14)"/><path d="M174 226H404.1A8 8 0 0 1 411.98 232.62A136 136 0 0 1 411.98 279.38A8 8 0 0 1 404.1 286H174A8 8 0 0 1 166 278V234A8 8 0 0 1 174 226Z" fill="#FFAA1F"/></symbol>
   </svg>
 
   <a class="skip" href="#main">Skip to content</a>
@@ -62,9 +66,8 @@
       </a>
       <nav class="nav" id="site-nav" aria-label="Main">
         <a href="#how">How it works</a>
-        <a href="#confluence">In Confluence</a>
-        <a href="#agents">For agents</a>
-        <a href="docs.html">Docs</a>
+        <a href="#agents">AI agents</a>
+        <a href="docs.html">Setup guide</a>
         <a href="privacy.html">Privacy</a>
       </nav>
       <div class="header-actions">
@@ -81,569 +84,516 @@
   </header>
 
   <main id="main">
-    <!-- Hero -->
-    <section class="hero" aria-labelledby="hero-title">
+    <!-- 1. Hero -->
+    <section class="h-hero" aria-labelledby="hero-title">
       <div class="wrap">
-        <div class="hero-copy">
-          <p class="eyebrow">A Forge app for Confluence, built for Codegeist 2026</p>
+        <div class="h-hero-copy">
+          <p class="eyebrow">For Confluence Cloud, with Bitbucket and Jira</p>
           <h1 class="display" id="hero-title">Docs that know when the code moved.</h1>
-          <p class="body-lg">Doc Drift anchors Confluence pages to code and Jira work, flags them when those change, and tells Rovo and coding agents which pages to trust.</p>
+          <p class="h-lede">When the code or Jira work behind a Confluence page changes, Doc Drift flags the page and warns AI agents before they rely on it.</p>
           <div class="cta-row">
             <a class="btn btn-primary" href="docs.html#install" data-install>Install for Confluence</a>
-            <a class="btn btn-secondary" href="#agents">Connect a coding agent</a>
-            <a class="btn btn-secondary" href="#" data-video hidden>
-              <svg class="icon" aria-hidden="true"><use href="#i-play"/></svg>Watch the demo
-            </a>
+            <a class="btn btn-secondary" href="#how">See how it works</a>
+            <a class="btn btn-secondary" href="#" data-video hidden><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg>Watch the film (1:49)</a>
           </div>
-          <ul class="hero-proof">
-            <li><svg class="icon" aria-hidden="true"><use href="#i-rule"/></svg>No AI in detection</li>
-            <li><svg class="icon" aria-hidden="true"><use href="#i-hand"/></svg>Agents never edit pages</li>
-            <li><svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg>Respects page permissions</li>
-          </ul>
         </div>
+      </div>
 
-        <div class="hero-art">
-          <svg class="tide" viewBox="0 0 800 640" preserveAspectRatio="none" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.25">
-            <path d="M0 90c90-26 170 22 260 0s170-48 270-16 180 40 270 6"/>
-            <path d="M0 150c90-26 170 22 260 0s170-48 270-16 180 40 270 6"/>
-            <path d="M0 210c90-26 170 22 260 0s170-48 270-16 180 40 270 6"/>
-            <path d="M0 270c90-26 170 22 260 0s170-48 270-16 180 40 270 6"/>
-            <path d="M0 330c90-26 170 22 260 0s170-48 270-16 180 40 270 6"/>
-            <path d="M0 390c90-26 170 22 260 0s170-48 270-16 180 40 270 6"/>
-            <path d="M0 450c90-26 170 22 260 0s170-48 270-16 180 40 270 6"/>
-            <path d="M0 510c90-26 170 22 260 0s170-48 270-16 180 40 270 6"/>
-            <path d="M0 570c90-26 170 22 260 0s170-48 270-16 180 40 270 6"/>
-          </svg>
+      <figure class="h-art">
+        <figcaption class="sr-only">A short animation: a Confluence runbook reads Verified, and AI agents are told it is safe to cite. A pull request renames the script it names, so the page reads Possibly stale and agents are warned not to present its steps as current. A person accepts the fix, and the page is Verified again.</figcaption>
+        <svg class="h-tide" viewBox="0 0 1200 520" preserveAspectRatio="none" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.25">
+          <path d="M0 70c120-30 230 26 360 0s230-56 380-18 300 46 460 8"/>
+          <path d="M0 130c120-30 230 26 360 0s230-56 380-18 300 46 460 8"/>
+          <path d="M0 190c120-30 230 26 360 0s230-56 380-18 300 46 460 8"/>
+          <path d="M0 250c120-30 230 26 360 0s230-56 380-18 300 46 460 8"/>
+          <path d="M0 310c120-30 230 26 360 0s230-56 380-18 300 46 460 8"/>
+          <path d="M0 370c120-30 230 26 360 0s230-56 380-18 300 46 460 8"/>
+          <path d="M0 430c120-30 230 26 360 0s230-56 380-18 300 46 460 8"/>
+          <path d="M0 490c120-30 230 26 360 0s230-56 380-18 300 46 460 8"/>
+        </svg>
 
-          <div class="mock-controls">
-            <span data-hero-status>Verified by Dana, 3 days ago</span>
-            <button class="btn btn-secondary btn-sm" type="button" data-hero-toggle>Merge PR #482</button>
-          </div>
-                    <figure class="page-mock" data-hero-mock aria-label="Example Confluence page with a Doc Drift badge">
-            <div class="crumbs"><span>Platform</span><span aria-hidden="true">/</span><span>Runbooks</span></div>
-            <p class="mock-title">Payments rollback runbook</p>
-            <div class="byline">
-              <span class="avatar" aria-hidden="true">D</span>
-              <span>Owned by Dana</span>
-              <span aria-hidden="true">·</span>
-              <span class="state-slot">
-                <span class="badge badge-verified"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Verified</span>
-                <span class="badge badge-possibly"><svg class="icon" aria-hidden="true"><use href="#i-slip"/></svg>Possibly stale</span>
-                <span class="tooltip" role="presentation">PR #482 changed scripts/rollback.sh 2 minutes ago. Review.</span>
-              </span>
-            </div>
-            <div class="page-body">
-              <p class="mock-h">Roll back a release</p>
-              <ol>
-                <li>Page the payments on-call engineer and post in the incident channel.</li>
-                <li>From the repo root, run <code class="token">scripts/rollback.sh</code> with the release tag.</li>
-                <li>Wait for <code class="token">ROLLBACK_TIMEOUT</code> to pass, then check the error rate.</li>
+        <div class="wrap h-art-wrap">
+          <div class="h-stage is-pr is-w1 is-drift is-tip" data-hero-stage aria-hidden="true">
+            <div class="h-pg h-pg--hero">
+              <p class="h-pg-crumbs"><svg class="icon" aria-hidden="true"><use href="#i-page"/></svg>Platform / Runbooks</p>
+              <p class="h-pg-title">Payments rollback runbook</p>
+              <div class="h-pg-by">
+                <span>By Dana</span>
+                <span class="h-bl">
+                  <svg class="h-bl-icon" aria-hidden="true"><use href="#dd-mark"/></svg>
+                  <span class="h-bl-slot">
+                    <span class="h-bl-ok">Verified · Doc Drift</span>
+                    <span class="h-bl-trace"></span>
+                    <span class="h-bl-drift">Possibly stale · Doc Drift</span>
+                  </span>
+                </span>
+                <span class="h-wire h-wire-ag"></span>
+                <span class="h-tip">PR #482 changed scripts/rollback.sh on Nov 13. Review.</span>
+              </div>
+              <p class="h-pg-h">Steps</p>
+              <ol class="h-pg-steps">
+                <li>Confirm the current and previous release.</li>
+                <li>Run the rollback script from the root of the <span class="h-mono h-ic">payments-api</span> repo.
+                  <div class="h-code">
+                    <span class="h-wire h-wire-pr"></span>
+                    <span class="h-code-v h-code-old"><span>export ROLLBACK_TIMEOUT=300</span><span><span class="h-hit">./scripts/rollback.sh</span> --timeout $ROLLBACK_TIMEOUT</span></span>
+                    <span class="h-code-v h-code-new"><span>export ROLLBACK_<b>TIMEOUT_SECS</b>=300</span><span>./scripts/<b>rollback-v2.sh</b> --timeout $ROLLBACK_<b>TIMEOUT_SECS</b></span></span>
+                    <span class="h-fix"><span class="h-fix-btn">Accept fix</span><span class="h-cursor"><svg viewBox="0 0 16 20" aria-hidden="true"><path d="M1.5 1.5v15l4.2-3.9 2.7 6 2.6-1.2-2.7-5.9 5.7-.4z"/></svg><span>Dana</span></span></span>
+                  </div>
+                </li>
               </ol>
-              <div class="trace-lines" aria-hidden="true"><span></span><span></span><span></span></div>
+              <div class="h-pg-more"><span style="width:36%"></span><span style="width:88%"></span></div>
+              <p class="h-toast"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Accepted. A new page version names PR #482.</p>
             </div>
-          </figure>
-<p class="sr-only" aria-live="polite" data-hero-live></p>
 
-          <div class="agent-card" data-agent-card aria-label="What an agent sees">
-            <header><svg class="icon icon-16" aria-hidden="true"><use href="#i-anchor"/></svg>check-page-freshness</header>
-<pre>{
-  <span class="j-key">"title"</span>: <span class="j-str">"Payments rollback runbook"</span>,
-  <span class="j-key">"status"</span>: <span class="j-state" data-agent-state>"verified"</span>,
-  <span class="j-key">"guidance"</span>: <span class="j-str" data-agent-guidance>"Safe to cite."</span>
-}</pre>
-          </div>
-        </div>
-      </div>
-    </section>
+            <div class="h-pr h-card">
+              <p class="h-pr-top"><svg class="icon" aria-hidden="true"><use href="#i-merge"/></svg>Bitbucket · payments-api</p>
+              <p class="h-pr-title"><span class="h-mono">PR #482</span> merged by Sam</p>
+              <p class="h-pr-files"><span class="h-mono">scripts/rollback.sh</span><span><span class="h-arr">→</span> <span class="h-mono">scripts/rollback-v2.sh</span></span></p>
+            </div>
 
-    <!-- Problem -->
-    <section class="section" aria-labelledby="problem-title">
-      <div class="wrap problem">
-        <div>
-          <p class="eyebrow">The problem</p>
-          <h2 class="title" id="problem-title" style="margin-top:12px">Docs rot when systems change, not when calendars turn.</h2>
-          <blockquote>
-            <p>“What actually invalidates technical docs isn't time passing, it's the system changing underneath them. How-tos, process docs, configuration guides: these are the dangerous ones.”</p>
-            <footer>A member of the Atlassian Community</footer>
-          </blockquote>
-        </div>
-        <div class="problem-points">
-          <div>
-            <h3>Review dates miss it</h3>
-            <p>A page untouched for 2 years can be correct. A page reviewed last month can be out of date after one merge. Page age and review reminders can't tell the two apart.</p>
+            <div class="h-ag">
+              <p class="h-ag-top"><svg class="icon" aria-hidden="true"><use href="#i-words"/></svg>What AI agents are told</p>
+              <div class="h-ag-msgs">
+                <p class="h-ag-ok"><strong>Verified.</strong> Safe to cite.</p>
+                <p class="h-ag-drift"><strong>Possibly stale.</strong> Do not present steps from this page as current.</p>
+              </div>
+            </div>
           </div>
-          <div>
-            <h3>Agents can't tell either</h3>
-            <p>Rovo and coding agents read the same pages and cite them with confidence. Nothing tells them that the script in step 2 was renamed last week.</p>
-          </div>
-          <div>
-            <h3>The cost lands at 3am</h3>
-            <p>The on-call engineer follows the runbook, and the command it names no longer exists. A runbook that's out of date can be worse than none.</p>
-          </div>
-        </div>
-      </div>
-    </section>
 
-    <!-- How it works -->
-    <section class="section" id="how" aria-labelledby="how-title">
+          <button class="h-loop-btn" type="button" aria-pressed="false" data-loop-toggle hidden>
+            <svg class="icon i-pause" aria-hidden="true"><use href="#i-pause"/></svg><svg class="icon i-play" aria-hidden="true"><use href="#i-play"/></svg><span>Pause</span>
+          </button>
+        </div>
+      </figure>
+
       <div class="wrap">
-        <div class="section-head">
-          <p class="eyebrow">How it works</p>
-          <h2 class="title" id="how-title">Catch the slip.</h2>
-          <p class="body-lg">Anchor a page to what it describes. When that moves, the page says so, and agents hold off until someone has looked.</p>
-        </div>
-        <div class="steps">
-          <article class="step">
-            <div class="step-art" aria-hidden="true">
-              <div class="bands"><span></span><span class="band-mid"></span><span></span></div>
-            </div>
-            <div class="step-body">
-              <span class="step-num">01</span>
-              <h3 class="heading-md">In sync</h3>
-              <p>The rollback runbook is anchored to <code>scripts/rollback.sh</code> in <code>payments-api</code>, and to the <code>PAY-142</code> epic. Someone checked it against both.</p>
-              <span class="badge badge-verified"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Verified</span>
-            </div>
-          </article>
-          <article class="step">
-            <div class="step-art" aria-hidden="true">
-              <div class="bands bands-moved" style="--slip-px:20px"><span></span><span class="band-mid"></span><span></span></div>
-            </div>
-            <div class="step-body">
-              <span class="step-num">02</span>
-              <h3 class="heading-md">Code moved</h3>
-              <p>PR #482 merges and renames the script. A deterministic matcher scores the change against every anchor. The page badge turns Possibly stale, the owner gets a comment, and agents are told to caveat.</p>
-              <span class="badge badge-possibly"><svg class="icon" aria-hidden="true"><use href="#i-slip"/></svg>Possibly stale</span>
-            </div>
-          </article>
-          <article class="step">
-            <div class="step-art" aria-hidden="true">
-              <div class="bands bands-ok"><span></span><span class="band-mid"></span><span></span></div>
-            </div>
-            <div class="step-body">
-              <span class="step-num">03</span>
-              <h3 class="heading-md">Reviewed</h3>
-              <p>Dana opens the review panel, sees the rename and the step it affects, and accepts the fix. The page is Verified again, and agents trust it again.</p>
-              <span class="badge badge-verified"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Verified</span>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- Inside Confluence -->
-    <section class="section" id="confluence" aria-labelledby="confluence-title">
-      <div class="wrap">
-        <div class="section-head">
-          <p class="eyebrow">Inside Confluence</p>
-          <h2 class="title" id="confluence-title">Everything happens on the page.</h2>
-          <p class="body-lg">No new tool to check. The badge sits in the page byline, and one click opens what changed and what to do about it.</p>
-        </div>
-
-        <div class="bento">
-          <article class="tile tile-wide">
-            <div>
-              <h3>See exactly what changed</h3>
-              <p>The review panel names the pull request or Jira change, who made it, the files, and why it flagged this page. Then you decide: mark it verified, snooze it, dismiss it with a reason, or fix it.</p>
-            </div>
-            <div class="tile-visual" aria-label="Review panel example">
-              <div class="event">
-                <div class="event-top">
-                  <svg class="icon icon-16 muted" aria-hidden="true"><use href="#i-merge"/></svg>
-                  <strong>PR #482</strong><span class="muted">merged by Sam · 2 hours ago</span>
-                  <span class="chip chip-sev">High</span>
-                </div>
-                <div class="event-why">PR #482 renamed a script that step 2 runs.</div>
-                <div class="event-files">scripts/rollback.sh <span class="arrow">→</span> scripts/rollback-v2.sh</div>
-              </div>
-              <div class="event">
-                <div class="event-top">
-                  <svg class="icon icon-16 muted" aria-hidden="true"><use href="#i-ticket"/></svg>
-                  <strong class="mono" style="font-size:13px">PAY-142</strong><span class="muted">moved to Done · Yesterday</span>
-                  <span class="chip chip-sev">Medium</span>
-                </div>
-                <div class="event-why">The epic this page is anchored to was closed.</div>
-              </div>
-              <div class="actions-row" aria-hidden="true">
-                <span class="fake-btn primary">Mark verified</span>
-                <span class="fake-btn">Propose fix</span>
-                <span class="fake-btn">Snooze 7 days</span>
-                <span class="fake-btn">Dismiss</span>
-              </div>
-            </div>
-          </article>
-
-          <article class="tile">
-            <div>
-              <h3>A badge in the byline</h3>
-              <p>Four states, always a word and an icon. The state is stored with the page, so the badge loads with it and page views run no app code.</p>
-            </div>
-            <div class="tile-visual state-grid">
-              <div class="row"><span class="badge badge-verified"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Verified</span><span>Checked since its anchors changed</span></div>
-              <div class="row"><span class="badge badge-possibly"><svg class="icon" aria-hidden="true"><use href="#i-slip"/></svg>Possibly stale</span><span>An anchor changed</span></div>
-              <div class="row"><span class="badge badge-stale"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>Stale</span><span>Unreviewed for 7 days, or 3 changes</span></div>
-              <div class="row"><span class="badge badge-unanchored"><svg class="icon" aria-hidden="true"><use href="#i-trace"/></svg>Unanchored</span><span>Not linked yet</span></div>
-            </div>
-          </article>
-
-          <article class="tile">
-            <div>
-              <h3>Anchors from the page itself</h3>
-              <p>Doc Drift reads the paths, repo links and Jira keys already on the page and suggests them. Tick, save, done. Or anchor a whole space at once.</p>
-            </div>
-            <div class="tile-visual">
-              <ul class="checklist">
-                <li><span class="box on" aria-hidden="true"><svg class="icon"><use href="#i-check"/></svg></span><span>payments-api: scripts/rollback.sh</span></li>
-                <li><span class="box on" aria-hidden="true"><svg class="icon"><use href="#i-check"/></svg></span><span>payments-api: deploy/helm/**</span></li>
-                <li><span class="box on" aria-hidden="true"><svg class="icon"><use href="#i-check"/></svg></span><span>PAY-142</span></li>
-                <li><span class="box" aria-hidden="true"></span><span>payments-api (whole repo)</span></li>
-              </ul>
-            </div>
-          </article>
-
-          <article class="tile">
-            <div>
-              <h3>Fixes you approve</h3>
-              <p>Drift Reviewer drafts new text for the affected step. For a plain rename, Doc Drift proposes the swap itself, with no AI. Nothing changes until you accept.</p>
-            </div>
-            <div class="tile-visual">
-              <div class="diff" aria-label="Proposed change">
-                <div class="del">- run scripts/rollback.sh &lt;tag&gt;</div>
-                <div class="add">+ run scripts/rollback-v2.sh &lt;tag&gt;</div>
-              </div>
-              <p class="attrib">Suggested from PR #482. Saved as a new page version, by you.</p>
-            </div>
-          </article>
-
-          <article class="tile">
-            <div>
-              <h3>Drift debt per space</h3>
-              <p>A dashboard in each space ranks the pages that need a look and groups them by owner, so a team can clear them in one sitting.</p>
-            </div>
-            <div class="tile-visual">
-              <div class="kpis">
-                <div class="kpi"><b>18 of 24</b><span>Pages anchored</span></div>
-                <div class="kpi"><b>5</b><span>Possibly stale</span></div>
-              </div>
-              <p class="sample-note">Sample data from the demo space.</p>
-            </div>
-          </article>
-
-          <article class="tile tile-half">
-            <div>
-              <h3>Track the update in Jira</h3>
-              <p>Not fixing it today? Create a Jira task from the panel. It lists the changes and the sections to re-read, and agents see that an update is tracked.</p>
-            </div>
-            <div class="tile-visual">
-              <div class="jira-row"><span>Update “Payments rollback runbook”: anchors changed in PR #482</span><span class="chip">PAY-201</span></div>
-              <p class="attrib">Closing the task doesn't mark the page Verified. A person still checks the page.</p>
-            </div>
-          </article>
-
-          <article class="tile tile-half">
-            <div>
-              <h3>The owner hears about it</h3>
-              <p>A short comment on the page mentions the owner, names the change and links to the review. Changes that land together become one comment.</p>
-            </div>
-            <div class="tile-visual">
-              <div class="event">
-                <div class="event-top"><img src="assets/doc-drift-icon.svg" alt="" width="24" height="24" style="border-radius:6px"><strong>Doc Drift</strong><span class="muted">commented</span></div>
-                <div class="event-why" style="color:var(--text)"><span class="mention">@Dana</span> PR #482 (merged by Sam) changed 2 files this page documents. Review in the Doc Drift badge.</div>
-              </div>
-            </div>
-          </article>
-        </div>
-
-        <ul class="more-features">
-          <li><svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg><span><b>Tuned by your admin</b>Sensitivity presets, ignored paths, watched spaces, escalation days and comment timing.</span></li>
-          <li><svg class="icon" aria-hidden="true"><use href="#i-undo"/></svg><span><b>Reverts close drift</b>When a pull request is reverted, the drift it caused closes on its own.</span></li>
-          <li><svg class="icon" aria-hidden="true"><use href="#i-rename"/></svg><span><b>Follows renames</b>A moved file is matched to its old path, so the anchor still fires.</span></li>
-          <li><svg class="icon" aria-hidden="true"><use href="#i-filter"/></svg><span><b>Learns from dismissals</b>Dismiss a change as not relevant, and you can stop watching that path for the page.</span></li>
-          <li><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg><span><b>Demo mode</b>Replay a seeded pull request from settings to see the whole flow without Bitbucket.</span></li>
-          <li><svg class="icon" aria-hidden="true"><use href="#i-ticket"/></svg><span><b>Jira anchors too</b>Status, fix version, scope and parent changes on anchored issues flag the page.</span></li>
+        <ul class="h-proof">
+          <li><svg class="icon" aria-hidden="true"><use href="#i-rule"/></svg>No AI decides what’s stale</li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-hand"/></svg>Agents never edit pages</li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg>Only shows pages you can view</li>
         </ul>
       </div>
     </section>
 
-    <!-- Agents -->
-    <section class="section" id="agents" aria-labelledby="agents-title">
+    <!-- 2. The problem -->
+    <section class="h-night h-problem" aria-labelledby="problem-title">
       <div class="wrap">
-        <div class="section-head">
-          <p class="eyebrow">For agents</p>
-          <h2 class="title" id="agents-title">Agents check before they cite.</h2>
-          <p class="body-lg">The same freshness signal people see in the byline is a tool any agent can call: the Drift Reviewer agent in Rovo, and coding agents like Claude Code and Cursor over MCP.</p>
+        <div class="h-problem-top">
+          <div class="h-problem-head reveal">
+            <p class="h-clock" aria-hidden="true">03:07</p>
+            <h2 class="title" id="problem-title">It’s 3 a.m. The runbook is a week behind the code.</h2>
+          </div>
+          <figure class="h-term reveal" style="--i:1" data-term>
+            <figcaption class="h-term-bar"><span class="h-dots" aria-hidden="true"><i></i><i></i><i></i></span>Terminal</figcaption>
+            <pre><span class="h-term-cmd" data-type-chars>$ ./scripts/rollback.sh</span>
+<span class="h-term-err">zsh: no such file or directory: ./scripts/rollback.sh</span></pre>
+          </figure>
+        </div>
+        <ol class="h-beats">
+          <li><svg class="icon" aria-hidden="true"><use href="#i-rename"/></svg><p>That script was renamed last week.</p></li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg><p>The page’s review date can’t see a code change.</p></li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-words"/></svg><p>And an AI assistant reads you the same old step.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 3. The turn -->
+    <section class="h-turn" aria-labelledby="turn-title">
+      <div class="wrap">
+        <div class="h-turn-art" aria-hidden="true">
+          <svg class="h-tide h-tide--turn" viewBox="0 0 1200 360" preserveAspectRatio="none" focusable="false" fill="none" stroke="currentColor" stroke-width="1.25">
+            <path d="M0 60c120-30 230 26 360 0s230-56 380-18 300 46 460 8"/>
+            <path d="M0 120c120-30 230 26 360 0s230-56 380-18 300 46 460 8"/>
+            <path d="M0 180c120-30 230 26 360 0s230-56 380-18 300 46 460 8"/>
+            <path d="M0 240c120-30 230 26 360 0s230-56 380-18 300 46 460 8"/>
+            <path d="M0 300c120-30 230 26 360 0s230-56 380-18 300 46 460 8"/>
+          </svg>
+          <svg class="h-mark" viewBox="0 0 512 512" focusable="false">
+            <path class="h-mark-ink" d="M140 120H222A136 136 0 0 1 347.19 202.88A8 8 0 0 1 339.83 214H118A8 8 0 0 1 110 206V150A30 30 0 0 1 140 120Z"/>
+            <path class="h-mark-ink" d="M118 298H339.83A8 8 0 0 1 347.19 309.12A136 136 0 0 1 222 392H140A30 30 0 0 1 110 362V306A8 8 0 0 1 118 298Z"/>
+            <path class="h-mark-trace" d="M118 226H348.1A8 8 0 0 1 355.98 232.62A136 136 0 0 1 355.98 279.38A8 8 0 0 1 348.1 286H118A8 8 0 0 1 110 278V234A8 8 0 0 1 118 226Z"/>
+            <path class="h-mark-slice" d="M174 226H404.1A8 8 0 0 1 411.98 232.62A136 136 0 0 1 411.98 279.38A8 8 0 0 1 404.1 286H174A8 8 0 0 1 166 278V234A8 8 0 0 1 174 226Z"/>
+          </svg>
+        </div>
+        <div class="h-turn-copy reveal">
+          <h2 class="title" id="turn-title">Doc Drift catches this.</h2>
+          <p class="h-lede">It watches the code and Jira work behind each page, and flags the page when they change.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. How it works -->
+    <section class="h-how" id="how" aria-labelledby="how-title">
+      <div class="wrap">
+        <div class="h-head reveal">
+          <h2 class="title" id="how-title">From merge to flag in seconds.</h2>
         </div>
 
-        <div class="agents">
-          <div class="tablist" role="tablist" aria-label="Agent tools">
-            <button class="tab" role="tab" id="tab-find" aria-controls="panel-find" aria-selected="true" data-title="Claude Code · find-docs-for-path">
-              <span class="tab-name">find-docs-for-path <small>MCP</small></span>
-              <span class="tab-desc">Before an edit: which pages describe this file?</span>
-            </button>
-            <button class="tab" role="tab" id="tab-check" aria-controls="panel-check" aria-selected="false" tabindex="-1" data-title="Claude Code · check-page-freshness">
-              <span class="tab-name">check-page-freshness <small>MCP and Rovo</small></span>
-              <span class="tab-desc">Before citing: can I trust this page?</span>
-            </button>
-            <button class="tab" role="tab" id="tab-list" aria-controls="panel-list" aria-selected="false" tabindex="-1" data-title="Claude Code · list-stale-pages">
-              <span class="tab-name">list-stale-pages <small>MCP</small></span>
-              <span class="tab-desc">Which pages in a space need a review?</span>
-            </button>
-            <button class="tab" role="tab" id="tab-rovo" aria-controls="panel-rovo" aria-selected="false" tabindex="-1" data-title="Rovo · Drift Reviewer">
-              <span class="tab-name" style="font-family:var(--sans);font-weight:600">Drift Reviewer <small>Rovo agent</small></span>
-              <span class="tab-desc">Answers with the state, explains the change, drafts the fix.</span>
-            </button>
-          </div>
-
-          <div class="terminal">
-            <div class="terminal-bar"><span data-terminal-title>Claude Code · find-docs-for-path</span></div>
-
-            <div role="tabpanel" id="panel-find" aria-labelledby="tab-find" tabindex="0">
-<pre><span class="t-prompt">&gt;</span> <span class="t-user">Before I edit deploy/helm/values.yaml, which docs describe it?</span>
-
-<span class="t-tool">doc-drift · find-docs-for-path</span> <span class="t-dim">(repo: "payments-api", path: "deploy/helm/values.yaml")</span>
-  <span class="t-dim">5 pages</span>
-  Payments API service overview        <span class="t-warn">possibly_stale</span>  <span class="t-dim">exact</span>
-  Scale payment workers                <span class="t-warn">possibly_stale</span>  <span class="t-dim">exact</span>
-  Fail over the payments database      <span class="t-ok">verified</span>        <span class="t-dim">exact</span>
-  Payments rollback runbook            <span class="t-ok">verified</span>        <span class="t-dim">exact</span>
-  Payments deployment and Helm chart   <span class="t-ok">verified</span>        <span class="t-dim">glob deploy/helm/**</span>
-
-<span class="t-agent">5 pages document this file, and 2 are already Possibly stale. I'll make the change, then list all 5 in the pull request so their owners can re-check them.</span>
-<span class="t-dim">Output from the demo space.</span></pre>
-            </div>
-
-            <div role="tabpanel" id="panel-check" aria-labelledby="tab-check" tabindex="0" hidden>
-<pre><span class="t-prompt">&gt;</span> <span class="t-user">How do I roll back payments-api? Check the runbook first.</span>
-
-<span class="t-tool">doc-drift · check-page-freshness</span> <span class="t-dim">(pageUrl: ".../Payments+rollback+runbook")</span>
-{
-  "title": "Payments rollback runbook",
-  "status": <span class="t-warn">"possibly_stale"</span>,
-  "citePolicy": "cite_with_caveat",
-  "openDrift": [{
-    "ref": "PR #482",
-    "summary": "renamed scripts/rollback.sh to scripts/rollback-v2.sh",
-    "severity": "high"
-  }],
-  "guidance": "Do not present steps from this page as current. Cite with caveat: what it describes changed in PR #482 on 2026-11-10, after it was last verified."
-}
-
-<span class="t-agent">The runbook may be out of date: PR #482 renamed the rollback script after the page was last verified. In the code, the script is now scripts/rollback-v2.sh.</span>
-<span class="t-dim">Example after the demo replay of PR #482.</span></pre>
-            </div>
-
-            <div role="tabpanel" id="panel-list" aria-labelledby="tab-list" tabindex="0" hidden>
-<pre><span class="t-prompt">&gt;</span> <span class="t-user">Which PLAT pages should I review this week?</span>
-
-<span class="t-tool">doc-drift · list-stale-pages</span> <span class="t-dim">(spaceKey: "PLAT", limit: 5)</span>
-  Scale payment workers              <span class="t-warn">possibly_stale</span>  high    <span class="t-dim">PR #5</span>
-  Refunds API guide                  <span class="t-warn">possibly_stale</span>  high    <span class="t-dim">PR #12</span>
-  Payments codebase tour             <span class="t-warn">possibly_stale</span>  high    <span class="t-dim">PR #13</span>
-  Payments local development setup   <span class="t-warn">possibly_stale</span>  high    <span class="t-dim">PR #13</span>
-  Payments API service overview      <span class="t-warn">possibly_stale</span>  medium  <span class="t-dim">2 changes</span>
-
-<span class="t-agent">5 PLAT pages have open changes, 4 of them high. Start with the Refunds API guide: PR #12 removed src/routes/refunds-v1.ts, which the guide documents.</span>
-<span class="t-dim">Output from the demo space.</span></pre>
-            </div>
-
-            <div role="tabpanel" id="panel-rovo" aria-labelledby="tab-rovo" tabindex="0" hidden>
-              <div class="chat">
-                <div class="bubble me"><span class="who">You</span>How do I roll back payments-api?</div>
-                <div class="bubble">
-                  <span class="who">Drift Reviewer</span>
-                  The rollback runbook is Possibly stale. PR #482 renamed <code>scripts/rollback.sh</code> after the page was last verified, so step 2 may be out of date. Want me to draft a fix for Dana to review?
-                  <div><span class="cite"><svg class="icon icon-16 muted" aria-hidden="true"><use href="#i-page"/></svg>Payments rollback runbook <span class="badge badge-possibly"><svg class="icon" aria-hidden="true"><use href="#i-slip"/></svg>Possibly stale</span></span></div>
+        <div class="h-story" data-story>
+          <ol class="h-steps">
+            <li class="h-step is-active" data-step="1">
+              <div class="h-step-text">
+                <p class="h-step-num"><svg class="icon" aria-hidden="true"><use href="#i-anchor"/></svg>01</p>
+                <h3>Link</h3>
+                <p>Doc Drift suggests the files and Jira issues a page names. You confirm.</p>
+              </div>
+              <div class="h-mini" aria-hidden="true">
+                <div class="h-card h-anchors">
+                  <p class="h-card-h">Suggested from this page (3)</p>
+                  <ul class="h-checks">
+                    <li><span class="h-box"><svg class="icon"><use href="#i-check"/></svg></span><span class="h-mono">scripts/rollback.sh</span></li>
+                    <li><span class="h-box"><svg class="icon"><use href="#i-check"/></svg></span><span class="h-mono">deploy/helm/values.yaml</span></li>
+                    <li><span class="h-box"><svg class="icon"><use href="#i-check"/></svg></span><span class="h-mono">PAY-6</span></li>
+                  </ul>
+                  <span class="h-btn-fake">Save and mark verified</span>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
+            </li>
+            <li class="h-step" data-step="2">
+              <div class="h-step-text">
+                <p class="h-step-num"><svg class="icon" aria-hidden="true"><use href="#i-merge"/></svg>02</p>
+                <h3>Change</h3>
+                <p>A pull request merges in Bitbucket, or a linked Jira issue is closed or re-planned.</p>
+              </div>
+              <div class="h-mini" aria-hidden="true">
+                <div class="h-pr h-card">
+                  <p class="h-pr-top"><svg class="icon"><use href="#i-merge"/></svg>Bitbucket · payments-api</p>
+                  <p class="h-pr-title"><span class="h-mono">PR #482</span> merged by Sam</p>
+                  <p class="h-pr-files"><span class="h-mono">scripts/rollback.sh</span><span><span class="h-arr">→</span> <span class="h-mono">scripts/rollback-v2.sh</span></span></p>
+                </div>
+                <p class="h-or" aria-hidden="true">or</p>
+                <div class="h-card h-jira-ev">
+                  <p class="h-pr-top"><svg class="icon"><use href="#i-ticket"/></svg>Jira · Payments</p>
+                  <p class="h-pr-title"><span class="h-mono">PAY-6</span> moved to Done</p>
+                </div>
+              </div>
+            </li>
+            <li class="h-step" data-step="3">
+              <div class="h-step-text">
+                <p class="h-step-num"><svg class="icon" aria-hidden="true"><use href="#i-slip"/></svg>03</p>
+                <h3>Flag</h3>
+                <p>Seconds after a merge, the page reads Possibly stale (it may be out of date) and names the exact change. The owner is told.</p>
+              </div>
+              <div class="h-mini" aria-hidden="true">
+                <div class="h-card h-mini-by">
+                  <p class="h-pg-title">Payments rollback runbook</p>
+                  <span class="h-bl is-drift">
+                    <svg class="h-bl-icon"><use href="#dd-mark"/></svg>
+                    <span class="h-bl-slot"><span class="h-bl-trace"></span><span class="h-bl-drift">Possibly stale · Doc Drift</span></span>
+                  </span>
+                  <p class="h-tip-static">PR #482 changed scripts/rollback.sh on Nov 13. Review.</p>
+                </div>
+              </div>
+            </li>
+            <li class="h-step" data-step="4">
+              <div class="h-step-text">
+                <p class="h-step-num"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>04</p>
+                <h3>Check</h3>
+                <p>A person reviews it and accepts the fix in one click. The page is Verified again.</p>
+              </div>
+              <div class="h-mini" aria-hidden="true">
+                <div class="h-card h-mini-ok">
+                  <p class="h-toast-static"><svg class="icon"><use href="#i-check"/></svg>Accepted. A new page version names PR #482.</p>
+                  <span class="h-bl"><svg class="h-bl-icon"><use href="#dd-mark"/></svg><span class="h-bl-ok">Verified · Doc Drift</span></span>
+                </div>
+              </div>
+            </li>
+          </ol>
 
-        <div class="connect">
-          <div class="panel">
-            <h3 class="heading-md">Connect a coding agent</h3>
-            <p>One MCP server per site. Agents read as the person who signs in, so they only see pages that person can view.</p>
-            <ol class="numbered">
-              <li>
-                <div>
-                  <b>An admin turns on the tools</b>
-                  <p>In Atlassian Administration: Apps, Sites, your site, Connected apps, Doc Drift, then Tools.</p>
-                </div>
-              </li>
-              <li>
-                <div>
-                  <b>Open the app once in Confluence</b>
-                  <p>Click any Doc Drift badge and allow access. Agents act as you, so this consent comes first.</p>
-                </div>
-              </li>
-              <li>
-                <div>
-                  <b>Add the server and sign in</b>
-                  <p>In Claude Code, run this, then <code>/mcp</code> to sign in.</p>
-                  <div class="copy-field">
-                    <code id="cmd-add">claude mcp add --transport http doc-drift https://mcp.atlassian.com/forge/12e968a1-a45d-4524-ba28-d47e2315db1a</code>
-                    <button class="copy-btn" type="button" data-copy="cmd-add" aria-label="Copy the claude mcp add command"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span data-copy-label>Copy</span></button>
+          <div class="h-board" data-board data-step="1" aria-hidden="true">
+            <div class="h-pg h-pg--board">
+              <p class="h-pg-crumbs"><svg class="icon"><use href="#i-page"/></svg>Platform / Runbooks</p>
+              <p class="h-pg-title">Payments rollback runbook</p>
+              <div class="h-pg-by">
+                <span>By Dana</span>
+                <span class="h-bl">
+                  <svg class="h-bl-icon"><use href="#dd-mark"/></svg>
+                  <span class="h-bl-slot">
+                    <span class="h-bl-ok">Verified · Doc Drift</span>
+                    <span class="h-bl-trace"></span>
+                    <span class="h-bl-drift">Possibly stale · Doc Drift</span>
+                  </span>
+                  <span class="h-tip">PR #482 changed scripts/rollback.sh on Nov 13. Review.</span>
+                </span>
+              </div>
+              <div class="h-pg-props">
+                <p><span>Service</span><span class="h-mono">payments-api</span></p>
+                <p><span>Jira</span><span><span class="h-mono h-key h-sug">PAY-6</span> Safer payments deploys and rollbacks</span></p>
+              </div>
+              <p class="h-pg-h">Steps</p>
+              <ol class="h-pg-steps" start="2">
+                <li>Run the rollback script from the root of the <span class="h-mono h-ic">payments-api</span> repo.
+                  <div class="h-code">
+                    <span class="h-code-v h-code-old"><span>export ROLLBACK_TIMEOUT=300</span><span>./<span class="h-sug">scripts/rollback.sh</span> --timeout $ROLLBACK_TIMEOUT</span></span>
+                    <span class="h-code-v h-code-new"><span>export ROLLBACK_<b>TIMEOUT_SECS</b>=300</span><span>./scripts/<b>rollback-v2.sh</b> --timeout $ROLLBACK_<b>TIMEOUT_SECS</b></span></span>
                   </div>
-                </div>
-              </li>
-            </ol>
-            <details class="more">
-              <summary>Cursor and other MCP clients</summary>
-              <span class="label">Server URL</span>
-              <div class="copy-field">
-                <code id="mcp-url">https://mcp.atlassian.com/forge/12e968a1-a45d-4524-ba28-d47e2315db1a</code>
-                <button class="copy-btn" type="button" data-copy="mcp-url" aria-label="Copy the MCP server URL"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span data-copy-label>Copy</span></button>
-              </div>
-              <span class="label">Cursor, in <code>.cursor/mcp.json</code></span>
-              <div class="copy-field">
-                <code id="cursor-json">{ "mcpServers": { "doc-drift": { "url": "https://mcp.atlassian.com/forge/12e968a1-a45d-4524-ba28-d47e2315db1a" } } }</code>
-                <button class="copy-btn" type="button" data-copy="cursor-json" aria-label="Copy the Cursor configuration"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span data-copy-label>Copy</span></button>
-              </div>
-            </details>
-          </div>
-
-          <div class="panel">
-            <h3 class="heading-md">Tell your agent the rule</h3>
-            <p>Paste this into <code>CLAUDE.md</code> or <code>AGENTS.md</code>. Your agent then checks a page before it relies on it, and trusts the code when the two disagree.</p>
-            <div class="instruction" id="agent-rule">Before you rely on a Confluence page, call the `check-page-freshness` tool from the doc-drift MCP server with its page ID or URL. If the state is not `verified`, do not present its steps as current, and tell the user which page needs a review. When a page and the code disagree, trust the code.</div>
-            <div class="actions-row">
-              <button class="btn btn-secondary btn-sm" type="button" data-copy="agent-rule"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span data-copy-label>Copy</span></button>
+                </li>
+              </ol>
             </div>
-            <span class="label">What agents can and can't do</span>
-            <ul class="checklist" style="margin-top:12px;font-family:var(--sans)">
-              <li style="font-family:var(--sans);font-size:15px;line-height:22px"><svg class="icon icon-16" aria-hidden="true" style="color:var(--verified)"><use href="#i-check"/></svg><span style="white-space:normal">Read page states, open changes and the pages that cover a file</span></li>
-              <li style="font-family:var(--sans);font-size:15px;line-height:22px"><svg class="icon icon-16" aria-hidden="true" style="color:var(--verified)"><use href="#i-check"/></svg><span style="white-space:normal">Draft a fix for a person to accept (Drift Reviewer only)</span></li>
-              <li style="font-family:var(--sans);font-size:15px;line-height:22px"><svg class="icon icon-16 muted" aria-hidden="true"><use href="#i-x"/></svg><span style="white-space:normal">Never edit a page, and never see a page the person can't view</span></li>
+            <div class="h-board-slot">
+              <div class="h-ov h-ov-1 h-card h-anchors">
+                <p class="h-card-h">Suggested from this page (3)</p>
+                <ul class="h-checks">
+                  <li><span class="h-box"><svg class="icon"><use href="#i-check"/></svg></span><span class="h-mono">scripts/rollback.sh</span></li>
+                  <li><span class="h-box"><svg class="icon"><use href="#i-check"/></svg></span><span class="h-mono">deploy/helm/values.yaml</span></li>
+                  <li><span class="h-box"><svg class="icon"><use href="#i-check"/></svg></span><span class="h-mono">PAY-6</span></li>
+                </ul>
+                <span class="h-btn-fake">Save and mark verified</span>
+              </div>
+              <div class="h-ov h-ov-2 h-ov-stack">
+                <div class="h-pr h-card">
+                  <p class="h-pr-top"><svg class="icon"><use href="#i-merge"/></svg>Bitbucket · payments-api</p>
+                  <p class="h-pr-title"><span class="h-mono">PR #482</span> merged by Sam</p>
+                  <p class="h-pr-files"><span class="h-mono">scripts/rollback.sh</span><span><span class="h-arr">→</span> <span class="h-mono">scripts/rollback-v2.sh</span></span></p>
+                </div>
+                <p class="h-or" aria-hidden="true">or</p>
+                <div class="h-card h-jira-ev">
+                  <p class="h-pr-top"><svg class="icon"><use href="#i-ticket"/></svg>Jira · Payments</p>
+                  <p class="h-pr-title"><span class="h-mono">PAY-6</span> moved to Done</p>
+                </div>
+              </div>
+              <div class="h-ov h-ov-3 h-card h-comment">
+                <p class="h-comment-who"><img src="assets/doc-drift-icon.svg" alt="" width="24" height="24">Doc Drift</p>
+                <p><span class="h-at">@Dana</span> PR #482 (merged by <span class="h-at">@Sam</span>) changed 2 files this page documents. Review in the Doc Drift badge.</p>
+              </div>
+              <p class="h-ov h-ov-4 h-toast-static"><svg class="icon"><use href="#i-check"/></svg>Accepted. A new page version names PR #482.</p>
+            </div>
+          </div>
+        </div>
+
+        <p class="h-note"><svg class="icon" aria-hidden="true"><use href="#i-rule"/></svg><span>Small edits don’t flag a page. Renames, removals and bigger changes do, by the same plain rules every time.</span></p>
+
+        <figure class="h-clip reveal" data-clip>
+          <div class="h-clip-frame">
+            <video muted playsinline loop preload="none" poster="assets/media/merge-to-flag-poster.jpg" width="1920" height="1080" aria-label="Recording: PR #482 is merged in Bitbucket, then the runbook reads Possibly stale 19 seconds later.">
+              <source src="assets/media/merge-to-flag.mp4" type="video/mp4">
+            </video>
+          </div>
+          <div class="h-clip-row">
+            <figcaption><strong>Real recording on our demo site, Nov 13.</strong> The merge in Bitbucket, then the page flagged 19 seconds later. The counter shows real time since the merge.</figcaption>
+            <button class="h-media-btn" type="button" data-clip-toggle hidden><svg class="icon i-pause" aria-hidden="true"><use href="#i-pause"/></svg><svg class="icon i-play" aria-hidden="true"><use href="#i-play"/></svg><span data-clip-label>Play</span></button>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 5. AI agents -->
+    <section class="h-agents" id="agents" aria-labelledby="agents-title">
+      <div class="wrap h-agents-grid">
+        <div class="h-agents-copy">
+          <div class="reveal">
+            <h2 class="title" id="agents-title">AI agents check before they answer.</h2>
+            <p class="h-lede">Our Rovo agent and coding assistants check Doc Drift before they rely on a page. If it may be out of date, they say so, and why.</p>
+          </div>
+          <ul class="h-facts">
+            <li><svg class="icon" aria-hidden="true"><use href="#i-words"/></svg><span>In Rovo, Atlassian’s AI, ask our agent, Drift Reviewer.</span></li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-anchor"/></svg><span>Coding assistants connect over MCP, an open standard for AI tools.</span></li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-hand"/></svg><span>Agents never edit pages. People do.</span></li>
+          </ul>
+          <p class="h-more"><a class="h-arrow-link" href="docs.html#mcp">Connect your coding assistant<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a></p>
+        </div>
+
+        <div class="h-demo reveal" style="--i:1">
+          <div class="h-switch" role="group" aria-label="Compare the answer" hidden data-switch>
+            <button type="button" aria-pressed="false" data-mode="without">Without Doc Drift</button>
+            <button type="button" aria-pressed="true" data-mode="with">With Doc Drift</button>
+          </div>
+          <div class="h-demo-stage" data-convo data-panels data-mode="with">
+            <div class="h-panel h-panel--without" data-panel="without">
+              <p class="h-panel-tag">Without Doc Drift</p>
+              <p class="h-illus-tag">Illustration: an assistant reading the page as written</p>
+              <div class="h-convo">
+                <p class="h-q"><span class="sr-only">Question: </span>How do I roll back payments-api?</p>
+                <p class="h-panel-who"><span class="h-avatar" aria-hidden="true">AI</span>AI assistant</p>
+                <p class="h-a">Run <span class="h-mono h-ic">./scripts/rollback.sh --timeout $ROLLBACK_TIMEOUT</span> from the payments-api repo.</p>
+                <p class="h-src"><svg class="icon" aria-hidden="true"><use href="#i-page"/></svg>Payments rollback runbook</p>
+              </div>
+            </div>
+            <div class="h-panel h-panel--with" data-panel="with">
+              <p class="h-panel-tag">With Doc Drift</p>
+              <div class="h-with">
+                <figure class="h-shot">
+                  <figcaption class="h-real-tag"><svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg>Real answer in Rovo · demo site, Nov 13</figcaption>
+                  <img src="assets/media/rovo-answer.jpg" width="720" height="737" loading="lazy" decoding="async" alt="Drift Reviewer in Rovo. Question: How do I roll back payments-api? Answer: Payments rollback runbook is Possibly stale. What it describes changed in PR #482 on 2026-11-13, after it was last verified. The affected section is “Steps”. Do not present steps from this page as current. The review is in the Doc Drift badge on the page.">
+                </figure>
+                <figure class="h-mcp">
+                  <figcaption class="h-real-tag"><svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg>Real output · doc-drift MCP server</figcaption>
+                  <div class="h-told">
+                    <p class="h-told-k">Told to coding assistants</p>
+                    <p class="h-told-v"><strong><svg class="icon" aria-hidden="true"><use href="#i-slip"/></svg>Possibly stale.</strong> Do not present steps from this page as current.</p>
+                  </div>
+                </figure>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. In Confluence -->
+    <section class="h-tiles-sec" id="confluence" aria-labelledby="confluence-title">
+      <div class="wrap">
+        <div class="h-head reveal">
+          <h2 class="title" id="confluence-title">Built into Confluence.</h2>
+        </div>
+        <ul class="h-tiles">
+          <li class="h-tile">
+            <div class="h-tv h-tv-fix reveal" aria-hidden="true">
+              <div class="h-qf">
+                <p class="h-tv-k">Quick fix</p>
+                <p>Replace <span class="h-mono h-ic">scripts/rollback.sh</span> with <span class="h-mono h-ic">scripts/rollback-v2.sh</span> in 1 place.</p>
+                <p class="h-qf-src">Suggested from PR #482. No AI used.</p>
+                <span class="h-qf-row"><span class="h-btn-fake h-qf-btn">Replace in 1 place</span><span class="h-qf-done"><svg class="icon"><use href="#i-check"/></svg></span></span>
+              </div>
+            </div>
+            <h3>Fixes a person approves</h3>
+            <p>A renamed file is fixed in one click, with no AI. Our agent drafts other edits; nothing changes until you accept.</p>
+          </li>
+          <li class="h-tile">
+            <div class="h-tv h-tv-jira reveal" style="--i:1" aria-hidden="true">
+              <div class="h-jira">
+                <p class="h-tv-k">What changed</p>
+                <p class="h-jira-ev"><span class="h-mono">PR #482</span> merged by Sam</p>
+                <p class="h-jira-files"><span class="h-mono">scripts/rollback.sh</span> <span class="h-arr">→</span> <span class="h-mono">scripts/rollback-v2.sh</span></p>
+                <div class="h-jira-swap">
+                  <span class="h-btn-fake h-btn-quiet h-jira-btn">Create Jira task</span>
+                  <p class="h-jira-done"><svg class="icon"><use href="#i-ticket"/></svg><span>Tracked in <span class="h-mono">PAY-24</span>.</span></p>
+                </div>
+              </div>
+            </div>
+            <h3>Track it in Jira</h3>
+            <p>Not fixing it today? Turn the flag into a Jira task.</p>
+          </li>
+          <li class="h-tile">
+            <div class="h-tv h-tv-dash reveal" aria-hidden="true">
+              <div class="h-dash">
+                <p class="h-tv-k">Pages with drift</p>
+                <ol class="h-rank">
+                  <li><span class="h-rank-page">Refunds API guide</span><span class="h-chip-stale"><svg class="icon"><use href="#i-clock"/></svg>Stale</span><span class="h-own">Dana</span></li>
+                  <li><span class="h-rank-page">Scale payment workers</span><span class="h-state-plain"><svg class="icon"><use href="#i-slip"/></svg>Possibly stale</span><span class="h-own">Sam</span></li>
+                  <li><span class="h-rank-page">Payments codebase tour</span><span class="h-state-plain"><svg class="icon"><use href="#i-slip"/></svg>Possibly stale</span><span class="h-own">Dana</span></li>
+                </ol>
+                <p class="h-sample">Sample data from the demo space</p>
+              </div>
+            </div>
+            <h3>Every space has a dashboard</h3>
+            <p>Pages to review, ranked, with their owners. A flag nobody checks for a week turns Stale.</p>
+          </li>
+          <li class="h-tile">
+            <div class="h-tv h-tv-comment reveal" style="--i:1" aria-hidden="true">
+              <div class="h-comment h-comment--tile">
+                <p class="h-comment-who"><img src="assets/doc-drift-icon.svg" alt="" width="24" height="24">Doc Drift</p>
+                <p><span class="h-at">@Dana</span> PR #482 (merged by <span class="h-at">@Sam</span>) changed 2 files this page documents. Review in the Doc Drift badge.</p>
+              </div>
+            </div>
+            <h3>The right people hear</h3>
+            <p>A short page comment tells the owner and the author of the change.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 7. Trust -->
+    <section class="h-trust" id="trust" aria-labelledby="trust-title">
+      <div class="wrap h-trust-grid">
+        <div class="h-trust-head reveal">
+          <h2 class="title" id="trust-title">A person decides.</h2>
+          <p class="h-more"><a class="h-arrow-link" href="privacy.html">How Doc Drift handles data<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a></p>
+          <p class="h-maker">Made by <a href="https://nano-soft.tech/">Nano Soft</a>, Bucharest</p>
+        </div>
+        <div class="h-trust-body">
+          <ul class="h-points">
+            <li><svg class="icon" aria-hidden="true"><use href="#i-rule"/></svg><p><strong>No AI decides what’s stale.</strong> Plain rules: same change, same result.</p></li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-hand"/></svg><p><strong>Agents never edit pages.</strong> Page text changes only when a person clicks to fix it.</p></li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg><p><strong>Respects permissions.</strong> People and agents see only pages they can view.</p></li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-box"/></svg><p><strong>Built on Atlassian Forge.</strong> Both apps, in Confluence and Bitbucket, run in Atlassian’s cloud. No servers of ours.</p></li>
+          </ul>
+          <div class="h-admins">
+            <p class="h-admins-k">For Confluence admins</p>
+            <ul>
+              <li><strong>Start with one space.</strong> Watch selected spaces only, and widen when you’re ready. <a href="docs.html#settings">Settings</a></li>
+              <li><strong>Set the noise level.</strong> Stricter or quieter, for the whole site. Owner comments wait 10 minutes by default and come at most once a day per page. <a href="docs.html#flags">The rules</a></li>
+              <li><strong>Check what it reads and stores.</strong> Every field, permission and retention period, in plain words. <a href="privacy.html">Privacy and data</a></li>
             </ul>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Trust -->
-    <section class="section" id="trust" aria-labelledby="trust-title">
+    <!-- 8. Get started -->
+    <section class="h-start" id="start" aria-labelledby="start-title">
       <div class="wrap">
-        <div class="section-head">
-          <p class="eyebrow">Built to be trusted</p>
-          <h2 class="title" id="trust-title">A person decides.</h2>
-          <p class="body-lg">Doc Drift watches and flags. It never claims a page is wrong, only that what it describes has changed.</p>
-        </div>
-        <div class="trust">
-          <div>
-            <svg class="icon" aria-hidden="true"><use href="#i-rule"/></svg>
-            <h3>No AI in detection</h3>
-            <p>A deterministic matcher scores each change against anchors: paths, globs, renames, removed identifiers. Same input, same result, no credits spent.</p>
-          </div>
-          <div>
-            <svg class="icon" aria-hidden="true"><use href="#i-hand"/></svg>
-            <h3>Agents never edit pages</h3>
-            <p>Page text changes only when a person clicks Accept, as that person, with a version message naming the pull request. Page history can undo it.</p>
-          </div>
-          <div>
-            <svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg>
-            <h3>Permission-aware</h3>
-            <p>Agents and tools read as the signed-in person. A page they can't view comes back as unknown, with no title.</p>
-          </div>
-          <div>
-            <svg class="icon" aria-hidden="true"><use href="#i-store"/></svg>
-            <h3>No page bodies stored</h3>
-            <p>Doc Drift keeps anchors, scores, pull request details and file paths. Diff text is deleted after 30 days. A fix draft keeps only the block it replaces.</p>
-          </div>
-          <div>
-            <svg class="icon" aria-hidden="true"><use href="#i-key"/></svg>
-            <h3>Signed changes, no servers of ours</h3>
-            <p>Both apps run on Atlassian Forge. The Bitbucket relay signs each change with a secret unique to your site, and talks only to the Confluence app.</p>
-          </div>
-          <div>
-            <svg class="icon" aria-hidden="true"><use href="#i-words"/></svg>
-            <h3>AI only when you ask</h3>
-            <p>Drafting a fix runs in Rovo on your site, only after someone clicks Propose fix. It sees the affected sections and the change, not your repository.</p>
-          </div>
-        </div>
-        <p style="margin-top:28px"><a href="privacy.html">Read how Doc Drift handles data</a></p>
-      </div>
-    </section>
-
-    <!-- Get started -->
-    <section class="section" id="start" aria-labelledby="start-title">
-      <div class="wrap">
-        <div class="section-head">
-          <p class="eyebrow">Get started</p>
+        <div class="h-head reveal">
           <h2 class="title" id="start-title">Three steps to your first flag.</h2>
         </div>
-        <ol class="start">
-          <li>
-            <span class="step-num">01</span>
-            <h3 class="heading-md">Install in Confluence</h3>
-            <p>A site admin installs Doc Drift. Jira is optional: connect it to watch issues too.</p>
-          </li>
-          <li>
-            <span class="step-num">02</span>
-            <h3 class="heading-md">Connect Bitbucket</h3>
-            <p>Install the relay in your Bitbucket workspace and paste the URL and secret from settings. Or skip this for now and replay the demo pull request.</p>
-          </li>
-          <li>
-            <span class="step-num">03</span>
-            <h3 class="heading-md">Anchor your pages</h3>
-            <p>Click the badge on a runbook and accept the suggested anchors. The next merge that touches them flags the page.</p>
-          </li>
+        <ol class="h-start-steps">
+          <li><span class="h-start-n" aria-hidden="true">1</span><h3>Install</h3><p>A site admin installs Doc Drift in Confluence. Jira is optional.</p></li>
+          <li><span class="h-start-n" aria-hidden="true">2</span><h3>Connect Bitbucket</h3><p>Add our small Bitbucket app to your workspace, or replay the demo first.</p></li>
+          <li><span class="h-start-n" aria-hidden="true">3</span><h3>Link a page</h3><p>Accept the suggested links. Doc Drift watches them from then on.</p></li>
         </ol>
-        <div class="start-cta">
+        <div class="h-start-cta">
           <a class="btn btn-primary" href="docs.html#install" data-install>Install for Confluence</a>
           <a class="btn btn-secondary" href="docs.html">Read the setup guide</a>
-          <span class="muted" data-install-pending>The install link is shared with Codegeist 2026 judges first.</span>
+          <p class="h-start-note" data-install-pending>In preview. The install link will be posted here.</p>
         </div>
       </div>
     </section>
 
-    <!-- FAQ -->
-    <section class="section" id="faq" aria-labelledby="faq-title">
-      <div class="wrap">
-        <div class="section-head">
-          <p class="eyebrow">Questions</p>
-          <h2 class="title" id="faq-title">Good to know.</h2>
+    <!-- 9. Questions -->
+    <section class="h-faq" id="faq" aria-labelledby="faq-title">
+      <div class="wrap h-faq-grid">
+        <div class="h-faq-head reveal">
+          <h2 class="title" id="faq-title">Questions</h2>
         </div>
         <div class="faq">
           <details>
-            <summary>Does it use AI to decide a page is stale?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
-            <div class="answer"><p>No. Detection is a deterministic matcher: it compares the files and identifiers a change touched with the anchors on each page. AI runs only when someone clicks Propose fix, and a person still accepts the result.</p></div>
+            <summary>Does AI decide what’s stale?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+            <div class="answer"><p>No. Plain rules compare what a change touched with what each page links to: same change, same result. AI runs only when someone chats with Drift Reviewer or asks it to draft a fix.</p></div>
           </details>
           <details>
-            <summary>Which code hosts does it support?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
-            <div class="answer"><p>Bitbucket Cloud, through a small relay app in a team workspace. GitHub and GitLab are not supported yet. Jira issues can be anchors on their own, so a page can be watched with no code host at all.</p></div>
+            <summary>Will small edits flag my pages?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+            <div class="answer"><p>Usually not. Renames, removals and bigger changes to a linked file flag a page; a one-line tweak doesn’t. Admins can make it stricter or quieter.</p></div>
+          </details>
+          <details>
+            <summary>Which code hosts work?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+            <div class="answer"><p>Bitbucket Cloud today. GitHub and GitLab aren’t supported yet. Jira issues work on their own, with no code host.</p></div>
+          </details>
+          <details>
+            <summary>Can I try it before rolling it out?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+            <div class="answer"><p>Yes. Install it on a test site, such as a free Atlassian developer site, then follow the <a href="docs.html#demo">demo replay</a> in the setup guide: one page and one click, with no Bitbucket needed.</p></div>
           </details>
           <details>
             <summary>Do I need Rovo?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
-            <div class="answer"><p>No. The badge, review panel, dashboard, comments, Jira tasks and the rename quick fix work without it. The Drift Reviewer agent and Propose fix need Rovo on your site, and drafting a fix uses Rovo credits there.</p></div>
+            <div class="answer"><p>No. The label, the review, one-click fixes, Jira tasks, the dashboard and comments work without it. Drift Reviewer and drafted fixes need Rovo.</p></div>
           </details>
           <details>
             <summary>Will it edit my pages?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
-            <div class="answer"><p>Only when you accept a proposed fix. The edit is saved as a new page version under your name, with a message that names the pull request, so page history can undo it. The app writes its badge to page metadata, never to the page text.</p></div>
+            <div class="answer"><p>Only when a person clicks to fix one. The edit is a new page version under their name, so page history can undo it.</p></div>
           </details>
           <details>
-            <summary>What about pages with view restrictions?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
-            <div class="answer"><p>They can't be watched yet. The app can't read them, so it says so in the badge and tells agents to check those pages against the code before citing them.</p></div>
+            <summary>What about restricted pages?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+            <div class="answer"><p>Pages with view restrictions can’t be watched yet.</p></div>
           </details>
           <details>
-            <summary>How much does it cost?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
-            <div class="answer"><p>Doc Drift is free while it's in preview. Drafting fixes with Drift Reviewer uses Rovo credits on your own site.</p></div>
+            <summary>What does it cost?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+            <div class="answer"><p>Free during the preview. Chats with Drift Reviewer and drafted fixes may use Rovo credits on your site.</p></div>
           </details>
         </div>
       </div>
     </section>
 
-    <section class="closing" aria-labelledby="closing-title">
-      <svg class="tide" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.25">
-        <path d="M0 80c140-30 260 26 400 0s260-56 420-18 260 44 380 8"/>
-        <path d="M0 160c140-30 260 26 400 0s260-56 420-18 260 44 380 8"/>
-        <path d="M0 240c140-30 260 26 400 0s260-56 420-18 260 44 380 8"/>
-        <path d="M0 320c140-30 260 26 400 0s260-56 420-18 260 44 380 8"/>
-      </svg>
-      <div class="wrap" style="position:relative">
-        <h2 class="title" id="closing-title">Catch the slip before your agents do.</h2>
-        <p class="body-lg">Docs that agents can trust, because they know when to stop trusting them.</p>
+    <!-- 10. Closing -->
+    <section class="h-night h-close" aria-labelledby="closing-title">
+      <div class="wrap">
+        <div class="h-close-copy reveal">
+          <h2 class="title" id="closing-title">Know which docs to trust.</h2>
+          <p class="h-lede">Docs that agents can trust, because they know when to stop trusting them.</p>
+        </div>
         <div class="cta-row">
           <a class="btn btn-primary" href="docs.html#install" data-install>Install for Confluence</a>
-          <a class="btn btn-secondary" href="docs.html">Read the setup guide</a>
+          <a class="btn btn-secondary" href="#how">See how it works</a>
+          <a class="btn btn-secondary" href="#" data-video hidden><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg>Watch the film (1:49)</a>
         </div>
       </div>
     </section>
@@ -660,8 +610,8 @@
           <h2>Product</h2>
           <ul>
             <li><a href="#how">How it works</a></li>
+            <li><a href="#agents">AI agents</a></li>
             <li><a href="#confluence">In Confluence</a></li>
-            <li><a href="#agents">For agents</a></li>
             <li><a href="#faq">Questions</a></li>
           </ul>
         </div>
@@ -669,7 +619,7 @@
           <h2>Docs</h2>
           <ul>
             <li><a href="docs.html">Setup guide</a></li>
-            <li><a href="docs.html#mcp">Connect coding agents</a></li>
+            <li><a href="docs.html#mcp">Connect coding assistants</a></li>
             <li><a href="docs.html#troubleshooting">Troubleshooting</a></li>
           </ul>
         </div>
@@ -688,5 +638,6 @@
   </footer>
 
   <script src="assets/site.js" defer></script>
+  <script src="assets/home.js" defer></script>
 </body>
 </html>

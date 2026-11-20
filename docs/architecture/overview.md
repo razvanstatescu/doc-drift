@@ -35,7 +35,7 @@ Bitbucket workspace                      Atlassian site (Confluence + Jira)
 
 ## Data flow
 
-1. **Bitbucket path.** `avi:bitbucket:fulfilled:pullrequest`, then the relay reads `/diffstat` (paginated, capped at 500 files) and `/diff` (skipped above 300 files, trimmed to 150 KB). It builds a `ChangeRecord`, signs it with HMAC-SHA256, and POSTs it to `ingest-change`.
+1. **Bitbucket path.** `avi:bitbucket:fulfilled:pullrequest`, then the relay reads `/diffstat` (paginated, capped at 500 files) and `/diff` (skipped above 300 files, trimmed to 200,000 UTF-8 bytes). It builds a `ChangeRecord`, signs it with HMAC-SHA256, and POSTs it to `ingest-change`.
 2. **Jira path.** `avi:jira:updated:issue` with a trigger filter on `changelog.items` becomes a `ChangeRecord` (source `jira`).
 3. **Ingest.** The web trigger verifies the HMAC, stores the `change_record`, and pushes **only its ID** to `match-queue` (with `delayInSeconds` for debounce). A consumer with a timeout over 55s has a 100 KB per-event cap, so never push diffs. Retries have no fixed count (24h window), so consumers must be idempotent (`dedupeKey`).
    - The web trigger uses `urlFormat: v2` and a **static response** (`response.type: static`, outputs 202/400/401). The handler returns an output key. A dynamic trigger counts as egress and makes the core app ineligible for Runs on Atlassian.

@@ -1,4 +1,5 @@
-// Doc Drift website: theme, menu, tabs, copy buttons, table of contents, and the hero demo.
+// Doc Drift website, shared by every page: theme, menu, tabs, copy buttons, table of contents and the
+// install and film links. The home page's motion lives in home.js.
 (function () {
   'use strict';
 
@@ -23,18 +24,29 @@
 
   // Theme: Day (light) by default, Night shift on request. The inline head script applies the saved choice
   // before first paint; this wires the toggle.
-  document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
-    function label() {
-      var light = root.getAttribute('data-theme') === 'light';
+  // The switch crossfades through a view transition when the browser has one and motion is allowed.
+  var calm = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
+  var toggles = Array.prototype.slice.call(document.querySelectorAll('[data-theme-toggle]'));
+  var themeColor = document.querySelector('meta[name="theme-color"]');
+  function labelToggles() {
+    var light = root.getAttribute('data-theme') === 'light';
+    toggles.forEach(function (btn) {
       btn.setAttribute('aria-label', light ? 'Switch to Night shift (dark) theme' : 'Switch to Day (light) theme');
       btn.setAttribute('title', light ? 'Night shift theme' : 'Day theme');
-    }
-    label();
+    });
+    if (themeColor) themeColor.setAttribute('content', light ? '#F2F6F7' : '#072630');
+  }
+  labelToggles();
+  toggles.forEach(function (btn) {
     btn.addEventListener('click', function () {
       var next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-      root.setAttribute('data-theme', next);
-      store('dds-theme', next);
-      label();
+      var apply = function () {
+        root.setAttribute('data-theme', next);
+        store('dds-theme', next);
+        labelToggles();
+      };
+      if (document.startViewTransition && !calm) document.startViewTransition(apply);
+      else apply();
     });
   });
 
@@ -58,14 +70,16 @@
     });
   }
 
-  // Header border on scroll.
+  // Header hairline once the page has scrolled: an observer on a sentinel at the top, no scroll listener.
   var header = document.querySelector('.site-header');
-  if (header) {
-    var onScroll = function () {
-      header.classList.toggle('is-scrolled', window.scrollY > 8);
-    };
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
+  if (header && 'IntersectionObserver' in window) {
+    var sentinel = document.createElement('div');
+    sentinel.setAttribute('aria-hidden', 'true');
+    sentinel.style.cssText = 'position:absolute;top:0;left:0;width:1px;height:8px;pointer-events:none;';
+    document.body.insertBefore(sentinel, document.body.firstChild);
+    new IntersectionObserver(function (entries) {
+      header.classList.toggle('is-scrolled', !entries[0].isIntersecting);
+    }).observe(sentinel);
   }
 
   // Mobile menu.
@@ -152,43 +166,6 @@
       }
     });
   });
-
-  // Hero demo: the page starts Verified, then PR #482 merges and the badge slips to Possibly stale.
-  // The visitor can mark it verified and replay the merge. This is the only motion on the page.
-  var mock = document.querySelector('[data-hero-mock]');
-  if (mock) {
-    var agentCard = document.querySelector('[data-agent-card]');
-    var stateText = document.querySelector('[data-agent-state]');
-    var guidanceText = document.querySelector('[data-agent-guidance]');
-    var toggle = document.querySelector('[data-hero-toggle]');
-    var status = document.querySelector('[data-hero-status]');
-    var live = document.querySelector('[data-hero-live]');
-    var setDrift = function (drifted, announce) {
-      mock.classList.toggle('is-drifted', drifted);
-      if (agentCard) agentCard.classList.toggle('is-drifted-agent', drifted);
-      if (stateText) stateText.textContent = drifted ? '"possibly_stale"' : '"verified"';
-      if (guidanceText)
-        guidanceText.textContent = drifted
-          ? '"Do not present steps from this page as current. Cite with caveat: what it describes changed in PR #482 on 2026-11-10, after it was last verified."'
-          : '"Safe to cite."';
-      if (toggle) toggle.textContent = drifted ? 'Mark verified' : 'Merge PR #482';
-      if (status) status.textContent = drifted ? 'PR #482 merged 2 minutes ago' : 'Verified by Dana, 3 days ago';
-      if (live && announce)
-        live.textContent = drifted
-          ? 'PR #482 merged. The page is now Possibly stale.'
-          : 'Marked verified. The page is Verified again.';
-    };
-    setDrift(false, false);
-    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var timer = setTimeout(function () {
-      setDrift(true, false);
-    }, reduce ? 300 : 1400);
-    if (toggle)
-      toggle.addEventListener('click', function () {
-        clearTimeout(timer);
-        setDrift(!mock.classList.contains('is-drifted'), true);
-      });
-  }
 
   // Table of contents: highlight the section in view.
   var tocLinks = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));

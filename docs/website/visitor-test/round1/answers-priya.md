@@ -1,0 +1,28 @@
+# Priya (Codegeist judge) - answers, round 1
+
+## A. First screen only (written before opening anything else)
+
+1. It watches the code and Jira work behind a Confluence page and flags the page when they change: "When the code or Jira work behind a Confluence page changes, Doc Drift flags it for people and AI agents." The mock shows a Bitbucket PR #482 changing scripts/rollback.sh and the runbook getting a "Possibly stale · Doc Drift" byline badge.
+2. "For teams with docs in Confluence." In practice, teams on Confluence + Bitbucket (+ Jira) who keep runbooks tied to code.
+3. "See how it works" - I want the mechanism and proof it is real, not "Install for Confluence" (I'm not installing blind with 40 entries to go).
+4. "flags it for people and AI agents" - how does the agent side work (Rovo? MCP?) is not said above the fold. "Possibly stale" vs the hero tooltip is fine. The cropped PR card at bottom-left is cut off, so the connection is unclear. No sign yet of whether this is a Forge app or what is live versus mocked.
+
+## B. Whole page
+
+5. At the 4-step section, "From merge to flag in seconds." with "Seconds after a merge, the page reads Possibly stale and names the exact change." The proof that it is real came later: "Real recording · demo site, Nov 13 ... the page flagged 19 seconds later. The counter shows real time since the merge." That recording is the single most credible thing on the page.
+6. (1) Link a Confluence page to code paths and Jira issues ("Doc Drift suggests the files and Jira issues a page names. You confirm."). (2) A Bitbucket PR merges or a Jira issue changes, a deterministic matcher flags the page "Possibly stale" and names the change. (3) A person reviews; renames fix in one click; agents (Rovo Drift Reviewer, MCP clients) are told not to trust the page meanwhile.
+7. Agents read, never write: "Agents never edit pages. People do." Rovo's Drift Reviewer and MCP clients check status before answering; the demo shows "Possibly stale. Do not present steps from this page as current." Unclear: "Our agent drafts other edits; nothing changes until you accept." That sounds like the agent does draft text, accepted by a person, but the page does not say the edit runs as the user.
+8. Trust: "No AI decides what's stale. / Plain rules: same change, same result."; "Real recording"; "Built on Atlassian Forge. / No servers of ours in between."; honest FAQ ("GitHub and GitLab aren't supported yet", "Pages with view restrictions can't be watched yet"). Doubts: no repo link, no tool list or MCP endpoint shown, no named scopes, no number of PRs tested, "Sample data from the demo space" is mocked; "Respects permissions" is asserted, not shown. "Free today" is fine.
+9. Skimmed the 3 a.m. terminal section (relatable but I know the problem), and the six feature cards ("A label at the top of the page" etc.), which render as empty tiles in the full-page shots. Also skimmed the three-step Install and the FAQ.
+10. "MCP, an open standard for AI tools" (I know it, fine for me), "anchors" is not used on page which is good; "Possibly stale" vs "Stale" never defined on page; "Drift in PLAT / 18 of 24 Pages anchored" ("anchored" unexplained); "Connect your coding assistant" lacks the actual endpoint/config.
+11. Best: the hero loop (Verified, then Possibly stale with tooltip "PR #482 changed scripts/rollback.sh on Nov 13. Review.", then Verified) and the real Bitbucket recording with the live counter. Off: the pinned step section leaves large empty gaps (frames 12-19, text far from the card), and the fade from light to a dark band right after the hero feels abrupt. Full-page captures show big blank areas, which I attribute to scroll-driven reveal; in the scroll sheet things do appear.
+12. On the phone the six feature cards appear as tall empty white boxes with only a title (full-390 part02); the visuals are missing or lazy-loaded. Long scroll. The "Connect your coding assistant" link is small. Otherwise text is readable.
+13. Dark: the six cards are dark teal on dark teal with empty upper halves, low contrast, and grey descriptions are dim. The amber badge is the one pop of colour, fine. Reads no worse overall, but empty cards look more broken.
+14. I would try the demo/click the setup guide, but I see no demo link on the page itself, only "Install for Confluence" and "replay the demo first" in step 2. "The install link is shared with Codegeist 2026 judges first" is odd/confusing. Missing: a 30-second way to try without Bitbucket, a repo or docs link, a screenshot of the Rovo agent and an MCP client actually running in a real session (the Without/With toggle looks scripted), and the Agents/MCP detail (tool names, auth).
+15. Clarity of problem 5 (the 3 a.m. terminal). Clarity of solution 4. Visual quality 4. Trust 3. Length 3 (feels long for a 3-minute review; features list and FAQ could be tighter, and the pinned scroll costs time).
+16. Show the agent/MCP proof as a real recording (an actual MCP client or Rovo answering with and without a flag, with tool names), and make every feature card actually show its image. For a judge: the "real versus claimed" line is the key.
+
+17. Rank: about 8th of 40. Clear promise, a believable real recording, honest limits, and a strong agent-trust angle that fits the Agents/MCP bonus. It loses points for no obvious try-it-now path, mocked feature tiles, and the agent proof being a toggle rather than a real session.
+
+## Scores
+Problem 5, solution 4, visual 4, trust 3, length 3. Rank ~8/40. Top change: replace the scripted Without/With toggle with a real recording of Rovo and an MCP client answering, and add a direct demo link.

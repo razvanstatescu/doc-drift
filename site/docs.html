@@ -26,9 +26,8 @@
       </a>
       <nav class="nav" id="site-nav" aria-label="Main">
         <a href="./#how">How it works</a>
-        <a href="./#confluence">In Confluence</a>
-        <a href="./#agents">For agents</a>
-        <a href="docs.html" aria-current="page">Docs</a>
+        <a href="./#agents">AI agents</a>
+        <a href="docs.html" aria-current="page">Setup guide</a>
         <a href="privacy.html">Privacy</a>
       </nav>
       <div class="header-actions">
@@ -49,7 +48,7 @@
       <div class="wrap">
         <p class="eyebrow">Docs</p>
         <h1 class="heading-lg" style="margin-top:10px">Setup guide</h1>
-        <p class="body-lg">Install the app, connect Jira and Bitbucket, anchor your first pages, and let your agents check pages before they cite them. You can see the whole flow without Bitbucket by replaying the demo pull request.</p>
+        <p class="body-lg">Install Doc Drift, link your Confluence pages to the code and Jira work they describe, and let AI agents check a page before they rely on it. You can try the whole flow without Bitbucket by replaying a demo pull request.</p>
       </div>
     </div>
 
@@ -57,35 +56,49 @@
       <nav class="toc" aria-label="On this page">
         <h2>On this page</h2>
         <ol>
+          <li><a href="#quick-start">Quick start</a></li>
           <li><a href="#before">Before you start</a></li>
           <li><a href="#install">Install the app</a></li>
           <li><a href="#jira">Connect Jira</a></li>
           <li><a href="#bitbucket">Connect Bitbucket</a></li>
           <li><a href="#demo">Try the demo replay</a></li>
           <li><a href="#anchor">Anchor pages</a></li>
+          <li><a href="#flags">When a page is flagged</a></li>
           <li><a href="#review">Review a flagged page</a></li>
+          <li><a href="#states">Page states</a></li>
           <li><a href="#dashboard">Space dashboard</a></li>
           <li><a href="#settings">Settings</a></li>
+          <li><a href="#rights">Who can do what</a></li>
           <li><a href="#mcp">Connect coding agents</a></li>
           <li><a href="#rovo">Drift Reviewer in Rovo</a></li>
-          <li><a href="#states">Page states</a></li>
           <li><a href="#troubleshooting">Troubleshooting</a></li>
           <li><a href="#support">Support</a></li>
         </ol>
       </nav>
 
       <article class="prose">
+        <section id="quick-start" class="guide-box">
+          <h2>Quick start</h2>
+          <ol>
+            <li><a href="#install">Install Doc Drift on your Confluence site.</a></li>
+            <li><a href="#anchor">Anchor a page: link it to the files or Jira issues it describes.</a></li>
+            <li><a href="#bitbucket">Connect Bitbucket</a>, or <a href="#demo">replay the demo pull request</a>.</li>
+            <li><a href="#review">Review the flagged page, then mark it verified.</a></li>
+            <li><a href="#mcp">Connect your coding agent over MCP.</a></li>
+          </ol>
+        </section>
+
         <section id="before">
           <h2>Before you start</h2>
           <ul>
             <li><strong>Confluence Cloud</strong>, and a site admin to install the app. Confluence administrators change its settings.</li>
             <li><strong>Jira Cloud</strong> on the same site, if you want Jira issues as anchors or want to create Jira tasks. Optional.</li>
             <li><strong>A Bitbucket Cloud team workspace</strong>, if you want merged pull requests to flag pages. Forge apps can't be installed in personal workspaces. Optional: the demo replay works without it.</li>
-            <li><strong>Rovo</strong> on the site, for the Drift Reviewer agent and Propose fix. Everything else works without it.</li>
+            <li><strong>Rovo</strong>, Atlassian's AI, on the site, for the Drift Reviewer agent and <strong>Propose fix</strong>. Everything else works without it.</li>
           </ul>
           <div class="note">
             <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-info"/></svg>
-            <p>Doc Drift is two Forge apps: the main app in Confluence, and a small relay in Bitbucket that sends merged pull requests to it. Forge doesn't let one app span Bitbucket and Confluence, so the relay is separate.</p>
+            <p>Doc Drift is two Forge apps: the main app in Confluence, and a relay, a small Bitbucket app that sends each merged pull request to it. Forge doesn't let one app span Bitbucket and Confluence, so the relay is separate.</p>
           </div>
         </section>
 
@@ -95,103 +108,201 @@
           <p data-install-ready hidden><a class="btn btn-primary" href="#" data-install>Install for Confluence</a></p>
           <ol class="steps-list">
             <li>Open the install link and pick your site. Only a site admin can install.</li>
-            <li>Review the permissions and select <strong>Install</strong>. Confluence is required; you can also connect Jira here.</li>
-            <li>Open any published page. A <strong>Doc Drift</strong> item appears in the byline, under the title.</li>
-            <li>Click it once and allow access when asked. The app and your agents act as you, so each person grants this once.</li>
+            <li>Review the permissions and select <strong>Install</strong>. Confluence is required. Jira is optional, and you can <a href="#jira">connect it after install</a>.</li>
+            <li>Open any published page. A <strong>Doc Drift</strong> item appears in the byline, the line under the page title. This guide calls it the badge; once the page has anchors, it shows the page's state, such as <strong>Verified · Doc Drift</strong>.</li>
+            <li>Click the badge and allow access when asked. The app and your agents act as you, so each person grants this once.</li>
           </ol>
         </section>
 
         <section id="jira">
           <h2>Connect Jira</h2>
-          <p>Jira is optional. With it, a page can be anchored to an issue or epic, and changes to its status, resolution, fix versions, components, summary, description or parent flag the page. You can also create a Jira task from a flagged page.</p>
-          <p>If you skipped Jira at install, connect it later in Atlassian Administration:</p>
+          <p>Jira is optional. With it, a page can be anchored to a Jira issue or epic, and some changes to that issue flag the page (see <a href="#flags">When a page is flagged</a>). You can also turn a flagged page into a Jira task.</p>
+          <p>To connect Jira after install, an admin opens Atlassian Administration, then:</p>
           <pre>Apps › Sites › your site › Connected apps › Doc Drift › View app details › Connections › Jira › Connect</pre>
-          <p>To turn Jira changes off without disconnecting, use <strong>Jira</strong> in the app settings.</p>
+          <p>Then they review the new permissions. To stop Jira changes flagging pages without disconnecting, turn off <strong>Flag pages when an anchored Jira issue changes</strong> in the app settings.</p>
         </section>
 
         <section id="bitbucket">
           <h2>Connect Bitbucket</h2>
-          <p>The relay reads each pull request merged into a repository's main branch, and sends Doc Drift the list of changed files and a short diff. It signs every request with a secret that only your site and the relay know.</p>
+          <p>When a pull request merges into a repository's main branch, the relay sends Doc Drift its number, title, author, branches, changed files and diff. Each request is signed with a secret that only your site and the relay know.</p>
           <ol class="steps-list">
-            <li>In Confluence, open <strong>Settings</strong> (the gear), then <strong>Doc Drift</strong> in the sidebar. Under <strong>Bitbucket relay</strong>, copy the ingest URL and select <strong>Generate secret</strong>. Copy the secret now: it's shown only once.</li>
+            <li>In Confluence, open <strong>Settings</strong> (the gear), then <strong>Doc Drift</strong> in the sidebar. Under <strong>Bitbucket relay</strong>, copy the <strong>Ingest URL</strong> and select <strong>Generate secret</strong>. Copy the secret now: it's shown only once.</li>
             <li>Install the Doc Drift Relay in your Bitbucket team workspace with its install link.</li>
-            <li>In Bitbucket, open <strong>Workspace settings</strong>, then <strong>Doc Drift Relay</strong> under Forge apps. Paste the URL and the secret and select <strong>Save</strong>.</li>
-            <li>Select <strong>Send test ping</strong>. It should say Connected, and the Confluence settings page shows the time of the last ping.</li>
+            <li>In Bitbucket, open <strong>Workspace settings</strong>, then <strong>Doc Drift Relay</strong> under Forge apps. Paste the URL into <strong>Core ingest URL</strong> and the secret into <strong>Shared secret</strong>, then select <strong>Save</strong>.</li>
+            <li>Select <strong>Send test ping</strong>. It should say <strong>Connected</strong>, and the Confluence settings page shows the time of the last test ping.</li>
           </ol>
-          <p>Merge a pull request and the settings page lists the repository under <strong>Repositories seen</strong>. Rotating the secret stops the old one at once, so update the relay right after.</p>
+          <p>After the first merge, the settings page lists the repository under <strong>Repositories seen</strong>. For large pull requests the relay sends the first 500 files, and leaves out the diff above 300 files or cuts it at about 200 KB. <strong>Rotate secret</strong> stops the old secret at once, so update the relay right after.</p>
         </section>
 
         <section id="demo">
           <h2>Try the demo replay</h2>
-          <p>The demo replays a seeded pull request through the same path the relay uses, with no Bitbucket needed. PR #482 in <code>payments-api</code> renames <code>scripts/rollback.sh</code> to <code>scripts/rollback-v2.sh</code>, and <code>ROLLBACK_TIMEOUT</code> to <code>ROLLBACK_TIMEOUT_SECS</code>.</p>
+          <p>The demo replays a seeded pull request through the same path the relay uses, so you need no Bitbucket. PR #482 in <code>payments-api</code> renames <code>scripts/rollback.sh</code> to <code>scripts/rollback-v2.sh</code>, and the variable <code>ROLLBACK_TIMEOUT</code> to <code>ROLLBACK_TIMEOUT_SECS</code>.</p>
           <ol class="steps-list">
             <li>Make a page that mentions <code>scripts/rollback.sh</code>, publish it, and anchor it to repository <code>payments-api</code>, path <code>scripts/rollback.sh</code>.</li>
             <li>In the app settings, under <strong>Get started</strong>, select <strong>Replay seeded PR #482</strong>.</li>
-            <li>After a few seconds, reload the page. The badge reads Possibly stale. Open it to see the change, the affected step and the rename quick fix.</li>
+            <li>After a few seconds, reload the page. The badge reads <strong>Possibly stale · Doc Drift</strong>: what the page describes changed, so it may be out of date. Open it to see the change, the affected section and the rename quick fix.</li>
           </ol>
-          <p>Set the comment delay to 0 minutes in settings if you want the owner comment to appear straight away.</p>
+          <p>To get the owner comment straight away, set <strong>Wait before commenting, in minutes</strong> to 0 in settings first.</p>
         </section>
 
         <section id="anchor">
           <h2>Anchor pages</h2>
-          <p>An anchor links a page to something it describes. When that thing changes, the page is flagged. Click the Doc Drift badge on a page and open <strong>Anchors</strong>.</p>
-          <div class="table-wrap">
+          <p>An anchor links a page to a file, folder or Jira issue it describes. When that changes, Doc Drift flags the page: it turns Possibly stale, and agents are told not to rely on it. To add anchors, click the badge; if the page has open changes, open its <strong>Anchors</strong> tab.</p>
+          <div class="table-wrap" role="region" aria-label="Anchor types" tabindex="0">
             <table>
-              <thead><tr><th>Anchor</th><th>Example</th><th>Flags the page when</th></tr></thead>
+              <thead><tr><th>Anchor</th><th>Type to pick</th><th>Example</th></tr></thead>
               <tbody>
-                <tr><td>File</td><td><code>payments-api: scripts/rollback.sh</code></td><td>The file is changed, renamed or removed</td></tr>
-                <tr><td>Folder or glob</td><td><code>payments-api: deploy/helm/**</code></td><td>Any matching file changes</td></tr>
-                <tr><td>Jira issue or epic</td><td><code>PAY-142</code></td><td>Its status, scope, fix versions or parent change</td></tr>
-                <tr><td>Whole repository</td><td><code>payments-api</code></td><td>Large changes only. A weak anchor: prefer paths</td></tr>
+                <tr><td>File</td><td><strong>File path or glob</strong>, with a repository and a path</td><td><code>payments-api</code>, <code>scripts/rollback.sh</code></td></tr>
+                <tr><td>Folder or glob</td><td><strong>File path or glob</strong>, with a pattern. <code>**</code> matches everything below a folder, and a path ending in <code>/</code> watches the whole folder</td><td><code>deploy/helm/**</code></td></tr>
+                <tr><td>Jira issue or epic</td><td><strong>Jira issue</strong>, with its key</td><td><code>PAY-142</code></td></tr>
+                <tr><td>Whole repository</td><td><strong>Whole repository</strong>, with a repository. It rarely flags a page: prefer paths</td><td><code>payments-api</code></td></tr>
               </tbody>
             </table>
           </div>
           <ul>
-            <li><strong>Suggestions.</strong> Doc Drift reads the paths in code blocks, Bitbucket links and Jira keys on the page and suggests them. Tick the ones that fit and save.</li>
-            <li><strong>Critical anchors.</strong> Mark an anchor Critical when a change to it should always get attention, such as the script a runbook runs.</li>
-            <li><strong>A whole space.</strong> On a space's <strong>Drift dashboard</strong>, select <strong>Anchor this space</strong> to review suggestions for every unanchored page in one table.</li>
-            <li><strong>Save anchors and mark verified</strong> saves them and marks the page Verified. Changing anchors needs edit rights on the page.</li>
+            <li><strong>Suggestions.</strong> Under <strong>Suggested from this page</strong>, Doc Drift lists the paths in code, Bitbucket links and Jira keys it finds on the page. Only checked suggestions are added when you save.</li>
+            <li><strong>Critical anchor.</strong> Tick it for a file whose change should always get attention, such as the script a runbook runs. Critical anchors flag on smaller changes, and their changes count as High.</li>
+            <li><strong>Save and mark verified</strong> saves the anchors and marks the page Verified. Changing anchors needs edit rights on the page.</li>
+            <li><strong>Anchor this space.</strong> On a space's <strong>Drift dashboard</strong>, this suggests anchors for up to 25 unanchored pages at a time. It lists only pages with suggestions, and saves only on pages you can edit.</li>
+          </ul>
+        </section>
+
+        <section id="flags">
+          <h2>When a page is flagged</h2>
+          <p>Fixed rules decide, not AI, so the same change always gives the same result. Doc Drift compares what a change touched with each page's anchors. These are the rules at the default setting, <strong>Balanced</strong>:</p>
+          <div class="table-wrap" role="region" aria-label="Rules at the default setting" tabindex="0">
+            <table class="table-fit">
+              <thead><tr><th>Anchor</th><th>Flags the page when</th></tr></thead>
+              <tbody>
+                <tr><td>File</td><td>The file is renamed or removed. Edits flag it when they're bigger: about 6 changed lines (lines added plus lines removed).</td></tr>
+                <tr><td>Critical file</td><td>Any edit, unless it only touches comments or whitespace.</td></tr>
+                <tr><td>Folder or glob</td><td>Only with page evidence (below). The size of a change alone isn't enough.</td></tr>
+                <tr><td>Critical folder or glob</td><td>A file in it is renamed or removed, or an edit has about 19 changed lines.</td></tr>
+                <tr><td>Whole repository</td><td>Only with page evidence, and not always then. It never flags on size.</td></tr>
+                <tr><td>Jira issue or epic</td><td>It moves to Done (any done status) or Won't Do, or is resolved as Won't Do; its fix versions, components, parent or description change; or it's deleted. Other status moves and summary edits don't flag it.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p><strong>Page evidence</strong> makes any code match stronger: the page names something the change removed, such as <code>ROLLBACK_TIMEOUT</code>, or a code block on the page has a line the change removed. At Balanced, with page evidence, a small edit is enough for file, folder and glob anchors.</p>
+
+          <details class="fold">
+            <summary>Strict and Quiet settings</summary>
+            <p><strong>Sensitivity</strong> in settings moves these lines for every page. Strict flags more pages; Quiet flags only strong matches.</p>
+            <div class="table-wrap" role="region" aria-label="Strict and Quiet" tabindex="0">
+              <table class="table-fit">
+                <thead><tr><th>Anchor</th><th>Strict</th><th>Quiet</th></tr></thead>
+                <tbody>
+                  <tr><td>File</td><td>Any edit</td><td>Renamed, removed, or about 50 changed lines</td></tr>
+                  <tr><td>Critical file</td><td>Any edit</td><td>Renamed, removed, or about 3 changed lines</td></tr>
+                  <tr><td>Folder or glob</td><td>A file in it renamed or removed, or about 60 changed lines</td><td>Only with page evidence</td></tr>
+                  <tr><td>Critical folder or glob</td><td>Renamed, removed, or about 4 changed lines</td><td>Only with page evidence</td></tr>
+                  <tr><td>Whole repository</td><td>Only with page evidence</td><td>Only with page evidence</td></tr>
+                  <tr><td>Jira issue or epic</td><td>Same as Balanced</td><td>Only Done, Won't Do or deleted</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>An edit that only touches comments or whitespace counts for much less, so it rarely flags a page. Each dismissal also makes that anchor a little less sensitive.</p>
+          </details>
+
+          <h3 id="never">Changes that never flag a page</h3>
+          <ul>
+            <li>Changes to files that match <strong>Ignore globs, one per line</strong>: by default tests, lock files, snapshots, <code>dist</code> folders and Markdown. So an anchor on a Markdown file never flags.</li>
+            <li>Merges into a branch other than main, while <strong>Only count merges into the main branch</strong> is on.</li>
+            <li>Any change, for pages in spaces that aren't watched. They keep their anchors.</li>
+            <li>Jira changes, while Jira is turned off in settings.</li>
+          </ul>
+
+          <h3>Renames and reverts</h3>
+          <ul>
+            <li><strong>Renames.</strong> A file anchor still matches a renamed file by its old path, and the review panel offers to move the anchor to the new one.</li>
+            <li><strong>Reverts.</strong> A pull request titled <code>Revert "…"</code> closes the open changes of the pull request it reverts. Other pages are checked as for any change, so a page already reviewed for that pull request can be flagged: the code it describes moved back.</li>
           </ul>
         </section>
 
         <section id="review">
           <h2>Review a flagged page</h2>
-          <p>Click the badge on a Possibly stale or Stale page. The <strong>Review</strong> tab lists each change: the pull request or Jira change, who made it, when, the files, and a sentence on why it flagged this page. Below that are the page sections that mention what changed.</p>
-          <div class="table-wrap">
-            <table>
+          <p>Click the badge on a Possibly stale or Stale page. The <strong>Review</strong> tab lists each change under <strong>What changed</strong>: who made it, when, the files, and why it flagged this page. <strong>Affected section</strong> shows the parts of the page that name what changed.</p>
+          <p>Each change is High or Medium: High when the anchored file was renamed or removed, the anchor is Critical, or the match is strong. People who can edit the page also get <strong>Show diff</strong> and the full Jira values.</p>
+          <div class="table-wrap" role="region" aria-label="Review actions" tabindex="0">
+            <table class="table-fit">
               <thead><tr><th>Action</th><th>What it does</th></tr></thead>
               <tbody>
-                <tr><td>Mark verified</td><td>You checked the page against the change. Closes the open changes and records who verified.</td></tr>
-                <tr><td>Propose fix</td><td>Opens Drift Reviewer in Rovo, which drafts new text per affected block. Drafts appear in the panel; nothing changes until you accept.</td></tr>
-                <tr><td>Accept fix</td><td>Saves the draft as a new page version, as you, with a message naming the pull request. Needs edit rights.</td></tr>
-                <tr><td>Rename quick fix</td><td>For a renamed file, replaces the old path with the new one in the affected blocks. No AI.</td></tr>
-                <tr><td>Snooze 7 days</td><td>Hides the change for a week. The page stays flagged for agents.</td></tr>
-                <tr><td>Dismiss</td><td>Closes the change with a reason: not relevant, already updated, or false positive. Not relevant can also stop watching that path for this page.</td></tr>
-                <tr><td>Create Jira task</td><td>Creates a task as you, listing the changes and sections to re-read. Closing the task doesn't verify the page.</td></tr>
+                <tr><td><strong>Mark verified</strong></td><td>Records that you checked the page against the changes, and closes them.</td></tr>
+                <tr><td><strong>Quick fix</strong></td><td>When the page names a renamed file, its button, such as <strong>Replace in 2 places</strong>, swaps in the new path as you, with a version message naming the pull request. No AI. It also closes that change, and moves a file anchor that pointed at the old path.</td></tr>
+                <tr><td><strong>Propose fix</strong>, under <strong>Proposed fix</strong></td><td>Opens Drift Reviewer in Rovo to draft new text, one block of the page at a time. Drafts appear in the panel, and the page doesn't change.</td></tr>
+                <tr><td><strong>Accept draft</strong>, <strong>Accept fix</strong></td><td>Saves drafts as a new page version, as you, with a version message such as <code>Doc Drift: accepted proposal for PR #482</code>. <strong>Accept fix</strong> accepts every open draft, <strong>Accept all for this section</strong> one section's drafts, and <strong>Reject draft</strong> drops one. A change closes once its last draft is accepted.</td></tr>
+                <tr><td><strong>Move anchor</strong> or <strong>Keep</strong>, under <strong>Renamed anchors</strong></td><td>After a rename, moves the anchor to the new path or keeps it on the old one. The change stays open until someone reviews the page.</td></tr>
+                <tr><td><strong>Snooze 7 days</strong></td><td>Pauses every open change for 7 days. They stay listed as Snoozed, and the page reads Possibly stale meanwhile, even if it was Stale. Agents are still warned, and the owner gets no comment about those changes.</td></tr>
+                <tr><td><strong>Dismiss</strong></td><td>Closes every open change with a reason: <strong>Not relevant</strong>, <strong>Already updated</strong> or <strong>False positive</strong>. The page reads Verified, with you as the reviewer, and each dismissal makes that anchor a little less sensitive. With <strong>Not relevant</strong>, you can also stop watching a path for this page.</td></tr>
+                <tr><td><strong>Create Jira task</strong>, under <strong>Track in Jira</strong></td><td>Creates a task as you, listing the changes and sections to re-read. The changes then show <strong>Tracked in</strong> and the key, such as <code>PAY-201</code>, and agents are told an update is tracked there. Closing the task doesn't verify the page.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p><strong>Mark verified</strong> and <strong>Create Jira task</strong> need view rights on the page; the rest need edit rights (see <a href="#rights">Who can do what</a>).</p>
+        </section>
+
+        <section id="states">
+          <h2>Page states</h2>
+          <p>Once a page has anchors, its badge shows the state as a word. The cite policy is the same advice in a form agents can read.</p>
+          <div class="table-wrap" role="region" aria-label="Page states" tabindex="0">
+            <table>
+              <thead><tr><th>State</th><th>Means</th><th>Agents are told</th><th>Cite policy</th></tr></thead>
+              <tbody>
+                <tr><td><span class="badge badge-verified"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-check"/></svg>Verified</span></td><td>Nothing has flagged the page since a person last verified it or saved its anchors</td><td>Safe to cite</td><td><code>cite</code></td></tr>
+                <tr><td><span class="badge badge-possibly"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-slip"/></svg>Possibly stale</span></td><td>An anchor changed after the last verification, so the page may be out of date. A first change always leads here, never straight to Stale</td><td>Don't present its steps as current, with a caveat that names what changed</td><td><code>cite_with_caveat</code></td></tr>
+                <tr><td><span class="badge badge-stale"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-clock"/></svg>Stale</span></td><td>Possibly stale for 7 days (the <strong>Days before Possibly stale becomes Stale</strong> setting), or 3 or more open changes, or a further High change to a Critical anchor</td><td>The same, and how long it's been unreviewed</td><td><code>do_not_cite</code></td></tr>
+                <tr><td><span class="badge badge-unanchored"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-trace"/></svg>Unanchored</span></td><td>Not linked to code or Jira yet</td><td>Doc Drift can't tell if it's current: cite with care</td><td><code>cite_with_caveat</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>A Verified page also shows that the watch is working. Its badge tooltip reads, for example, <strong>Verified on Nov 12. 1 anchor change since, none flagged. Watching 3 anchors.</strong></p>
+        </section>
+
+        <section id="dashboard">
+          <h2>Space dashboard</h2>
+          <p>Each space has a <strong>Drift dashboard</strong> in its sidebar. It counts only the pages you can view.</p>
+          <ul>
+            <li><strong>Pages anchored</strong>, <strong>Possibly stale</strong>, <strong>Stale</strong> and <strong>Median time to verify</strong>, in tiles.</li>
+            <li><strong>Pages with drift</strong>, ranked by severity, then state and open changes. Filter it with <strong>Show</strong>, and open a page from its title or <strong>Review</strong>.</li>
+            <li><strong>Owner backlog</strong>: open changes by page owner.</li>
+            <li><strong>Anchor this space</strong>, while pages are unanchored (see <a href="#anchor">Anchor pages</a>).</li>
+          </ul>
+        </section>
+
+        <section id="settings">
+          <h2>Settings</h2>
+          <p>Confluence administrators find the settings under <strong>Settings</strong>, then <strong>Doc Drift</strong>. Setup comes first: <strong>Get started</strong>, <strong>Bitbucket relay</strong> and <strong>For coding agents</strong>. The options below apply from the next change Doc Drift receives, once you select <strong>Save settings</strong>.</p>
+          <div class="table-wrap" role="region" aria-label="Settings" tabindex="0">
+            <table>
+              <thead><tr><th>Setting</th><th>Default</th><th>What it changes</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Sensitivity</strong></td><td>Balanced</td><td>How strong a match must be to flag a page: Strict, Balanced or Quiet (see <a href="#flags">When a page is flagged</a>)</td></tr>
+                <tr><td><strong>Ignore globs, one per line</strong></td><td>Tests, lock files, snapshots, <code>dist</code> folders, Markdown</td><td>Changes to matching files never flag a page. <strong>Reset to defaults</strong> brings the list back</td></tr>
+                <tr><td><strong>Only count merges into the main branch</strong></td><td>On</td><td>Merges into release or feature branches never flag a page</td></tr>
+                <tr><td><strong>Watch pages in</strong></td><td>All spaces</td><td>With <strong>Selected spaces only</strong>, pages in other spaces keep their anchors, but new changes don't flag them</td></tr>
+                <tr><td><strong>Days before Possibly stale becomes Stale</strong></td><td>7</td><td>1 to 30 days. 3 or more open changes also mark a page Stale</td></tr>
+                <tr><td><strong>Comment on flagged pages and mention the owner</strong></td><td>On</td><td>Mentions the owner, and the pull request author when their account is on your site. At most 1 new comment per page in 24 hours; later changes are added to it</td></tr>
+                <tr><td><strong>Wait before commenting, in minutes</strong></td><td>10</td><td>0 to 60. Changes in this window become 1 comment</td></tr>
+                <tr><td><strong>Flag pages when an anchored Jira issue changes</strong></td><td>On</td><td>Off: Jira changes are ignored</td></tr>
               </tbody>
             </table>
           </div>
         </section>
 
-        <section id="dashboard">
-          <h2>Space dashboard</h2>
-          <p>Each space has a <strong>Drift dashboard</strong> in its sidebar: how many pages are anchored, how many are Possibly stale or Stale, the median time to verify, the pages that need a review most, and a backlog by owner. Select a row to open the page.</p>
-        </section>
-
-        <section id="settings">
-          <h2>Settings</h2>
-          <p>Confluence administrators find the settings under <strong>Settings</strong>, then <strong>Doc Drift</strong>. Changes apply to the next change the app receives.</p>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Setting</th><th>Default</th><th>What it changes</th></tr></thead>
+        <section id="rights">
+          <h2>Who can do what</h2>
+          <p>Doc Drift checks each person's rights on a page before it acts.</p>
+          <div class="table-wrap" role="region" aria-label="Who can do what" tabindex="0">
+            <table class="table-fit">
+              <thead><tr><th>Who</th><th>Can</th></tr></thead>
               <tbody>
-                <tr><td>Sensitivity</td><td>Balanced</td><td>How strong a match must be to flag a page: Strict, Balanced or Quiet</td></tr>
-                <tr><td>Ignored paths</td><td>Tests, lock files, snapshots, build output, Markdown</td><td>Files that never flag a page, as globs</td></tr>
-                <tr><td>Only count merges into the main branch</td><td>On</td><td>Merges into release or feature branches never flag a page</td></tr>
-                <tr><td>Watched spaces</td><td>All spaces</td><td>Pages outside the chosen spaces keep their anchors but aren't flagged</td></tr>
-                <tr><td>Escalation</td><td>7 days</td><td>How long a page stays Possibly stale before it turns Stale</td></tr>
-                <tr><td>Comments</td><td>On, 10 minute delay</td><td>The owner comment, and how long to wait so changes that land together become one comment</td></tr>
-                <tr><td>Jira</td><td>On</td><td>Whether Jira issue changes flag pages</td></tr>
+                <tr><td>Anyone who can view the page</td><td>See its state and a summary of each change. Use <strong>Mark verified</strong> and <strong>Create Jira task</strong>; Jira also checks that you can create issues in the project.</td></tr>
+                <tr><td>People who can edit the page</td><td>All of that, plus <strong>Show diff</strong>, <strong>Dismiss</strong>, <strong>Snooze 7 days</strong>, <strong>Propose fix</strong>, accepting or rejecting drafts, the quick fix, <strong>Move anchor</strong> or <strong>Keep</strong>, and changing anchors. <strong>Anchor this space</strong> saves only on pages you can edit.</td></tr>
+                <tr><td>Confluence administrators</td><td>Change the settings.</td></tr>
+                <tr><td>Bitbucket workspace admins</td><td>Change the relay's settings.</td></tr>
+                <tr><td>Site admins</td><td>Install the app.</td></tr>
+                <tr><td>Admins in Atlassian Administration</td><td>Connect Jira, and turn on the MCP tools.</td></tr>
+                <tr><td>Drift Reviewer and coding agents</td><td>Act as the person signed in, with that person's rights. A page that person can't view comes back as <code>unknown</code>, with no title.</td></tr>
               </tbody>
             </table>
           </div>
@@ -199,18 +310,19 @@
 
         <section id="mcp">
           <h2>Connect coding agents</h2>
-          <p>Doc Drift has an MCP server with three read-only tools: <code>check-page-freshness</code>, <code>find-docs-for-path</code> and <code>list-stale-pages</code>. Agents sign in as a person and only see pages that person can view.</p>
+          <p>MCP is an open standard that lets AI tools use other apps. Doc Drift's MCP server has 3 read-only tools: <code>check-page-freshness</code>, <code>find-docs-for-path</code> and <code>list-stale-pages</code>. Agents sign in as a person and see only the pages that person can view.</p>
           <ol class="steps-list">
-            <li><strong>An admin turns on the tools.</strong> In Atlassian Administration: Apps, Sites, your site, Connected apps, Doc Drift, View app details. Under Tools, turn on the tools to share with MCP clients.</li>
-            <li><strong>Open the app once in Confluence</strong> and allow access, if you haven't yet. Signing in to the MCP server doesn't grant this.</li>
-            <li><strong>Add the server.</strong> In Claude Code, run the command below, then <code>/mcp</code> in a session to sign in and pick your site.</li>
+            <li><strong>An admin turns on the tools.</strong> In Atlassian Administration: Apps › Sites › your site › Connected apps › Doc Drift › <strong>View app details</strong> › <strong>Tools</strong>. Turn on <strong>Expose tools to MCP-compatible apps</strong>: this one switch turns on all 3 tools for that site.</li>
+            <li><strong>Each person opens the app once in Confluence</strong> and allows access, if they haven't yet. Signing in to the MCP server doesn't grant this.</li>
+            <li><strong>Add the server.</strong> The URL is the same for every site: when you sign in, you pick a site where the tools are on. In Claude Code, run the command below, then <code>/mcp</code> in a session to sign in.</li>
           </ol>
           <div class="copy-field">
             <code id="cmd-add">claude mcp add --transport http doc-drift https://mcp.atlassian.com/forge/12e968a1-a45d-4524-ba28-d47e2315db1a</code>
             <button class="copy-btn" type="button" data-copy="cmd-add" aria-label="Copy the claude mcp add command"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-copy"/></svg><span data-copy-label>Copy</span></button>
           </div>
-          <h3>Cursor and other clients</h3>
-          <p>Add a remote server with this URL. In Cursor, put it in <code>.cursor/mcp.json</code> or <code>~/.cursor/mcp.json</code>:</p>
+          <h3>Other MCP clients</h3>
+          <p>We've tested Claude Code. Other clients that support remote MCP servers with sign-in should work with the same URL.</p>
+          <p>Cursor, not yet tested by us: put this in <code>.cursor/mcp.json</code> or <code>~/.cursor/mcp.json</code>.</p>
           <div class="copy-field">
             <code id="cursor-json">{ "mcpServers": { "doc-drift": { "url": "https://mcp.atlassian.com/forge/12e968a1-a45d-4524-ba28-d47e2315db1a" } } }</code>
             <button class="copy-btn" type="button" data-copy="cursor-json" aria-label="Copy the Cursor configuration"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-copy"/></svg><span data-copy-label>Copy</span></button>
@@ -222,13 +334,27 @@
             <button class="copy-btn" type="button" data-copy="agent-rule" aria-label="Copy the agent instruction"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-copy"/></svg><span data-copy-label>Copy</span></button>
           </div>
           <h3>The tools</h3>
-          <div class="table-wrap">
+          <div class="table-wrap" role="region" aria-label="MCP tools" tabindex="0">
             <table>
               <thead><tr><th>Tool</th><th>Input</th><th>Returns</th></tr></thead>
               <tbody>
-                <tr><td><code>check-page-freshness</code></td><td>Page ID, URL or exact title</td><td>The state, open changes, affected sections, a cite policy and guidance on how to cite the page</td></tr>
-                <tr><td><code>find-docs-for-path</code></td><td>Repository and a file, folder or glob</td><td>Up to 25 pages anchored to that path, each with its state</td></tr>
-                <tr><td><code>list-stale-pages</code></td><td>Optional space key and limit</td><td>Possibly stale and Stale pages, most urgent first</td></tr>
+                <tr><td><code>check-page-freshness</code></td><td>A page ID, any page link (short <code>/wiki/x/</code> links too) or the exact title</td><td>The page's state and cite policy, open changes, affected sections, any Jira task tracking an update, and guidance on how to cite it. A link to another site is refused.</td></tr>
+                <tr><td><code>find-docs-for-path</code></td><td>A repository and a file, folder or glob</td><td>Up to 25 pages you can view that are anchored to that path, each with its state and cite policy</td></tr>
+                <tr><td><code>list-stale-pages</code></td><td>A space key (optional) and a limit from 1 to 50 (default 10)</td><td>Possibly stale and Stale pages you can view, most urgent first</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>What agents can and can't do</h3>
+          <div class="table-wrap" role="region" aria-label="What agents can and can't do" tabindex="0">
+            <table class="table-fit">
+              <thead><tr><th>Action</th><th>Coding agents (MCP)</th><th>Drift Reviewer (Rovo)</th></tr></thead>
+              <tbody>
+                <tr><td>Check a page's state and what changed</td><td>Yes</td><td>Yes</td></tr>
+                <tr><td>Find pages by code path, or list flagged pages</td><td>Yes</td><td>No</td></tr>
+                <tr><td>See diffs</td><td>No</td><td>Only if you can edit the page</td></tr>
+                <tr><td>Draft a fix</td><td>No</td><td>Yes, after Rovo asks you to confirm. Needs edit rights</td></tr>
+                <tr><td>Mark a page Verified</td><td>No</td><td>Yes, when you say you checked it, after Rovo asks you to confirm</td></tr>
+                <tr><td>Edit page text, dismiss, snooze, change anchors or create Jira tasks</td><td>No</td><td>No</td></tr>
               </tbody>
             </table>
           </div>
@@ -236,49 +362,66 @@
 
         <section id="rovo">
           <h2>Drift Reviewer in Rovo</h2>
-          <p>Drift Reviewer is a Rovo agent that answers freshness questions and drafts fixes. Find it in Rovo Chat, or select <strong>Propose fix</strong> in the review panel to open it with the page.</p>
+          <p>Drift Reviewer is our agent in Rovo, Atlassian's AI. It says whether a page is safe to cite, explains what changed, and drafts fixes for a person to accept. Find it in Rovo Chat, or select <strong>Propose fix</strong> in the review panel to open it with the page.</p>
           <ul>
             <li>Ask “Is this page still current?” or “What changed since this page was verified?”</li>
-            <li>Ask it to draft a fix. Each draft replaces one block, Rovo asks you to confirm before it's saved, and you accept it in the review panel.</li>
-            <li>Tell it you checked the page, and it can record a verification for you after you confirm.</li>
+            <li>Ask it to draft a fix. It saves one draft per block after Rovo asks you to confirm, and you accept drafts in the review panel. Drafting needs edit rights on the page.</li>
+            <li>Tell it you checked the page, and it marks the page Verified after Rovo asks you to confirm. It does this only when you say you checked.</li>
           </ul>
-          <p>Drift Reviewer never edits a page, and treats page and diff text as evidence, not instructions. Drafting uses Rovo credits on your site.</p>
-        </section>
-
-        <section id="states">
-          <h2>Page states</h2>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>State</th><th>Means</th><th>Agents are told</th></tr></thead>
-              <tbody>
-                <tr><td><span class="badge badge-verified"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-check"/></svg>Verified</span></td><td>Checked since its anchors last changed</td><td>Safe to cite</td></tr>
-                <tr><td><span class="badge badge-possibly"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-slip"/></svg>Possibly stale</span></td><td>An anchor changed after the last verification</td><td>Cite with a caveat that names the change</td></tr>
-                <tr><td><span class="badge badge-stale"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-clock"/></svg>Stale</span></td><td>Unreviewed for 7 days, 3 or more open changes, or a further high change to a critical anchor</td><td>Don't present its steps as current</td></tr>
-                <tr><td><span class="badge badge-unanchored"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-trace"/></svg>Unanchored</span></td><td>Not linked to code or Jira yet</td><td>Can't tell if it's current: cite with care</td></tr>
-              </tbody>
-            </table>
-          </div>
+          <p>AI runs only when someone chats with Drift Reviewer or asks for a drafted fix, and those chats use your site's Rovo credits. Detection never uses AI. Drift Reviewer never edits a page, and treats page and diff text as evidence, not instructions.</p>
+          <p>Other Rovo agents don't check pages on their own. An agent built in Rovo Studio can add Doc Drift's tools.</p>
         </section>
 
         <section id="troubleshooting">
           <h2>Troubleshooting</h2>
-          <h3>An agent tool says to grant access in Connected apps</h3>
-          <p>The person signed in to the MCP server hasn't opened the app in Confluence yet. Open any page, click the Doc Drift badge and allow access, then retry. After an app upgrade that adds permissions, do this once more.</p>
-          <h3>There's no badge on a page</h3>
-          <p>Confluence shows app byline items only on published pages. Publish the page and reload it.</p>
-          <h3>A page with view restrictions can't be anchored</h3>
-          <p>Restricted pages can't be watched yet: the app can't read them, and their changes don't reach it. Agents are told to check those pages against the code before citing them.</p>
-          <h3>A merge didn't flag the page</h3>
-          <ul>
-            <li>The merge went into a branch other than main. Only main-branch merges count.</li>
-            <li>The changed file matches an ignored path, such as a test or a Markdown file.</li>
-            <li>The page is in a space that isn't watched.</li>
-            <li>The match was weak, for example a whole-repo anchor on a small change. Anchor the exact path, or try the Strict preset.</li>
-          </ul>
-          <h3>The relay test ping fails</h3>
-          <p>Check that the URL and secret match the ones in Confluence settings. If you rotated the secret, paste the new one. In a personal Bitbucket workspace the relay can't be installed: use a team workspace.</p>
-          <h3>The badge didn't update after an action</h3>
-          <p>Reload the page. The badge state is stored with the page and refreshes on the next load.</p>
+          <div class="faq faq-guide">
+            <details>
+              <summary>An agent tool says to grant access in Connected apps<svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-plus"/></svg></summary>
+              <div class="answer">
+              <p>The person signed in to the MCP server hasn't opened the app in Confluence yet. Open any page, click the Doc Drift badge and allow access, then retry. After an app upgrade that adds permissions, do this once more.</p>
+              </div>
+            </details>
+            <details>
+              <summary>There's no badge on a page<svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-plus"/></svg></summary>
+              <div class="answer">
+              <p>Confluence shows app byline items only on published pages. Publish the page and reload it.</p>
+              </div>
+            </details>
+            <details>
+              <summary>A page with view restrictions can't be anchored<svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-plus"/></svg></summary>
+              <div class="answer">
+              <p>Restricted pages can't be watched yet: the app can't read them, and their changes don't reach it. Agents are told to check those pages against the code before citing them.</p>
+              </div>
+            </details>
+            <details>
+              <summary>A merge didn't flag the page<svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-plus"/></svg></summary>
+              <div class="answer">
+              <ul>
+                <li>It's a change that never flags: a branch other than main, ignored files such as tests or Markdown, or a space that isn't watched (see <a href="#never">Changes that never flag a page</a>). For an unwatched space, the badge panel says <strong>This space isn't watched yet.</strong>, with an <strong>Open settings</strong> link for administrators.</li>
+                <li>The change was too small for the anchor. At the default setting, edits to a file anchor need about 6 changed lines, and folder anchors need page evidence unless they're Critical. Anchor the exact file, tick <strong>Critical anchor</strong>, or try Strict (see <a href="#flags">When a page is flagged</a>).</li>
+                <li>It hasn't arrived yet. In our tests, a merge flagged its page 11 to 19 seconds later; Jira changes can arrive up to about 3 minutes late.</li>
+              </ul>
+              </div>
+            </details>
+            <details>
+              <summary>The relay test ping fails<svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-plus"/></svg></summary>
+              <div class="answer">
+              <p>Check that the URL and secret match the ones in Confluence settings. If you rotated the secret, paste the new one. In a personal Bitbucket workspace the relay can't be installed: use a team workspace.</p>
+              </div>
+            </details>
+            <details>
+              <summary>The badge didn't update after an action<svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-plus"/></svg></summary>
+              <div class="answer">
+              <p>Reload the page. The badge state is stored with the page and refreshes on the next load.</p>
+              </div>
+            </details>
+            <details>
+              <summary>A restored page lost its anchors<svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-plus"/></svg></summary>
+              <div class="answer">
+              <p>Trashing a page removes its anchors and closes its open changes, so a restored page comes back Unanchored: add its anchors again. A moved page keeps its anchors and state in its new space.</p>
+              </div>
+            </details>
+          </div>
         </section>
 
         <section id="support">
@@ -302,8 +445,8 @@
           <h2>Product</h2>
           <ul>
             <li><a href="./#how">How it works</a></li>
+            <li><a href="./#agents">AI agents</a></li>
             <li><a href="./#confluence">In Confluence</a></li>
-            <li><a href="./#agents">For agents</a></li>
             <li><a href="./#faq">Questions</a></li>
           </ul>
         </div>
@@ -311,7 +454,7 @@
           <h2>Docs</h2>
           <ul>
             <li><a href="docs.html">Setup guide</a></li>
-            <li><a href="docs.html#mcp">Connect coding agents</a></li>
+            <li><a href="docs.html#mcp">Connect coding assistants</a></li>
             <li><a href="docs.html#troubleshooting">Troubleshooting</a></li>
           </ul>
         </div>

@@ -1,0 +1,2433 @@
+/* Doc Drift home page. Loaded after site.css, home only. Tokens come from site.css (brand/tokens.json);
+   the few extra values below are home-only roles built from the same brand constants. */
+
+:root,
+:root[data-theme='light'] {
+  --page-ground: #f2f6f7;
+  --mark-ink: #0a2f38;
+  --mark-trace: 0.14;
+  --wire: #1b6470;
+  --twin-shadow: 0 1px 2px #0726300f, 0 14px 36px #0726301c;
+}
+:root[data-theme='dark'] {
+  --page-ground: #072630;
+  --mark-ink: #f2f6f7;
+  --mark-trace: 0.16;
+  --wire: #5fb3bf;
+  --twin-shadow: 0 1px 0 #ffffff0f inset, 0 16px 40px #00000059;
+}
+
+/* View transitions and the mobile touch targets live in site.css (shared by every page). */
+
+.home main {
+  overflow-x: clip;
+}
+
+/* Shared pieces */
+.h-lede {
+  margin-top: 20px;
+  max-width: 34em;
+  font-size: 20px;
+  line-height: 30px;
+  color: var(--text-muted);
+}
+.h-head {
+  max-width: 760px;
+}
+.h-mono {
+  font-family: var(--mono);
+  font-size: 0.92em;
+  word-spacing: -0.2em;
+}
+.h-ic {
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--surface-sunk);
+}
+.h-arrow-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.h-arrow-link:hover {
+  text-decoration: underline;
+}
+.h-arrow-link .icon {
+  width: 18px;
+  height: 18px;
+}
+.h-more {
+  margin-top: 20px;
+}
+.h-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--twin-shadow);
+}
+.h-btn-fake {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--radius-cut);
+  background: var(--text);
+  color: var(--ground);
+  font: 600 12.5px/1 var(--sans);
+  white-space: nowrap;
+}
+.h-btn-quiet {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--line-strong);
+}
+.h-tv-k,
+.h-card-h {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* Reveals: section heads and visuals only, once. JS adds .motion, so without JS everything shows. */
+.motion .reveal {
+  opacity: 0;
+  translate: 0 16px;
+  transition:
+    opacity 500ms ease-out,
+    translate 500ms ease-out;
+  transition-delay: calc(var(--i, 0) * 60ms);
+}
+.motion .reveal.is-in {
+  opacity: 1;
+  translate: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Page twin: a Confluence page in our own tokens, with the real strings */
+.h-pg {
+  position: relative;
+  padding: 22px 26px 26px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--twin-shadow);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 21px;
+}
+.h-pg-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.h-pg-crumbs .icon {
+  width: 14px;
+  height: 14px;
+}
+.h-pg-title {
+  margin-top: 10px;
+  font-size: 21px;
+  line-height: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.h-pg-by {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 18px;
+}
+.h-pg-props {
+  display: grid;
+  margin-top: 14px;
+  border-radius: 10px;
+  background: var(--surface-sunk);
+  font-size: 12.5px;
+  line-height: 19px;
+}
+.h-pg-props p {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 10px;
+  padding: 7px 12px;
+}
+.h-pg-props p + p {
+  border-top: 1px solid var(--line);
+}
+.h-pg-props p > span:first-child {
+  color: var(--text-muted);
+}
+.h-key {
+  margin-right: 3px;
+  color: var(--link);
+}
+.h-pg-h {
+  margin-top: 16px;
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+}
+.h-pg-steps {
+  display: grid;
+  gap: 6px;
+  margin: 6px 0 0;
+  padding-left: 20px;
+}
+.h-pg-steps li::marker {
+  color: var(--text-muted);
+}
+.h-code {
+  position: relative;
+  display: grid;
+  margin-top: 8px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: var(--surface-sunk);
+  font: 400 12px/19px var(--mono);
+}
+.h-code-v {
+  grid-area: 1 / 1;
+  display: grid;
+  transition: opacity 240ms ease-out;
+}
+.h-code-v > span {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.h-code-new {
+  opacity: 0;
+}
+.h-code-new b {
+  font-weight: 500;
+  color: var(--verified);
+}
+.h-hit,
+.h-sug {
+  position: relative;
+}
+.h-hit::after,
+.h-sug::after {
+  content: '';
+  position: absolute;
+  inset: -1px -2px;
+  border-radius: 4px;
+  background: var(--trace);
+  box-shadow: inset 0 -1.5px 0 var(--wire);
+  opacity: 0;
+  transition: opacity 240ms ease-out;
+  pointer-events: none;
+}
+
+/* The byline label: the app icon and the state title. Drift slips the amber band one slip unit right
+   (180 ms out, 240 ms back) and leaves the trace where it was. */
+.h-bl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.h-bl-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--mark-ink);
+}
+.h-bl-slot {
+  display: inline-grid;
+  align-items: center;
+}
+.h-bl-slot > span {
+  grid-area: 1 / 1;
+}
+.h-bl-ok {
+  justify-self: start;
+  padding: 3px 0;
+  transition: opacity 120ms ease-out;
+}
+.h-bl-trace {
+  align-self: stretch;
+  border-radius: 6px;
+  background: var(--trace);
+  opacity: 0;
+  transition: opacity 240ms ease-out;
+}
+.h-bl-drift {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--beacon);
+  color: var(--on-beacon);
+  box-shadow: var(--shadow-glow);
+  opacity: 0;
+  transition:
+    opacity 240ms ease-out,
+    translate 240ms ease-out;
+}
+.is-drift .h-bl-drift,
+.h-bl.is-drift .h-bl-drift {
+  opacity: 1;
+  translate: 11.7% 0;
+  transition-duration: 180ms;
+}
+.is-drift .h-bl-trace,
+.h-bl.is-drift .h-bl-trace {
+  opacity: 1;
+}
+.is-drift .h-bl-ok {
+  opacity: 0;
+}
+
+/* The tooltip, as Confluence shows it under the byline item */
+.h-tip,
+.h-tip-static {
+  width: max-content;
+  max-width: 100%;
+  padding: 7px 10px;
+  border-radius: var(--radius-cut);
+  background: var(--text);
+  color: var(--ground);
+  font: 400 12.5px/17px var(--sans);
+  white-space: normal;
+}
+.h-tip {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  z-index: 3;
+  box-shadow: var(--shadow-raise);
+  opacity: 0;
+  translate: 0 -4px;
+  transition:
+    opacity 180ms ease-out,
+    translate 180ms ease-out;
+  pointer-events: none;
+}
+.is-tip .h-tip {
+  opacity: 1;
+  translate: none;
+}
+.h-tip-static {
+  margin-top: 10px;
+}
+
+/* PR card */
+.h-pr {
+  padding: 14px 16px 16px;
+  font-size: 13px;
+  line-height: 19px;
+}
+.h-pr-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.h-pr-top .icon {
+  width: 16px;
+  height: 16px;
+}
+.h-pr-title {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+.h-pr-files {
+  display: grid;
+  gap: 2px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--surface-sunk);
+  font-size: 12px;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+.h-pr-files .h-mono {
+  font-size: 12px;
+}
+.h-arr {
+  color: var(--text-muted);
+}
+
+/* Night card: what AI agents are told */
+.h-ag {
+  --text: #f2f6f7;
+  --text-muted: #9db8be;
+  padding: 14px 16px 16px;
+  border-radius: var(--radius-card);
+  background: #072630;
+  border: 1px solid #1d5360;
+  box-shadow: var(--twin-shadow);
+  color: var(--text);
+}
+:root[data-theme='dark'] .h-ag {
+  background: #05191f;
+}
+.h-ag-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.h-ag-top .icon {
+  width: 16px;
+  height: 16px;
+}
+.h-ag-msgs {
+  display: grid;
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 20px;
+}
+.h-ag-msgs > p {
+  grid-area: 1 / 1;
+  transition: opacity 240ms ease-out;
+}
+.h-ag-drift {
+  opacity: 0;
+}
+
+/* Wires: a link drawn between two twins (scale only) */
+.h-wire {
+  display: block;
+  height: 0;
+  border-top: 1.5px solid var(--wire);
+  transform-origin: left center;
+  scale: 0 1;
+  transition: scale 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.h-wire::before,
+.h-wire::after {
+  content: '';
+  position: absolute;
+  top: -4.75px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1.5px solid var(--wire);
+}
+.h-wire::before {
+  left: -4px;
+}
+.h-wire::after {
+  right: -4px;
+}
+
+/* Toasts */
+.h-toast,
+.h-toast-static {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font: 500 13px/18px var(--sans);
+}
+.h-toast .icon,
+.h-toast-static .icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--verified);
+  stroke-width: 2.25;
+}
+.h-toast {
+  position: absolute;
+  z-index: 4;
+  right: 18px;
+  top: -20px;
+  max-width: calc(100% - 36px);
+  box-shadow: var(--shadow-raise);
+  opacity: 0;
+  translate: 0 6px;
+  transition:
+    opacity 240ms ease-out,
+    translate 240ms ease-out;
+}
+
+/* ------------------------------------------------------------------ */
+/* 1. Hero */
+.h-hero {
+  position: relative;
+  padding: 80px 0 72px;
+}
+.h-hero-copy {
+  max-width: 900px;
+}
+.h-hero .display {
+  margin-top: 16px;
+}
+.h-hero .cta-row {
+  margin-top: 32px;
+}
+.h-art {
+  position: relative;
+  margin: 64px 0 0;
+}
+.h-tide {
+  position: absolute;
+  left: 0;
+  top: -40px;
+  width: 100%;
+  height: calc(100% + 80px);
+  color: var(--tide);
+  opacity: var(--tide-opacity);
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+}
+.h-art-wrap {
+  position: relative;
+}
+.h-stage {
+  position: relative;
+  height: 344px;
+}
+.h-pg--hero {
+  position: absolute;
+  top: 0;
+  left: calc(50% - 270px);
+  width: 540px;
+}
+.h-pg-more {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+.h-pg-more span {
+  height: 9px;
+  border-radius: 5px;
+  background: var(--trace);
+}
+.h-stage > .h-pr,
+.h-stage > .h-ag {
+  position: absolute;
+  z-index: 2;
+  width: min(290px, calc(50% - 310px));
+}
+.h-stage > .h-pr {
+  right: calc(50% + 310px);
+  top: 134px;
+}
+.h-stage > .h-ag {
+  left: calc(50% + 310px);
+  top: 50px;
+}
+.h-wire-pr {
+  position: absolute;
+  right: 100%;
+  top: 38px;
+  width: 86px;
+}
+.h-wire-ag {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 24px;
+  margin-left: 22px;
+  margin-right: -66px;
+}
+.h-fix {
+  position: absolute;
+  right: 10px;
+  top: -16px;
+  z-index: 3;
+  display: flex;
+  opacity: 0;
+  transition: opacity 200ms ease-out;
+}
+.h-fix-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--radius-cut);
+  background: var(--text);
+  color: var(--ground);
+  font: 600 12.5px/1 var(--sans);
+  box-shadow: var(--shadow-raise);
+  transition: scale 140ms ease-out;
+}
+.h-cursor {
+  position: absolute;
+  left: 58%;
+  top: 62%;
+  display: flex;
+  align-items: flex-start;
+  translate: 40px 34px;
+  transition: translate 760ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.h-cursor svg {
+  width: 15px;
+  height: 19px;
+  fill: var(--text);
+  stroke: var(--surface);
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+}
+.h-cursor span {
+  margin: 14px 0 0 -2px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--link);
+  color: var(--surface);
+  font: 600 11px/15px var(--sans);
+}
+
+/* Hero states. The static markup holds the flagged state (no JS, or reduced motion). With motion
+   allowed, the stage starts as step 1 until home.js takes over (.is-live), so nothing flashes. */
+.motion-ok .h-stage:not(.is-live) .h-pr,
+.motion-ok .h-stage:not(.is-live) .h-tip {
+  opacity: 0;
+}
+.motion-ok .h-stage:not(.is-live) .h-wire {
+  scale: 0 1;
+}
+.motion-ok .h-stage:not(.is-live) .h-bl-drift,
+.motion-ok .h-stage:not(.is-live) .h-bl-trace,
+.motion-ok .h-stage:not(.is-live) .h-hit::after {
+  opacity: 0;
+}
+.motion-ok .h-stage:not(.is-live) .h-bl-drift {
+  translate: none;
+}
+.motion-ok .h-stage:not(.is-live) .h-bl-ok,
+.motion-ok .h-stage:not(.is-live) .h-ag-ok {
+  opacity: 1;
+}
+.motion-ok .h-stage:not(.is-live) .h-ag-drift {
+  opacity: 0;
+}
+
+.h-stage .h-pr {
+  opacity: 0;
+  translate: -12px 0;
+  transition:
+    opacity 320ms ease-out,
+    translate 320ms ease-out;
+}
+.h-stage.is-pr > .h-pr {
+  opacity: 1;
+  translate: none;
+}
+.h-stage.is-w1 .h-wire-pr,
+.h-wire-ag {
+  scale: 1 1;
+}
+.h-stage.is-w1 .h-hit::after {
+  opacity: 1;
+}
+.h-stage.is-press .h-fix {
+  opacity: 1;
+}
+.h-stage.is-press .h-cursor {
+  translate: 0 0;
+}
+.h-stage.is-click .h-fix-btn {
+  scale: 0.94;
+}
+.h-stage.is-fixed .h-code-new,
+.h-stage.is-fixed .h-toast {
+  opacity: 1;
+}
+.h-stage.is-fixed .h-toast {
+  translate: none;
+}
+.h-stage.is-fixed .h-code-old {
+  opacity: 0;
+}
+.h-stage.is-drift .h-ag-drift {
+  opacity: 1;
+}
+.h-stage.is-drift .h-ag-ok {
+  opacity: 0;
+}
+
+.h-loop-btn,
+.h-media-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px 0 12px;
+  border-radius: var(--radius-cut);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--text);
+  font: 600 14px/1 var(--sans);
+  cursor: pointer;
+}
+.h-loop-btn:hover,
+.h-media-btn:hover,
+.h-loop-btn[aria-pressed='true'] {
+  background: var(--surface-sunk);
+}
+.h-loop-btn .icon,
+.h-media-btn .icon {
+  width: 18px;
+  height: 18px;
+}
+.h-loop-btn .i-play,
+.h-loop-btn[aria-pressed='true'] .i-pause,
+.h-media-btn .i-play,
+.h-media-btn:not(.is-playing) .i-pause {
+  display: none;
+}
+.h-loop-btn[aria-pressed='true'] .i-play,
+.h-media-btn:not(.is-playing) .i-play {
+  display: block;
+}
+.h-loop-btn .i-play,
+.h-media-btn .i-play {
+  fill: currentColor;
+  stroke-width: 1.25;
+}
+.h-loop-btn {
+  position: absolute;
+  right: var(--gutter);
+  bottom: -8px;
+  z-index: 3;
+}
+
+.h-proof {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px 36px;
+  margin: 72px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 500;
+}
+.h-proof li {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.h-proof .icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Night bands: the problem and the closing. Tall gradient seams, no dividers (R1 recipe D). */
+.h-night {
+  --g: #072630;
+  --seam: 220px;
+  --ground: var(--g);
+  --surface: #0e3d48;
+  --surface-sunk: #05191f;
+  --well: #05191f;
+  --line: #1d5360;
+  --line-strong: #4f8994;
+  --text: #f2f6f7;
+  --text-muted: #9db8be;
+  --link: #5fb3bf;
+  --trace: #ffffff1a;
+  --verified: #4fd1a1;
+  --stale: #ff7a66;
+  --wire: #5fb3bf;
+  --shadow-raise: 0 1px 0 #ffffff0f inset, 0 12px 32px #00000066;
+  --tide-opacity: 0.35;
+  color: var(--text);
+  color-scheme: dark;
+}
+:root[data-theme='dark'] .h-night {
+  --g: #05191f;
+  --well: #0a2a33;
+}
+.h-problem {
+  padding: calc(var(--seam) + 8px) 0 calc(var(--seam) + 8px);
+  background: linear-gradient(
+    to bottom,
+    var(--page-ground) 0,
+    color-mix(in oklab, var(--g) 10%, var(--page-ground)) calc(var(--seam) * 0.2),
+    color-mix(in oklab, var(--g) 34%, var(--page-ground)) calc(var(--seam) * 0.42),
+    color-mix(in oklab, var(--g) 68%, var(--page-ground)) calc(var(--seam) * 0.64),
+    color-mix(in oklab, var(--g) 92%, var(--page-ground)) calc(var(--seam) * 0.84),
+    var(--g) var(--seam),
+    var(--g) calc(100% - var(--seam)),
+    color-mix(in oklab, var(--g) 92%, var(--page-ground)) calc(100% - var(--seam) * 0.84),
+    color-mix(in oklab, var(--g) 68%, var(--page-ground)) calc(100% - var(--seam) * 0.64),
+    color-mix(in oklab, var(--g) 34%, var(--page-ground)) calc(100% - var(--seam) * 0.42),
+    color-mix(in oklab, var(--g) 10%, var(--page-ground)) calc(100% - var(--seam) * 0.2),
+    var(--page-ground) 100%
+  );
+}
+.h-problem-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 48px 72px;
+  align-items: end;
+}
+.h-clock {
+  font-size: clamp(76px, 11vw, 140px);
+  line-height: 0.9;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.h-problem .title {
+  margin-top: 28px;
+  max-width: 13em;
+}
+.h-term {
+  margin: 0;
+  border-radius: var(--radius-card);
+  background: var(--well);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-raise);
+  overflow: hidden;
+}
+.h-term-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-muted);
+  font: 500 12.5px/16px var(--sans);
+}
+.h-dots {
+  display: inline-flex;
+  gap: 6px;
+}
+.h-dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--line);
+}
+.h-term pre {
+  padding: 20px 20px 24px;
+  font: 400 15px/26px var(--mono);
+  color: var(--text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.h-term-err {
+  color: var(--stale);
+}
+.h-term .ch {
+  opacity: 0;
+}
+.h-term .ch.on {
+  opacity: 1;
+}
+.h-term.is-typing .h-term-err,
+.h-term.is-waiting .h-term-err {
+  opacity: 0;
+}
+.h-term-err {
+  transition: opacity 200ms ease-out;
+}
+.h-beats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 32px 48px;
+  margin: 88px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.h-beats li {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+.h-beats .icon {
+  width: 24px;
+  height: 24px;
+  color: var(--text-muted);
+}
+.h-beats p {
+  font-size: 21px;
+  line-height: 30px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--text);
+  max-width: 17em;
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. The turn: back to Paper. The mark's amber slice slips into place as the section scrolls in. */
+.h-turn {
+  position: relative;
+  padding: 24px 0 64px;
+  text-align: center;
+}
+.h-turn-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 280px;
+}
+.h-tide--turn {
+  top: 0;
+  height: 100%;
+  -webkit-mask-image: radial-gradient(ellipse 60% 70% at 50% 50%, #000 30%, transparent 75%);
+  mask-image: radial-gradient(ellipse 60% 70% at 50% 50%, #000 30%, transparent 75%);
+}
+.h-mark {
+  position: relative;
+  width: 240px;
+  height: 240px;
+}
+.h-mark-ink {
+  fill: var(--mark-ink);
+}
+.h-mark-trace {
+  fill: var(--mark-ink);
+  fill-opacity: var(--mark-trace);
+}
+.h-mark-slice {
+  fill: #ffaa1f;
+}
+.h-turn-copy {
+  max-width: 640px;
+  margin: 16px auto 0;
+}
+.h-turn-copy .h-lede {
+  margin-inline: auto;
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. How it works: a sticky board; each step switches it to a whole state */
+.h-how {
+  padding: 64px 0;
+}
+.h-story {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 72px;
+  margin-top: 24px;
+}
+.h-steps {
+  position: relative;
+  margin: 0;
+  padding: 0 0 0 28px;
+  list-style: none;
+}
+.h-steps::before,
+.h-steps::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 17vh;
+  bottom: 17vh;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--line);
+}
+.h-steps::after {
+  background: var(--text);
+  transform-origin: top;
+  scale: 1 var(--progress, 0.25);
+  transition: scale 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.h-step {
+  display: flex;
+  align-items: center;
+  min-height: 34vh;
+}
+.h-step-text {
+  max-width: 420px;
+}
+.h-step-num {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font: 500 14px/20px var(--mono);
+  color: var(--text-muted);
+}
+.h-step-num .icon {
+  width: 18px;
+  height: 18px;
+}
+.h-step h3 {
+  margin-top: 10px;
+  font-size: 34px;
+  line-height: 40px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h-step-text > p:last-child {
+  margin-top: 12px;
+  font-size: 19px;
+  line-height: 29px;
+  color: var(--text-muted);
+}
+.js .h-story .h-step:not(.is-active) h3 {
+  color: var(--text-muted);
+}
+.h-mini {
+  display: none;
+}
+
+.h-board {
+  position: sticky;
+  top: max(96px, calc(50vh - 290px));
+  align-self: start;
+  display: grid;
+  gap: 18px;
+}
+.h-pg--board .h-code {
+  margin-bottom: 2px;
+}
+.h-board-slot {
+  display: grid;
+  min-height: 176px;
+  padding: 0 28px;
+}
+.h-ov {
+  grid-area: 1 / 1;
+  align-self: start;
+  opacity: 0;
+  translate: 0 10px;
+  transition:
+    opacity 260ms ease-out,
+    translate 260ms ease-out;
+}
+.h-board[data-step='1'] .h-ov-1,
+.h-board[data-step='2'] .h-ov-2,
+.h-board[data-step='3'] .h-ov-3,
+.h-board[data-step='4'] .h-ov-4 {
+  opacity: 1;
+  translate: none;
+}
+.h-ov-4 {
+  justify-self: start;
+  box-shadow: var(--twin-shadow);
+}
+.h-board[data-step='1'] .h-bl-ok {
+  opacity: 0;
+}
+.h-board[data-step='1'] .h-bl-trace {
+  opacity: 1;
+}
+.h-board[data-step='1'] .h-sug::after {
+  opacity: 1;
+}
+.h-board[data-step='3'] .h-bl-ok {
+  opacity: 0;
+}
+.h-board[data-step='3'] .h-bl-drift {
+  opacity: 1;
+  translate: 11.7% 0;
+  transition-duration: 180ms;
+}
+.h-board[data-step='3'] .h-bl-trace {
+  opacity: 1;
+}
+.h-board[data-step='3'] .h-tip {
+  opacity: 1;
+  translate: none;
+}
+.h-board[data-step='4'] .h-code-new {
+  opacity: 1;
+}
+.h-board[data-step='4'] .h-code-old {
+  opacity: 0;
+}
+
+/* Anchors suggestion card */
+.h-anchors {
+  padding: 14px 16px 16px;
+}
+.h-checks {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 14px;
+  padding: 0;
+  list-style: none;
+  font-size: 12.5px;
+  line-height: 18px;
+}
+.h-checks li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.h-checks .h-mono {
+  overflow-wrap: anywhere;
+}
+.h-box {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--text);
+  color: var(--ground);
+}
+.h-box .icon {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.5;
+}
+
+/* Owner comment */
+.h-comment {
+  padding: 14px 16px 16px;
+  font-size: 13.5px;
+  line-height: 20px;
+}
+.h-comment-who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.h-comment-who img {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+}
+.h-at {
+  position: relative;
+  color: var(--link);
+  font-weight: 600;
+}
+
+/* The real recording */
+.h-note {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 12px;
+  max-width: 760px;
+  margin: 72px auto 0;
+  color: var(--text-muted);
+  font-size: 17px;
+  line-height: 26px;
+  text-align: left;
+}
+.h-note .icon {
+  flex: none;
+  margin-top: 3px;
+}
+.h-clip {
+  max-width: 960px;
+  margin: 48px auto 0;
+}
+.h-clip-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  box-shadow: var(--twin-shadow);
+}
+.h-clip video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+.h-clip-tag {
+  display: flex;
+  width: fit-content;
+  margin: 0 0 12px;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 8px;
+  border-radius: var(--radius-cut);
+  background: var(--text);
+  color: var(--ground);
+  font: 500 12.5px/16px var(--sans);
+}
+.h-clip-tag .icon {
+  width: 15px;
+  height: 15px;
+}
+.h-clip-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin-top: 16px;
+}
+.h-clip figcaption {
+  max-width: 42em;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 22px;
+}
+.h-media-btn {
+  flex: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* 5. AI agents: one answer, Without / With */
+.h-agents {
+  padding: 64px 0;
+}
+.h-agents-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 72px;
+  align-items: start;
+}
+.h-facts {
+  display: grid;
+  gap: 14px;
+  margin: 36px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.h-facts li {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 12px;
+  font-size: 16px;
+  line-height: 24px;
+}
+.h-facts .icon {
+  margin-top: 2px;
+  color: var(--text-muted);
+}
+.h-switch {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--surface-sunk);
+  border: 1px solid var(--line);
+}
+.h-switch button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-muted);
+  font: 600 14px/1 var(--sans);
+  cursor: pointer;
+}
+.h-switch button:hover {
+  color: var(--text);
+}
+.h-switch button[aria-pressed='true'] {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px #0726301f, 0 0 0 1px var(--line);
+}
+
+/* The stage holds both answers in one grid cell, so it keeps the size of the taller one and the
+   switch never moves anything. */
+.h-demo-stage {
+  display: grid;
+  gap: 28px;
+  margin-top: 20px;
+}
+.js .h-panel {
+  grid-area: 1 / 1;
+  transition:
+    opacity 200ms ease-out,
+    visibility 0s linear 0s;
+}
+.js [data-convo][data-mode='with'] .h-panel[data-panel='without'],
+.js [data-convo][data-mode='without'] .h-panel[data-panel='with'] {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 200ms ease-out,
+    visibility 0s linear 200ms;
+}
+.h-panel--without {
+  align-self: start;
+}
+.h-panel-tag {
+  margin-bottom: 10px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+.js .h-panel-tag {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+  padding: 0;
+}
+
+/* Tags: real captures get a solid tag, the illustration a quiet one */
+.h-real-tag,
+.h-illus-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 12px;
+  padding: 5px 10px 5px 8px;
+  border-radius: var(--radius-cut);
+  font: 500 12.5px/16px var(--sans);
+}
+.h-real-tag {
+  background: var(--text);
+  color: var(--ground);
+}
+.h-real-tag .icon {
+  flex: none;
+  width: 15px;
+  height: 15px;
+}
+.h-illus-tag {
+  padding-left: 10px;
+  border: 1px solid var(--line-strong);
+  color: var(--text-muted);
+}
+
+/* Without: our illustration of an assistant that trusts the page as written */
+.h-convo {
+  max-width: 560px;
+  padding: 22px;
+  border-radius: 22px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--twin-shadow);
+}
+.h-q {
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  padding: 10px 16px;
+  border-radius: 16px 16px 4px 16px;
+  background: var(--surface-sunk);
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 500;
+}
+.h-panel-who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+}
+.h-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--surface-sunk);
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.h-a {
+  margin-top: 10px;
+  font-size: 17px;
+  line-height: 27px;
+}
+.h-src {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 5px 10px 5px 8px;
+  border-radius: var(--radius-cut);
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.h-src .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* With: the real Drift Reviewer answer in Rovo, and the real line coding assistants get over MCP */
+.h-with {
+  display: grid;
+  grid-template-columns: minmax(0, 400px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: end;
+}
+.h-shot,
+.h-mcp {
+  margin: 0;
+  min-width: 0;
+}
+.h-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 720 / 737;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  box-shadow: var(--shadow-raise);
+}
+.h-told {
+  padding: 14px 16px 16px;
+  border-radius: 14px;
+  background: #072630;
+  color: #f2f6f7;
+  box-shadow: var(--twin-shadow);
+}
+:root[data-theme='dark'] .h-told {
+  background: #05191f;
+  box-shadow: inset 0 0 0 1px #1d5360;
+}
+.h-told-k {
+  color: #9db8be;
+  font-size: 12.5px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.h-told-v {
+  margin-top: 6px;
+  font-size: 16px;
+  line-height: 24px;
+}
+.h-told-v strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 4px;
+  font-weight: 600;
+}
+.h-told-v .icon {
+  width: 18px;
+  height: 18px;
+  color: #9db8be;
+}
+
+/* ------------------------------------------------------------------ */
+/* 6. In Confluence: four tiles, each with a small visual that plays once */
+.h-tiles-sec {
+  padding: 64px 0;
+}
+.h-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin: 48px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.h-tile {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 10px 10px 26px;
+  border-radius: 22px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.h-tile h3 {
+  margin: 22px 14px 0;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+.h-tile > p {
+  margin: 6px 14px 0;
+  max-width: 34em;
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 24px;
+}
+.h-tv {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 236px;
+  padding: 20px;
+  border-radius: 14px;
+  background: var(--surface-sunk);
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 19px;
+}
+.h-tv > * {
+  width: min(100%, 440px);
+}
+.h-tv-k {
+  margin-bottom: 8px;
+}
+
+.h-qf,
+.h-jira,
+.h-dash {
+  padding: 14px 16px 16px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.h-qf .h-mono {
+  font-size: 11.5px;
+}
+.h-qf-src {
+  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 17px;
+}
+.h-qf-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+.h-qf-done {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--verified-tint);
+  color: var(--verified);
+}
+.h-qf-done .icon {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.25;
+}
+
+.h-jira-ev {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+.h-jira-files {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 18px;
+}
+.h-jira-files .h-mono {
+  color: var(--text);
+  white-space: nowrap;
+}
+.h-jira-swap {
+  display: grid;
+  align-items: center;
+  min-height: 36px;
+  margin-top: 12px;
+}
+.h-jira-swap > * {
+  grid-area: 1 / 1;
+  justify-self: start;
+}
+.h-jira-done {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+.h-jira-done .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+}
+.h-jira-done .h-mono {
+  color: var(--link);
+}
+.h-jira-btn {
+  opacity: 0;
+}
+
+.h-rank {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.h-rank li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--surface-sunk);
+  font-size: 12.5px;
+  line-height: 18px;
+}
+.h-rank-page {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.h-chip-stale,
+.h-state-plain {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  line-height: 18px;
+  white-space: nowrap;
+}
+.h-chip-stale {
+  padding: 0 8px 0 6px;
+  border-radius: 6px;
+  background: var(--stale-tint);
+  color: var(--stale);
+  font-weight: 500;
+}
+.h-chip-stale .icon,
+.h-state-plain .icon {
+  width: 14px;
+  height: 14px;
+}
+.h-state-plain .icon {
+  color: var(--text-muted);
+}
+.h-own {
+  min-width: 34px;
+  color: var(--text-muted);
+  text-align: right;
+}
+.h-sample {
+  margin-top: 10px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.h-comment--tile {
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+/* Tile micro-animations: the final state is the default (no JS, reduced motion). With motion, each
+   visual starts one step earlier and plays once when it scrolls in. */
+.h-tv-jira .h-jira-btn,
+.h-tv-jira .h-jira-done,
+.h-tv-dash .h-rank li,
+.h-tv-comment .h-comment,
+.h-tv-fix .h-qf-done {
+  transition:
+    opacity 320ms ease-out var(--d, 0ms),
+    translate 320ms ease-out var(--d, 0ms),
+    scale 320ms ease-out var(--d, 0ms);
+}
+.h-tv-fix .h-qf-done {
+  --d: 1050ms;
+}
+.motion .h-tv-fix:not(.is-in) .h-qf-done {
+  opacity: 0;
+  scale: 0.5;
+}
+.h-tv-jira .h-jira-btn {
+  --d: 1000ms;
+}
+.h-tv-jira .h-jira-done {
+  --d: 1100ms;
+}
+.motion .h-tv-jira:not(.is-in) .h-jira-btn {
+  opacity: 1;
+}
+.motion .h-tv-jira:not(.is-in) .h-jira-done {
+  opacity: 0;
+  translate: 0 6px;
+}
+.h-tv-dash .h-rank li:nth-child(1) {
+  --d: 450ms;
+}
+.h-tv-dash .h-rank li:nth-child(2) {
+  --d: 540ms;
+}
+.h-tv-dash .h-rank li:nth-child(3) {
+  --d: 630ms;
+}
+.motion .h-tv-dash:not(.is-in) .h-rank li {
+  opacity: 0;
+  translate: -8px 0;
+}
+.h-tv-comment .h-comment {
+  --d: 450ms;
+}
+.motion .h-tv-comment:not(.is-in) .h-comment {
+  opacity: 0;
+  translate: 0 10px;
+  scale: 0.98;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .motion .h-tv-fix.is-in .h-qf-btn,
+  .motion .h-tv-jira.is-in .h-jira-btn {
+    animation: h-press 420ms ease-out both;
+    animation-delay: 650ms;
+  }
+}
+@keyframes h-press {
+  0%,
+  100% {
+    scale: 1;
+  }
+  45% {
+    scale: 0.93;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 7. Trust, on a sunk band */
+.h-trust {
+  margin-top: 64px;
+  padding: 120px 0;
+  background: var(--surface-sunk);
+}
+.h-trust-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+  gap: 48px 72px;
+}
+.h-points {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 44px 56px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.h-points li {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+.h-points .icon {
+  width: 26px;
+  height: 26px;
+  color: var(--text);
+}
+.h-points p {
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 25px;
+}
+.h-trust-body {
+  min-width: 0;
+}
+.h-maker {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+.h-admins {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 18px;
+  margin-top: 40px;
+  font-size: 15px;
+  line-height: 22px;
+}
+.h-admins-k {
+  font-weight: 600;
+}
+.h-admins ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.h-admins a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 500;
+}
+.h-points strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text);
+  font-size: 19px;
+  line-height: 27px;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------ */
+/* 8. Get started */
+.h-start {
+  padding: 128px 0 64px;
+}
+.h-start-steps {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 32px 48px;
+  margin: 48px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.h-start-steps::before {
+  content: '';
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  top: 22px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--line);
+}
+.h-start-steps li {
+  position: relative;
+}
+.h-start-n {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1.5px solid var(--line-strong);
+  color: var(--text);
+  font: 600 17px/1 var(--sans);
+}
+.h-start-steps h3 {
+  margin-top: 22px;
+  font-size: 22px;
+  line-height: 30px;
+  font-weight: 600;
+}
+.h-start-steps p {
+  margin-top: 8px;
+  max-width: 22em;
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 25px;
+}
+.h-start-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  margin-top: 48px;
+}
+.h-start-note {
+  margin-left: 8px;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+/* ------------------------------------------------------------------ */
+/* 9. Questions: title left, questions right */
+.h-faq {
+  padding: 64px 0 96px;
+}
+.h-faq-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+  gap: 48px 72px;
+  align-items: start;
+}
+.h-faq .faq {
+  max-width: none;
+  border-top: 1px solid var(--line);
+}
+.h-faq .faq summary {
+  min-height: 44px;
+}
+.h-faq .faq .answer {
+  max-width: 40em;
+}
+
+/* ------------------------------------------------------------------ */
+/* 10. Closing: Night, running into the footer */
+.h-close {
+  --seam: 200px;
+  padding: calc(var(--seam) + 16px) 0 128px;
+  text-align: center;
+  background: linear-gradient(
+    to bottom,
+    var(--page-ground) 0,
+    color-mix(in oklab, var(--g) 10%, var(--page-ground)) calc(var(--seam) * 0.2),
+    color-mix(in oklab, var(--g) 34%, var(--page-ground)) calc(var(--seam) * 0.42),
+    color-mix(in oklab, var(--g) 68%, var(--page-ground)) calc(var(--seam) * 0.64),
+    color-mix(in oklab, var(--g) 92%, var(--page-ground)) calc(var(--seam) * 0.84),
+    var(--g) var(--seam)
+  );
+}
+.h-close-copy {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.h-close .h-lede {
+  margin-inline: auto;
+}
+.h-close .cta-row {
+  justify-content: center;
+  margin-top: 36px;
+}
+
+.home .site-footer {
+  --g: #072630;
+  --ground: var(--g);
+  --line: #1d5360;
+  --line-strong: #4f8994;
+  --text: #f2f6f7;
+  --text-muted: #9db8be;
+  --link: #5fb3bf;
+  color-scheme: dark;
+  border-top: 0;
+  background: var(--g);
+  color: var(--text);
+}
+:root[data-theme='dark'] .home .site-footer {
+  --g: #05191f;
+}
+.home .site-footer .lockup {
+  color: var(--text);
+}
+
+/* ------------------------------------------------------------------ */
+/* Scroll-linked extras: the slip in the turn and a slow tide drift. Only with motion allowed and
+   support for scroll timelines; otherwise the end state shows. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .h-mark {
+      view-timeline-name: --dd-mark;
+      view-timeline-axis: block;
+    }
+    .h-mark-slice {
+      animation: h-slip linear both;
+      animation-timeline: --dd-mark;
+      animation-range: cover 30% cover 44%;
+    }
+    .h-art .h-tide {
+      animation: h-tide-drift linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 100vh;
+    }
+    .h-turn {
+      view-timeline-name: --dd-turn;
+      view-timeline-axis: block;
+    }
+    .h-tide--turn {
+      animation: h-tide-turn linear both;
+      animation-timeline: --dd-turn;
+      animation-range: cover 0% cover 100%;
+    }
+  }
+}
+@keyframes h-slip {
+  from {
+    translate: -56px 0;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+@keyframes h-tide-drift {
+  to {
+    translate: 0 -32px;
+  }
+}
+@keyframes h-tide-turn {
+  from {
+    translate: 0 18px;
+  }
+  to {
+    translate: 0 -18px;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Responsive */
+@media (max-width: 1179px) {
+  .h-stage {
+    display: grid;
+    height: auto;
+    max-width: 600px;
+    margin: 0 auto;
+    padding-top: 20px;
+  }
+  .h-pg--hero {
+    position: relative;
+    left: auto;
+    width: auto;
+    grid-area: 1 / 1;
+  }
+  .h-stage {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 12px;
+  }
+  .h-pg--hero {
+    grid-column: 1 / -1;
+  }
+  .h-stage > .h-pr,
+  .h-stage > .h-ag {
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
+    width: auto;
+    margin: -22px 0 0;
+  }
+  .h-stage > .h-pr {
+    grid-area: 2 / 1;
+    margin-left: 14px;
+    translate: 0 10px;
+  }
+  .h-stage > .h-ag {
+    grid-area: 2 / 2;
+    margin-right: 14px;
+  }
+  .h-wire {
+    display: none;
+  }
+  .h-loop-btn {
+    position: static;
+    margin: 20px auto 0;
+    display: flex;
+  }
+  .h-loop-btn[hidden] {
+    display: none;
+  }
+}
+
+@media (max-width: 1080px) {
+  .h-problem-top,
+  .h-agents-grid,
+  .h-trust-grid,
+  .h-faq-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .h-agents-grid {
+    gap: 48px;
+  }
+  .h-problem .title {
+    max-width: 16em;
+  }
+}
+
+@media (max-width: 899px), (max-height: 680px) {
+  .h-story {
+    display: block;
+  }
+  .h-board {
+    display: none;
+  }
+  .h-steps {
+    padding: 0;
+  }
+  .h-steps::before,
+  .h-steps::after {
+    display: none;
+  }
+  .h-step {
+    display: block;
+    min-height: 0;
+    padding: 24px 24px 26px;
+    border-radius: 22px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+  .h-step + .h-step {
+    margin-top: 16px;
+  }
+  .h-step h3 {
+    font-size: 26px;
+    line-height: 32px;
+  }
+  .js .h-story .h-step:not(.is-active) h3 {
+    color: var(--text);
+  }
+  .h-step-text {
+    max-width: none;
+  }
+  .h-step-text > p:last-child {
+    font-size: 17px;
+    line-height: 26px;
+  }
+  .h-mini {
+    display: block;
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 14px;
+    background: var(--surface-sunk);
+  }
+  .h-mini .h-card {
+    box-shadow: none;
+  }
+  .h-mini-by,
+  .h-mini-ok {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    justify-items: start;
+    padding: 14px 16px 16px;
+  }
+  .h-mini-by .h-pg-title {
+    margin: 0;
+    font-size: 16px;
+    line-height: 22px;
+  }
+  .h-mini-by .h-tip-static {
+    margin: 0;
+  }
+  .h-mini-ok .h-toast-static {
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .h-hero {
+    padding: 56px 0 64px;
+  }
+  .h-lede {
+    font-size: 18px;
+    line-height: 28px;
+  }
+  .h-how,
+  .h-agents,
+  .h-tiles-sec,
+  .h-faq {
+    padding-top: 40px;
+    padding-bottom: 40px;
+  }
+  .h-start {
+    padding: 80px 0 40px;
+  }
+  .h-turn {
+    padding: 8px 0 40px;
+  }
+  .h-turn-art {
+    height: 220px;
+  }
+  .h-mark {
+    width: 190px;
+    height: 190px;
+  }
+  .h-night {
+    --seam: 140px;
+  }
+  .h-close {
+    --seam: 140px;
+    padding-bottom: 88px;
+  }
+  .h-beats {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+    margin-top: 56px;
+  }
+  .h-beats li {
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 14px;
+  }
+  .h-beats p {
+    font-size: 19px;
+    line-height: 28px;
+  }
+  .h-trust {
+    margin-top: 40px;
+    padding: 80px 0;
+  }
+  .h-points {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+  .h-start-steps {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+  .h-start-steps::before {
+    left: 22px;
+    right: auto;
+    top: 22px;
+    bottom: 22px;
+    width: 2px;
+    height: auto;
+  }
+  .h-start-steps li {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    column-gap: 18px;
+  }
+  .h-start-steps li > :not(.h-start-n) {
+    grid-column: 2;
+  }
+  .h-start-n {
+    grid-row: 1 / span 2;
+  }
+  .h-start-steps h3 {
+    margin-top: 6px;
+  }
+  .h-start-note {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+  .h-note {
+    margin-top: 56px;
+    font-size: 16px;
+    line-height: 25px;
+  }
+  .h-clip {
+    margin-top: 32px;
+  }
+  .h-clip-row {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .h-tiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .h-with {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  .h-shot {
+    max-width: 420px;
+  }
+  .h-proof {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 48px;
+  }
+  .h-art {
+    margin-top: 44px;
+  }
+  .h-pg {
+    padding: 18px 16px 20px;
+  }
+  .h-pg-title {
+    font-size: 19px;
+    line-height: 25px;
+  }
+  .h-pg-steps {
+    padding-left: 18px;
+  }
+  .h-code {
+    padding: 8px 10px;
+    font-size: 11.5px;
+    line-height: 18px;
+  }
+  .h-toast {
+    left: 12px;
+    right: 12px;
+    max-width: none;
+  }
+  .h-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .h-stage > .h-pr {
+    grid-area: 2 / 1;
+    margin: -22px 10px 0;
+  }
+  .h-stage > .h-ag {
+    grid-area: 3 / 1;
+    margin: 10px 10px 0;
+  }
+  .h-convo {
+    padding: 16px;
+  }
+  .h-switch {
+    display: flex;
+  }
+  .h-switch button {
+    flex: 1 1 0;
+    padding: 0 10px;
+  }
+  .h-a {
+    font-size: 16px;
+    line-height: 25px;
+  }
+  .h-tv {
+    height: auto;
+    min-height: 200px;
+    padding: 16px;
+  }
+  .h-rank-page {
+    white-space: normal;
+  }
+  .h-clock {
+    font-size: 84px;
+  }
+  .h-term pre {
+    padding: 16px;
+    font-size: 13.5px;
+    line-height: 23px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .h-cursor {
+    transition: none;
+  }
+}
+
+/* Review pass (2026-11-20): on wide screens the hero copy centres over the centred stage, so the first
+   screen reads as one composition; the stage starts higher, so the label flip shows above the fold. */
+@media (min-width: 861px) {
+  .h-hero {
+    padding-top: 64px;
+  }
+  .h-hero-copy {
+    margin: 0 auto;
+    max-width: 960px;
+    text-align: center;
+  }
+  .h-hero-copy .h-lede {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 33em;
+  }
+  .h-hero .cta-row {
+    justify-content: center;
+  }
+  .h-art {
+    margin-top: 48px;
+  }
+}
+
+/* Short desktop screens (1280 x 720 and similar): a tighter hero, so the PR card still shows in the
+   first screen. Comes after the review block on purpose. */
+@media (min-width: 1180px) and (max-height: 820px) {
+  .h-hero {
+    padding-top: 36px;
+  }
+  .h-hero .display {
+    margin-top: 12px;
+    font-size: 60px;
+    line-height: 64px;
+  }
+  .h-hero .h-lede {
+    margin-top: 14px;
+    font-size: 18px;
+    line-height: 27px;
+  }
+  .h-hero .cta-row {
+    margin-top: 22px;
+  }
+  .h-art {
+    margin-top: 24px;
+  }
+}
+
+/* Round 3 (2026-11-20, from the second visitor test) */
+
+/* Step 1: no placeholder in the label slot (visitors read it as a loading glitch). The label appears
+   once the links are saved, at step 2. */
+.h-board[data-step='1'] .h-bl {
+  opacity: 0;
+}
+.h-board .h-bl {
+  transition: opacity 240ms ease-out;
+}
+
+/* Step 2: the pull request, or a Jira change. */
+.h-ov-stack {
+  display: grid;
+  gap: 8px;
+  justify-items: stretch;
+}
+.h-or {
+  justify-self: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.h-jira-ev {
+  padding: 12px 16px 14px;
+  font-size: 13px;
+  line-height: 19px;
+}
+.h-mini .h-or {
+  margin: 8px 0;
+  text-align: center;
+}
+
+/* The recording's caption carries the "real" label now; the film's own tag stays inside the frame. */
+.h-clip-row figcaption strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* For Confluence admins: three short, concrete answers (rollout, noise, data). */
+.h-admins {
+  display: block;
+  margin-top: 48px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+}
+.h-admins-k {
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+}
+.h-admins ul {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px 28px;
+  margin-top: 14px;
+}
+.h-admins li {
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 23px;
+}
+.h-admins li strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text);
+  font-weight: 600;
+}
+.h-admins li a {
+  min-height: 0;
+  margin-top: 6px;
+  display: inline-flex;
+  font-weight: 500;
+}
+@media (max-width: 860px) {
+  .h-admins ul {
+    grid-template-columns: 1fr;
+  }
+  .h-admins li a {
+    min-height: 44px;
+    margin-top: 0;
+  }
+}

@@ -264,6 +264,11 @@ Verified 2026-11-13 via the Forge MCP docs search:
 - On uninstall, data is soft-deleted and **retained for 28 days**. A reinstall is a new installation; the developer can ask Atlassian support to re-link the old data within 21 days, with customer consent. Data an app deletes itself is also kept soft-deleted for the retention period (recoverable on request within 21 days). https://developer.atlassian.com/platform/forge/storage-reference/hosted-storage-data-lifecycle/
 - Used on the public privacy page (`site/privacy.html`).
 
+### App log access
+Verified 2026-11-20 via the Forge MCP docs search:
+- The developer gets access to an installation's app logs automatically when the app is installed, and sees them in the developer console. An admin can turn this off under **Logs access** in the app's **Details** tab (Atlassian Administration > Apps > Sites > the site > Connected apps > the app). Isolated Cloud is the exception: developers can't see those logs. https://developer.atlassian.com/platform/forge/access-app-logs/
+- So anything the apps `console.log` (file paths, change reasons, badge tooltips, notification lines with names) is readable by Nano Soft by default. Used on the public privacy page (`site/privacy.html`).
+
 ### Recommendation
 Use **Forge SQL** for `binding`, `page_state`, `drift_event`, `change_record` and `verification`. The dashboard needs grouped counts per space and status, and custom entities have no aggregates: you would page through 100 rows at a time, or maintain counters by hand. Keep KVS for settings and the secret store for the HMAC secret. Fall back to custom entities only if spike 7 fails.
 

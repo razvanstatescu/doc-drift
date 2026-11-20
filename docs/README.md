@@ -26,8 +26,8 @@ Start with [product/overview.md](product/overview.md), then [architecture/overvi
 - [hackathon/demo-and-pitch.md](hackathon/demo-and-pitch.md): demo environment, video script, Devpost outline, bonus strategy
 
 ## Cross-cutting
-- [decisions.md](decisions.md): decision log (D1 to D38)
-- Website: [../site/](../site/) (GitHub Pages, D36; see its README)
+- [decisions.md](decisions.md): decision log (D1 to D42)
+- Website: [../site/](../site/) (GitHub Pages, D36; v2 D42; see its README). Research, plan and visitor tests: [website/](website/) (R1 reference sites, R2 accuracy audit, plan, visitor-test)
 - Launch video: [video/research.md](video/research.md) (research and plan, D37) with four research logs in [video/appendix/](video/appendix/)
 - [glossary.md](glossary.md): shared vocabulary
 - [source/](source/): original plan, logo zip, artifact links

@@ -9,7 +9,7 @@ The public site for Doc Drift (D36; v2 on 2026-11-20, D42), published to GitHub 
 | `privacy.html` | Privacy and data handling: an "In short" box, then what is read, stored and for how long, AI use, who sees what, permissions (scopes), deletion, and this website (GitHub Pages, no analytics or cookies) |
 | `404.html` | Not found. Uses absolute `/doc-drift/` paths because GitHub Pages serves it from any depth; change them if the site moves to a custom domain |
 | `assets/site.css` | Shared styles. Tokens copied from [../brand/tokens.json](../brand/tokens.json): Day (light) by default, Night shift on toggle (Razvan, 2026-11-13) |
-| `assets/home.css` | Home-only styles, loaded after `site.css`: the product twins, the Night bands, the pinned board, reveals and the scroll-linked slip |
+| `assets/home.css` | Home-only styles, loaded after `site.css`: the product twins, the two Night panels (inset, rounded, no fades into the page), the pinned board, reveals and the scroll-linked slip |
 | `assets/site.js` | Theme toggle (with a view-transition crossfade), mobile menu, tabs, copy buttons, table of contents. `CONFIG` at the top holds the install link and video URL |
 | `assets/home.js` | Home only: the hero loop and its Pause button, the pinned board, reveals, typing, the agents switch and the recording player. No libraries and no scroll listeners |
 | `assets/media/merge-to-flag.mp4` | The real recording on the home page: 9.9 s, 1080p, muted, about 960 KB, cut from film v5 at 38.3 to 48.2 s (`ffmpeg -ss 38.3 -to 48.2 … -crf 25`), with `merge-to-flag-poster.jpg` (the flagged frame at 47.6 s) as its poster |

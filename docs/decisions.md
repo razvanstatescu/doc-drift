@@ -210,7 +210,7 @@ An audit of every claim on the site (R2) found 20 inaccurate claims on the home 
 Research on 12 large sites (R1) found our page as tall as theirs but with about twice the words (1,040 at reading size against a median of 445, a 59-word hero against 20).
 
 What changed:
-- **The home page tells the v5 film's story in its words** (D41). It runs from the 3 a.m. problem as a Night band, through "Doc Drift catches this" (the mark's slip, scroll-linked), to how it works as a pinned board in whole steps, then AI agents, a person fixes it, in Confluence, trust, get started, questions and close.
+- **The home page tells the v5 film's story in its words** (D41). It runs from the 3 a.m. problem on a Night panel, through "Doc Drift catches this" (the mark's slip, scroll-linked), to how it works as a pinned board in whole steps, then AI agents, a person fixes it, in Confluence, trust, get started, questions and close.
 - **It is 2,134 words down to about 810 of copy, plus the real UI strings inside the visuals.** No JSON, tool names, setup commands or matcher terms.
 - **The visuals are HTML twins built from the app's real strings**, plus one real recording from the film: merge to flag, 9.9 s, muted. It plays only in view and has a pause button.
 - **The agents section is one answer with a "Without Doc Drift / With Doc Drift" switch.**

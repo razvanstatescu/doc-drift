@@ -1899,25 +1899,7 @@
   margin-top: 36px;
 }
 
-.home .site-footer {
-  --g: #072630;
-  --ground: var(--g);
-  --line: #1d5360;
-  --line-strong: #4f8994;
-  --text: #f2f6f7;
-  --text-muted: #9db8be;
-  --link: #5fb3bf;
-  color-scheme: dark;
-  border-top: 0;
-  background: var(--g);
-  color: var(--text);
-}
-:root[data-theme='dark'] .home .site-footer {
-  --g: #05191f;
-}
-.home .site-footer .lockup {
-  color: var(--text);
-}
+/* The footer is the shared light one (site.css): the closing panel ends the page's Night. */
 
 /* ------------------------------------------------------------------ */
 /* Scroll-linked extras: the slip in the turn and a slow tide drift. Only with motion allowed and
@@ -2429,5 +2411,58 @@
   .h-admins li a {
     min-height: 44px;
     margin-top: 0;
+  }
+}
+
+/* Night panels (2026-11-20, Razvan: the long light-to-dark fades into the closing and around the
+   3 a.m. band looked muddy). Both Night sections are now inset panels with crisp rounded edges on
+   the page ground. Depth comes from a soft `current` glow inside the panel, never from a fade into
+   the page. Each panel rises a little as it enters (transform only; nothing with reduced motion). */
+.h-night.h-problem,
+.h-night.h-close {
+  position: relative;
+  isolation: isolate;
+  margin-inline: clamp(12px, 2.2vw, 32px);
+  border-radius: clamp(24px, 3vw, 40px);
+  background:
+    radial-gradient(980px 560px at 88% -12%, rgb(34 113 126 / 0.4), transparent 62%),
+    radial-gradient(760px 460px at 4% 112%, rgb(34 113 126 / 0.2), transparent 60%),
+    var(--g);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.07),
+    inset 0 0 0 1px rgb(255 255 255 / 0.04),
+    0 40px 90px -50px rgb(7 38 48 / 0.55);
+  overflow: hidden;
+}
+.h-night.h-problem {
+  padding: 128px 0 136px;
+}
+.h-night.h-close {
+  margin-bottom: clamp(40px, 6vw, 96px);
+  padding: 128px 0 136px;
+}
+:root[data-theme='dark'] .h-night.h-problem,
+:root[data-theme='dark'] .h-night.h-close {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    inset 0 0 0 1px rgb(95 179 191 / 0.14);
+}
+.motion .h-night.reveal {
+  opacity: 1;
+  translate: 0 32px;
+  scale: 0.985;
+  transition:
+    translate 800ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    scale 800ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: 0ms;
+}
+.motion .h-night.reveal.is-in {
+  translate: none;
+  scale: none;
+}
+@media (max-width: 860px) {
+  .h-night.h-problem,
+  .h-night.h-close {
+    padding: 72px 0 80px;
   }
 }

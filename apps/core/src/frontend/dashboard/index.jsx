@@ -202,7 +202,7 @@ const App = () => {
         <HelperMessage>
           {canAnchor
             ? unanchored
-              ? `${plural(unanchored, 'page')} in ${spaceKey} ${unanchored === 1 ? 'is' : 'are'} not anchored. Get suggestions for all of them at once.`
+              ? `${plural(unanchored, 'page')} in ${spaceKey} ${unanchored === 1 ? 'is' : 'are'} not anchored. Get suggestions for up to 25 at a time.`
               : 'Get anchor suggestions for every unanchored page at once.'
             : `${COPY.anchorSpaceForbidden} ${COPY.anchorSpaceForbiddenBody}`}
         </HelperMessage>

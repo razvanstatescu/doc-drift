@@ -5,3 +5,8 @@ packages:
 # iframe-resizer (pulled in by @forge/react) only prints a licence notice on install.
 allowBuilds:
   iframe-resizer: false
+
+# GHSA (prosemirror-view paste XSS), pulled in through @forge/bridge > @atlaskit/adf-schema for types.
+# Not reachable (UI Kit never mounts an editor), but a minor bump clears it. Triage: docs/implementation-plan.md.
+overrides:
+  prosemirror-view: ^1.42.3

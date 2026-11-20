@@ -45,7 +45,7 @@ describe('order, defaults and display', () => {
     expect(defaultChecked([repo, block, loose, jira])).toEqual({ [block.key]: true, [jira.key]: true });
   });
   it('shows the literal and a short note', () => {
-    expect(suggestionDisplay(repo)).toEqual({ code: 'payments-api', note: 'Whole repository. Flags on every merge.' });
+    expect(suggestionDisplay(repo)).toEqual({ code: 'payments-api', note: 'Whole repository. Flags only when code this page names changes.' });
     expect(suggestionDisplay(block)).toEqual({ code: 'deploy/helm/values.yaml', note: 'in payments-api' });
     expect(suggestionDisplay(jira)).toEqual({ code: 'PAY-142', note: 'Jira issue' });
     expect(suggestionDisplay(loose)).toEqual({ code: 'config/workers.yaml', note: 'Needs a repository' });

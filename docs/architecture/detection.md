@@ -65,7 +65,7 @@ So the handler filters on changelog `fieldId` and then fetches the issue (`reque
 - **Monorepos:** rely on path anchors. Repo-level anchors weigh 0.2 and never alert alone.
 - **Large diffs** (more than 300 files): diffstat only, no hunks fetched.
 - **Non-default branches:** merges are ignored (setting).
-- **Reverts:** close the events of the reverted PR with the reason `reverted`.
+- **Reverts:** close the events of the reverted PR with the reason `reverted`. A revert delivered before its original (BUG-13) closes the original when it arrives, but only if the revert came in during the 24 hours before it. An older revert never closes a new PR that reuses its title.
 - **Noise control:** ignore globs (defaults in [features.md](../product/features.md)), a 24h notification cap, and a dismiss dampener: each dismissal takes 0.1 off that anchor, with a floor of 0.3.
 
 ## Evaluation (current results)

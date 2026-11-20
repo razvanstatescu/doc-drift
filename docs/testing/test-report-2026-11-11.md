@@ -2,6 +2,24 @@
 
 QA run against core 4.16.0 and relay version 2 in development (one-atlas-jzzf, DDSTEST space, sandbox repo `nano-soft-dev/qa-sandbox` for crafted records, `qa/` files in `nano-soft-dev/payments-api` for real merges). Plan: [test-plan.md](test-plan.md). No app source was changed and nothing was deployed.
 
+## Phase 4 (2026-11-20, core 5.7.0 and 5.8.0, relay 2.4.0)
+
+A testing and fix pass after the website v2 accuracy audit (D42).
+
+| Check | Result |
+| --- | --- |
+| Vitest | core 353, matcher 204, shared 14, relay 53 |
+| `scripts/qa/run_matrix.py all` on 5.7.0 | 107 pass, 16 known observations, 0 fail |
+| `scripts/qa/phase2.py all` | 37 of 40 on 5.7.0. All 3 failures were test expectations: the PLAT pages aged from Possibly stale into Stale (as designed), and a comment more than 24 h old makes the next one a new comment that opens with the owner mention. The expectations now follow the state. Then 40 of 40 on 5.8.0 |
+| Large PR, real merge | PR #483 (130 files under `qa/bulk-130/`): the relay read 130 of 130 on one page (`pagelen=500`), `truncated: false`; core found 0 candidates and made 0 events, 3.7 s after ingest. PR #484 removed the files, also 0 events. With BB-05 (320 files), S6 is closed |
+| MCP from Claude Code | `list-stale-pages` and `find-docs-for-path` answer with status, `citePolicy` and guidance |
+| Dependency audit | prosemirror-view (high) cleared by an override; glob and minimatch (moderate) not reachable, waiting on the Forge SDK (implementation-plan.md) |
+| Browser pass | Not run: the debug Chrome profile's Atlassian session had expired, and signing in needs Razvan |
+
+**The one-off rename flake (4.22.0) is explained and fixed.** It was a product bug, not a timing issue. When a change arrives, the BUG-13 check (a revert delivered before its original) looked through every revert the repo had ever received. QA PR numbers were `time % 100000 + 70000`, which wraps about every 28 hours, so an old QA revert of `#N` closed a later run's `#N` at once: "changesSince 1, relevant 0". For real teams the same path was open by title: a revert without a PR number matches on the title, so an old `Revert "Bump deps"` would close any later PR titled "Bump deps" the moment it flagged. Fixed in 5.8.0: the BUG-13 check only looks at reverts received in the 24 hours before the change (`EARLY_REVERT_WINDOW_HOURS`, test `early-revert-window.test.ts`). QA PR numbers are now Unix seconds and never repeat. P2-RVT-05 passes live on the new query.
+
+Also in 5.7.0: the 5 product copy bugs from D42, and a closing `DDS_MATCH_DONE` line for a revert that touches no other page.
+
 ## Phase 3 (2026-11-12, core 5.0.0 to 5.4.0, relay 2.2.0)
 
 D35 shipped (Create Jira task, `write:jira-work`, major version 5) and the open phase 2 items were closed.

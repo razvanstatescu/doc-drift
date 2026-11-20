@@ -591,14 +591,22 @@ export async function resolveEvents(pageId: string, eventIds: string[], closedBy
  * BUG-13: stored revert PRs in a repo (titles starting `Revert "`), newest first, so a change that
  * arrives after its own revert can be closed at once. The caller runs detectRevert on the titles.
  */
+/** How far back a revert delivered before its change still counts as that change's revert (BUG-13). */
+export const EARLY_REVERT_WINDOW_HOURS = 24;
+
 export async function revertCandidates(repo: string, receivedBeforeChangeId: string, limit = 100): Promise<{ id: string; title: string; prId: number | null }[]> {
   // Only reverts received before this change: a revert that arrives later closes the change itself.
+  // Only recent ones: delivery retries reorder within hours. An older "Revert "Bump deps"" must not
+  // close a new PR that reuses the title (or, in QA, a reused PR number).
+  const hours = EARLY_REVERT_WINDOW_HOURS;
   const rows = await query<{ id: string; title: string | null; pr_id: number | null }>(
     `SELECT id, title, pr_id FROM change_record WHERE repo = ? AND title LIKE ?
        AND received_at < (SELECT received_at FROM change_record WHERE id = ?)
+       AND received_at >= DATE_SUB((SELECT received_at FROM change_record WHERE id = ?), INTERVAL ${hours} HOUR)
      ORDER BY received_at DESC LIMIT ${Math.min(500, Math.max(1, Math.floor(limit)))}`,
     repo.toLowerCase(),
     'Revert "%',
+    receivedBeforeChangeId,
     receivedBeforeChangeId,
   );
   return rows.filter((r) => r.title).map((r) => ({ id: r.id, title: r.title!, prId: r.pr_id === null ? null : Number(r.pr_id) }));

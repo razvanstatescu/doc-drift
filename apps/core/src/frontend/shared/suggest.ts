@@ -21,7 +21,7 @@ export type Strength = 'strong' | 'weak';
 
 /**
  * Strong suggestions are pre-checked; weak ones start unchecked. The resolver's `strength` (or
- * `weak`) wins. Otherwise a whole repository is weak (it flags on every merge), and so is a path on
+ * `weak`) wins. Otherwise a whole repository is weak (it flags only when a name or line the page quotes changes), and so is a path on
  * a page that links no repository (it needs one typed in before it can be saved).
  */
 export function suggestionStrength(s: SuggestionView): Strength {
@@ -54,7 +54,7 @@ export function defaultChecked(list: SuggestionView[] | null | undefined): Recor
 export function suggestionDisplay(s: SuggestionView, typedRepo = ''): { code: string; note: string } {
   const repo = typedRepo.trim();
   if (s.anchorType === 'jira') return { code: s.jiraKey || s.label || '', note: 'Jira issue' };
-  if (s.anchorType === 'repo') return { code: s.repo || (s.label || '').replace(/ \(whole repo\)$/, ''), note: 'Whole repository. Flags on every merge.' };
+  if (s.anchorType === 'repo') return { code: s.repo || (s.label || '').replace(/ \(whole repo\)$/, ''), note: 'Whole repository. Flags only when code this page names changes.' };
   const code = s.pattern || s.label || '';
   if (s.needsRepo) return { code, note: repo ? `in ${repo.split('/').pop()}` : 'Needs a repository' };
   return { code, note: s.repo ? `in ${s.repo.split('/').pop()}` : '' };

@@ -254,7 +254,9 @@ def ingest_post(body, signature=None, timestamp=None):
 # ---------------------------------------------------------------------------
 # Records
 # ---------------------------------------------------------------------------
-_pr_counter = [int(time.time()) % 100000 + 70000]
+# Unix seconds: never repeats across runs (the old `% 100000` wrapped every ~28 h, so a stale QA
+# revert of #N could close a later run's #N; see the BUG-13 window note in docs/testing).
+_pr_counter = [int(time.time())]
 
 
 def next_pr():

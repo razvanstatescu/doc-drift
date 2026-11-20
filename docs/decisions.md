@@ -230,7 +230,7 @@ It is plain CSS and JS, with no library and no scroll listeners. Page-to-page vi
 
 **Tested.** Four simulated first-time visitors ran two rounds (website/visitor-test/). By round 2 every one scored the problem 5 of 5 and the solution 4, and the Codegeist judge persona ranked the site about 5th to 8th of 40. What they still want is a way to act today: the production share link (`CONFIG.installUrl`) and the public film (`CONFIG.videoUrl`).
 
-**Wrong product copy found on the way, not fixed here:**
+**Wrong product copy found on the way** (fixed in core 5.7.0, 2026-11-20: whole-repo label and note, Critical help, Jira help, "up to 25 at a time", "changes to this page's anchors"):
 - `anchors.jsx:31` says "Whole repository (weak: flags on every merge)", but a whole-repo anchor never flags on size.
 - `settings/index.jsx:455`: Jira help says any status change counts.
 - `dashboard/index.jsx:203`: "all of them at once", but it is at most 25 pages.

@@ -24,7 +24,14 @@ record, check, rec, ingest, inspect, drift, open_events, state_of, bind, path_an
     rm.record, rm.check, rm.rec, rm.ingest, rm.inspect, rm.drift, rm.open_events, rm.state_of, rm.bind, rm.path_anchor,
 )
 ME = "5e8d4e6bacb63e0b834222ee"  # Razvan Statescu (owner of the QA pages)
-PLAT_BASELINE = {"anchored": 18, "total": 24, "possiblyStale": 5, "stale": 0}
+# 5 drifted PLAT pages. They age from Possibly stale into Stale after the escalation days (7), so
+# checks compare the drifted total, not the split.
+PLAT_BASELINE = {"anchored": 18, "total": 24, "drifted": 5}
+CITE_POLICY = {"possibly_stale": "cite_with_caveat", "stale": "do_not_cite"}
+
+
+def plat_ok(k):
+    return k.get("anchored") == PLAT_BASELINE["anchored"] and k.get("total") == PLAT_BASELINE["total"] and (k.get("possiblyStale") or 0) + (k.get("stale") or 0) == PLAT_BASELINE["drifted"]
 
 
 def page(title, body):
@@ -72,10 +79,10 @@ def g_tools():
     r = tool("check-page-freshness", {}, ctx)
     check("P2-TOL-07 the context page is used only when no page was named", r.get("pageId") == ctx and r.get("resolvedFrom") == "context", {k: r.get(k) for k in ("pageId", "resolvedFrom")})
     r = tool("check-page-freshness", {"pageId": "2720129"})
-    check("P2-TOL-08 (R-5) citePolicy and affectedSections on a Possibly stale PLAT page", r.get("citePolicy") == "cite_with_caveat" and isinstance(r.get("affectedSections"), list),
+    check("P2-TOL-08 (R-5) citePolicy and affectedSections on a drifted PLAT page", r.get("status") in CITE_POLICY and r.get("citePolicy") == CITE_POLICY[r.get("status")] and isinstance(r.get("affectedSections"), list),
           {k: r.get(k) for k in ("title", "status", "citePolicy", "affectedSections", "guidance")})
     r = tool("list-stale-pages", {"spaceKey": "plat"})
-    check("P2-TOL-09 (BUG-10) list-stale-pages with 'plat' finds PLAT's drifted pages and echoes the limit", r.get("spaceKey") == "PLAT" and len(r.get("pages", [])) == PLAT_BASELINE["possiblyStale"] and r.get("limit") == 10,
+    check("P2-TOL-09 (BUG-10) list-stale-pages with 'plat' finds PLAT's drifted pages and echoes the limit", r.get("spaceKey") == "PLAT" and len(r.get("pages", [])) == PLAT_BASELINE["drifted"] and r.get("limit") == 10,
           {"spaceKey": r.get("spaceKey"), "pages": len(r.get("pages", [])), "limit": r.get("limit"), "guidance": str(r.get("guidance"))[:200]})
     r = tool("list-stale-pages", {"spaceKey": "PLAT", "limit": "abc"})
     check("P2-TOL-10 (obs 5) a bad limit is reported, not silently ignored", "was used" in str(r.get("guidance")), {"limit": r.get("limit"), "guidance": str(r.get("guidance"))[-120:]})
@@ -259,8 +266,9 @@ def g_notify():
     last = bodies[-1] if bodies else ""
     # The author here is also the page owner, who is mentioned at the start: since 5.2 they are named,
     # not mentioned twice (live PR #19). Another author's account still gets the mention (unit tests).
+    # A new comment (none in the last 24 h) opens with that one owner mention; an appended line has none.
     newest = last.split("<p>")[-1]
-    check("P2-NTF-01 (R-6) the drift comment names the PR author; an author who owns the page is not mentioned twice", n.get("outcome") in ("created", "appended") and "merged by Razvan Statescu)" in newest and newest.count("ri:account-id") == 0,
+    check("P2-NTF-01 (R-6) the drift comment names the PR author; an author who owns the page is not mentioned twice", n.get("outcome") in ("created", "appended") and "merged by Razvan Statescu)" in newest and newest.count("ri:account-id") == (1 if n.get("outcome") == "created" else 0),
           {"notify": n, "comment": last[-400:]})
     q.driver("verify", pageId=pid)
 
@@ -308,7 +316,7 @@ def g_reset():
 def g_plat():
     d = q.driver("dashboard", spaceKey="PLAT")[1] or {}
     k = d.get("kpis") or {}
-    check("P2-PLAT PLAT demo state unchanged", all(k.get(x) == v for x, v in PLAT_BASELINE.items()), {"kpis": k})
+    check("P2-PLAT PLAT demo state unchanged", plat_ok(k), {"kpis": k})
 
 
 GROUPS = {

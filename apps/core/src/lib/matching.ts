@@ -137,6 +137,7 @@ export async function processChange(changeRecordId: string): Promise<MatchOutcom
     const rest = bindings.filter((b) => !skip.has(b.pageId));
     const scored = rest.length > 0 ? await scoreAndStore(changeRecordId, record, rest, { ...config, scoreReverts: true }, spaceByPage, notifyDelaySeconds, false) : undefined;
     const n = scored?.events ?? 0;
+    if (!scored) log('DDS_MATCH_DONE', { changeRecordId, outcome: 'revert', closedPages: closedPages.length, events: 0 });
     await markChangeProcessed(changeRecordId, n > 0 ? `revert+scored:${n}` : 'revert');
     const all = [...pages, ...(scored?.refreshed ?? [])];
     return { changeRecordId, outcome: n > 0 ? 'revert+scored' : 'revert', events: n, pages: all.map((p) => ({ pageId: p.pageId, status: p.status })) };

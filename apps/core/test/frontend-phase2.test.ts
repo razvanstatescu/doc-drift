@@ -41,10 +41,10 @@ describe('inlineCodeParts', () => {
 
 describe('verified context (R-8) and last verified (UX-9)', () => {
   it('says how many changes the watch saw', () => {
-    expect(verifiedContextLine({ changesSince: 12, relevant: 0 })).toBe('12 changes to anchored code since, none flagged.');
-    expect(verifiedContextLine({ changesSince: 1 })).toBe('1 change to anchored code since, none flagged.');
-    expect(verifiedContextLine({ changesSince: 5, relevant: 2 })).toBe('5 changes to anchored code since, 2 flagged.');
-    expect(verifiedContextLine({ changesSince: 0, relevant: 0 })).toBe('No changes to anchored code since.');
+    expect(verifiedContextLine({ changesSince: 12, relevant: 0 })).toBe("12 changes to this page's anchors since, none flagged.");
+    expect(verifiedContextLine({ changesSince: 1 })).toBe("1 change to this page's anchors since, none flagged.");
+    expect(verifiedContextLine({ changesSince: 5, relevant: 2 })).toBe("5 changes to this page's anchors since, 2 flagged.");
+    expect(verifiedContextLine({ changesSince: 0, relevant: 0 })).toBe("No changes to this page's anchors since.");
   });
   it('says nothing without a count', () => {
     expect(verifiedContextLine(null)).toBe('');

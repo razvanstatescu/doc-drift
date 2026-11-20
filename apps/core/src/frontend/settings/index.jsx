@@ -452,7 +452,7 @@ const App = () => {
             <Toggle id="jira-enabled" isChecked={form.jiraEnabled} onChange={() => set('jiraEnabled', !form.jiraEnabled)} />
             <Label labelFor="jira-enabled">Flag pages when an anchored Jira issue changes</Label>
           </Inline>
-          <HelperMessage>Status, resolution, fix version, component, parent and description changes count. Off: Jira is ignored.</HelperMessage>
+          <HelperMessage>Moves to Done or Won't Do, fix version, component, parent and description changes, and deletion count. Other status moves don't. Off: Jira is ignored.</HelperMessage>
         </Field>
       </Section>
 

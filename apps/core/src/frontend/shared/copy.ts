@@ -89,7 +89,7 @@ export const COPY = {
   addAnchor: 'Add an anchor',
   addAnchorButton: 'Add anchor',
   critical: 'Critical anchor',
-  criticalHelp: 'Critical anchors raise the severity of changes to them.',
+  criticalHelp: 'Critical anchors flag on smaller edits, and their changes count as High.',
   globHelp: 'Globs work too, for example',
   remove: 'Remove',
   duplicateAnchor: 'This anchor is already in the list.',

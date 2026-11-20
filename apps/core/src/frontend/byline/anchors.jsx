@@ -28,7 +28,7 @@ import { defaultChecked, sortSuggestions, suggestionToAnchor } from '../shared/s
 const TYPE_OPTIONS = [
   { label: 'File path or glob', value: 'path' },
   { label: 'Jira issue', value: 'jira' },
-  { label: 'Whole repository (weak: flags on every merge)', value: 'repo' },
+  { label: 'Whole repository (weak: flags only when code this page names changes)', value: 'repo' },
 ];
 
 const EMPTY_MANUAL = { anchorType: 'path', repo: '', pattern: '', critical: false };

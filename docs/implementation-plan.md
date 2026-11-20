@@ -65,7 +65,7 @@ The Forge apps bundle their own dependencies. They import `packages/*` through w
 
 Fix during M3/M4; none blocks the demo.
 1. ~~Review panel: sort events High before Medium.~~ Done (M3).
-2. Review panel: rename proposals did not show for the M1 event (created before proposals were stored). Re-check on the next rename merge.
+2. ~~Review panel: rename proposals did not show for the M1 event (created before proposals were stored).~~ Covered headless since phase 2: P2-DRF-02 (the rename quick fix proposes both mentions) and P2-RQF-01 (apply: one version, anchor follows) pass on 5.8.0 (2026-11-20). One browser look is still due.
 3. ~~Dashboard: "18 of 25" counts the space home page. Exclude the home page so it reads 18 of 24.~~ Done (M3).
 4. ~~Dashboard: "Pages with drift" lists Verified pages. Show only drifted pages, and use the empty state when there are none. Remove the duplicate "Pages to review" heading.~~ Done (M3).
 5. ~~Matcher reason: for PR #5 (`--count` renamed to `--replicas`), the reasons list only the file change. The removed flag `--count`, which the page mentions, should appear as "Page mentions --count, removed in PR #5". Check the identifier extraction for flags on modified (not removed) lines.~~ Done (M3): removal notices on + lines no longer keep a flag alive.
@@ -101,7 +101,7 @@ All 10 Bitbucket scenarios were merged for real in nano-soft-dev/payments-api, a
 | 03 remove v1 refunds | #12 | Refunds guide High; API overview Medium | Pass (1.00 High; 0.72 Medium with REFUNDS_V1_ENABLED) |
 | 10 structured logging | #13 | 3 of 11 candidates flag (2 High, 1 Medium) | Pass (11 candidates, 3 events: 1.00, 1.00, 0.68) |
 
-Small issue: when every file is ignored (04, 05), the consumer logs `probe: skipped` but no closing `DDS_MATCH_DONE` line. Add a closing line with the reason.
+~~Small issue: when every file is ignored (04, 05), the consumer logs `probe: skipped` but no closing `DDS_MATCH_DONE` line.~~ Done in phase 2 (`skipped` reason). The last gap, a revert that touches no other page, got its closing line in core 5.7.0 (2026-11-20).
 Note: after 08 (a revert), `bb_seed.py prepare 03` needs `--force`, because 02's change is no longer on main.
 
 ### Open findings to schedule (from the M4 review and UI agents, 2026-11-11)
@@ -112,7 +112,9 @@ Note: after 08 (a revert), `bb_seed.py prepare 03` needs `--force`, because 02's
 - ~~M4: missing security tests.~~ Done (HMAC, consent mapping, gates, dev-driver refusal).
 - ~~Snoozed pages showed the binding UI.~~ Done: "Snoozed until …".
 - ~~UI Kit limits.~~ Done: wrapping Inline tiles, "Critical anchor" checkbox.
-- The 3 dependency-audit advisories in transitive Forge SDK packages are to triage.
+- ~~The 3 dependency-audit advisories in transitive Forge SDK packages are to triage.~~ Triaged 2026-11-20 (core 5.7.0, relay 2.4.0):
+  - **prosemirror-view** paste XSS (high), via `@forge/bridge` > `@atlaskit/adf-schema`. UI Kit never mounts an editor, so it isn't reachable. It is cleared anyway with an override to `^1.42.3` (`pnpm-workspace.yaml`, relay `package.json`).
+  - **glob** and **minimatch** (moderate), via `@forge/manifest`. They need attacker-controlled glob patterns or an AbortSignal; the SDK only globs its own files. The fixes are major versions inside the SDK, so wait for a Forge SDK release.
 
 ### M4 build results (2026-11-11)
 - F13 settings are honoured live and verified headless: Quiet suppresses a borderline replay, an excluded space gets no events, and Jira off ignores issue changes. Defaults restored.

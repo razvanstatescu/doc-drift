@@ -598,15 +598,15 @@ export interface VerifiedContext {
 
 /**
  * R-8: shows the watch is working on a Verified page.
- * "12 changes to anchored code since, none flagged." or "No changes to anchored code since.";
+ * "12 changes to this page's anchors since, none flagged." or "No changes to this page's anchors since.";
  * '' when the resolver sent no count.
  */
 export function verifiedContextLine(ctx: VerifiedContext | null | undefined): string {
   if (!ctx || typeof ctx.changesSince !== 'number' || !Number.isFinite(ctx.changesSince) || ctx.changesSince < 0) return '';
   const n = Math.floor(ctx.changesSince);
-  if (n === 0) return 'No changes to anchored code since.';
+  if (n === 0) return "No changes to this page's anchors since.";
   const relevant = typeof ctx.relevant === 'number' && ctx.relevant > 0 ? Math.floor(ctx.relevant) : 0;
-  return `${plural(n, 'change')} to anchored code since, ${relevant === 0 ? 'none' : String(relevant)} flagged.`;
+  return `${plural(n, 'change')} to this page's anchors since, ${relevant === 0 ? 'none' : String(relevant)} flagged.`;
 }
 
 /**
